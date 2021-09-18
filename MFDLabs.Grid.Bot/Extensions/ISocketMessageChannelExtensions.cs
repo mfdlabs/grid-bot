@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+using MFDLabs.Grid.Bot.Utility;
 using System.Collections.Generic;
 using System.IO;
 
@@ -26,6 +27,11 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static IReadOnlyCollection<RestMessage> GetPinnedMessages(this ISocketMessageChannel channel, RequestOptions options = null)
         {
             return channel.GetPinnedMessagesAsync(options).GetAwaiter().GetResult();
+        }
+
+        public static bool IsWhitelisted(this ISocketMessageChannel channel)
+        {
+            return AdminUtility.Singleton.ChannelIsAllowed(channel);
         }
     }
 }

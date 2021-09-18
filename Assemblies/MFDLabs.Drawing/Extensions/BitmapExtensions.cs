@@ -1,4 +1,5 @@
-﻿using MFDLabs.Drawing.Models;
+﻿using MFDLabs.Drawing.Extensions;
+using MFDLabs.Drawing.Models;
 using MFDLabs.Drawing.NativeWin32;
 using System;
 using System.Drawing;
@@ -13,7 +14,7 @@ namespace MFDLabs.Drawing
             NativeMethods.GetWindowRect(hwnd, out BaseRectangle rect);
             GetWindowBitmapAndDeviceHandle(rect, out Bitmap bitmap, out Graphics graphics, out IntPtr hdc);
             NativeMethods.PrintWindow(hwnd, hdc, 0);
-            GraphicsUtility.CleanupRender(graphics, hdc);
+            graphics.CleanUp(hdc);
             return bitmap;
         }
 

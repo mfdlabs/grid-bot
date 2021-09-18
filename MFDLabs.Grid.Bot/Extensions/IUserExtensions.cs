@@ -14,5 +14,10 @@ namespace MFDLabs.Grid.Bot.Extensions
         {
             return AdminUtility.Singleton.UserIsPrivilaged(user);
         }
+
+        public static bool IsOwner(this IUser user)
+        {
+            return AdminUtility.Singleton.CheckIsUserOwner(user);
+        }
     }
 }
