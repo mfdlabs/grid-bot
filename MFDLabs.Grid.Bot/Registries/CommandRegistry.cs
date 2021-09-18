@@ -4,6 +4,9 @@
     Description: C# Runtime parser for a command registry
 */
 
+// Jakob: TODO, Load these commands from a different assembly so they can be changed at runtime?
+//              It will have to load the assembly, and this shouldn't have a reference to it.
+
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Abstractions;
@@ -50,7 +53,7 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             if (!wasRegistered) RegisterOnce();
 
-            var command = GetCommandByName(commandName);
+            var command = GetCommandByCommandAlias(commandName);
 
             if (command == default) return null;
 
@@ -116,7 +119,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
         public bool SetIsEnabled(string commandName, bool isEnabled)
         {
-            var command = GetCommandByName(commandName.ToLower());
+            var command = GetCommandByCommandAlias(commandName.ToLower());
 
             if (command == null) return false;
 
@@ -132,7 +135,7 @@ namespace MFDLabs.Grid.Bot.Registries
             return true;
         }
 
-        public async Task CheckAndRunCommand(string commandName, string[] messageContent, SocketMessage message)
+        public async Task CheckAndRunCommandByAlias(string commandAlias, string[] messageContent, SocketMessage message)
         {
 
             _instrumentationPerfmon.CommandsPerSecond.Increment();
@@ -146,11 +149,11 @@ namespace MFDLabs.Grid.Bot.Registries
             var username = $"{TextGlobal.Singleton.EscapeString(message.Author.Username)}#{message.Author.Discriminator}";
             var userId = message.Author.Id;
 
-            InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandName);
+            InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
             _counters.RequestCountN++;
             SystemLogger.Singleton.Verbose(
                 "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
-                commandName,
+                commandAlias,
                 messageContent.Length > 0 ? TextGlobal.Singleton.EscapeString(string.Join(" ", messageContent).Replace("\n", "\\n")) : "No command arguments.",
                 username,
                 userId,
@@ -166,18 +169,18 @@ namespace MFDLabs.Grid.Bot.Registries
             {
                 if (!wasRegistered) RegisterOnce();
 
-                var command = GetCommandByName(commandName);
+                var command = GetCommandByCommandAlias(commandAlias);
 
                 if (command == null)
                 {
                     _instrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     _counters.RequestFailedCountN++;
-                    SystemLogger.Singleton.Warning("The command '{0}' did not exist.", commandName);
+                    SystemLogger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
                     if (Settings.Singleton.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         _instrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
-                        await message.ReplyAsync($"The command with the name '{commandName}' was not found.");
+                        await message.ReplyAsync($"The command with the name '{commandAlias}' was not found.");
                     }
                     _instrumentationPerfmon.NotFoundCommandsThatDidNotTellTheFrontendUser.Increment();
                     return;
@@ -188,7 +191,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 if (!command.IsEnabled)
                 {
                     _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandName);
+                    SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandAlias);
                     bool isAllowed = false;
                     if (AdminUtility.Singleton.UserIsAdmin(message.Author))
                     {
@@ -209,7 +212,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         _instrumentationPerfmon.DisabledCommandsThatDidNotAllowBypass.Increment();
                         _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                         _counters.RequestFailedCountN++;
-                        await message.ReplyAsync($"The command by the nameof '{commandName}' is disabled, please try again later.");
+                        await message.ReplyAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later.");
                         return;
                     }
                     _instrumentationPerfmon.DisabledCommandsThatWereInvokedToTheFrontendUser.Increment();
@@ -246,7 +249,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     {
                         _instrumentationPerfmon.NewThreadCommandsThatWereAllowedToExecute.Increment();
                         _instrumentationPerfmon.NewThreadCountersPerSecond.Increment();
-                        inNewThread = ExecuteCommandInNewThread(commandName, messageContent, message, sw, command);
+                        inNewThread = ExecuteCommandInNewThread(commandAlias, messageContent, message, sw, command);
                         return;
                     }
 
@@ -259,32 +262,32 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 _instrumentationPerfmon.CommandsNotExecutedInNewThread.Increment();
 
-                await command.Invoke(messageContent, message, commandName);
+                await command.Invoke(messageContent, message, commandAlias);
 
                 _instrumentationPerfmon.SucceededCommandsPerSecond.Increment();
                 _counters.RequestSucceededCountN++;
             }
             catch (Exception ex)
             {
-                await HandleException(ex, commandName, message);
+                await HandleException(ex, commandAlias, message);
             }
             finally
             {
                 sw.Stop();
                 _instrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                 _instrumentationPerfmon.CommandsThatFinished.Increment();
-                SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.", sw.Elapsed.TotalSeconds, commandName, inNewThread ? " in new thread" : "");
+                SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.", sw.Elapsed.TotalSeconds, commandAlias, inNewThread ? " in new thread" : "");
             }
 
             return;
         }
 
-        private bool ExecuteCommandInNewThread(string commandName, string[] messageContent, SocketMessage message, Stopwatch sw, IStateSpecificCommandHandler command)
+        private bool ExecuteCommandInNewThread(string alias, string[] messageContent, SocketMessage message, Stopwatch sw, IStateSpecificCommandHandler command)
         {
             bool inNewThread;
             var threadName = NetworkingGlobal.Singleton.GenerateUUIDV4();
 
-            SystemLogger.Singleton.LifecycleEvent("Executing command '{0}' in new thread '{1}'.", commandName, threadName);
+            SystemLogger.Singleton.LifecycleEvent("Executing command '{0}' in new thread '{1}'.", alias, threadName);
 
             inNewThread = true;
 
@@ -294,20 +297,20 @@ namespace MFDLabs.Grid.Bot.Registries
                 {
                     _instrumentationPerfmon.NewThreadCommandsThatPassedChecks.Increment();
                     // We do not expect a result here.
-                    await command.Invoke(messageContent, message, commandName);
+                    await command.Invoke(messageContent, message, alias);
                     _instrumentationPerfmon.SucceededCommandsPerSecond.Increment();
                     _counters.RequestSucceededCountN++;
                 }
                 catch (Exception ex)
                 {
-                    await HandleException(ex, commandName, message);
+                    await HandleException(ex, alias, message);
                 }
                 finally
                 {
                     sw.Stop();
                     _instrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                     _instrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
-                    SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, commandName);
+                    SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
                 }
             })
             {
@@ -318,7 +321,7 @@ namespace MFDLabs.Grid.Bot.Registries
             return inNewThread;
         }
 
-        private async Task HandleException(Exception ex, string commandName, SocketMessage message)
+        private async Task HandleException(Exception ex, string alias, SocketMessage message)
         {
             _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
             _counters.RequestFailedCountN++;
@@ -335,7 +338,7 @@ namespace MFDLabs.Grid.Bot.Registries
             if (ex is TimeoutException)
             {
                 _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                SystemLogger.Singleton.Error("The command '{0}' timed out. {1}", commandName, ex.Message);
+                SystemLogger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
                 await message.ReplyAsync("the command you tried to execute has timed out, please try identify the leading cause of a timeout.");
                 return;
             }
@@ -407,10 +410,10 @@ namespace MFDLabs.Grid.Bot.Registries
             return;
         }
 
-        private IStateSpecificCommandHandler GetCommandByName(string commandName)
+        public IStateSpecificCommandHandler GetCommandByCommandAlias(string alias)
         {
             lock (_stateSpecificCommandHandlers)
-                return (from command in _stateSpecificCommandHandlers.OfType<IStateSpecificCommandHandler>() where command.CommandAliases.Contains<string>(commandName) select command).FirstOrDefault<IStateSpecificCommandHandler>();
+                return (from command in _stateSpecificCommandHandlers where command.CommandAliases.Contains(alias) select command).FirstOrDefault();
         }
 
         private void ParseAndInsertIntoCommandRegistry()

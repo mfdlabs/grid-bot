@@ -43,8 +43,8 @@ namespace MFDLabs.Grid.Bot.Interfaces
         /// </summary>
         /// <param name="messageContentArray">The parameters of the <see cref="IStateSpecificCommandHandler"/>, normally they take the <see cref="IStateSpecificCommandHandler"/> name of the <see cref="IStateSpecificCommandHandler"/> out and push the rest to an array.</param>
         /// <param name="message">The <see cref="SocketMessage"/> that is used to reply to the frontend user.</param>
-        /// <param name="originalCommand">The original <see cref="IStateSpecificCommandHandler"/> name, as you may want to do something different per <see cref="IStateSpecificCommandHandler"/> name.</param>
+        /// <param name="originalAlias">The original <see cref="IStateSpecificCommandHandler"/> name, as you may want to do something different per <see cref="IStateSpecificCommandHandler"/> name.</param>
         /// <returns>Returns as <see cref="Task"/> that can be awaited on.</returns>
-        Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand);
+        Task Invoke(string[] messageContentArray, SocketMessage message, string originalAlias);
     }
 }
