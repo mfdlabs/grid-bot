@@ -1,4 +1,5 @@
-﻿using MFDLabs.Diagnostics.NativeWin32;
+﻿using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.Diagnostics.NativeWin32;
 using MFDLabs.Text.Extensions;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -57,7 +58,7 @@ namespace MFDLabs.Diagnostics
             try
             {
                 NativeMethods.OpenProcessToken(hProcess, 8, out phToken);
-                return SystemGlobal.Singleton.ContextIsAdministrator(new WindowsIdentity(phToken));
+                return new WindowsIdentity(phToken).IsAdministrator();
             }
             catch
             {
