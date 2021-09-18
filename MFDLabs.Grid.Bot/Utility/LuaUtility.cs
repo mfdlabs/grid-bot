@@ -1,7 +1,6 @@
 ﻿using MFDLabs.Abstractions;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
-using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var parsedScript = script;
 
-            var escapedString = TextGlobal.Singleton.EscapeString(script.Replace("\n", "\\n"));
+            var escapedString = script.EscapeNewLines().Escape();
 
             if (!Settings.Singleton.ScriptExectionCareAboutBadTextCase) parsedScript = script.ToLower();
 

@@ -1,4 +1,5 @@
 ﻿using MFDLabs.Abstractions;
+using MFDLabs.Diagnostics.Extensions;
 using System;
 using System.Diagnostics;
 
@@ -10,13 +11,13 @@ namespace MFDLabs.Diagnostics
         [DebuggerStepThrough]
         public string GetNowAsISO()
         {
-            return DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.ffffZ");
+            return DateTime.Now.ToIso()
         }
 
         [DebuggerStepThrough]
         public string GetUtcNowAsISO()
         {
-            return DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.ffffZ");
+            return DateTime.UtcNow.ToIso();
         }
     }
 }

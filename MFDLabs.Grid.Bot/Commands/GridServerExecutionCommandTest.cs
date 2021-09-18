@@ -5,7 +5,6 @@ using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
-using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -34,14 +33,12 @@ namespace MFDLabs.Grid.Bot.Commands
                 var script = new ScriptExecution()
                 {
                     name = "Test",
-                    script = TextGlobal.Singleton.SerializeJsonWithEnumConverter(
-                        new ExecuteScriptCommand(
+                    script = new ExecuteScriptCommand(
                             new ExecuteScriptSettings(
                                 "run",
                                 new Dictionary<string, object>() { { "script", "return 1, 2, 3;" } }
                             )
-                        )
-                    )
+                        ).ToJson()
                 };
 
                 var result = LuaUtility.Singleton.ParseLuaValues(await SoapUtility.Singleton.OpenJobExAsync(job, script));

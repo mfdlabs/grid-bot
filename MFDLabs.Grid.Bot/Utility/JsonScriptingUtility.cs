@@ -1,7 +1,7 @@
 ﻿using MFDLabs.Abstractions;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Networking;
-using MFDLabs.Text;
+using MFDLabs.Text.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -18,11 +18,9 @@ namespace MFDLabs.Grid.Bot.Utility
             );
 
             return (
-                TextGlobal.Singleton.SerializeJsonWithEnumConverter(
-                    new ThumbnailCommand(
-                        settings
-                    )
-                ), 
+                new ThumbnailCommand(
+                    settings
+                ).ToJson(), 
                 settings
             );
         }
@@ -56,11 +54,9 @@ namespace MFDLabs.Grid.Bot.Utility
             );
 
             return (
-                TextGlobal.Singleton.SerializeJsonWithEnumConverter(
-                    new GameServerCommand(
-                        settings
-                    )
-                ),
+                new GameServerCommand(
+                    settings
+                ).ToJson(),
                 settings
             );
         }
@@ -96,11 +92,9 @@ namespace MFDLabs.Grid.Bot.Utility
             );
 
             return (
-                TextGlobal.Singleton.SerializeJsonWithEnumConverter(
-                    new ExecuteScriptGameServerCommand(
-                        settings
-                    )
-                ),
+                new ExecuteScriptGameServerCommand(
+                    settings
+                ).ToJson(),
                 settings
             );
         }

@@ -2,7 +2,7 @@
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Text;
+using MFDLabs.Text.Extensions;
 using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
@@ -23,9 +23,9 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var jobs = TextGlobal.Singleton.SerializeJsonWithEnumConverter(await SoapUtility.Singleton.GetAllJobsExAsync());
+            var jobs = await SoapUtility.Singleton.GetAllJobsExAsync();
 
-            await message.ReplyAsync(jobs == "[]" ? "There are currently no jobs open." : jobs);
+            await message.ReplyAsync(jobs.Length == 0 ? "There are currently no jobs open." : jobs.ToJson());
         }
     }
 }

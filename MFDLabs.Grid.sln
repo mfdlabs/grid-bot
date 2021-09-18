@@ -177,6 +177,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{625E78
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		CODEOWNERS = CODEOWNERS
+		README.md = README.md
+		SECURITY.md = SECURITY.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmap", "Roadmap", "{39FDFFF1-C1F7-4F89-81CC-BE2EB647EB93}"

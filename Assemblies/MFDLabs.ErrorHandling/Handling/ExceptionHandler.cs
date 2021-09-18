@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MFDLabs.ErrorHandling.Extensions;
+using System;
 using System.Diagnostics;
 
 namespace MFDLabs.ErrorHandling
@@ -9,13 +10,13 @@ namespace MFDLabs.ErrorHandling
 
         public static void LogException(Exception ex, EventLogEntryType eventLogEntryType, string eventSource = null)
         {
-            LogException(new ExceptionDetail(ex).ToString(), eventLogEntryType, eventSource);
+            LogException(ex.ToDetailedString(), eventLogEntryType, eventSource);
             LogRaw(ex);
         }
 
         private static void LogRaw(Exception ex)
         {
-            LogRaw(new ExceptionDetail(ex).ToString());
+            LogRaw(ex.ToDetailedString());
         }
 
         public static void LogException(Exception ex)

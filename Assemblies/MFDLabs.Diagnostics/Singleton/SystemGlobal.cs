@@ -1,4 +1,5 @@
 ﻿using MFDLabs.Abstractions;
+using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Networking;
 using System;
 using System.Diagnostics;
@@ -63,13 +64,7 @@ namespace MFDLabs.Diagnostics
         // TODO: Pull out to MFDLabs.Security
         public bool ContextIsAdministrator()
         {
-            return ContextIsAdministrator(WindowsIdentity.GetCurrent());
-        }
-
-        public bool ContextIsAdministrator(WindowsIdentity id)
-        {
-            return new WindowsPrincipal(id)
-                      .IsInRole(WindowsBuiltInRole.Administrator);
+            return WindowsIdentity.GetCurrent().IsAdministrator();
         }
     }
 }

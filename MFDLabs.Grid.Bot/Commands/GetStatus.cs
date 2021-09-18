@@ -2,7 +2,7 @@
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Text;
+using MFDLabs.Text.Extensions;
 using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            await message.ReplyAsync(TextGlobal.Singleton.SerializeJsonWithEnumConverter(await SoapUtility.Singleton.GetStatusAsync()));
+            await message.ReplyAsync((await SoapUtility.Singleton.GetStatusAsync()).ToJson());
         }
     }
 }

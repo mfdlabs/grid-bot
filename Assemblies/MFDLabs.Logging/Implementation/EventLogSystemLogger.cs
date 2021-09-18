@@ -1,10 +1,12 @@
 ﻿using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.ErrorHandling;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
 using MFDLabs.Text;
+using MFDLabs.Text.Extensions;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -47,7 +49,7 @@ namespace MFDLabs.Logging
                 "[{0}][{1}][{2}][{3}][{4}-{5}][{6}][{7}][{8}][{9}][{10}][{11}][{12}][{13}] {14}\n",
                 DateTimeGlobal.Singleton.GetUtcNowAsISO(),
                 SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
-                TextGlobal.Singleton.FillString(threadID, '0', countNCharsToReplace, TextGlobal.StringDirection.Left),
+                threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left),
                 LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"),
                 SystemGlobal.Singleton.CurrentPlatform,
                 SystemGlobal.Singleton.CurrentDeviceArch.ToLower(),
@@ -209,8 +211,8 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Error(Exception ex)
         {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", new ExceptionDetail(ex).ToString());
-            LogLocally(LogLevel.Error, "ERROR", new ExceptionDetail(ex).ToString());
+            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
+            LogLocally(LogLevel.Error, "ERROR", ex.ToDetailedString());
         }
 
         [DebuggerStepThrough]

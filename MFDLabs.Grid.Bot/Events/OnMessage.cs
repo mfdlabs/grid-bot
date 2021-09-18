@@ -1,7 +1,6 @@
 ﻿using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Grid.Bot.Utility;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,7 +17,7 @@ namespace MFDLabs.Grid.Bot.Events
 
             if (!Settings.Singleton.AllowAllChannels)
             {
-                if (!AdminUtility.Singleton.ChannelIsAllowed(message.Channel.Id) && !userIsAdmin)
+                if (!message.Channel.IsWhitelisted() && !userIsAdmin)
                     return;
             }
 

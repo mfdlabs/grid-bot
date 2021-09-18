@@ -5,10 +5,9 @@
 */
 
 using MFDLabs.Abstractions;
-using MFDLabs.ErrorHandling;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
-using MFDLabs.Reflection;
+using MFDLabs.Reflection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,7 +73,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 SystemLogger.Singleton.Info("Got console hook namespace '{0}'.", @namespace);
 
-                var types = TypeHelper.GetTypesInNamespace(Assembly.GetExecutingAssembly(), @namespace);
+                var types = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(@namespace);
 
                 if (types.Length == 0)
                 {
@@ -110,9 +109,7 @@ namespace MFDLabs.Grid.Bot.Registries
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(
-                   new ExceptionDetail(ex).ToString()
-                );
+                SystemLogger.Singleton.Error(ex);
             }
             finally
             {

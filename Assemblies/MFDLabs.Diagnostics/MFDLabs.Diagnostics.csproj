@@ -149,9 +149,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\MarshalerExtensions.cs" />
     <Compile Include="Extensions\PointerHelpersExtensions.cs" />
     <Compile Include="Extensions\ProcessExtensions.cs" />
+    <Compile Include="Extensions\WindowsIdentityExtensions.cs" />
     <Compile Include="Helpers\Marshaler.cs" />
     <Compile Include="Helpers\PointerHelpers.cs" />
     <Compile Include="NativeWin32\NativeMethods.cs" />

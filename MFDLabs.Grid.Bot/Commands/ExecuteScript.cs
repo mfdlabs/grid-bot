@@ -62,7 +62,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
 
                 // allow admins to bypass?
-                if (TextGlobal.Singleton.StringContainsUnicode(script) && !Settings.Singleton.ScriptExectionSupportUnicode)
+                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExectionSupportUnicode)
                 {
                     await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, please remove any unicode characters from your script.");
                     return;
@@ -70,13 +70,13 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 // This is ugly as hell, can we have empty constructors so we can not include some stuff pls?
                 // jakob: just add shared ones maybe
-                var (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript("run", new Dictionary<string, object>() { { "script", TextGlobal.Singleton.EscapeString(script) } });
+                var (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript("run", new Dictionary<string, object>() { { "script", script.Escape() } });
 
                 bool didWriteAdminScript = false;
 
                 if (Settings.Singleton.AllowAdminScripts && SystemGlobal.Singleton.ContextIsAdministrator() && settings is ExecuteScriptGameServerSettings)
                 {
-                    if (AdminUtility.Singleton.UserIsAdmin(message.Author))
+                    if (message.Author.IsAdmin())
                     {
                         SystemLogger.Singleton.LifecycleEvent("The user '{0}' is an admin and the setting 'AllowAdminScripts' is enabled.", message.Author.Id);
 
@@ -84,7 +84,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                         bool allow = true;
 
-                        if (Settings.Singleton.AdminScriptsOnlyAllowedByOwner && !AdminUtility.Singleton.CheckIsUserOwner(message.Author)) allow = false;
+                        if (Settings.Singleton.AdminScriptsOnlyAllowedByOwner && !message.Author.IsOwner()) allow = false;
 
                         if (allow)
                         {

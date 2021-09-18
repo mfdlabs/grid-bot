@@ -1,7 +1,7 @@
 ﻿using Discord;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
-using MFDLabs.ErrorHandling;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Models;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
@@ -9,7 +9,6 @@ using MFDLabs.Grid.Bot.Plugins;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
-using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
 using System;
 using System.Collections.Generic;
@@ -56,7 +55,7 @@ namespace MFDLabs.Grid.Bot
                                 AuditLogReason = "Exception Occurred"
                             }
                         );
-                        packet.Item.Message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{new ExceptionDetail(ex)}\n```").Build());
+                        packet.Item.Message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                         return PluginResult.ContinueProcessing;
                     }
                     packet.Item.Message.Reply("An error occurred when trying to execute render task, please try again later.");
@@ -172,8 +171,7 @@ namespace MFDLabs.Grid.Bot
                                 {
                                     _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
                                     SystemLogger.Singleton.Warning("The first parameter of the command was not a valid Int64, trying to get the userID by username lookup.");
-                                    username = string.Join(" ", packet.Item.ContentArray);
-                                    username = TextGlobal.Singleton.EscapeString(username);
+                                    username = packet.Item.ContentArray.Join(' ').EscapeNewLines().Escape();
                                     if (!username.IsNullOrEmpty())
                                     {
                                         SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
@@ -209,12 +207,12 @@ namespace MFDLabs.Grid.Bot
                                     }
                                 }
 
-                                if (userId == -123123 && AdminUtility.Singleton.UserIsAdmin(packet.Item.Message.Author)) throw new Exception("Test exception for auto handling on task threads.");
+                                if (userId == -123123 && packet.Item.Message.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
 
                                 if (UserUtility.Singleton.GetIsUserBanned(userId))
                                 {
                                     bool canSkip = false;
-                                    if (userId == -200000 && AdminUtility.Singleton.UserIsAdmin(packet.Item.Message.Author)) canSkip = true;
+                                    if (userId == -200000 && packet.Item.Message.Author.IsAdmin()) canSkip = true;
 
                                     if (!canSkip)
                                     {

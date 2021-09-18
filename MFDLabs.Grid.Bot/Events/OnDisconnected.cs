@@ -1,5 +1,4 @@
-﻿using MFDLabs.ErrorHandling;
-using MFDLabs.Logging;
+﻿using MFDLabs.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -11,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Events
         {
 #if DEBUG
             if (!(ex is TaskCanceledException && !Settings.Singleton.DebugAllowTaskCanceledExceptions))
-                SystemLogger.Singleton.Error(new ExceptionDetail(ex).ToString());
+                SystemLogger.Singleton.Error(ex);
 #endif
             return Task.CompletedTask;
         }

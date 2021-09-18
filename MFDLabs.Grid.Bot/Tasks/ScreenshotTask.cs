@@ -1,7 +1,6 @@
 ﻿using Discord.WebSocket;
 using MFDLabs.Concurrency;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling;
 using MFDLabs.Grid.Bot.Base;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Plugins;
@@ -32,7 +31,7 @@ namespace MFDLabs.Grid.Bot.Tasks
 
             if (packet.Item != null)
             {
-                if (packet.Item.Content.Contains("-test---test-123-okkkk") && AdminUtility.Singleton.UserIsAdmin(packet.Item.Author)) throw new Exception("Test exception for auto handling on task threads.");
+                if (packet.Item.Content.Contains("-test---test-123-okkkk") && packet.Item.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
 
 
                 using (packet.Item.Channel.EnterTypingState())
@@ -120,7 +119,7 @@ namespace MFDLabs.Grid.Bot.Tasks
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(new ExceptionDetail(ex).ToString());
+                SystemLogger.Singleton.Error(ex);
                 return false;
             }
             finally

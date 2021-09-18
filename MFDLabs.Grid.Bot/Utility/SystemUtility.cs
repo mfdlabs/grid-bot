@@ -1,7 +1,6 @@
 ﻿using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.ErrorHandling;
 using MFDLabs.Logging;
 using System;
 using System.Diagnostics;
@@ -59,7 +58,7 @@ namespace MFDLabs.Grid.Bot.Utility
                     }
                     catch (Exception ex)
                     {
-                        SystemLogger.Singleton.Error(new ExceptionDetail(ex).ToString());
+                        SystemLogger.Singleton.Error(ex);
                     }
                     finally
                     {

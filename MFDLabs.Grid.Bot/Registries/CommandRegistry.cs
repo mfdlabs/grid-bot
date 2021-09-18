@@ -11,16 +11,15 @@ using Discord;
 using Discord.WebSocket;
 using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
-using MFDLabs.Reflection;
-using MFDLabs.Text;
+using MFDLabs.Reflection.Extensions;
 using MFDLabs.Text.Extensions;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,6 @@ using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-using ExceptionDetail = MFDLabs.ErrorHandling.ExceptionDetail;
 
 namespace MFDLabs.Grid.Bot.Registries
 {
@@ -60,7 +58,7 @@ namespace MFDLabs.Grid.Bot.Registries
             var isInternal = command.Internal == true;
             var isDisabled = command.IsEnabled == false;
 
-            if (isInternal && !AdminUtility.Singleton.UserIsAdmin(author)) return null;
+            if (isInternal && !author.IsAdmin()) return null;
 
             var builder = new EmbedBuilder
             {
@@ -99,7 +97,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 var isInternal = command.Internal == true;
                 var isDisabled = command.IsEnabled == false;
-                if (isInternal && !AdminUtility.Singleton.UserIsAdmin(author)) continue;
+                if (isInternal && !author.IsAdmin()) continue;
 
                 builder.AddField(
                     $"{command.CommandName}: {string.Join(", ", command.CommandAliases)}",
@@ -142,11 +140,11 @@ namespace MFDLabs.Grid.Bot.Registries
 
 
             var channel = message.Channel as SocketGuildChannel;
-            var channelName = TextGlobal.Singleton.EscapeString(channel == null ? message.Channel.Name : channel.Name);
+            var channelName = channel != null ? channel.Name.Escape() : message.Channel.Name;
             var channelId = channel == null ? message.Channel.Id : channel.Id;
-            var guildName = channel != null ? TextGlobal.Singleton.EscapeString(channel.Guild.Name) : $"Direct Message in {message.Channel.Name}.";
+            var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {message.Channel.Name}.";
             var guildId = channel != null ? channel.Guild.Id : message.Channel.Id;
-            var username = $"{TextGlobal.Singleton.EscapeString(message.Author.Username)}#{message.Author.Discriminator}";
+            var username = $"{message.Author.Username.Escape()}#{message.Author.Discriminator}";
             var userId = message.Author.Id;
 
             InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
@@ -154,7 +152,7 @@ namespace MFDLabs.Grid.Bot.Registries
             SystemLogger.Singleton.Verbose(
                 "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
                 commandAlias,
-                messageContent.Length > 0 ? TextGlobal.Singleton.EscapeString(string.Join(" ", messageContent).Replace("\n", "\\n")) : "No command arguments.",
+                messageContent.Length > 0 ? messageContent.Join(' ').EscapeNewLines().Escape() : "No command arguments.",
                 username,
                 userId,
                 guildName,
@@ -193,7 +191,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
                     SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandAlias);
                     bool isAllowed = false;
-                    if (AdminUtility.Singleton.UserIsAdmin(message.Author))
+                    if (message.Author.IsAdmin())
                     {
                         if (Settings.Singleton.AllowAdminsToBypassDisabledCommands)
                         {
@@ -233,7 +231,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     if (Settings.Singleton.NewThreadsOnlyAvailableForAdmins)
                     {
                         _instrumentationPerfmon.NewThreadCommandsThatAreOnlyAvailableToAdmins.Increment();
-                        if (!AdminUtility.Singleton.UserIsAdmin(message.Author))
+                        if (!message.Author.IsAdmin())
                         {
                             _instrumentationPerfmon.NewThreadCommandsThatDidNotPassAdministratorCheck.Increment();
                             isAllowed = false;
@@ -388,7 +386,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             _instrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
 
-            SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionID.ToString(), new ExceptionDetail(ex).ToString());
+            SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionID.ToString(), ex.ToDetailedString());
 
             if (!Settings.Singleton.CareToLeakSensitiveExceptions)
             {
@@ -400,7 +398,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         AuditLogReason = "Exception Occurred"
                     }
                 );
-                await message.Channel.SendMessageAsync(embed: new EmbedBuilder().WithDescription($"```\n{new ExceptionDetail(ex)}\n```").Build());
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                 return;
             }
 
@@ -429,7 +427,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     SystemLogger.Singleton.Info("Got command namespace '{0}'.", @namespace);
 
-                    var types = TypeHelper.GetTypesInNamespace(Assembly.GetExecutingAssembly(), @namespace);
+                    var types = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(@namespace);
 
                     if (types.Length == 0)
                     {
@@ -500,9 +498,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 catch (Exception ex)
                 {
                     _instrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                    SystemLogger.Singleton.Error(
-                        new ExceptionDetail(ex).ToString()
-                    );
+                    SystemLogger.Singleton.Error(ex);
                 }
                 finally
                 {

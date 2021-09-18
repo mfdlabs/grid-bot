@@ -6,11 +6,10 @@ namespace MFDLabs.Reflection
 {
     public class TypeHelper
     {
-        public static Type[] GetTypesInNamespace(Assembly assembly, string nameSpace)
+        public static Type[] GetTypesInNamespace(Assembly assembly, string @namespace)
         {
-            return
-              assembly.GetTypes()
-                      .Where(t => String.Equals(t.Namespace, nameSpace, StringComparison.Ordinal))
+            return assembly.GetTypes()
+                      .Where(t => String.Equals(t.Namespace, @namespace, StringComparison.Ordinal))
                       .ToArray();
         }
 

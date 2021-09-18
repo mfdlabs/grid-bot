@@ -137,6 +137,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Models\ExceptionDetail.cs" />
     <Compile Include="Handling\ExceptionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -2,7 +2,7 @@
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
-using MFDLabs.Reflection;
+using MFDLabs.Reflection.Extensions;
 using MFDLabs.Text.Extensions;
 using System;
 using System.Configuration;
@@ -153,7 +153,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 {
                     transformedValue = Enum.Parse(type, rawSettingValue);
                 }
-                else if (TypeHelper.IsPrimitive(type))
+                else if (type.IsPrimitave())
                 {
                     transformedValue = Convert.ChangeType(rawSettingValue, type);
                 }

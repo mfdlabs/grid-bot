@@ -1,5 +1,5 @@
 ﻿using Discord;
-using MFDLabs.ErrorHandling;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Logging;
 using System.Threading.Tasks;
 
@@ -13,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Events
             {
 #if DEBUG
                 if (!(message.Exception is TaskCanceledException && !Settings.Singleton.DebugAllowTaskCanceledExceptions))
-                    SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}", message.Source, message.Message, new ExceptionDetail(message.Exception).ToString());
+                    SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}", message.Source, message.Message, message.Exception.ToDetailedString());
 #endif
                 return Task.CompletedTask;
             }

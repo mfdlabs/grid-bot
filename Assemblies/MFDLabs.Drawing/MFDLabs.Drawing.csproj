@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\BitmapExtensions.cs" />
+    <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Utility\GraphicsUtility.cs" />
     <Compile Include="Models\BaseRectangle.cs" />
     <Compile Include="NativeWin32\NativeMethods.cs" />
