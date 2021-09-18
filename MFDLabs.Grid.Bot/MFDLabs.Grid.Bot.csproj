@@ -314,7 +314,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="MFDLABS-APPLICATIONS-INTERNAL.pfx" />
-    <None Include="MFDLabs.Grid.Bot.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

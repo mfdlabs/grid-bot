@@ -176,6 +176,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{625E78
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		CODEOWNERS = CODEOWNERS
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmap", "Roadmap", "{39FDFFF1-C1F7-4F89-81CC-BE2EB647EB93}"
@@ -186,7 +187,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{2606CCD7-2831-4E89-9503-D93C47AF19DE}"
 	ProjectSection(SolutionItems) = preProject
 		clean.bat = clean.bat
-		Clean.targets = Clean.targets
 		DeleteObjBinFolders.ps1 = DeleteObjBinFolders.ps1
 		deploy.bat = deploy.bat
 		Deploy.ps1 = Deploy.ps1
@@ -201,7 +201,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Maps", "Maps", "{59A4FA25-5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F8FDDA43-1A1E-42AA-AD38-DA19D1669ECA}"
 	ProjectSection(SolutionItems) = preProject
-		Test.csx = Test.csx
 		test.runsettings = test.runsettings
 	EndProjectSection
 EndProject
