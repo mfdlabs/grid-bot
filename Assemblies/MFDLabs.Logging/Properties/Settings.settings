@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MFDLabs.Logging.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="LoggingUtilDataName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">bot</Value>
+    </Setting>
+    <Setting Name="SettingsReloadInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:01.5000000</Value>
+    </Setting>
+    <Setting Name="PersistLocalLogs" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="MaxLogLevel" Type="MFDLabs.EventLog.LogLevel" Scope="User">
+      <Value Profile="(Default)">Verbose</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

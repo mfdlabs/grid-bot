@@ -1,0 +1,424 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A854E7F4-873B-413F-98CF-AB4D4D682D17}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
+    <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>false</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <WarningLevel>0</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <WarningLevel>0</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win64Test|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win64Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win64Test|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win64Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win64Test|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win64Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32Test|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win32Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32Test|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win32Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32Test|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Win32Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>MFDLABS-APPLICATIONS-INTERNAL.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.5.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.5.0.0\lib\net461\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.5.0.0\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Interactive.Async, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Interactive.Async.5.0.0\lib\net461\System.Interactive.Async.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Async, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Linq.Async.5.0.0\lib\net461\System.Linq.Async.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Base\HoldsSocketMessagePortExpiringTaskThread.cs" />
+    <Compile Include="Commands\CloseAllJobs.cs" />
+    <Compile Include="Commands\CloseExpiredJobs.cs" />
+    <Compile Include="Commands\CloseJob.cs" />
+    <Compile Include="Commands\DisableCommand.cs" />
+    <Compile Include="Commands\EnableCommand.cs" />
+    <Compile Include="Commands\ExecuteScript.cs" />
+    <Compile Include="Commands\Exit.cs" />
+    <Compile Include="Commands\GetJobDiagnostics.cs" />
+    <Compile Include="Commands\GetAllJobs.cs" />
+    <Compile Include="Commands\GetAllSettingsOfAssembly.cs" />
+    <Compile Include="Commands\GetAllSettings.cs" />
+    <Compile Include="Commands\GetJobCount.cs" />
+    <Compile Include="Commands\GetMachineAddress.cs" />
+    <Compile Include="Commands\GetSettingOfAssembly.cs" />
+    <Compile Include="Commands\GetSetting.cs" />
+    <Compile Include="Commands\GetStatus.cs" />
+    <Compile Include="Commands\GridServerExecutionCommandTest.cs" />
+    <Compile Include="Commands\OpenJob.cs" />
+    <Compile Include="Commands\HelloWorld.cs" />
+    <Compile Include="Commands\GetVersion.cs" />
+    <Compile Include="Commands\Help.cs" />
+    <Compile Include="Commands\KillWebServer.cs" />
+    <Compile Include="Commands\KillGridServer.cs" />
+    <Compile Include="Commands\OpenGridServer.cs" />
+    <Compile Include="Commands\PrefixCheck.cs" />
+    <Compile Include="Commands\ReloadSettingsOfAssembly.cs" />
+    <Compile Include="Commands\ReloadSettings.cs" />
+    <Compile Include="Commands\Render.cs" />
+    <Compile Include="Commands\RestartBot.cs" />
+    <Compile Include="Commands\ThrowTest.cs" />
+    <Compile Include="Commands\UpdateSetting.cs" />
+    <Compile Include="Commands\UpdateSettingOfAssembly.cs" />
+    <Compile Include="Commands\ViewConsole.cs" />
+    <Compile Include="Commands\ViewCurrentConsole.cs" />
+    <Compile Include="Events\OnLatencyUpdated.cs" />
+    <Compile Include="Events\OnLoggedOut.cs" />
+    <Compile Include="Events\OnLoggedIn.cs" />
+    <Compile Include="Extensions\ISocketMessageChannelExtensions.cs" />
+    <Compile Include="Extensions\IUserExtensions.cs" />
+    <Compile Include="Hooks\ClearConsoleHook.cs" />
+    <Compile Include="Hooks\CommandRegistryMetricsReportHook.cs" />
+    <Compile Include="Hooks\SuicideHook.cs" />
+    <Compile Include="Hooks\ListThreadsHook.cs" />
+    <Compile Include="Hooks\OpenGridServerHook.cs" />
+    <Compile Include="Hooks\ShutdownHook.cs" />
+    <Compile Include="Hooks\PartialShutdownHook.cs" />
+    <Compile Include="Hooks\ResetHook.cs" />
+    <Compile Include="Hooks\UtcNowHook.cs" />
+    <Compile Include="Interfaces\IConsoleHook.cs" />
+    <Compile Include="Models\RenderTaskRequest.cs" />
+    <Compile Include="PerformanceMonitors\CommandRegistryInstrumentationPerformanceMonitor.cs" />
+    <Compile Include="PerformanceMonitors\PerformanceServer.cs" />
+    <Compile Include="PerformanceMonitors\RenderTaskPerformanceMonitor.cs" />
+    <Compile Include="PerformanceMonitors\RenderTaskUserPerformanceMonitor.cs" />
+    <Compile Include="Plugins\PacketMetricsPlugin.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
+    <Compile Include="Tasks\ScreenshotTask.cs" />
+    <Compile Include="Events\OnConnected.cs" />
+    <Compile Include="Events\OnDisconnected.cs" />
+    <Compile Include="Events\OnLogMessage.cs" />
+    <Compile Include="Events\OnMessage.cs" />
+    <Compile Include="Events\OnReady.cs" />
+    <Compile Include="Extensions\SocketMessageExtensions.cs" />
+    <Compile Include="Global\BotGlobal.cs" />
+    <Compile Include="Registries\ConsoleHookRegistry.cs" />
+    <Compile Include="Registries\CommandRegistry.cs" />
+    <Compile Include="Interfaces\IStateSpecificCommandHandler.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Utility\AdminUtility.cs" />
+    <Compile Include="Utility\GridServerCommandUtility.cs" />
+    <Compile Include="Utility\JsonScriptingUtility.cs" />
+    <Compile Include="Utility\LuaUtility.cs" />
+    <Compile Include="Utility\SignalUtility.cs" />
+    <Compile Include="Utility\SoapUtility.cs" />
+    <Compile Include="Utility\SystemUtility.cs" />
+    <Compile Include="Utility\UserUtility.cs" />
+    <Compile Include="NativeWin32\NativeMethods.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.debug.config" />
+    <None Include="App.release.config" />
+    <None Include="App.config" />
+    <None Include="runservice.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="RunService.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MFDLABS-APPLICATIONS-INTERNAL.pfx" />
+    <None Include="MFDLabs.Grid.Bot.cd" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
+      <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
+      <Name>MFDLabs.Abstractions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj">
+      <Project>{fb3389dd-e0be-430c-8d1b-20544405ad89}</Project>
+      <Name>MFDLabs.Concurrency</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
+      <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
+      <Name>MFDLabs.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj">
+      <Project>{16f214d5-7539-4b0c-a8ee-8d8d8d9daa67}</Project>
+      <Name>MFDLabs.Drawing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj">
+      <Project>{d3cde6e3-28aa-44c9-98bf-1bf5dba6c714}</Project>
+      <Name>MFDLabs.ErrorHandling</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj">
+      <Project>{8441f32b-f58e-42b4-be35-4181bf5c0c68}</Project>
+      <Name>MFDLabs.Grid.Commands</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj">
+      <Project>{4254cfd2-14da-419d-a7fc-da835cdc513b}</Project>
+      <Name>MFDLabs.Grid.ComputeCloud</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
+      <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
+      <Name>MFDLabs.Instrumentation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj">
+      <Project>{091c5862-cc55-434a-80eb-f3e030b15dfe}</Project>
+      <Name>MFDLabs.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Networking\MFDLabs.Networking.csproj">
+      <Project>{66691ad6-1713-4996-951a-31a7c81e8f9e}</Project>
+      <Name>MFDLabs.Networking</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj">
+      <Project>{c85a3daf-e246-432b-b363-7478c6d6541f}</Project>
+      <Name>MFDLabs.Reflection</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj">
+      <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
+      <Name>MFDLabs.Text</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj">
+      <Project>{9089974e-f0c9-40af-9bd7-28309b884dc3}</Project>
+      <Name>MFDLabs.Threading</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj">
+      <Project>{ff4b1e10-8697-41db-8850-5f4d9f60b9d0}</Project>
+      <Name>MFDLabs.Users.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj">
+      <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>
+      <Name>Discord.Net.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Discord.Net.Rest\Discord.Net.Rest.csproj">
+      <Project>{E772DF88-34B3-4B39-B0A4-DE61E1746D4C}</Project>
+      <Name>Discord.Net.Rest</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj">
+      <Project>{2245FDE3-16A9-42D7-8C21-74B3A8951C6A}</Project>
+      <Name>Discord.Net.WebSocket</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Microsoft.Ccr.Core\Microsoft.Ccr.Core.csproj">
+      <Project>{17e9a370-0eef-4cec-805e-255ca27e6a44}</Project>
+      <Name>Microsoft.Ccr.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="app.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>COPY /Y "$(ProjectDir)App.$(ConfigurationName).config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+
+IF '$(Configuration)' == 'Release' (
+      del /q "$(TargetDir)*.pdb"
+       ECHO "Deploying."
+       powershell -ExecutionPolicy Unrestricted "$(SolutionDir)Deploy.ps1" -root $(SolutionDir) -config $(Configuration)
+)
+</PostBuildEvent>
+  </PropertyGroup>
+</Project>
