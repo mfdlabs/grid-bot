@@ -18,9 +18,5 @@ jobs:
         nuget-version: latest
     - run: nuget restore MFDLabs.Grid.sln
 
-    - name: Restore .NET
-      uses: actions/setup-dotnet@v1
-    - run: dotnet restore
-
     - name: Build 
       run: msbuild /noLogo /p:Configuration=Release
