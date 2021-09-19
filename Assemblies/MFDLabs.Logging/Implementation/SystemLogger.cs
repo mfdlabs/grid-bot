@@ -1,5 +1,6 @@
 ﻿using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
+using MFDLabs.ErrorHandling;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
 using MFDLabs.Logging.Diagnostics;
@@ -23,7 +24,7 @@ namespace MFDLabs.Logging
         private static bool _CanLog = true;
 
         
-        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
+        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => Settings.Singleton.MaxLogLevel;
 
         [DebuggerHidden]
         public bool LogThreadID { get; set; } = false;
@@ -52,7 +53,7 @@ namespace MFDLabs.Logging
                 NetworkingGlobal.Singleton.GetLocalIP(),
                 SystemGlobal.Singleton.GetMachineID(),
                 SystemGlobal.Singleton.GetMachineHost(),
-                global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
+                Settings.Singleton.LoggingUtilDataName,
                 logType.ToUpper(),
                 format
             );
@@ -92,7 +93,7 @@ namespace MFDLabs.Logging
             {
                 Log("Try clear local logs...");
 
-                if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
+                if (Settings.Singleton.PersistLocalLogs)
                 {
                     if (overrideENV)
                     {
@@ -267,7 +268,7 @@ namespace MFDLabs.Logging
                         ConsoleGlobal.Singleton.WriteContentStr(NetworkingGlobal.Singleton.GetLocalIP());
                         ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineID());
                         ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineHost());
-                        ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                        ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, Settings.Singleton.LoggingUtilDataName);
                         ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
                         ConsoleGlobal.Singleton.WriteColoredContent(color, string.Format($" {format}\n", args));
                     }

@@ -42,7 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\ConsoleGlobal.cs" />
-    <Compile Include="Implementation\EventLogConsoleSystemLogger.cs" />
     <Compile Include="Implementation\EventLogSystemLogger.cs" />
     <Compile Include="System\LoggingSystem.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -50,6 +49,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Settings.cs" />
     <Compile Include="Implementation\SystemLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
