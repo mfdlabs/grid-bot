@@ -62,9 +62,9 @@ namespace MFDLabs.Grid.Deployer.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("lms.simulpong.com")]
-        public string WebServerRemoteServiceName {
+        public string WebServerLookupHost {
             get {
-                return ((string)(this["WebServerRemoteServiceName"]));
+                return ((string)(this["WebServerLookupHost"]));
             }
         }
         
@@ -101,6 +101,15 @@ namespace MFDLabs.Grid.Deployer.Properties {
         public string GridServerLookupHost {
             get {
                 return ((string)(this["GridServerLookupHost"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("15")]
+        public int MaxAttemptsToLaunchWebServer {
+            get {
+                return ((int)(this["MaxAttemptsToLaunchWebServer"]));
             }
         }
     }

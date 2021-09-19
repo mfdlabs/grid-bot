@@ -3,6 +3,7 @@ using MFDLabs.Grid.Deployer.Tooling;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace MFDLabs.Grid.Deployer
 {
@@ -26,11 +27,22 @@ namespace MFDLabs.Grid.Deployer
             if (gridServicePath == null)
             {
                 ConsoleExtended.WriteTitle("The grid server is not installed on this machine.");
-                throw new ApplicationException("The grid server is not installed on this system!");
+                Environment.Exit(1);
+                return;
             }
 
             ConsoleExtended.WriteTitle("Got grid server path '{0}'.", gridServicePath);
             ConsoleExtended.WriteTitle("Trying to launch web server...");
+            ConsoleExtended.WriteTitle("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
+
+            if (!Directory.Exists(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath))
+            {
+                ConsoleExtended.WriteTitle("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
+                Environment.Exit(1);
+                return;
+            }
+
+            ConsoleExtended.WriteTitle("Found web server at '{0}', try launch now.", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
 
             LaunchWebServer();
 
@@ -81,8 +93,15 @@ namespace MFDLabs.Grid.Deployer
 
             ConsoleExtended.WriteTitle("Trying to contact web server at attempt No. {0}", attempt);
 
+            if (attempt > global::MFDLabs.Grid.Deployer.Properties.Settings.Default.MaxAttemptsToLaunchWebServer)
+            {
+                ConsoleExtended.WriteTitle("Max attempts exceeded when trying to launch the web server.");
+                Environment.Exit(1);
+                return;
+            }
+
             if (NetTools.IsServiceAvailable(
-                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerRemoteServiceName,
+                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerLookupHost,
                 80,
                 0
             ))
