@@ -46,6 +46,7 @@
     <Compile Include="Atomic.cs" />
     <Compile Include="Helpers\TaskHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelfDisposingTimer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
