@@ -51,6 +51,8 @@ namespace MFDLabs.Grid.Bot.Utility
                         proc.Start();
                         proc.WaitForExit();
 
+                        if (proc.ExitCode == 1) throw new ApplicationException($"Unable to open the grid server due to an internal exception on the machine '{SystemGlobal.Singleton.GetMachineID()} ({SystemGlobal.Singleton.GetMachineHost()})', please contact a datacenter administrator.");
+
                         SystemLogger.Singleton.Info(
                             "Successfully opened Grid Server via {0}",
                             Settings.Singleton.GridServerDeployerExecutableName
@@ -58,7 +60,7 @@ namespace MFDLabs.Grid.Bot.Utility
                     }
                     catch (Exception ex)
                     {
-                        SystemLogger.Singleton.Error(ex);
+                        throw ex;
                     }
                     finally
                     {
