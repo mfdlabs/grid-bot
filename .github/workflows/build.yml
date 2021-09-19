@@ -16,7 +16,7 @@ jobs:
         uses: nuget/setup-nuget@v1
         with:
           nuget-version: latest
-      - run: nuget restore Revision_761231.sln
+      - run: nuget restore MFDLabs.Grid.sln
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
