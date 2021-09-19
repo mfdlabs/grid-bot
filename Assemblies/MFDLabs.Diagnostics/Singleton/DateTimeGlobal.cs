@@ -11,7 +11,7 @@ namespace MFDLabs.Diagnostics
         [DebuggerStepThrough]
         public string GetNowAsISO()
         {
-            return DateTime.Now.ToIso()
+            return DateTime.Now.ToIso();
         }
 
         [DebuggerStepThrough]
