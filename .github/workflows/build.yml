@@ -12,5 +12,15 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
+    - name: Restore Nuget
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: latest
+    - run: nuget restore MFDLabs.Grid.sln
+
+    - name: Restore .NET
+      uses: actions/setup-dotnet@v1
+    - run: dotnet restore
+
     - name: Build 
       run: msbuild /noLogo /p:Configuration=Release
