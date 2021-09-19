@@ -154,7 +154,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{625E78
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
-		.github\workflows\build.yml = .github\workflows\build.yml
 		CODEOWNERS = CODEOWNERS
 		README.md = README.md
 		SECURITY.md = SECURITY.md
