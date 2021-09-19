@@ -15,11 +15,12 @@ namespace MFDLabs.Logging
 {
     [DebuggerDisplay("Global Logger")]
     [DebuggerStepThrough]
-    public sealed class EventLogSystemLogger : SingletonBase<EventLogSystemLogger>, ILogger
+    public sealed class EventLogConsoleSystemLogger : SingletonBase<SystemLogger>, ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly object _logSync = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static bool _CanLog = true;
-
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private System.Diagnostics.EventLog _eventLog;
@@ -32,6 +33,7 @@ namespace MFDLabs.Logging
         {
             _eventLog = eventLog;
         }
+
 
         public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
 
@@ -134,6 +136,7 @@ namespace MFDLabs.Logging
         public void Log(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
+            LogColorString(ConsoleColor.White, LogLevel.None, "LOG", format, args);
             LogLocally(LogLevel.None, "LOG", format, args);
         }
 
@@ -141,6 +144,7 @@ namespace MFDLabs.Logging
         public void Log(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
+            LogColorString(ConsoleColor.White, LogLevel.None, "LOG", messageGetter());
             LogLocally(LogLevel.None, "LOG", messageGetter());
         }
 
@@ -148,6 +152,7 @@ namespace MFDLabs.Logging
         public void Warning(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", format, args);
+            LogColorString(ConsoleColor.Yellow, LogLevel.Warning, "Warn", format, args);
             LogLocally(LogLevel.Warning, "WARNING", format, args);
         }
 
@@ -155,6 +160,7 @@ namespace MFDLabs.Logging
         public void Warning(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", messageGetter());
+            LogColorString(ConsoleColor.Yellow, LogLevel.Warning, "Warn", messageGetter());
             LogLocally(LogLevel.Warning, "WARNING", messageGetter());
         }
 
@@ -162,6 +168,7 @@ namespace MFDLabs.Logging
         public void Trace(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", format, args);
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", format, args);
             LogLocally(LogLevel.Error, "TRACE", format, args);
         }
 
@@ -169,6 +176,7 @@ namespace MFDLabs.Logging
         public void Trace(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", messageGetter());
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", messageGetter());
             LogLocally(LogLevel.Error, "TRACE", messageGetter());
         }
 
@@ -176,6 +184,7 @@ namespace MFDLabs.Logging
         public void Debug(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
+            LogColorString(ConsoleColor.Magenta, LogLevel.Verbose, "DEBUG", format, args);
             LogLocally(LogLevel.Verbose, "DEBUG", format, args);
         }
 
@@ -183,6 +192,7 @@ namespace MFDLabs.Logging
         public void Debug(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
+            LogColorString(ConsoleColor.Magenta, LogLevel.Verbose, "DEBUG", messageGetter());
             LogLocally(LogLevel.Verbose, "DEBUG", messageGetter());
         }
 
@@ -190,6 +200,7 @@ namespace MFDLabs.Logging
         public void Info(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
+            LogColorString(ConsoleColor.Blue, LogLevel.Information, "INFO", format, args);
             LogLocally(LogLevel.Information, "INFO", format, args);
         }
 
@@ -197,6 +208,7 @@ namespace MFDLabs.Logging
         public void Info(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
+            LogColorString(ConsoleColor.Blue, LogLevel.Information, "INFO", messageGetter());
             LogLocally(LogLevel.Information, "INFO", messageGetter());
         }
 
@@ -204,6 +216,7 @@ namespace MFDLabs.Logging
         public void Error(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", format, args);
             LogLocally(LogLevel.Error, "ERROR", format, args);
         }
 
@@ -211,6 +224,7 @@ namespace MFDLabs.Logging
         public void Error(Exception ex)
         {
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", ex.ToDetailedString());
             LogLocally(LogLevel.Error, "ERROR", ex.ToDetailedString());
         }
 
@@ -218,6 +232,7 @@ namespace MFDLabs.Logging
         public void Error(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", messageGetter());
             LogLocally(LogLevel.Error, "ERROR", messageGetter());
         }
 
@@ -225,6 +240,7 @@ namespace MFDLabs.Logging
         public void Verbose(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
+            LogColorString(ConsoleColor.Cyan, LogLevel.Verbose, "VERBOSE", format, args);
             LogLocally(LogLevel.Verbose, "VERBOSE", format, args);
         }
 
@@ -232,6 +248,7 @@ namespace MFDLabs.Logging
         public void Verbose(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
+            LogColorString(ConsoleColor.Cyan, LogLevel.Verbose, "VERBOSE", messageGetter());
             LogLocally(LogLevel.Verbose, "VERBOSE", messageGetter());
         }
 
@@ -239,6 +256,7 @@ namespace MFDLabs.Logging
         public void LifecycleEvent(string format, params object[] args)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
+            LogColorString(ConsoleColor.Green, LogLevel.None, "LC-EVENT", format, args);
             LogLocally(LogLevel.None, "LC-EVENT", format, args);
         }
 
@@ -246,13 +264,50 @@ namespace MFDLabs.Logging
         public void LifecycleEvent(Func<string> messageGetter)
         {
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
+            LogColorString(ConsoleColor.Green, LogLevel.None, "LC-EVENT", messageGetter());
             LogLocally(LogLevel.None, "LC-EVENT", messageGetter());
+        }
+
+        [DebuggerStepThrough]
+        private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format, params object[] args)
+        {
+            if (_CanLog)
+            {
+                if (level <= MaxLogLevel())
+                {
+                    // A lock is required here to truly make it thread safe.
+                    lock (_logSync)
+                    {
+                        var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
+                        var countNCharsToReplace = 4 - threadID.Length;
+
+                        ConsoleGlobal.Singleton.WriteContentStr(DateTimeGlobal.Singleton.GetUtcNowAsISO());
+                        ConsoleGlobal.Singleton.WriteContentStr(LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
+                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"));
+                        ConsoleGlobal.Singleton.WriteContentStr(threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left));
+                        ConsoleGlobal.Singleton.WriteContentStr($"{SystemGlobal.Singleton.CurrentPlatform}-{SystemGlobal.Singleton.CurrentDeviceArch.ToLower()}");
+                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.Version);
+                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.AssemblyVersion);
+#if DEBUG
+                        ConsoleGlobal.Singleton.WriteContentStr("Debug");
+#else
+                        ConsoleGlobal.Singleton.WriteContentStr("Release");
+#endif
+                        ConsoleGlobal.Singleton.WriteContentStr(NetworkingGlobal.Singleton.GetLocalIP());
+                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineID());
+                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineHost());
+                        ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                        ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
+                        ConsoleGlobal.Singleton.WriteColoredContent(color, string.Format($" {format}\n", args));
+                    }
+                }
+            }
         }
 
         [DebuggerStepThrough]
         private void LogToEventLog(EventLogEntryType entryType, LogLevel level, string logType, string format, params object[] args)
         {
-            if (_eventLog == null) throw new ArgumentNullException("_eventLog");
+            if (_eventLog == null) return;
 
             if (_CanLog)
             {
