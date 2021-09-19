@@ -29,6 +29,8 @@ This repository includes the following projects:
 - [MFDLabs.Reflection](./Assemblies/MFDLabs.Reflection)
 - [MFDLabs.Threading](./Assemblies/MFDLabs.Threading)
 - [MFDLabs.Text](./Assemblies/MFDLabs.Text)
+- [MFDLabs.Configuration](./Assemblies/MFDLabs.Configuration)
+- [MFDLabs.Hashicorp.VaultClient](./Assemblies/MFDLabs.Hashicorp.VaultClient)
 
 
 These are projects used by MFDLABS Grid Instances and the Roblox Grid Bot to help aid in development.
