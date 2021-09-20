@@ -10,15 +10,15 @@ namespace MFDLabs.Configuration.Logging
 			var useEventLogger = global::MFDLabs.Configuration.Properties.Settings.Default.ConfigurationLoggingUseSystemLogger;
 			_OverrideOnError = onError ?? ((m) => 
 			{ 
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Error(m);
+				if (useEventLogger) SystemLogger.Singleton.Error(m);
 			});
 			_OverrideOnWarning = onWarning ?? ((m) =>
 			{
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Warning(m);
+				if (useEventLogger) SystemLogger.Singleton.Warning(m);
 			});
 			_OverrideOnInformation = onInformation ?? ((m) =>
 			{
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Info(m);
+				if (useEventLogger) SystemLogger.Singleton.Info(m);
 			});
 		}
 
