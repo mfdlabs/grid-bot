@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Tasks
 {
-    internal sealed class ScreenshotTask : HoldsSocketMessagePortExpiringTaskThread<ScreenshotTask>
+    internal sealed class ScreenshotTask : HoldsSocketMessagePortAsyncExpiringTaskThread<ScreenshotTask>
     {
         public override string Name => "Screenshot Relay";
         public override TimeSpan ProcessActivationInterval => Settings.Singleton.ScreenshotRelayActivationTimeout;

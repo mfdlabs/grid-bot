@@ -6,7 +6,7 @@ namespace MFDLabs.Grid.Bot
 {
     internal sealed class Settings : SingletonBase<Settings>
     {
-        internal string HigherPrivilagedUsers
+        internal string HigherPrivilagedUserIDs
         {
             get
             {
@@ -407,14 +407,14 @@ namespace MFDLabs.Grid.Bot
                 return global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayShouldShowLauncherWindow;
             }
         }
-        internal string AllowedChannels
+        internal string AllowedChannelIDs
         {
             get
             {
                 return global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels;
             }
         }
-        internal string Admins
+        internal string AdministratorUserIDs
         {
             get
             {

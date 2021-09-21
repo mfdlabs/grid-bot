@@ -1,6 +1,6 @@
-﻿using Microsoft.Ccr.Core;
-using System;
+﻿using System;
 using System.Threading;
+using Microsoft.Ccr.Core;
 
 namespace MFDLabs.Concurrency
 {

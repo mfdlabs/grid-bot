@@ -1,6 +1,6 @@
-﻿using MFDLabs.Abstractions;
+﻿using System.Diagnostics;
+using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
-using System.Diagnostics;
 
 namespace MFDLabs.Logging.Diagnostics
 {

@@ -32,6 +32,7 @@ namespace MFDLabs.Text
 
         public string EscapeString(string s)
         {
+            if (s == null) return null;
             var b = new StringBuilder();
             foreach (var c in s)
             {
@@ -56,6 +57,7 @@ namespace MFDLabs.Text
 
         public string UnescapeString(string v)
         {
+            if (v == null) return null;
             return Regex.Replace(
                 v,
                 @"\\u(?<Value>[a-zA-Z0-9]{4})",

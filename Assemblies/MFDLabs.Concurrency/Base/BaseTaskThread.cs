@@ -1,7 +1,7 @@
-﻿using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Threading;
+using MFDLabs.Logging;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Concurrency.Base
 {

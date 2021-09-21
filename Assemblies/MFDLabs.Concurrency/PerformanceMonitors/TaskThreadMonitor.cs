@@ -1,6 +1,6 @@
-﻿using MFDLabs.Instrumentation;
+﻿using System;
+using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
-using System;
 
 namespace MFDLabs.Concurrency
 {

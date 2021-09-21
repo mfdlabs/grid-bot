@@ -1,38 +1,38 @@
-﻿using Discord;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Abstractions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class AdminUtility : SingletonBase<AdminUtility>
     {
-        public IReadOnlyCollection<string> AllowedChannels
+        public IReadOnlyCollection<string> AllowedChannelIDs
         {
-            get { return (from channel in Settings.Singleton.AllowedChannels.Split(',') where !channel.IsNullOrEmpty() select channel).ToArray(); }
+            get { return (from id in Settings.Singleton.AllowedChannelIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
-        public IReadOnlyCollection<string> Admins
+        public IReadOnlyCollection<string> AdministratorUserIDs
         {
-            get { return (from user in Settings.Singleton.Admins.Split(',') where !user.IsNullOrEmpty() select user).ToArray(); }
+            get { return (from id in Settings.Singleton.AdministratorUserIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
-        public IReadOnlyCollection<string> PrivilagedUsers
+        public IReadOnlyCollection<string> HigherPrivilagedUserIDs
         {
-            get { return (from user in Settings.Singleton.HigherPrivilagedUsers.Split(',') where !user.IsNullOrEmpty() select user).ToArray(); }
+            get { return (from id in Settings.Singleton.HigherPrivilagedUserIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
-        public bool CheckIsUserOwner(IUser user)
+        public bool UserIsOwner(IUser user)
         {
-            return CheckIsUserOwner(user.Id);
+            return UserIsOwner(user.Id);
         }
 
-        public bool CheckIsUserOwner(ulong id)
+        public bool UserIsOwner(ulong id)
         {
             return id == Settings.Singleton.BotOwnerID;
         }
@@ -49,7 +49,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public bool UserIsAdmin(string id)
         {
-            return Admins.Contains(id);
+            if (UserIsOwner(ulong.Parse(id))) return true;
+            return AdministratorUserIDs.Contains(id);
         }
 
         public bool UserIsPrivilaged(IUser user)
@@ -64,7 +65,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public bool UserIsPrivilaged(string id)
         {
-            return PrivilagedUsers.Contains(id);
+            if (UserIsAdmin(id)) return true;
+            return HigherPrivilagedUserIDs.Contains(id);
         }
 
         public bool ChannelIsAllowed(IChannel channel)
@@ -79,7 +81,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public bool ChannelIsAllowed(string id)
         {
-            return AllowedChannels.Contains(id);
+            return AllowedChannelIDs.Contains(id);
         }
 
         public async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
@@ -107,6 +109,18 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
             SystemLogger.Singleton.Info("User '{0}' is on the admin whitelist.", message.Author.Id);
+            return true;
+        }
+
+        public async Task<bool> RejectIfNotOwnerAsync(SocketMessage message)
+        {
+            if (!UserIsOwner(message.Author))
+            {
+                SystemLogger.Singleton.Warning("User '{0}' is not the owner. Please take this with caution as leaked internal methods may be abused!", message.Author.Id);
+                await message.ReplyAsync("You lack the correct permissions to execute that command.");
+                return false;
+            }
+            SystemLogger.Singleton.Info("User '{0}' is the owner.", message.Author.Id);
             return true;
         }
     }

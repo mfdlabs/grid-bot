@@ -73,8 +73,9 @@ namespace MFDLabs.Grid.Bot.Registries
             {
                 builder.Color = new Color(0x00, 0xff, 0x00);
             }
-            builder.AddField(string.Join(", ", command.CommandAliases), $"{command.CommandDescription} {(isInternal ? "**INTERNAL**" : "")} {(isDisabled ? "**DISABLED**" : "**ENABLED**")}", false);
+            builder.AddField(string.Join(", ", command.CommandAliases), $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}", false);
             builder.WithCurrentTimestamp();
+            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
 
             return builder.Build();
         }
@@ -102,7 +103,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 builder.AddField(
                     $"{command.CommandName}: {string.Join(", ", command.CommandAliases)}",
-                    $"{command.CommandDescription} {(isInternal ? "**INTERNAL**" : "")} {(isDisabled ? "**DISABLED**" : "**ENABLED**")}",
+                    $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}",
                     false
                 );
 
@@ -112,6 +113,11 @@ namespace MFDLabs.Grid.Bot.Registries
             }
 
             if (i < 24) embeds.Add(builder.Build());
+            builder.Color = new Color(0x00, 0x99, 0xff);
+            builder = new EmbedBuilder();
+            builder.WithCurrentTimestamp();
+            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
+            embeds.Add(builder.Build());
 
             return embeds;
         }

@@ -1,20 +1,19 @@
-﻿using MFDLabs.Abstractions;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
 using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
 
 namespace MFDLabs.Logging
 {
-    [DebuggerDisplay("Global Logger")]
+    [DebuggerDisplay("Global EventLog Logger")]
     [DebuggerStepThrough]
     public sealed class EventLogSystemLogger : SingletonBase<EventLogSystemLogger>, ILogger
     {
@@ -34,7 +33,7 @@ namespace MFDLabs.Logging
             _eventLog = eventLog;
         }
 
-        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => Settings.Singleton.MaxLogLevel;
+        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
 
         [DebuggerHidden]
         public bool LogThreadID { get; set; } = false;
@@ -63,7 +62,7 @@ namespace MFDLabs.Logging
                 NetworkingGlobal.Singleton.GetLocalIP(),
                 SystemGlobal.Singleton.GetMachineID(),
                 SystemGlobal.Singleton.GetMachineHost(),
-                Settings.Singleton.LoggingUtilDataName,
+                global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
                 logType.ToUpper(),
                 format
             );
@@ -103,7 +102,7 @@ namespace MFDLabs.Logging
             {
                 Log("Try clear local logs...");
 
-                if (Settings.Singleton.PersistLocalLogs)
+                if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
                 {
                     if (overrideENV)
                     {
@@ -267,30 +266,30 @@ namespace MFDLabs.Logging
 
                     switch (logType)
                     {
-                        case "LOG":
-                            category = 1;
-                            break;
-                        case "WARNING":
-                            category = 2;
-                            break;
-                        case "TRACE":
-                            category = 3;
-                            break;
-                        case "DEBUG":
-                            category = 4;
-                            break;
-                        case "INFO":
-                            category = 5;
-                            break;
-                        case "ERROR":
-                            category = 6;
-                            break;
-                        case "VERBOSE":
-                            category = 7;
-                            break;
-                        case "LC-EVENT":
-                            category = 8;
-                            break;
+                    case "LOG":
+                        category = 1;
+                        break;
+                    case "WARNING":
+                        category = 2;
+                        break;
+                    case "TRACE":
+                        category = 3;
+                        break;
+                    case "DEBUG":
+                        category = 4;
+                        break;
+                    case "INFO":
+                        category = 5;
+                        break;
+                    case "ERROR":
+                        category = 6;
+                        break;
+                    case "VERBOSE":
+                        category = 7;
+                        break;
+                    case "LC-EVENT":
+                        category = 8;
+                        break;
                     }
 
                     _eventLog.WriteEntry(message, entryType, _eventId, category);

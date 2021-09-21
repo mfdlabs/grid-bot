@@ -60,7 +60,6 @@
     <Compile Include="Enums\Jitter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sentinels\ServiceSentinel.cs" />
-    <Compile Include="Threading\ThreadLocalRandom.cs" />
     <Compile Include="CircuitBreakers\ThresholdExecutionCircuitBreaker.cs" />
     <Compile Include="Extensions\TimeSpanExtensions.cs" />
     <Compile Include="Sentinels\TogglableServiceSentinel.cs" />
@@ -70,6 +69,11 @@
       <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
       <Name>MFDLabs.Text</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Threading\MFDLabs.Threading.csproj">
+      <Project>{9089974e-f0c9-40af-9bd7-28309b884dc3}</Project>
+      <Name>MFDLabs.Threading</Name>
+    </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

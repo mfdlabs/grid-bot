@@ -20,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return (
                 new ThumbnailCommand(
                     settings
-                ).ToJson(), 
+                ).ToJson(),
                 settings
             );
         }
@@ -42,11 +42,11 @@ namespace MFDLabs.Grid.Bot.Utility
                 maxGameInstances,
                 apiKey,
                 preferredPlayerCapacity,
-                placeVisitAccessKey, 
+                placeVisitAccessKey,
                 datacenterId,
-                creatorId, 
+                creatorId,
                 creatorType,
-                placeVersion, 
+                placeVersion,
                 vipOwnerId,
                 placeFetchUrl,
                 metadata,
@@ -99,7 +99,7 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, IDictionary<string, object> arguments) 
+        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, IDictionary<string, object> arguments)
         {
             return GetGameServerExecutionScript(
                 type,

@@ -17,7 +17,7 @@ namespace MFDLabs.Grid.Bot.Extensions
 
         public static bool IsOwner(this IUser user)
         {
-            return AdminUtility.Singleton.CheckIsUserOwner(user);
+            return AdminUtility.Singleton.UserIsOwner(user);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using MFDLabs.ErrorHandling.Extensions;
-using System;
+﻿using System;
 using System.Diagnostics;
+using MFDLabs.ErrorHandling.Extensions;
 
 namespace MFDLabs.ErrorHandling
 {

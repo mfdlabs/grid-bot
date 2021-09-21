@@ -7,12 +7,9 @@ namespace MFDLabs.Threading
     {
         public SelfDisposingTimer(Action action, TimeSpan startTime, TimeSpan period)
         {
-            _Action = action;
-            _Period = period;
-            _Timer = new Timer(delegate (object weakThis)
-            {
-                OnTimer((WeakReference)weakThis);
-            }, new WeakReference(this), startTime, period);
+            _act = action;
+            _period = period;
+            _timer = new Timer((weakThis) => OnTimer((WeakReference)weakThis), new WeakReference(this), startTime, period);
         }
 
         private static void OnTimer(WeakReference self)
@@ -21,40 +18,38 @@ namespace MFDLabs.Threading
             {
                 return;
             }
-            currentTimer._Action();
+            currentTimer._act();
         }
 
         public bool Change(TimeSpan dueTime, TimeSpan period)
         {
-            _Period = period;
-            return _Timer.Change(dueTime, period);
+            _period = period;
+            return _timer.Change(dueTime, period);
         }
 
         public void Stop()
         {
-            _Timer.Dispose();
-            _Timer = null;
+            _timer.Dispose();
+            _timer = null;
         }
 
         ~SelfDisposingTimer()
         {
-            _Timer?.Dispose();
+            _timer?.Dispose();
         }
 
-        internal void Pause()
+        public void Pause()
         {
-            _Timer.Change(-1, -1);
+            _timer.Change(-1, -1);
         }
 
-        internal void Unpause()
+        public void Unpause()
         {
-            _Timer.Change(_Period, _Period);
+            _timer.Change(_period, _period);
         }
 
-        private readonly Action _Action;
-
-        private Timer _Timer;
-
-        private TimeSpan _Period;
+        private readonly Action _act;
+        private Timer _timer;
+        private TimeSpan _period;
     }
 }

@@ -1,7 +1,7 @@
-﻿using MFDLabs.Logging;
-using Microsoft.Ccr.Core;
-using System;
+﻿using System;
 using System.Threading;
+using MFDLabs.Logging;
+using Microsoft.Ccr.Core;
 
 namespace MFDLabs.Concurrency.Base
 {
@@ -95,11 +95,11 @@ namespace MFDLabs.Concurrency.Base
                                                 _monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceID);
 
 #if DEBUG
-                                            SystemLogger.Singleton.Error(ex);
+                                                SystemLogger.Singleton.Error(ex);
 #else
                                             SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
 #endif
-                                        }
+                                            }
                                         }
                                         _isProcessingItem = false;
                                         _lastUsedTimeUtc = DateTime.UtcNow;

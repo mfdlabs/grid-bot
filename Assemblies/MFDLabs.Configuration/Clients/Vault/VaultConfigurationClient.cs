@@ -6,7 +6,6 @@ using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines;
-using Newtonsoft.Json;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {

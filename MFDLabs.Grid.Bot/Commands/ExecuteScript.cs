@@ -1,4 +1,10 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Extensions;
@@ -8,15 +14,8 @@ using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
-using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {

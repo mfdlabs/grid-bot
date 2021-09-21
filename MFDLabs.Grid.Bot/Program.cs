@@ -104,7 +104,7 @@ namespace MFDLabs.Grid.Bot
                 BotGlobal.Singleton.Client.MessageReceived += OnMessage.Invoke;
                 BotGlobal.Singleton.Client.Disconnected += OnDisconnected.Invoke;
                 BotGlobal.Singleton.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
-                BotGlobal.Singleton.Client.JoinedGuild += null;
+                BotGlobal.Singleton.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
 
                 await BotGlobal.Singleton.SingletonLaunch();
                 await Task.Delay(-1);

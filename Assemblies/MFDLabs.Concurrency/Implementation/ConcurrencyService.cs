@@ -1,8 +1,8 @@
-﻿using MFDLabs.ErrorHandling;
-using Microsoft.Ccr.Core;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using MFDLabs.ErrorHandling;
+using Microsoft.Ccr.Core;
 
 namespace MFDLabs.Concurrency
 {

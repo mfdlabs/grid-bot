@@ -1,7 +1,7 @@
-﻿using MFDLabs.Instrumentation;
+﻿using System;
+using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
-using System;
 
 namespace MFDLabs.Concurrency.Base.Async
 {

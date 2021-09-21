@@ -32,6 +32,11 @@ namespace MFDLabs.Grid.Bot.Extensions
             return await AdminUtility.Singleton.RejectIfNotPrivilagedAsync(message);
         }
 
+        public static async Task<bool> RejectIfNotOwnerAsync(this SocketMessage message)
+        {
+            return await AdminUtility.Singleton.RejectIfNotOwnerAsync(message);
+        }
+
         public static bool RejectIfNotPrivilaged(this SocketMessage message)
         {
             return message.RejectIfNotPrivilagedAsync().GetAwaiter().GetResult();
@@ -40,6 +45,11 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static bool RejectIfNotAdmin(this SocketMessage message)
         {
             return message.RejectIfNotAdminAsync().GetAwaiter().GetResult();
+        }
+
+        public static bool RejectIfNotOwner(this SocketMessage message)
+        {
+            return message.RejectIfNotOwnerAsync().GetAwaiter().GetResult();
         }
     }
 }

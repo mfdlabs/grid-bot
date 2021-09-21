@@ -1,5 +1,5 @@
-﻿using MFDLabs.Abstractions;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using MFDLabs.Abstractions;
 
 namespace MFDLabs.Concurrency.Base.Async
 {

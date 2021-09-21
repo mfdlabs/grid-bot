@@ -1,6 +1,6 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Threading;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Sentinels.CircuitBreakerPolicy
 {

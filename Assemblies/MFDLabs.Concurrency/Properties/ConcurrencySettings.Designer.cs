@@ -52,15 +52,6 @@ namespace MFDLabs.Concurrency.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PrimaryDispatcherShouldUseBackgroundThreads {
-            get {
-                return ((bool)(this["PrimaryDispatcherShouldUseBackgroundThreads"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("MFDLabs Concurrency Service")]
         public string PrimaryDispatcherQueueName {
             get {
@@ -74,15 +65,6 @@ namespace MFDLabs.Concurrency.Properties {
         public global::Microsoft.Ccr.Core.DispatcherOptions PrimaryDispatcherOptions {
             get {
                 return ((global::Microsoft.Ccr.Core.DispatcherOptions)(this["PrimaryDispatcherOptions"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double PrimaryDispatcherQueueSchedulingRate {
-            get {
-                return ((double)(this["PrimaryDispatcherQueueSchedulingRate"]));
             }
         }
         
