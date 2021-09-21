@@ -40,8 +40,7 @@ namespace MFDLabs.Tracing.Core
             set
             {
                 _IsMasterEnabled = value ?? throw new ArgumentNullException("Attempt to set null for field _IsMasterEnabled");
-                bool flag = IsTracingEnabled();
-                if (flag)
+                if (IsTracingEnabled())
                 {
                     CheckFields();
                 }
