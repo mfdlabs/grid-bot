@@ -12,19 +12,19 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class AdminUtility : SingletonBase<AdminUtility>
     {
-        public ICollection<string> AllowedChannels
+        public IReadOnlyCollection<string> AllowedChannels
         {
-            get { return new List<string>(from channel in Settings.Singleton.AllowedChannels.Split(',') where !channel.IsNullOrEmpty() select channel); }
+            get { return (from channel in Settings.Singleton.AllowedChannels.Split(',') where !channel.IsNullOrEmpty() select channel).ToArray(); }
         }
 
-        public ICollection<string> Admins
+        public IReadOnlyCollection<string> Admins
         {
-            get { return new List<string>(from user in Settings.Singleton.Admins.Split(',') where !user.IsNullOrEmpty() select user); }
+            get { return (from user in Settings.Singleton.Admins.Split(',') where !user.IsNullOrEmpty() select user).ToArray(); }
         }
 
-        public ICollection<string> PrivilagedUsers
+        public IReadOnlyCollection<string> PrivilagedUsers
         {
-            get { return new List<string>(from user in Settings.Singleton.HigherPrivilagedUsers.Split(',') where !user.IsNullOrEmpty() select user); }
+            get { return (from user in Settings.Singleton.HigherPrivilagedUsers.Split(',') where !user.IsNullOrEmpty() select user).ToArray(); }
         }
 
         public bool CheckIsUserOwner(IUser user)

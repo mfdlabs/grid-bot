@@ -30,7 +30,6 @@ namespace MFDLabs.Grid.Bot.Utility
 
                         };
 
-
                         if (SystemGlobal.Singleton.ContextIsAdministrator())
                         {
                             psi.Verb = "runas";

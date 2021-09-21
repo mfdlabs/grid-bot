@@ -7,6 +7,15 @@
 // Jakob: TODO, Load these commands from a different assembly so they can be changed at runtime?
 //              It will have to load the assembly, and this shouldn't have a reference to it.
 
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Abstractions;
@@ -21,14 +30,6 @@ using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Registries
 {

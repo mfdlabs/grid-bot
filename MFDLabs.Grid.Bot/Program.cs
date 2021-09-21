@@ -1,4 +1,7 @@
-﻿using Discord.WebSocket;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Events;
 using MFDLabs.Grid.Bot.Global;
@@ -8,9 +11,6 @@ using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot
 {
@@ -104,6 +104,7 @@ namespace MFDLabs.Grid.Bot
                 BotGlobal.Singleton.Client.MessageReceived += OnMessage.Invoke;
                 BotGlobal.Singleton.Client.Disconnected += OnDisconnected.Invoke;
                 BotGlobal.Singleton.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
+                BotGlobal.Singleton.Client.JoinedGuild += null;
 
                 await BotGlobal.Singleton.SingletonLaunch();
                 await Task.Delay(-1);
