@@ -1,0 +1,46 @@
+// -----------------------------------------------------------------------
+//  <copyright file="IOperatorEndpoint.cs" company="MFDLABS">
+//    Copyright © 2019 MFDLABS. All rights reserved.
+//    Copyright 2020 G-Research Limited
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//  </copyright>
+// -----------------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace MFDLabs.Hashicorp.ConsulClient
+{
+    /// <summary>
+    /// The interface for the Operator API Endpoints
+    /// </summary>
+    public interface IOperatorEndpoint
+    {
+        Task<QueryResult<RaftConfiguration>> RaftGetConfiguration(CancellationToken ct = default(CancellationToken));
+        Task<QueryResult<RaftConfiguration>> RaftGetConfiguration(QueryOptions q, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> RaftRemovePeerByAddress(string address, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> RaftRemovePeerByAddress(string address, WriteOptions q, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringInstall(string key, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringInstall(string key, WriteOptions q, CancellationToken ct = default(CancellationToken));
+        Task<QueryResult<KeyringResponse[]>> KeyringList(CancellationToken ct = default(CancellationToken));
+        Task<QueryResult<KeyringResponse[]>> KeyringList(QueryOptions q, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringRemove(string key, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringRemove(string key, WriteOptions q, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringUse(string key, CancellationToken ct = default(CancellationToken));
+        Task<WriteResult> KeyringUse(string key, WriteOptions q, CancellationToken ct = default(CancellationToken));
+    }
+}
