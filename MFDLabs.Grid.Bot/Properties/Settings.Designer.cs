@@ -385,9 +385,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ScriptExectionSupportUnicode {
+        public bool ScriptExecutionSupportUnicode {
             get {
-                return ((bool)(this["ScriptExectionSupportUnicode"]));
+                return ((bool)(this["ScriptExecutionSupportUnicode"]));
             }
         }
         
@@ -703,6 +703,51 @@ namespace MFDLabs.Grid.Bot.Properties {
         public string HigherPrivilagedUsers {
             get {
                 return ((string)(this["HigherPrivilagedUsers"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RbxDiscordUsersServiceRemoteURL {
+            get {
+                return ((string)(this["RbxDiscordUsersServiceRemoteURL"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RbxDiscordUsersServiceMaxRedirects {
+            get {
+                return ((int)(this["RbxDiscordUsersServiceMaxRedirects"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan RbxDiscordUsersServiceRequestTimeout {
+            get {
+                return ((global::System.TimeSpan)(this["RbxDiscordUsersServiceRequestTimeout"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip {
+            get {
+                return ((int)(this["RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan RbxDiscordUsersServiceCircuitBreakerRetryInterval {
+            get {
+                return ((global::System.TimeSpan)(this["RbxDiscordUsersServiceCircuitBreakerRetryInterval"]));
             }
         }
     }

@@ -9,13 +9,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class CloseExpiredJobs : IStateSpecificCommandHandler
     {
         public string CommandName => "Close All Expired Jobs";
-
         public string CommandDescription => "Closes all the grid server's expired jobs.";
-
         public string[] CommandAliases => new string[] { "caej", "closeallexpiredjobs" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

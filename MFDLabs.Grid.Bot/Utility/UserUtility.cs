@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 using MFDLabs.Abstractions;
+using MFDLabs.Discord.RbxUsers.Client;
 using MFDLabs.Instrumentation;
 using MFDLabs.Users.Client;
 using MFDLabs.Users.Client.Models.Users;
@@ -10,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class UserUtility : SingletonBase<UserUtility>
     {
-        private readonly UsersClient _SharedUsersClient = new UsersClient(
+        private readonly IUsersClient _SharedUsersClient = new UsersClient(
             StaticCounterRegistry.Instance,
             new UsersClientConfig(
                 Settings.Singleton.UsersServiceRemoteURL,
@@ -20,6 +23,29 @@ namespace MFDLabs.Grid.Bot.Utility
                 Settings.Singleton.UsersServiceCircuitBreakerRetryInterval
             )
         );
+
+        private readonly IRbxDiscordUsersClient _SharedDiscordUsersClient = new RbxDiscordUsersClient(
+            StaticCounterRegistry.Instance,
+            new RbxDiscordUsersClientConfig(
+                Settings.Singleton.RbxDiscordUsersServiceRemoteURL,
+                Settings.Singleton.RbxDiscordUsersServiceMaxRedirects,
+                Settings.Singleton.RbxDiscordUsersServiceRequestTimeout,
+                Settings.Singleton.RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip,
+                Settings.Singleton.RbxDiscordUsersServiceCircuitBreakerRetryInterval
+            )
+        );
+
+        public async Task<long?> GetRobloxIDByIUserAsync(IUser user)
+        {
+            var result = await _SharedDiscordUsersClient.ResolveRobloxUserByIDAsync(user.Id, CancellationToken.None);
+            if (result.Username == null) return null;
+            return result.ID;
+        }
+
+        public long? GetRobloxIDByIUser(IUser user)
+        {
+            return GetRobloxIDByIUserAsync(user).GetAwaiter().GetResult();
+        }
 
         public bool GetIsUserBanned(long id)
         {

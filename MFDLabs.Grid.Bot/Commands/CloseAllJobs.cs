@@ -9,13 +9,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class CloseAllJobs : IStateSpecificCommandHandler
     {
         public string CommandName => "Close All Jobs";
-
         public string CommandDescription => "Closes all the grid server's jobs.";
-
         public string[] CommandAliases => new string[] { "caj", "closealljobs" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

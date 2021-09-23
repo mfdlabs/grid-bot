@@ -16,13 +16,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class EvaluateScript : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate Script";
-
-        public string CommandDescription => "Evals a csx script on the system.";
-
+        public string CommandDescription => $"Runs a .csx script from the folder '{Directory.GetCurrentDirectory()}\\RuntimeScripts\\'.";
         public string[] CommandAliases => new string[] { "evals", "evalscript" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
@@ -32,20 +28,21 @@ namespace MFDLabs.Grid.Bot.Commands
             var scriptName = messageContentArray.ElementAtOrDefault(0);
             if (scriptName.IsNullWhiteSpaceOrEmpty())
             {
-                await message.ReplyAsync("The script is required.");
+                await message.ReplyAsync("The script name is required.");
                 return;
             }
 
-            scriptName = scriptName.Replace("..", "");
+            scriptName = scriptName.Escape().EscapeNewLines().EscapeQuotes().Replace("..", "");
 
             var fullScriptName = $"{Directory.GetCurrentDirectory()}\\RuntimeScripts\\{scriptName}.csx";
 
             if (!File.Exists(fullScriptName))
             {
-                await message.ReplyAsync($"Could not find the script");
+                await message.ReplyAsync($"Unable to find the script '{scriptName}' at the specified path '{fullScriptName}'.");
+                return;
             }
 
-            await message.ReplyAsync($"Executing script '{scriptName}'.");
+            await message.Channel.SendMessageAsync($"Executing script '{scriptName}' at path '{fullScriptName}'.");
 
             ScriptState<object> result;
 

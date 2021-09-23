@@ -1,5 +1,14 @@
 param ([string]$root, [string]$config, [bool]$isService=$false)
 
+$7zipPath = "C:\Program Files\7-Zip\7z.exe"
+
+if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
+    & Write-Host "7Zip not found on the system." -ForegroundColor Red
+    Exit
+}
+
+Set-Alias 7zip-Archive $7zipPath
+
 function Get-RandomHex {
     param(
         [int] $Bits = 256
@@ -70,7 +79,8 @@ try {
 
     $lastdeploy = Get-ChildItem "$($deploymentYear)" | Sort-Object LastWriteTime | Select-Object -Last 1
 
-    & Compress-Archive -Path "$($location)$($deploymentKind)/bin/$($config)/*" -CompressionLevel Fastest -DestinationPath $file -Verbose -Force
+    & 7zip-Archive a -bb3 -y -tzip $file "$($location)$($deploymentKind)/bin/$($config)/*"
+    #& Compress-Archive -Path "$($location)$($deploymentKind)/bin/$($config)/*" -CompressionLevel Fastest -DestinationPath $file -Verbose -Force
 
     $newFile = $file.Replace(".zip", ".mfdlabs-archive")
 

@@ -165,47 +165,88 @@ namespace MFDLabs.Grid.Bot
                                     return PluginResult.ContinueProcessing;
                                 }
 
+                                bool isAuthorCheck = false;
+                                long userId = 0;
+
+                                if (packet.Item.ContentArray.Length == 0)
+                                {
+                                    isAuthorCheck = true;
+                                    var nullableUserID = packet.Item.Message.Author.GetRobloxID();
+
+                                    if (!nullableUserID.HasValue)
+                                    {
+                                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
+                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", packet.Item.Message.Author.ToString());
+                                        packet.Item.Message.Reply($"You have no Roblox account associated with you.");
+                                        return PluginResult.ContinueProcessing;
+                                    }
+
+                                    userId = nullableUserID.Value;
+                                }
+
+
                                 string username = null;
 
-                                if (!long.TryParse(packet.Item.ContentArray.ElementAtOrDefault(0), out long userId))
-                                {
-                                    _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                                    SystemLogger.Singleton.Warning("The first parameter of the command was not a valid Int64, trying to get the userID by username lookup.");
-                                    username = packet.Item.ContentArray.Join(' ').EscapeNewLines().Escape();
-                                    if (!username.IsNullOrEmpty())
+                                if (!isAuthorCheck)
+                                    if (!long.TryParse(packet.Item.ContentArray.ElementAtOrDefault(0), out userId))
                                     {
-                                        SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
-                                        var nullableUserID = UserUtility.Singleton.GetUserIDByUsername(username);
+                                        _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
 
-                                        if (!nullableUserID.HasValue)
+                                        if (packet.Item.Message.MentionedUsers.Count > 0)
                                         {
-                                            _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                            SystemLogger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
-                                            packet.Item.Message.Reply($"The user by the username of '{username}' was not found.");
-                                            return PluginResult.ContinueProcessing;
-                                        }
+                                            var user = packet.Item.Message.MentionedUsers.ElementAt(0);
+                                            // we have mentioned a user.
+                                            var nullableUserID = user.GetRobloxID();
 
-                                        SystemLogger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserID.Value);
-                                        userId = nullableUserID.Value;
+                                            if (!nullableUserID.HasValue)
+                                            {
+                                                _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
+                                                SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
+                                                packet.Item.Message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
+                                                return PluginResult.ContinueProcessing;
+                                            }
+
+                                            userId = nullableUserID.Value;
+                                        }
+                                        else
+                                        {
+                                            SystemLogger.Singleton.Warning("The first parameter of the command was not a valid Int64, trying to get the userID by username lookup.");
+                                            username = packet.Item.ContentArray.Join(' ').EscapeNewLines().Escape();
+                                            if (!username.IsNullOrEmpty())
+                                            {
+                                                SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
+                                                var nullableUserID = UserUtility.Singleton.GetUserIDByUsername(username);
+
+                                                if (!nullableUserID.HasValue)
+                                                {
+                                                    _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
+                                                    SystemLogger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
+                                                    packet.Item.Message.Reply($"The user by the username of '{username}' was not found.");
+                                                    return PluginResult.ContinueProcessing;
+                                                }
+
+                                                SystemLogger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserID.Value);
+                                                userId = nullableUserID.Value;
+                                            }
+                                            else
+                                            {
+                                                _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
+                                                SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
+                                                packet.Item.Message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {Settings.Singleton.Prefix}{packet.Item.OriginalCommandName} userID|userName");
+                                                return PluginResult.ContinueProcessing;
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
-                                        SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
-                                        packet.Item.Message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {Settings.Singleton.Prefix}{packet.Item.OriginalCommandName} userID|userName");
-                                        return PluginResult.ContinueProcessing;
+                                        if (userId > Settings.Singleton.MaxUserIDSize)
+                                        {
+                                            _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
+                                            SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, Settings.Singleton.MaxUserIDSize);
+                                            packet.Item.Message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{Settings.Singleton.MaxUserIDSize}'");
+                                            return PluginResult.ContinueProcessing;
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    if (userId > Settings.Singleton.MaxUserIDSize)
-                                    {
-                                        _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                                        SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, Settings.Singleton.MaxUserIDSize);
-                                        packet.Item.Message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{Settings.Singleton.MaxUserIDSize}'");
-                                        return PluginResult.ContinueProcessing;
-                                    }
-                                }
 
                                 if (userId == -123123 && packet.Item.Message.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
 

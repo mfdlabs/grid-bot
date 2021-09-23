@@ -11,6 +11,7 @@ namespace MFDLabs.Configuration.Settings
         DateTime Updated { get; }
     }
 
+    [Serializable]
     internal class Setting : ISetting
     {
         public string GroupName { get; set; }

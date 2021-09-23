@@ -10,6 +10,7 @@ namespace MFDLabs.Configuration.Settings
         DateTime Updated { get; }
     }
 
+    [Serializable]
     internal class ConnectionString : IConnectionString
     {
         public string GroupName { get; set; }

@@ -42,6 +42,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clients\ConsulKV\ConsulKVConfigurationClient.cs" />
+    <Compile Include="Configuration\ConsulKV\Elements\ConsulKVGroupConfigurationElement.cs" />
+    <Compile Include="Configuration\ConsulKV\Elements\ConsulKVGroupConfigurationElements.cs" />
+    <Compile Include="Configuration\ConsulKV\Sections\ConsulKVProviderConfigurationSection.cs" />
     <Compile Include="FileBasedSettingsOverrideHelper.cs" />
     <Compile Include="Configuration\Vault\Elements\VaultGroupConfigurationElement.cs" />
     <Compile Include="Configuration\Vault\Elements\VaultGroupConfigurationElements.cs" />
@@ -54,6 +58,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Providers\ConsulKVProvider.cs" />
     <Compile Include="Providers\VaultProvider.cs" />
     <Compile Include="Settings\ConnectionString.cs" />
     <Compile Include="Settings\Setting.cs" />
@@ -66,6 +71,10 @@
     <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj">
       <Project>{3fca88db-360c-4fd9-ab58-9e84433f8943}</Project>
       <Name>MFDLabs.EventLog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj">
+      <Project>{da34f8b5-ad37-478d-8963-671221cf9e36}</Project>
+      <Name>MFDLabs.Hashicorp.ConsulClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj">
       <Project>{600046c9-f766-43d1-915d-90e981d0601e}</Project>
@@ -91,5 +100,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

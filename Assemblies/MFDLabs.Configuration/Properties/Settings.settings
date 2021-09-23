@@ -11,5 +11,11 @@
     <Setting Name="VaultConfigurationFetcherPageSize" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">50</Value>
     </Setting>
+    <Setting Name="ConsulKVConfigurationFetcherPageSize" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">50</Value>
+    </Setting>
+    <Setting Name="ConsulKVConfigurationFetcherBackoffBaseMilliseconds" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

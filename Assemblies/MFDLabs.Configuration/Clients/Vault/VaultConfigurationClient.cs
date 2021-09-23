@@ -65,7 +65,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 });
             }
             _client.V1.System.UnmountSecretBackendAsync(engine.Path).Wait();
-            return theseSettings;
+            return theseSettings.ToArray();
         }
 
         public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
@@ -97,7 +97,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 });
             }
             _client.V1.System.UnmountSecretBackendAsync(engine.Path).Wait();
-            return theseSettings;
+            return theseSettings.ToArray();
         }
 
         public void SetProperty(string groupName, string name, string type, string value, DateTime updated)

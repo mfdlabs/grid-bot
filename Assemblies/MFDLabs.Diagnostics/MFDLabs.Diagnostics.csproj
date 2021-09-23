@@ -51,6 +51,11 @@
     <Compile Include="Helpers\Marshaler.cs" />
     <Compile Include="Helpers\PointerHelpers.cs" />
     <Compile Include="NativeWin32\NativeMethods.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="Singleton\DateTimeGlobal.cs" />
     <Compile Include="Helpers\DevicePlatformHelper.cs" />
     <Compile Include="Helpers\ProcessHelper.cs" />
@@ -70,6 +75,13 @@
       <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
       <Name>MFDLabs.Text</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

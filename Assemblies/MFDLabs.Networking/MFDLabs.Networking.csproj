@@ -41,6 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="Singleton\NetworkingGlobal.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -49,6 +54,17 @@
       <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
       <Name>MFDLabs.Abstractions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj">
+      <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
+      <Name>MFDLabs.Text</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

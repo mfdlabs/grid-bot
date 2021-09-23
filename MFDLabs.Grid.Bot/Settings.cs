@@ -2,10 +2,47 @@
 using MFDLabs.Abstractions;
 using System;
 
+// TODO: Get rid of this.
+
 namespace MFDLabs.Grid.Bot
 {
     internal sealed class Settings : SingletonBase<Settings>
     {
+        internal TimeSpan RbxDiscordUsersServiceCircuitBreakerRetryInterval
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceCircuitBreakerRetryInterval;
+            }
+        }
+        internal int RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip;
+            }
+        }
+        internal TimeSpan RbxDiscordUsersServiceRequestTimeout
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRequestTimeout;
+            }
+        }
+        internal int RbxDiscordUsersServiceMaxRedirects
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxRedirects;
+            }
+        }
+        internal string RbxDiscordUsersServiceRemoteURL
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRemoteURL;
+            }
+        }
         internal string HigherPrivilagedUserIDs
         {
             get
@@ -211,11 +248,11 @@ namespace MFDLabs.Grid.Bot
                 return global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase;
             }
         }
-        internal bool ScriptExectionSupportUnicode
+        internal bool ScriptExecutionSupportUnicode
         {
             get
             {
-                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionSupportUnicode;
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionSupportUnicode;
             }
         }
         internal string BlacklistedScriptKeywords

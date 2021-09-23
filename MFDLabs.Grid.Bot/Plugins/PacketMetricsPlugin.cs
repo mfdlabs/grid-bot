@@ -1,8 +1,11 @@
-﻿using MFDLabs.Concurrency;
+﻿using System.Threading.Tasks;
+using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.Concurrency.Base.Async;
+
+#if DEBUG
 using MFDLabs.Logging;
-using System.Threading.Tasks;
+#endif
 
 namespace MFDLabs.Grid.Bot.Plugins
 {

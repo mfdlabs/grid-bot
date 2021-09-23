@@ -61,7 +61,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
 
                 // allow admins to bypass?
-                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExectionSupportUnicode)
+                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExecutionSupportUnicode)
                 {
                     await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, please remove any unicode characters from your script.");
                     return;

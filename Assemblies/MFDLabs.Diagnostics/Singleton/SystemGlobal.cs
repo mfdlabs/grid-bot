@@ -1,11 +1,12 @@
-﻿using MFDLabs.Abstractions;
-using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.Networking;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Security.Principal;
+using MFDLabs.Abstractions;
+using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.Networking;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Diagnostics
 {
@@ -53,12 +54,16 @@ namespace MFDLabs.Diagnostics
 
         public string GetMachineHost()
         {
-            return Dns.GetHostEntry(NetworkingGlobal.Singleton.GetLocalIP()).HostName;
+            return !global::MFDLabs.Diagnostics.Properties.Settings.Default.MachineHostOverride.IsNullWhiteSpaceOrEmpty() 
+                ? global::MFDLabs.Diagnostics.Properties.Settings.Default.MachineHostOverride
+                : Dns.GetHostEntry(NetworkingGlobal.Singleton.GetLocalIP()).HostName;
         }
 
         public string GetMachineID()
         {
-            return Environment.MachineName;
+            return !global::MFDLabs.Diagnostics.Properties.Settings.Default.MachineIDOverride.IsNullWhiteSpaceOrEmpty()
+                ? global::MFDLabs.Diagnostics.Properties.Settings.Default.MachineIDOverride
+                : Environment.MachineName;
         }
 
         // TODO: Pull out to MFDLabs.Security
