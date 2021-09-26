@@ -1,21 +1,17 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class HelloWorld : IStateSpecificCommandHandler
     {
-        public string CommandName => "Hello World";
-
-        public string CommandDescription => "Invokes a hello world request to the remote service";
-
-        public string[] CommandAliases => new string[] { "hw" };
-
+        public string CommandName => "Grid Server Hello World";
+        public string CommandDescription => "Trys to invoke a HelloWorld SOAP request to a Grid Server instance via SoapUtility.";
+        public string[] CommandAliases => new string[] { "hw", "helloworld" };
         public bool Internal => false;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

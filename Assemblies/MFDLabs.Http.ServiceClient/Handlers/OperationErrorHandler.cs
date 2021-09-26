@@ -1,5 +1,5 @@
-﻿using MFDLabs.Http.Client;
-using System.Net;
+﻿using System.Net;
+using MFDLabs.Http.Client;
 
 namespace MFDLabs.Http.ServiceClient
 {

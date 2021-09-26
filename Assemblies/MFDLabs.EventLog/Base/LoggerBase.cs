@@ -1,8 +1,8 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.EventLog
 {

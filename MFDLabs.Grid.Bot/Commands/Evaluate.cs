@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -16,9 +14,9 @@ namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class Evaluate : IStateSpecificCommandHandler
     {
-        public string CommandName => "Evaluate";
-        public string CommandDescription => "Evaluates the given C# code with error handling included.";
-        public string[] CommandAliases => new string[] { "eval" };
+        public string CommandName => "Evaluate CSharp";
+        public string CommandDescription => $"Attempts to evaluate the given C# with Roslyn\nLayout: {Settings.Singleton.Prefix}evaluate ...scriptContents.";
+        public string[] CommandAliases => new string[] { "eval", "evaluate" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -29,7 +27,6 @@ namespace MFDLabs.Grid.Bot.Commands
             var scriptContents = messageContentArray.Join(' ');
             if (scriptContents.IsNullWhiteSpaceOrEmpty())
             {
-                SystemLogger.Singleton.Warning("The script was null or empty, aborting.");
                 await message.ReplyAsync("The script is required.");
                 return;
             }

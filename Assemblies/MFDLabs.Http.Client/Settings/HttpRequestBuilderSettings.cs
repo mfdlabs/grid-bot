@@ -1,5 +1,5 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client
 {

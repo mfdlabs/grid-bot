@@ -1,5 +1,5 @@
-﻿using Discord.WebSocket;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 
 namespace MFDLabs.Grid.Bot.Events
 {

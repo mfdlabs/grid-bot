@@ -1,4 +1,5 @@
-﻿using MFDLabs.Http;
+﻿using System;
+using MFDLabs.Http;
 using MFDLabs.Http.Client;
 using MFDLabs.Http.Client.Monitoring;
 using MFDLabs.Http.ServiceClient;
@@ -6,7 +7,7 @@ using MFDLabs.Instrumentation;
 using MFDLabs.Pipeline;
 using MFDLabs.Sentinels.CircuitBreakerPolicy;
 using MFDLabs.Text.Extensions;
-using System;
+
 using HttpClientBuilder = MFDLabs.Http.Client.HttpClientBuilder;
 
 namespace MFDLabs.Users.Client
@@ -33,16 +34,18 @@ namespace MFDLabs.Users.Client
             }
             AppendHandler(new OperationErrorHandler());
 
-            HttpRequestMetricsHandler metricsHandler = new HttpRequestMetricsHandler(counterRegistry, _CategoryName, httpClientSettings.ClientName);
+            AddHandlerBefore<SendHttpRequestHandler>(new HttpRequestMetricsHandler(counterRegistry, _CategoryName, httpClientSettings.ClientName));
 
-            AddHandlerBefore<SendHttpRequestHandler>(metricsHandler);
-            string circuitBreakerIdentifier = _ClientCircuitBreakerPart + httpClientSettings.ClientName;
-            DefaultCircuitBreakerPolicyConfig circuitBreakerPolicyConfig = new DefaultCircuitBreakerPolicyConfig
-            {
-                FailuresAllowedBeforeTrip = config.CircuitBreakerFailuresAllowedBeforeTrip,
-                RetryInterval = config.CircuitBreakerRetryInterval
-            };
-            DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>> circuitBreakerPolicy = new DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>>(circuitBreakerIdentifier, circuitBreakerPolicyConfig, new DefaultTripReasonAuthority());
+            var circuitBreakerPolicy = new DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>>(
+                _ClientCircuitBreakerPart + httpClientSettings.ClientName,
+                new DefaultCircuitBreakerPolicyConfig
+                {
+                    FailuresAllowedBeforeTrip = config.CircuitBreakerFailuresAllowedBeforeTrip,
+                    RetryInterval = config.CircuitBreakerRetryInterval
+                },
+                new DefaultTripReasonAuthority()
+            );
+
             new CircuitBreakerPolicyMetricsEventHandler(counterRegistry).RegisterEvents(circuitBreakerPolicy, _CategoryName, httpClientSettings.ClientName);
             AddHandlerAfter<RequestFailureThrowsHandler>(new CircuitBreakerHandler(circuitBreakerPolicy));
         }

@@ -269,6 +269,14 @@
       <Project>{4254cfd2-14da-419d-a7fc-da835cdc513b}</Project>
       <Name>MFDLabs.Grid.ComputeCloud</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Http.Client\MFDLabs.Http.Client.csproj">
+      <Project>{be0ef3cb-b89f-4509-9f60-e5246b152fe2}</Project>
+      <Name>MFDLabs.Http.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Http\MFDLabs.Http.csproj">
+      <Project>{df178c70-fe6d-4050-8996-133fb6074958}</Project>
+      <Name>MFDLabs.Http</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
       <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
       <Name>MFDLabs.Instrumentation</Name>

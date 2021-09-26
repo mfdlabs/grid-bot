@@ -1,8 +1,8 @@
-﻿using MFDLabs.Instrumentation.Infrastructure;
-using MFDLabs.Instrumentation.PrometheusListener;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using MFDLabs.Instrumentation.Infrastructure;
+using MFDLabs.Instrumentation.PrometheusListener;
 
 namespace MFDLabs.Instrumentation
 {

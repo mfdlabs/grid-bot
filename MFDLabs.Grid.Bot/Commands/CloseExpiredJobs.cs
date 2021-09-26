@@ -1,15 +1,15 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class CloseExpiredJobs : IStateSpecificCommandHandler
     {
-        public string CommandName => "Close All Expired Jobs";
-        public string CommandDescription => "Closes all the grid server's expired jobs.";
+        public string CommandName => "Close All Expired Grid Server Jobs";
+        public string CommandDescription => "Attempts to close all of the grid server's expired jobs via the SoapUtility.";
         public string[] CommandAliases => new string[] { "caej", "closeallexpiredjobs" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

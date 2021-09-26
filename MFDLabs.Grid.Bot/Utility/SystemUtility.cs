@@ -1,9 +1,9 @@
-﻿using MFDLabs.Abstractions;
+﻿using System;
+using System.Diagnostics;
+using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Logging;
-using System;
-using System.Diagnostics;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
@@ -137,50 +137,53 @@ namespace MFDLabs.Grid.Bot.Utility
         /// <summary>
         /// "Safe" because it checks if the process exists first.
         /// </summary>
-        public void KillServerSafe()
+        public bool KillServerSafe()
         {
             SystemLogger.Singleton.Log("Trying to close Backend server.");
 
             if (!ProcessHelper.GetProcessByWindowTitle(_GlobalServerJobSignature, out var server))
             {
                 SystemLogger.Singleton.Warning("Backend server is not running, ignoring...");
-                return;
+                return false;
             }
 
             if (!SystemGlobal.Singleton.ContextIsAdministrator() && server.IsElevated())
             {
                 // This is quite useless I think
                 SystemLogger.Singleton.Warning("Backend server is running on a higher context than the current process, ignoring...");
-                return;
+                return false;
             }
 
             KillServer();
 
             SystemLogger.Singleton.Info("Successfully closed backend Server.");
+            return true;
         }
 
         /// <summary>
         /// "Safe" because it checks if the process exists first.
         /// </summary>
-        public void KillGridServerSafe()
+        public bool KillGridServerSafe()
         {
             SystemLogger.Singleton.Log("Trying to close GridServer.");
 
             if (!ProcessHelper.GetProcessByName(_GridServerSignature, out var server))
             {
                 SystemLogger.Singleton.Warning("GridServer not running, ignoring...");
-                return;
+                return false;
             }
 
             if (!SystemGlobal.Singleton.ContextIsAdministrator() && server.IsElevated())
             {
                 SystemLogger.Singleton.Warning("GridServer is running on a higher context than the current process, ignoring...");
-                return;
+                return false;
             }
 
             KillGridServer();
 
             SystemLogger.Singleton.Info("Successfully closed GridServer.");
+
+            return true;
         }
 
         private const string _GridServerSignature = "rccservice";

@@ -1,6 +1,6 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using MFDLabs.Abstractions;
-using System;
 
 // TODO: Get rid of this.
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using MFDLabs.Discord.RbxUsers.Client.Models;
@@ -24,14 +25,20 @@ namespace MFDLabs.Discord.RbxUsers.Client
         public RobloxUserResponse ResolveRobloxUserByID(ulong discordID)
         {
             if (discordID == default) throw new ArgumentNullException("discordID");
-
-            return _RequestSender.SendRequest<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}");
+            if (_cachedUsers.TryGetValue(discordID, out var userResponse)) return userResponse;
+            userResponse = _RequestSender.SendRequest<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}");
+            _cachedUsers.TryAdd(discordID, userResponse);
+            return userResponse;
         }
-        public Task<RobloxUserResponse> ResolveRobloxUserByIDAsync(ulong discordID, CancellationToken cancellationToken)
+        public async Task<RobloxUserResponse> ResolveRobloxUserByIDAsync(ulong discordID, CancellationToken cancellationToken)
         {
             if (discordID == default) throw new ArgumentNullException("discordID");
-
-            return _RequestSender.SendRequestAsync<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}", cancellationToken);
+            if (_cachedUsers.TryGetValue(discordID, out var userResponse)) return userResponse;
+            userResponse = await _RequestSender.SendRequestAsync<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}", cancellationToken);
+            _cachedUsers.TryAdd(discordID, userResponse);
+            return userResponse;
         }
+
+        private readonly ConcurrentDictionary<ulong, RobloxUserResponse> _cachedUsers = new ConcurrentDictionary<ulong, RobloxUserResponse>();
     }
 }

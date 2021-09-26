@@ -1,22 +1,18 @@
-﻿using Discord.WebSocket;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class GetJobDiagnostics : IStateSpecificCommandHandler
     {
-        public string CommandName => "Get Job diag";
-
-        public string CommandDescription => "Gets the diagnostics for a job.";
-
+        public string CommandName => "Get Grid Server Job Diagnostics";
+        public string CommandDescription => $"Attempts to call a DiagEx SOAP action via the SoapUtility\nLayout: {Settings.Singleton.Prefix}jobdiagnostics jobID type?=1.";
         public string[] CommandAliases => new string[] { "jd", "jobdiag", "jobdiagnostics" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

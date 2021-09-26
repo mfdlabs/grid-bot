@@ -1,4 +1,8 @@
-﻿using MFDLabs.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MFDLabs.Http;
 using MFDLabs.Http.Client;
 using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
@@ -7,10 +11,6 @@ using MFDLabs.Users.Client.Models.Usernames;
 using MFDLabs.Users.Client.Models.Users;
 using MFDLabs.Users.Client.Models.UserSearch;
 using MFDLabs.Users.Client.Models.WebAPI;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Users.Client
 {

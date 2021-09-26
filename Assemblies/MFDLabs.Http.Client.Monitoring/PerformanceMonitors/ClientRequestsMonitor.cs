@@ -1,9 +1,9 @@
-﻿using MFDLabs.Instrumentation;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using MFDLabs.Instrumentation;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client.Monitoring
 {

@@ -1,11 +1,11 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Threading;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Instrumentation.Infrastructure
 {

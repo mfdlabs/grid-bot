@@ -1,9 +1,9 @@
-﻿using MFDLabs.Text.Extensions;
+﻿using System;
+using MFDLabs.Text.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using OpenTracing;
 using OpenTracing.Noop;
-using System;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 

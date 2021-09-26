@@ -1,7 +1,7 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Instrumentation
 {

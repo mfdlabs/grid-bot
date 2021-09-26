@@ -1,6 +1,6 @@
-﻿using Prometheus;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Prometheus;
 
 namespace MFDLabs.Instrumentation.PrometheusListener
 {
@@ -17,7 +17,7 @@ namespace MFDLabs.Instrumentation.PrometheusListener
             {
                 objectives.Add(new QuantileEpsilonPair(percentile / 100.0, PrometheusConstants.MaxPercentileError));
             }
-            Summary summary = Metrics.CreateSummary(sanitizedVariableName, helpText, new SummaryConfiguration
+            var summary = Metrics.CreateSummary(sanitizedVariableName, helpText, new SummaryConfiguration
             {
                 LabelNames = new string[]
                 {
@@ -31,15 +31,14 @@ namespace MFDLabs.Instrumentation.PrometheusListener
                 Objectives = objectives,
                 MaxAge = CounterReporter.SubmissionInterval
             });
-            _SummaryChild = summary.WithLabels(new string[]
-            {
+            _SummaryChild = summary.WithLabels(
                 sanitizedInstanceName,
                 sanitizedCategoryName,
                 PrometheusServerWrapper.Instance.MachineName,
                 PrometheusServerWrapper.Instance.HostIdentifier,
                 PrometheusServerWrapper.Instance.ServerFarmIdentifier,
                 PrometheusServerWrapper.Instance.SuperFarmIdentifier
-            });
+            );
         }
 
         internal void AddDataPoint(double data)

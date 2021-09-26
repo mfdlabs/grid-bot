@@ -1,5 +1,5 @@
-﻿using MFDLabs.Instrumentation.PrometheusListener;
-using System.Threading;
+﻿using System.Threading;
+using MFDLabs.Instrumentation.PrometheusListener;
 
 namespace MFDLabs.Instrumentation
 {

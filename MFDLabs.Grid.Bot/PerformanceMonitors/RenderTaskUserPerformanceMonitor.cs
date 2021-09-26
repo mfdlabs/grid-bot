@@ -1,6 +1,6 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using MFDLabs.Instrumentation;
-using System;
 
 namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {

@@ -1,9 +1,9 @@
-﻿using MFDLabs.Abstractions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using MFDLabs.Abstractions;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MFDLabs.Grid.Bot.Utility
 {

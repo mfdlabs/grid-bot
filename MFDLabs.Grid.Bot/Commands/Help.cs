@@ -1,22 +1,19 @@
-﻿using Discord.WebSocket;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Registries;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class Help : IStateSpecificCommandHandler
     {
-        public string CommandName => "Help";
-
-        public string CommandDescription => "Prints a help message for all commands or a specific command.";
-
+        public string CommandName => "Bot Help";
+        public string CommandDescription => "Attempts to return an embed on a State Specific command by name, or all commands within the user's permission scope, " +
+            $"if the command doesn't exist and the setting 'IsAllowedToEchoBackNotFoundCommandException' is enabled it will tell you it doesn't exist\nLayout: {Settings.Singleton.Prefix}help commandName?";
         public string[] CommandAliases => new string[] { "h", "help" };
-
         public bool Internal => false;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

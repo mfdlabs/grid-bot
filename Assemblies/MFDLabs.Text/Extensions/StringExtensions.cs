@@ -19,5 +19,6 @@ namespace MFDLabs.Text.Extensions
         public static string Join<T>(this IList<T> arr, string seperator) => string.Join(seperator, arr);
         public static string Join<T>(this IList<T> arr, char seperator) => arr.Join(seperator.ToString());
         public static string ToJson<T>(this T self) => TextGlobal.Singleton.SerializeJsonWithEnumConverter(self);
+        public static string MakeFileSafeString(this string s) => Regex.Replace(s, @"[^a-z0-9_-]", "_", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 }

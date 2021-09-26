@@ -1,8 +1,8 @@
-﻿using Discord;
+﻿using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Abstractions;
 using MFDLabs.Logging;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Global
 {

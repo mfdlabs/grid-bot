@@ -1,5 +1,5 @@
-﻿using OpenTracing;
-using System;
+﻿using System;
+using OpenTracing;
 
 namespace MFDLabs.Tracing.Core
 {

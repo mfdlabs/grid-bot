@@ -1,9 +1,9 @@
-﻿using MFDLabs.Pipeline;
-using MFDLabs.Tracing.Core;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Pipeline;
+using MFDLabs.Tracing.Core;
+using Microsoft.Extensions.Logging;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 

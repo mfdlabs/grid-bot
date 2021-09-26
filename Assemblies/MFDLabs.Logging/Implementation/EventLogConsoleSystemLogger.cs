@@ -17,6 +17,14 @@ namespace MFDLabs.Logging
     [DebuggerStepThrough]
     public sealed class EventLogConsoleSystemLogger : SingletonBase<SystemLogger>, ILogger
     {
+        private readonly string _fileName =
+#if DEBUG
+                        "\\dev_log_" +
+#else
+                        "\\log_" +
+#endif
+                        $"{DateTimeGlobal.Singleton.GetUtcNowAsISO().MakeFileSafeString()}-{SystemGlobal.Singleton.CurrentProcess.Id:X}.log";
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly object _logSync = new object();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -92,7 +100,7 @@ namespace MFDLabs.Logging
                         Directory.CreateDirectory(dirName);
                     }
 
-                    File.AppendAllText(dirName + $"\\log_{SystemGlobal.Singleton.CurrentProcess.Id:X}.log", str);
+                    File.AppendAllText(dirName + _fileName, str);
                 }
             }
         }

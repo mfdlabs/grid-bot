@@ -1,7 +1,7 @@
-﻿using MFDLabs.Pipeline;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using MFDLabs.Pipeline;
 
 namespace MFDLabs.Http.Client
 {

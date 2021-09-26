@@ -1,9 +1,7 @@
 ﻿using Discord.WebSocket;
-using System;
 
 namespace MFDLabs.Grid.Bot.Models
 {
-    [Serializable]
     internal sealed class RenderTaskRequest
     {
         public SocketMessage Message { get; set; }

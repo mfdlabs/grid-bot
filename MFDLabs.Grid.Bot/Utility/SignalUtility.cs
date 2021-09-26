@@ -1,10 +1,10 @@
-﻿using MFDLabs.Abstractions;
+﻿using System;
+using MFDLabs.Abstractions;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Logging;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Threading;
-using System;
 
 namespace MFDLabs.Grid.Bot.Utility
 {

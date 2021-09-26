@@ -1,8 +1,8 @@
-﻿using MFDLabs.Abstractions;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using MFDLabs.Abstractions;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Networking
 {

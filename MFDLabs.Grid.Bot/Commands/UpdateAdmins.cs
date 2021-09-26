@@ -11,14 +11,10 @@ namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class UpdateAdmins : IStateSpecificCommandHandler
     {
-        public string CommandName => "Update Admins";
-
-        public string CommandDescription => "Updates the administrator list. This is not persistent, unless this instance has either of the following enviroment variables defined: WE_ON_THE_GRID, WE_ON_THE_RUN, WE_ARE_AN_ACTOR";
-
+        public string CommandName => "Update Admin List";
+        public string CommandDescription => $"Updates the administrator list. This is not persistent, unless this instance has either of the following enviroment variables defined: WE_ON_THE_GRID, WE_ON_THE_RUN, WE_ARE_AN_ACTOR\nLayout: {Settings.Singleton.Prefix}updateadmins add/remove userMention|userID";
         public string[] CommandAliases => new string[] { "uadmin", "updateadmins" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

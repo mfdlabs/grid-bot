@@ -1,8 +1,8 @@
-﻿using Polly.CircuitBreaker;
-using Polly.Wrap;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Polly.CircuitBreaker;
+using Polly.Wrap;
 
 namespace MFDLabs.Http.Client.Monitoring
 {

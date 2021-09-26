@@ -1,23 +1,19 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Models;
 using MFDLabs.Grid.Bot.Tasks;
 using MFDLabs.Logging;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class Render : IStateSpecificCommandHandler
     {
-        public string CommandName => "Render";
-
-        public string CommandDescription => "Renders a user.";
-
+        public string CommandName => "Render User";
+        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID for the author and render them.\nLayout: {Settings.Singleton.Prefix}render robloxUserID?|discordUserMention?|...userName?";
         public string[] CommandAliases => new string[] { "r", "render", "sexually-weird-render" };
-
         public bool Internal => !Settings.Singleton.RenderingEnabled;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

@@ -1,26 +1,22 @@
-﻿using Discord.WebSocket;
+﻿using System;
+using System.Configuration;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Configuration;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class UpdateSetting : IStateSpecificCommandHandler
     {
-        public string CommandName => "Update Setting";
-
-        public string CommandDescription => "Updates a setting";
-
+        public string CommandName => "Update Bot Instance Setting";
+        public string CommandDescription => $"Attempts to update the value of a setting from '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}', if the setting is not found it throws, if the setting value cannot be converted it will throw.\nLayout: {Settings.Singleton.Prefix}update settingName ...settingValue";
         public string[] CommandAliases => new string[] { "up", "update" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

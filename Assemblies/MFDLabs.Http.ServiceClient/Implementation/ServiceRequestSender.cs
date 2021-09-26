@@ -1,6 +1,6 @@
-﻿using MFDLabs.Http.Client;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Http.Client;
 
 namespace MFDLabs.Http.ServiceClient
 {

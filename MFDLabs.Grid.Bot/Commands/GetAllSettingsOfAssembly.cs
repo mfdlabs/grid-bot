@@ -8,32 +8,27 @@ THIS IS NOT ALLOWED BECAUSE OF THE WAY INDEXERS WORK, PLEASE TRY AGAIN LATER!!!!
  
 */
 
-
-using Discord;
-using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
 using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Logging;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class GetAllSettingsOfAssembly : IStateSpecificCommandHandler
     {
-        public string CommandName => "Get All Settings Of Assembly";
-
-        public string CommandDescription => "Gets a list of settings with their types and values from an assembly.";
-
+        public string CommandName => "Get All Remote Settings";
+        public string CommandDescription => "Attempts to list all remote settings for a different assembly, if the command was invoked in a public channel (a channel that is an instance of SocketGuildChannel) and the setting 'AllowLogSettingsInPublicChannels' is disabled, it will throw.";
         public string[] CommandAliases => new string[] { "getalla", "getallassemblysettings" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         /// <inheritdoc/>
@@ -41,13 +36,10 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (message.IsInPublicChannel())
+            if (message.IsInPublicChannel() && !Settings.Singleton.AllowLogSettingsInPublicChannels)
             {
-                if (!Settings.Singleton.AllowLogSettingsInPublicChannels)
-                {
-                    await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
-                    return;
-                }
+                await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
+                return;
             }
 
             var assemblyName = messageContentArray.ElementAtOrDefault(0);
@@ -114,7 +106,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     && p.FirstOrDefault(b => b.ParameterType == typeof(string)) != null;
             });
 
-            throw new ApplicationException("Partially disabled due to reflection sucking ass.");
+            throw new ApplicationException("Partially disabled due to not being able to get all members of an index property :(.");
         }
     }
 }

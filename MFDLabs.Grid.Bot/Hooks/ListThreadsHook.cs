@@ -1,6 +1,6 @@
-﻿using MFDLabs.Grid.Bot.Interfaces;
+﻿using System.Diagnostics;
+using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
-using System.Diagnostics;
 
 namespace MFDLabs.Grid.Bot.Hooks
 {

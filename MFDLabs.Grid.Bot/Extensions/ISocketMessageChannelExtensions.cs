@@ -1,9 +1,9 @@
-﻿using Discord;
+﻿using System.Collections.Generic;
+using System.IO;
+using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Utility;
-using System.Collections.Generic;
-using System.IO;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {

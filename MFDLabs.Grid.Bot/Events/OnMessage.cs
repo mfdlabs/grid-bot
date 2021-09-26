@@ -1,8 +1,8 @@
-﻿using Discord.WebSocket;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Registries;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Events
 {

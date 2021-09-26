@@ -15,9 +15,9 @@ namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class EvaluateScript : IStateSpecificCommandHandler
     {
-        public string CommandName => "Evaluate Script";
-        public string CommandDescription => $"Runs a .csx script from the folder '{Directory.GetCurrentDirectory()}\\RuntimeScripts\\'.";
-        public string[] CommandAliases => new string[] { "evals", "evalscript" };
+        public string CommandName => "Evaluate Runtime CSharp Script";
+        public string CommandDescription => $"Attempts to evaluate a script with the given name on the current machine\nLayout: {Settings.Singleton.Prefix}evauluatescript scriptName.";
+        public string[] CommandAliases => new string[] { "evals", "evalscript", "evauluatescript" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

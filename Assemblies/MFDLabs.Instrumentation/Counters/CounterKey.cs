@@ -1,6 +1,6 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Diagnostics;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Instrumentation
 {

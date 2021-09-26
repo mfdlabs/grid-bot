@@ -1,10 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Runtime.Serialization;
+using Newtonsoft.Json;
 
 namespace MFDLabs.Users.Client.Models.Users
 {
+    [DataContract]
     public class SetUserStatusRequest
     {
-        [JsonProperty("status", Required = Required.Default, NullValueHandling = NullValueHandling.Ignore)]
+        [DataMember(Name = "status", IsRequired = true)]
+        [JsonProperty("status", Required = Required.Always, NullValueHandling = NullValueHandling.Ignore)]
         public string Status { get; set; }
     }
 }

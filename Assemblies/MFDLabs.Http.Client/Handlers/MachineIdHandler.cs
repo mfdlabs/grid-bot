@@ -1,8 +1,8 @@
-﻿using MFDLabs.Pipeline;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Pipeline;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client
 {

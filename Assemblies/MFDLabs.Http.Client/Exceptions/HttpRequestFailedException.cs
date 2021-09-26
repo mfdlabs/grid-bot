@@ -1,8 +1,8 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client
 {

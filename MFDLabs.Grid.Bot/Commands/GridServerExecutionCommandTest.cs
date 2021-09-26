@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -6,21 +8,15 @@ using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Text.Extensions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class GridServerExecutionCommandTest : IStateSpecificCommandHandler
     {
-        public string CommandName => "Test";
-
-        public string CommandDescription => "Funny Test";
-
-        public string[] CommandAliases => new string[] { "t" };
-
+        public string CommandName => "Grid Server Execution Command Test";
+        public string CommandDescription => "A test at Lua execution to a remove grid server instance via SoapUtility.";
+        public string[] CommandAliases => new string[] { "t", "test" };
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

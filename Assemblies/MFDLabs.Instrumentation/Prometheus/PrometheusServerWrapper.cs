@@ -1,10 +1,10 @@
-﻿using Prometheus;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
+using Prometheus;
 
 namespace MFDLabs.Instrumentation.PrometheusListener
 {

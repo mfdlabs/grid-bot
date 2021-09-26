@@ -1,9 +1,10 @@
-﻿using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.Diagnostics.NativeWin32;
-using MFDLabs.Text.Extensions;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
+using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.Diagnostics.NativeWin32;
+using MFDLabs.Text.Extensions;
+
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 using PHANDLE = System.IntPtr;

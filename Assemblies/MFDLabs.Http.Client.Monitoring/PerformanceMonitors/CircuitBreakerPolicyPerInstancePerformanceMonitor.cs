@@ -1,5 +1,5 @@
-﻿using MFDLabs.Instrumentation;
-using System;
+﻿using System;
+using MFDLabs.Instrumentation;
 
 namespace MFDLabs.Http.Client.Monitoring
 {

@@ -1,8 +1,8 @@
-﻿using OpenTracing;
+﻿using System;
+using System.Collections.Generic;
+using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
-using System;
-using System.Collections.Generic;
 
 namespace MFDLabs.Tracing.Core
 {

@@ -1,8 +1,8 @@
-﻿using MFDLabs.Pipeline;
-using MFDLabs.RequestContext;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Pipeline;
+using MFDLabs.RequestContext;
 
 namespace MFDLabs.Http.ServiceClient
 {

@@ -1,7 +1,7 @@
-﻿using MFDLabs.Pipeline;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Pipeline;
 
 namespace MFDLabs.Http.ServiceClient
 {

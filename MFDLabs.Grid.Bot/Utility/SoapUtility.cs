@@ -1,7 +1,7 @@
-﻿using MFDLabs.Grid.ComputeCloud;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
+using MFDLabs.Grid.ComputeCloud;
 
 namespace MFDLabs.Grid.Bot.Utility
 {

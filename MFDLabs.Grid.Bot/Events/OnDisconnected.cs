@@ -1,6 +1,9 @@
-﻿using MFDLabs.Logging;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+
+#if DEBUG
+using MFDLabs.Logging;
+#endif
 
 namespace MFDLabs.Grid.Bot.Events
 {

@@ -1,5 +1,5 @@
-﻿using MFDLabs.Logging;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {

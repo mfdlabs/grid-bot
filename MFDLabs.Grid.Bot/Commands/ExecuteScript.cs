@@ -15,31 +15,24 @@ using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
-using Microsoft.Win32;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class ExecuteScript : IStateSpecificCommandHandler
     {
-        public string CommandName => "Execute Script";
-
-        public string CommandDescription => "Dispataches the given lua and executes it on the grid server.";
-
+        public string CommandName => "Execute Grid Server Lua Script";
+        public string CommandDescription => $"Attempts to execute the given script contents on a grid server instance\nLayout: {Settings.Singleton.Prefix}execute ...script.";
         public string[] CommandAliases => new string[] { "x", "ex", "execute" };
-
-        public bool Internal => !Settings.Singleton.ScriptExectionEnabled;
-
+        public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!Settings.Singleton.ScriptExectionEnabled)
-            {
-                if (!await message.RejectIfNotAdminAsync()) return;
-            }
-
             using (message.Channel.EnterTypingState())
             {
+                var userIsAdmin = message.Author.IsAdmin();
+                var userIsOwner = message.Author.IsOwner();
+
                 var script = string.Join(" ", messageContentArray);
 
                 script = Regex.Replace(script, "[\"“‘”]", "\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -53,29 +46,25 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                // allow admins to bypass?
-                if (LuaUtility.Singleton.CheckIfScriptContainsDisallowedText(script, out string keyword))
+                if (LuaUtility.Singleton.CheckIfScriptContainsDisallowedText(script, out string keyword) && !userIsAdmin)
                 {
                     await message.ReplyAsync($"The script you sent contains keywords that are not permitted, please review your script and change the blacklisted keyword: {keyword}");
                     return;
                 }
 
-                // allow admins to bypass?
-                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExecutionSupportUnicode)
+                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExecutionSupportUnicode && !userIsAdmin)
                 {
                     await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, please remove any unicode characters from your script.");
                     return;
                 }
 
-                // This is ugly as hell, can we have empty constructors so we can not include some stuff pls?
-                // jakob: just add shared ones maybe
                 var (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript("run", new Dictionary<string, object>() { { "script", script.Escape() } });
 
                 bool didWriteAdminScript = false;
 
                 if (Settings.Singleton.AllowAdminScripts && SystemGlobal.Singleton.ContextIsAdministrator() && settings is ExecuteScriptGameServerSettings)
                 {
-                    if (message.Author.IsAdmin())
+                    if (userIsAdmin)
                     {
                         SystemLogger.Singleton.LifecycleEvent("The user '{0}' is an admin and the setting 'AllowAdminScripts' is enabled.", message.Author.Id);
 
@@ -83,17 +72,13 @@ namespace MFDLabs.Grid.Bot.Commands
 
                         bool allow = true;
 
-                        if (Settings.Singleton.AdminScriptsOnlyAllowedByOwner && !message.Author.IsOwner()) allow = false;
+                        if (Settings.Singleton.AdminScriptsOnlyAllowedByOwner && !userIsOwner) allow = false;
 
                         if (allow)
                         {
                             try
                             {
-                                var gridServicePath = Registry.GetValue(
-                                    Settings.Singleton.GridServerRegistryKeyName,
-                                    Settings.Singleton.GridServerRegistryValueName,
-                                    null
-                                );
+                                var gridServicePath = GridServerCommandUtility.Singleton.GetGridServerPath();
 
                                 if (gridServicePath == null)
                                 {
@@ -128,8 +113,8 @@ namespace MFDLabs.Grid.Bot.Commands
                     command
                 );
 
-                // bump to 15 seconds so it doesn't batch job timeout on first execution
-                var job = new Job() { id = NetworkingGlobal.Singleton.GenerateUUIDV4(), expirationInSeconds = didWriteAdminScript ? 20000 : 15 };
+                // bump to 20 seconds so it doesn't batch job timeout on first execution
+                var job = new Job() { id = NetworkingGlobal.Singleton.GenerateUUIDV4(), expirationInSeconds = didWriteAdminScript ? 20000 : 20 };
                 var result = LuaUtility.Singleton.ParseLuaValues(await SoapUtility.Singleton.BatchJobExAsync(job, scriptEx));
 
                 await message.ReplyAsync(result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
@@ -145,11 +130,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     );
                 if (didWriteAdminScript)
                 {
-                    var gridServicePath = Registry.GetValue(
-                        Settings.Singleton.GridServerRegistryKeyName,
-                        Settings.Singleton.GridServerRegistryValueName,
-                        null
-                    );
+                    var gridServicePath = GridServerCommandUtility.Singleton.GetGridServerPath();
 
                     if (gridServicePath == null)
                     {

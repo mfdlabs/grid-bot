@@ -1,7 +1,7 @@
-﻿using MFDLabs.Http.Client;
+﻿using System;
+using MFDLabs.Http.Client;
 using MFDLabs.Http.ServiceClient;
 using MFDLabs.Sentinels.CircuitBreakerPolicy;
-using System;
 
 namespace MFDLabs.Users.Client
 {

@@ -1,19 +1,21 @@
-﻿using MFDLabs.Abstractions;
-using MFDLabs.Grid.Commands;
-using MFDLabs.Grid.ComputeCloud;
-using MFDLabs.Logging;
-using MFDLabs.Networking;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MFDLabs.Abstractions;
+using MFDLabs.Grid.Commands;
+using MFDLabs.Grid.ComputeCloud;
+using MFDLabs.Logging;
+using MFDLabs.Networking;
+using Microsoft.Win32;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class GridServerCommandUtility : SingletonBase<GridServerCommandUtility>
     {
-        private readonly object _writeLock = new object();
+        public object GetGridServerPath() 
+            => Registry.GetValue(Settings.Singleton.GridServerRegistryKeyName, Settings.Singleton.GridServerRegistryValueName, null);
 
         private IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {

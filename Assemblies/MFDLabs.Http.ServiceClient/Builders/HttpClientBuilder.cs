@@ -1,10 +1,10 @@
-﻿using MFDLabs.Http.Client;
+﻿using System;
+using System.Net;
+using MFDLabs.Http.Client;
 using MFDLabs.Http.Client.Monitoring;
 using MFDLabs.Instrumentation;
 using MFDLabs.RequestContext;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Net;
 
 namespace MFDLabs.Http.ServiceClient
 {

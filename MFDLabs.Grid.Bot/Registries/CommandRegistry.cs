@@ -6,6 +6,7 @@
 
 // Jakob: TODO, Load these commands from a different assembly so they can be changed at runtime?
 //              It will have to load the assembly, and this shouldn't have a reference to it.
+// Alex: That won't really work if we want to keep up shared settings.
 
 
 using System;

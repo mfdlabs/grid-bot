@@ -1,10 +1,10 @@
-﻿using MFDLabs.Abstractions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using MFDLabs.Abstractions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MFDLabs.Text
 {

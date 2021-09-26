@@ -1,5 +1,5 @@
-﻿using MFDLabs.Abstractions;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using MFDLabs.Abstractions;
 
 namespace MFDLabs.Diagnostics
 {

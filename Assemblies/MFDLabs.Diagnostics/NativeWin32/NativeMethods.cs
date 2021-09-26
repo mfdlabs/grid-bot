@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 using DWORD = System.UInt32;
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;

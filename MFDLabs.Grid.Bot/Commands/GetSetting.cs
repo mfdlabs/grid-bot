@@ -1,25 +1,29 @@
-﻿using Discord;
+﻿/*
+
+TODO: We want a Vault and a ConsulKV (lol.) system in here?
+It may or may not help, it depends on if you told them to set prop on prop change.
+ 
+*/
+
+
+using System.Configuration;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Configuration;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class GetSetting : IStateSpecificCommandHandler
     {
-        public string CommandName => "Get Setting";
-
-        public string CommandDescription => "Tries to get the setting by name. NOT CASE SENSITIVE";
-
+        public string CommandName => "Get Bot Instance Setting";
+        public string CommandDescription => $"Tries to get a setting from the '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' by name, if it is not found it will return the raw exception message.\nLayout: {Settings.Singleton.Prefix}getsetting settingName.";
         public string[] CommandAliases => new string[] { "get", "getsetting" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

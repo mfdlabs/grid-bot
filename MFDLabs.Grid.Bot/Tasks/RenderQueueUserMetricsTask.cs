@@ -1,4 +1,8 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using Discord;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.ErrorHandling.Extensions;
@@ -10,10 +14,6 @@ using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace MFDLabs.Grid.Bot
 {

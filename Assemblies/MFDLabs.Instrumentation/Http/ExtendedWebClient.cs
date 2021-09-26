@@ -1,9 +1,9 @@
-﻿using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Instrumentation
 {

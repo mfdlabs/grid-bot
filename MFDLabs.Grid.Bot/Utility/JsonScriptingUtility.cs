@@ -1,9 +1,9 @@
-﻿using MFDLabs.Abstractions;
+﻿using System;
+using System.Collections.Generic;
+using MFDLabs.Abstractions;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
-using System;
-using System.Collections.Generic;
 
 namespace MFDLabs.Grid.Bot.Utility
 {

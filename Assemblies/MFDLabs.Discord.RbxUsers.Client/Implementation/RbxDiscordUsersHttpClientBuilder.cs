@@ -7,6 +7,7 @@ using MFDLabs.Instrumentation;
 using MFDLabs.Pipeline;
 using MFDLabs.Sentinels.CircuitBreakerPolicy;
 using MFDLabs.Text.Extensions;
+
 using HttpClientBuilder = MFDLabs.Http.Client.HttpClientBuilder;
 
 namespace MFDLabs.Discord.RbxUsers.Client

@@ -14,6 +14,7 @@
 
         public const string RawValue = "generic_raw";
 
+        // language=regex
         public const string RegexReplacementChars = "[^a-zA-Z_:][^a-zA-Z0-9_:]*";
 
         public const string EmptyVal = "null";

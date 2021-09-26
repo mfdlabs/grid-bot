@@ -1,7 +1,7 @@
-﻿using MFDLabs.Abstractions;
-using MFDLabs.Diagnostics.Extensions;
-using System;
+﻿using System;
 using System.Diagnostics;
+using MFDLabs.Abstractions;
+using MFDLabs.Diagnostics.Extensions;
 
 namespace MFDLabs.Diagnostics
 {

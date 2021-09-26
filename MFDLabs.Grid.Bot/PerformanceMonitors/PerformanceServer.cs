@@ -1,8 +1,8 @@
-﻿using MFDLabs.Abstractions;
+﻿using System.Net;
+using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
-using System.Net;
 
 namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {

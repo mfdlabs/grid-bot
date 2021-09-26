@@ -2,12 +2,13 @@
 
 namespace MFDLabs.Users.Client.Enumeration
 {
+    [DataContract]
     public enum SortOrder
     {
-        [EnumMember(Value = @"Asc")]
+        [EnumMember(Value = "Asc")]
         Asc = 0,
 
-        [EnumMember(Value = @"Desc")]
+        [EnumMember(Value = "Desc")]
         Desc = 1,
     }
 }

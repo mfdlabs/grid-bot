@@ -1,7 +1,7 @@
-﻿using MFDLabs.Grid.Bot.Global;
+﻿using System.Threading.Tasks;
+using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Events
 {

@@ -1,10 +1,10 @@
-﻿using MFDLabs.Http;
+﻿using System.Threading.Tasks;
+using MFDLabs.Http;
 using MFDLabs.Users.Client.Enumeration;
 using MFDLabs.Users.Client.Models.Usernames;
 using MFDLabs.Users.Client.Models.Users;
 using MFDLabs.Users.Client.Models.UserSearch;
 using MFDLabs.Users.Client.Models.WebAPI;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Users.Client
 {

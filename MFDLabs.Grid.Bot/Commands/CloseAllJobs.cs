@@ -1,15 +1,15 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class CloseAllJobs : IStateSpecificCommandHandler
     {
-        public string CommandName => "Close All Jobs";
-        public string CommandDescription => "Closes all the grid server's jobs.";
+        public string CommandName => "Close All Grid Server Jobs";
+        public string CommandDescription => "Attempts to close all of the grid server jobs via the SoapUtility.";
         public string[] CommandAliases => new string[] { "caj", "closealljobs" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

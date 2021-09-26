@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace MFDLabs.Http
 {

@@ -1,4 +1,8 @@
-﻿using Discord.WebSocket;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using MFDLabs.Concurrency;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Base;
@@ -7,10 +11,6 @@ using MFDLabs.Grid.Bot.Plugins;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Logging;
 using MFDLabs.Threading;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace MFDLabs.Grid.Bot.Tasks
 {

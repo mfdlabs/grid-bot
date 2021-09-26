@@ -1,8 +1,8 @@
-﻿using MFDLabs.Pipeline;
-using MFDLabs.Sentinels.CircuitBreakerPolicy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using MFDLabs.Pipeline;
+using MFDLabs.Sentinels.CircuitBreakerPolicy;
 
 namespace MFDLabs.Http.Client
 {

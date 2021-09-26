@@ -1,28 +1,24 @@
-﻿using Discord;
-using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Logging;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class GetSettingOfAssembly : IStateSpecificCommandHandler
     {
-        public string CommandName => "Get Setting Of Assembly";
-
-        public string CommandDescription => "Tries to get the setting by name, in a different assembly. NOT CASE SENSITIVE";
-
+        public string CommandName => "Get Remote Setting";
+        public string CommandDescription => $"Attempts to get an item from a remote settings instance for a different assembly, if the assembly is not found it will throw, if the settings instance is not found it will throw, if the settings are not ApplicationSettingsBase, it will throw.\nLayout: {Settings.Singleton.Prefix}getassemblysetting assemblyName settingsInstanceName settingName.";
         public string[] CommandAliases => new string[] { "geta", "getassemblysetting" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

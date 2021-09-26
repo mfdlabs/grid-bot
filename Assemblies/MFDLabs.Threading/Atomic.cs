@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 
-
 namespace MFDLabs.Threading
 {
     public sealed class Atomic

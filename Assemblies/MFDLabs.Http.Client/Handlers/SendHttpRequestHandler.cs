@@ -1,6 +1,4 @@
-﻿using MFDLabs.Pipeline;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -9,6 +7,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using MFDLabs.Pipeline;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client
 {

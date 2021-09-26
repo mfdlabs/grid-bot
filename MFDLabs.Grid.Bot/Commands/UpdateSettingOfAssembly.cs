@@ -1,28 +1,25 @@
-﻿using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Reflection.Extensions;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Logging;
+using MFDLabs.Reflection.Extensions;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class UpdateSettingOfAssembly : IStateSpecificCommandHandler
     {
-        public string CommandName => "Update Setting Of Assembly ";
-
-        public string CommandDescription => "Updates a setting inside of a different assembly";
-
+        public string CommandName => "Update Remote Setting";
+        public string CommandDescription => $"Updates a remote setting inside a different assembly, if the assembly is not found it throws, if the settings instance is not found it throws, if the settings instance is not an ApplicationSettingsBase child it throws, " +
+            $"if the settings value cannot be converted to the real type it throws\nLayout: {Settings.Singleton.Prefix}updateofassembly assemblyName settingsInstanceName settingName ...settingValue";
         public string[] CommandAliases => new string[] { "upa", "updateofassembly" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

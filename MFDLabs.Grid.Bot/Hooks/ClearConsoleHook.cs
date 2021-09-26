@@ -1,5 +1,5 @@
-﻿using MFDLabs.Grid.Bot.Interfaces;
-using System;
+﻿using System;
+using MFDLabs.Grid.Bot.Interfaces;
 
 namespace MFDLabs.Grid.Bot.Hooks
 {

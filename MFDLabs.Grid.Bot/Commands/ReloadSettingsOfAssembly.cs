@@ -1,27 +1,23 @@
-﻿using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Logging;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal sealed class ReloadSettingsOfAssembly : IStateSpecificCommandHandler
     {
-        public string CommandName => "Reload Settings Of Assembly";
-
-        public string CommandDescription => "Reloads all settings from app.config for the given assembly. Please refrain from using this as it isn't thread safe.";
-
+        public string CommandName => "Reload Remote Settings";
+        public string CommandDescription => "Attempts to reload remote settings from a different assembly, if the assembly is not found it throws, if the settings instance is not found it throws, if the settings instance is not a ApplicationSettingsBase child, it throws.";
         public string[] CommandAliases => new string[] { "reloada", "reloadassemblysettings" };
-
         public bool Internal => true;
-
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

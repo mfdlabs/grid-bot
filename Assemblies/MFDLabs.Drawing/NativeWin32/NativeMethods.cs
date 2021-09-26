@@ -1,6 +1,6 @@
-﻿using MFDLabs.Drawing.Models;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using MFDLabs.Drawing.Models;
 
 namespace MFDLabs.Drawing.NativeWin32
 {
