@@ -2,6 +2,7 @@
 
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <Configurations>Debug;Release;ReleaseNoDeploy</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>

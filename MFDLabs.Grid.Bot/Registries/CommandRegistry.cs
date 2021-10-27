@@ -168,6 +168,20 @@ namespace MFDLabs.Grid.Bot.Registries
                 channelName,
                 channelId
             );
+
+            await message.Author.FireEventAsync(
+                "CommandExecuted",
+                string.Format(
+                    "Tried to execute the command '{0}' with the arguments '{1}' in guild '{2}' ({3}) - channel '{4}' ({5}).",
+                    commandAlias,
+                    messageContent.Length > 0 ? messageContent.Join(' ').EscapeNewLines().Escape() : "No command arguments.",
+                    guildName,
+                    guildId,
+                    channelName,
+                    channelId
+                )
+            );
+
             var sw = Stopwatch.StartNew();
             var inNewThread = false;
 
@@ -179,6 +193,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (command == null)
                 {
+                    await message.Author.FireEventAsync("CommandNotFound", commandAlias);
                     _instrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     _counters.RequestFailedCountN++;
@@ -196,6 +211,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (!command.IsEnabled)
                 {
+                    await message.Author.FireEventAsync("CommandDisabled", commandAlias);
                     _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
                     SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandAlias);
                     bool isAllowed = false;
@@ -331,6 +347,7 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
             _counters.RequestFailedCountN++;
+            await message.Author.FireEventAsync("CommandException", $"The command {alias} threw: {ex.ToDetailedString()}");
 
             var exceptionID = Guid.NewGuid();
 

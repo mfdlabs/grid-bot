@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using MFDLabs.Analytics.Google;
+using MFDLabs.Networking;
 
 #if DEBUG
 using MFDLabs.Logging;
@@ -8,12 +10,13 @@ namespace MFDLabs.Grid.Bot.Events
 {
     internal sealed class OnLatencyUpdated
     {
-        internal static Task Invoke(int oldLatency, int newLatency)
+        internal static async Task Invoke(int oldLatency, int newLatency)
         {
+            await Manager.Singleton.TrackNetworkEventAsync("KeepAlive", "LatencyUpdate", $"Received a latency update from the discord socket, old latency '{oldLatency}', new latency '{newLatency}'.");
 #if DEBUG
             SystemLogger.Singleton.Info("Received a latency update from the discord socket, old latency '{0}', new latency '{1}'.", oldLatency, newLatency);
 #endif
-            return Task.CompletedTask;
+            return;
         }
     }
 }

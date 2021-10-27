@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Discord;
+using MFDLabs.Analytics.Google;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.ErrorHandling.Extensions;
@@ -39,6 +40,7 @@ namespace MFDLabs.Grid.Bot
                 }
                 catch (Exception ex)
                 {
+                    packet.Item.Message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
                     perfmon.TotalRendersThatFailed.Increment();
                     packet.Status = PacketProcessingStatus.Failure;
 #if DEBUG

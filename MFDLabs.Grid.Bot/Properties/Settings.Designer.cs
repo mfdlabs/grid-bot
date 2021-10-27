@@ -750,5 +750,23 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((global::System.TimeSpan)(this["RbxDiscordUsersServiceCircuitBreakerRetryInterval"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string GoogleAnalyticsTrackerID {
+            get {
+                return ((string)(this["GoogleAnalyticsTrackerID"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GAOnMessage {
+            get {
+                return ((bool)(this["GAOnMessage"]));
+            }
+        }
     }
 }

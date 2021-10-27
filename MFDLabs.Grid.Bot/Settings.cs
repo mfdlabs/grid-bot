@@ -8,6 +8,13 @@ namespace MFDLabs.Grid.Bot
 {
     internal sealed class Settings : SingletonBase<Settings>
     {
+        internal string GoogleAnalyticsTrackerID
+        {
+            get
+            {
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID;
+            }
+        }
         internal TimeSpan RbxDiscordUsersServiceCircuitBreakerRetryInterval
         {
             get

@@ -2,7 +2,9 @@
 using System.IO;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using MFDLabs.Analytics.Google;
 using MFDLabs.Diagnostics;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Events;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
@@ -37,16 +39,33 @@ namespace MFDLabs.Grid.Bot
                     throw new FileNotFoundException($"Could not locate the application configuration at the files '{AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' or '{Directory.GetCurrentDirectory()}\\app.config' with your distribution, please install the app correctly and try again.", $"'{AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' or '{Directory.GetCurrentDirectory()}\\app.config'");
                 }
             }
+
+            Manager.Singleton.Initialize(Settings.Singleton.GoogleAnalyticsTrackerID);
+
 #if DEBUG
             if (Settings.Singleton.OnLaunchWarnAboutDebugMode)
             {
+                Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "Startup", "Warning", "Debug Mode Enabled", 1);
                 SystemLogger.Singleton.Warning(_DebugMode);
             }
 #endif
             if (SystemGlobal.Singleton.ContextIsAdministrator() && Settings.Singleton.OnLaunchWarnAboutAdminMode)
             {
+                Manager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
                 SystemLogger.Singleton.Warning(_AdminMode);
             }
+
+            Manager.Singleton.TrackNetworkEvent(
+                "Startup",
+                "Info",
+                string.Format(
+                    "Process '{0}' opened with file name '{1}' (version {2}).",
+                    SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
+                    SystemGlobal.Singleton.CurrentProcess.ProcessName,
+                    SystemGlobal.Singleton.AssemblyVersion
+                ),
+                1
+            );
 
             SystemLogger.Singleton.Debug(
                 "Process '{0}' opened with file name '{1}' (version {2}).",
@@ -59,6 +78,7 @@ namespace MFDLabs.Grid.Bot
 
             if (Settings.Singleton.ShouldLaunchCounterServer)
             {
+                Manager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started", 1);
                 PerformanceServer.Singleton.Start();
             }
 
@@ -68,6 +88,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
+                Manager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.", 1);
                 SystemLogger.Singleton.LifecycleEvent(_PrimaryTaskError);
                 SystemLogger.Singleton.Error(ex.Message);
                 PerformanceServer.Singleton.Stop();
@@ -83,6 +104,7 @@ namespace MFDLabs.Grid.Bot
 
                 if (Settings.Singleton.BotToken.IsNullOrWhiteSpace())
                 {
+                    Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "MainTask", "Error", $"MainTask Failure: No Bot Token.", 1);
                     SystemLogger.Singleton.Error(_NoBotToken);
                     SignalUtility.Singleton.InvokeInteruptSignal();
                     await Task.Delay(-1);
@@ -111,6 +133,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
+                Manager.Singleton.TrackNetworkEvent("MainTask", "Error", $"MainTask Failure: {ex.ToDetailedString()}.");
                 SystemLogger.Singleton.LifecycleEvent(_InitializationError);
                 SystemLogger.Singleton.Error(ex.Message);
                 SignalUtility.Singleton.InvokeInteruptSignal();

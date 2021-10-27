@@ -10,6 +10,8 @@ namespace MFDLabs.Grid.Bot.Events
     {
         internal static async Task Invoke(SocketMessage message)
         {
+            await message.Author.FireEventAsync(typeof(OnMessage).FullName, message.Channel.Name);
+
             var userIsAdmin = message.Author.IsAdmin();
             var userIsPrivilaged = message.Author.IsPrivilaged();
 

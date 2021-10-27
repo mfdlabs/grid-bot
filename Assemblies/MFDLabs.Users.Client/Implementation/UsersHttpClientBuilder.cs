@@ -14,7 +14,8 @@ namespace MFDLabs.Users.Client
 {
     internal sealed class UsersHttpClientBuilder : HttpClientBuilder
     {
-        public UsersHttpClientBuilder(ICounterRegistry counterRegistry, UsersClientSettings httpClientSettings, UsersClientConfig config) : base(null, httpClientSettings, null)
+        public UsersHttpClientBuilder(ICounterRegistry counterRegistry, UsersClientSettings httpClientSettings, UsersClientConfig config) 
+            : base(null, httpClientSettings, null)
         {
             if (counterRegistry == null)
             {

@@ -64,7 +64,16 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseNoDeploy|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <WarningLevel>0</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=3.11.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -237,6 +246,10 @@
       <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
       <Name>MFDLabs.Abstractions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj">
+      <Project>{3edc3274-d4ed-4aa1-a347-00a9b4f9fc9d}</Project>
+      <Name>MFDLabs.Analytics.Google</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj">
       <Project>{fb3389dd-e0be-430c-8d1b-20544405ad89}</Project>
       <Name>MFDLabs.Concurrency</Name>
@@ -344,7 +357,13 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY /Y "$(ProjectDir)App.$(ConfigurationName).config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+    <PostBuildEvent>SET CONFIG=$(ConfigurationName)
+
+IF '%25CONFIG%25' == 'ReleaseNoDeploy' (
+     SET CONFIG=Release
+)
+
+COPY /Y "$(ProjectDir)App.%25CONFIG%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
 (IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ (RMDIR $(ProjectDir)$(OutDir)RuntimeScripts\ /S/Q))
 XCOPY $(ProjectDir)RuntimeScripts\ $(ProjectDir)$(OutDir)RuntimeScripts\ /E/H/C/I/F/Y
 RMDIR /S/Q "cs" "de" "es" "fr" "it" "ja" "ko" "pl" "pt-BR" "ru" "tr" "zh-Hans" "zh-Hant"

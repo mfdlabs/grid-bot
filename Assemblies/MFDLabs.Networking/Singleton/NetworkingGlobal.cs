@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using MFDLabs.Abstractions;
+using MFDLabs.Networking.Extensions;
 using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Networking
@@ -12,6 +13,8 @@ namespace MFDLabs.Networking
         {
             return Guid.NewGuid().ToString();
         }
+
+        public string LocalIP => GetLocalIPAsInt().ToString();
 
         public string GetLocalIP()
         {
@@ -25,6 +28,24 @@ namespace MFDLabs.Networking
                 }
             }
             return "0.0.0.0";
+        }
+
+        public long GetLocalIPAsInt()
+        {
+            return GetLocalIP().ToIntIpAddress();
+        }
+
+        public long ToInt(string ip)
+        {
+            // careful of sign extension: convert to uint first;
+            // unsigned NetworkToHostOrder ought to be provided.
+            return (long)(uint)IPAddress.NetworkToHostOrder(
+                 (int)IPAddress.Parse(ip).Address);
+        }
+
+        public string ToAddress(long ip)
+        {
+            return IPAddress.Parse(ip.ToString()).ToString();
         }
     }
 }
