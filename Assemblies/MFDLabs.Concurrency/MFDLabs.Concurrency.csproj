@@ -48,6 +48,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -66,7 +67,12 @@
     <Compile Include="Base\ExpiringTaskThread.cs" />
     <Compile Include="Enums\PacketProcessingStatus.cs" />
     <Compile Include="Enums\PluginResult.cs" />
+    <Compile Include="Implementation\AsyncHelper.cs" />
+    <Compile Include="Implementation\AsyncWorkQueue.cs" />
     <Compile Include="Implementation\ConcurrencyService.cs" />
+    <Compile Include="Implementation\FastAsyncResult.cs" />
+    <Compile Include="Implementation\Interleaver.cs" />
+    <Compile Include="Implementation\RefreshAhead.cs" />
     <Compile Include="Models\Packet.cs" />
     <Compile Include="PerformanceMonitors\DispatcherMonitor.cs" />
     <Compile Include="DispatcherQueues\PatchedDispatcherQueue.cs" />

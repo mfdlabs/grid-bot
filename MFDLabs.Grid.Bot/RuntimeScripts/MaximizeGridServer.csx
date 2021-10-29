@@ -1,0 +1,1 @@
+using System;using System.Runtime.InteropServices;using MFDLabs.Diagnostics;private const int SW_MAXIMIZE = 3;[DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)]static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);ShowWindow(ProcessHelper.GetWindowHandle("rccservice"), SW_MAXIMIZE);

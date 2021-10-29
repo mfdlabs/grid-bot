@@ -231,8 +231,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="RuntimeScripts\Directory.csx" />
+    <None Include="RuntimeScripts\Maximize.csx" />
+    <None Include="RuntimeScripts\MaximizeGridServer.csx" />
     <None Include="RuntimeScripts\Metrics.csx" />
     <None Include="RuntimeScripts\Test.csx" />
+    <None Include="RuntimeScripts\who-is-xlxi.csx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

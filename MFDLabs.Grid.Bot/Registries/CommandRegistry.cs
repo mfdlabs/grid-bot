@@ -193,7 +193,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (command == null)
                 {
-                    await message.Author.FireEventAsync("CommandNotFound", commandAlias);
+                    await message.Author.FireEventAsync("CommandNotFound", $"{channel.Id} {commandAlias}");
                     _instrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     _counters.RequestFailedCountN++;
@@ -211,7 +211,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (!command.IsEnabled)
                 {
-                    await message.Author.FireEventAsync("CommandDisabled", commandAlias);
+                    await message.Author.FireEventAsync("CommandDisabled", $"{channel.Id} {commandAlias}");
                     _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
                     SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandAlias);
                     bool isAllowed = false;
