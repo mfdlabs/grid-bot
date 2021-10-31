@@ -23,8 +23,8 @@ namespace MFDLabs.Grid.Bot
         internal sealed class RenderQueueUserMetricsTask : ExpiringTaskThread<RenderQueueUserMetricsTask, RenderTaskRequest>
         {
             public override string Name => "Render Queue";
-            public override TimeSpan ProcessActivationInterval => Settings.Singleton.RenderQueueDelay;
-            public override TimeSpan Expiration => Settings.Singleton.RenderQueueExpiration;
+            public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
+            public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
             public override int PacketID => 5;
 
             public override PluginResult OnReceive(ref Packet<RenderTaskRequest> packet)
@@ -48,7 +48,7 @@ namespace MFDLabs.Grid.Bot
 #else
                     SystemLogger.Singleton.Warning("An error occurred when trying to execute render task: {0}", ex.Message);
 #endif
-                    if (!Settings.Singleton.CareToLeakSensitiveExceptions)
+                    if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
                     {
                         packet.Item.Message.Channel.SendMessage(
                             $"<@!{packet.Item.Message.Author.Id}>, An error occured with the reder task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
@@ -148,9 +148,9 @@ namespace MFDLabs.Grid.Bot
 
                                     var (weirdStream, weirdFileName) = GridServerCommandUtility.Singleton.RenderUser(
                                         4,
-                                        Settings.Singleton.RenderPlaceID,
-                                        Settings.Singleton.RenderSizeX,
-                                        Settings.Singleton.RenderSizeY
+                                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
                                     );
 
                                     if (weirdStream == null || weirdFileName == null)
@@ -234,18 +234,18 @@ namespace MFDLabs.Grid.Bot
                                             {
                                                 _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
                                                 SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
-                                                packet.Item.Message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {Settings.Singleton.Prefix}{packet.Item.OriginalCommandName} userID|userName");
+                                                packet.Item.Message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{packet.Item.OriginalCommandName} userID|userName");
                                                 return PluginResult.ContinueProcessing;
                                             }
                                         }
                                     }
                                     else
                                     {
-                                        if (userId > Settings.Singleton.MaxUserIDSize)
+                                        if (userId > global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
                                         {
                                             _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                                            SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, Settings.Singleton.MaxUserIDSize);
-                                            packet.Item.Message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{Settings.Singleton.MaxUserIDSize}'");
+                                            SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize);
+                                            packet.Item.Message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
                                             return PluginResult.ContinueProcessing;
                                         }
                                     }
@@ -269,16 +269,16 @@ namespace MFDLabs.Grid.Bot
                                 SystemLogger.Singleton.Info(
                                     "Trying to render the character for the user '{0}' with the place '{1}', and the dimensions of {2}x{3}",
                                     userId,
-                                    Settings.Singleton.RenderPlaceID,
-                                    Settings.Singleton.RenderSizeX,
-                                    Settings.Singleton.RenderSizeY
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
                                 );
 
                                 var (stream, fileName) = GridServerCommandUtility.Singleton.RenderUser(
                                     userId,
-                                    Settings.Singleton.RenderPlaceID,
-                                    Settings.Singleton.RenderSizeX,
-                                    Settings.Singleton.RenderSizeY
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
                                 );
 
                                 if (stream == null || fileName == null)
@@ -309,7 +309,7 @@ namespace MFDLabs.Grid.Bot
                 else
                 {
                     SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
-                    if (Settings.Singleton.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
                     return PluginResult.ContinueProcessing;
                 }
             }

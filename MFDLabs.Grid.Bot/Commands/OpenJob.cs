@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class OpenJob : IStateSpecificCommandHandler
     {
         public string CommandName => "Open Grid Server Job";
-        public string CommandDescription => $"Attempts to open a job on the Grid Server via SoapUtility\nLayout: {Settings.Singleton.Prefix}openjob jobID placeID?=1818 universeID?=1.";
+        public string CommandDescription => $"Attempts to open a job on the Grid Server via SoapUtility\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}openjob jobID placeID?=1818 universeID?=1.";
         public string[] CommandAliases => new string[] { "oj", "openjob" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -25,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (jobID == default)
             {
-                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {Settings.Singleton.Prefix}{originalCommand} jobID placeID?=1818 universeID?=1`");
+                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} jobID placeID?=1818 universeID?=1`");
                 return;
             }
 

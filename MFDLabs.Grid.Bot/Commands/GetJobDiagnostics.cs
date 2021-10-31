@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class GetJobDiagnostics : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Grid Server Job Diagnostics";
-        public string CommandDescription => $"Attempts to call a DiagEx SOAP action via the SoapUtility\nLayout: {Settings.Singleton.Prefix}jobdiagnostics jobID type?=1.";
+        public string CommandDescription => $"Attempts to call a DiagEx SOAP action via the SoapUtility\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}jobdiagnostics jobID type?=1.";
         public string[] CommandAliases => new string[] { "jd", "jobdiag", "jobdiagnostics" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -24,11 +24,11 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (jobID == default)
             {
-                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {Settings.Singleton.Prefix}{originalCommand} jobID type?=1");
+                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} jobID type?=1");
                 return;
             }
 
-            await message.ReplyAsync(LuaUtility.Singleton.ParseLuaValues(await SoapUtility.Singleton.DiagExAsync(type, jobID)));
+            await message.ReplyAsync(LuaUtility.Singleton.ParseLuaValues(await GridServerArbiter.Singleton.DiagExAsync(type, jobID)));
         }
     }
 }

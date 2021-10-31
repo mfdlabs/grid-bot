@@ -9,7 +9,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class OpenGridServer : IStateSpecificCommandHandler
     {
         public string CommandName => "Open Grid Server";
-        public string CommandDescription => $"Attempts to open the grid server via '{Settings.Singleton.GridServerDeployerExecutableName}', if the deployer fails it will return info on why it failed.";
+        public string CommandDescription => $"Attempts to open the grid server via '{MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerDeployerExecutableName}', if the deployer fails it will return info on why it failed.";
         public string[] CommandAliases => new string[] { "ogsrv", "opengridserver" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -18,7 +18,13 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var tto = SystemUtility.Singleton.OpenGridServer();
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+            {
+                await message.ReplyAsync("Not closing any instances, we are not in a single instanced environment.");
+                return;
+            }
+
+            var tto = SystemUtility.Singleton.OpenGridServer().Item1;
 
             await message.ReplyAsync($"Successfully opened grid server in '{tto.TotalSeconds}' seconds!");
         }

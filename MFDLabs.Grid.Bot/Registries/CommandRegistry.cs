@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -28,7 +29,6 @@ using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Logging.Diagnostics;
-using MFDLabs.Networking;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Text.Extensions;
 
@@ -41,6 +41,7 @@ namespace MFDLabs.Grid.Bot.Registries
         private readonly object _registrationLock = new object();
 
         private readonly ICollection<IStateSpecificCommandHandler> _stateSpecificCommandHandlers = new List<IStateSpecificCommandHandler>();
+        private ICollection<(IStateSpecificCommandHandler, string)> _disabledCommandsReasons = new List<(IStateSpecificCommandHandler, string)>();
 
         private readonly CommandRegistryInstrumentationPerformanceMonitor _instrumentationPerfmon = new CommandRegistryInstrumentationPerformanceMonitor(StaticCounterRegistry.Instance);
 
@@ -123,7 +124,7 @@ namespace MFDLabs.Grid.Bot.Registries
             return embeds;
         }
 
-        public bool SetIsEnabled(string commandName, bool isEnabled)
+        public bool SetIsEnabled(string commandName, bool isEnabled, string reason = null)
         {
             var command = GetCommandByCommandAlias(commandName.ToLower());
 
@@ -131,6 +132,14 @@ namespace MFDLabs.Grid.Bot.Registries
 
             lock (_stateSpecificCommandHandlers)
             {
+                if (!isEnabled && reason != null)
+                    _disabledCommandsReasons.Add((command, reason));
+                else
+                {
+                    var list = _disabledCommandsReasons.ToList();
+                    list.RemoveAll(x => x.Item1 == command);
+                    _disabledCommandsReasons = list;
+                }
                 _stateSpecificCommandHandlers.Remove(command);
 
                 command.IsEnabled = isEnabled;
@@ -182,6 +191,24 @@ namespace MFDLabs.Grid.Bot.Registries
                 )
             );
 
+            if (commandAlias.IsNullOrWhiteSpace())
+            {
+                SystemLogger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
+                await message.Author.FireEventAsync("InvalidCommand", "Got prefix but command alias was empty");
+                return;
+            }
+
+            if (
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
+                !Regex.IsMatch(commandAlias, @"^[a-zA-Z]*$")
+            )
+            {
+                SystemLogger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
+                await message.Author.FireEventAsync("InvalidCommand", "The command did not contain alphabet characters.");
+                // should we reply here?
+                return;
+            }
+
             var sw = Stopwatch.StartNew();
             var inNewThread = false;
 
@@ -193,12 +220,12 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (command == null)
                 {
-                    await message.Author.FireEventAsync("CommandNotFound", $"{channel.Id} {commandAlias}");
+                    await message.Author.FireEventAsync("CommandNotFound", $"{channelId} {commandAlias}");
                     _instrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     _counters.RequestFailedCountN++;
                     SystemLogger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
-                    if (Settings.Singleton.IsAllowedToEchoBackNotFoundCommandException)
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         _instrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
                         await message.ReplyAsync($"The command with the name '{commandAlias}' was not found.");
@@ -211,13 +238,15 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (!command.IsEnabled)
                 {
-                    await message.Author.FireEventAsync("CommandDisabled", $"{channel.Id} {commandAlias}");
+                    var disabledMessage = (from cmd in _disabledCommandsReasons where cmd.Item1 == command select cmd.Item2).FirstOrDefault();
+
+                    await message.Author.FireEventAsync("CommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
                     _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    SystemLogger.Singleton.Warning("The command '{0}' is disabled.", commandAlias);
+                    SystemLogger.Singleton.Warning("The command '{0}' is disabled. {1}", commandAlias, disabledMessage != null ? $"Because: '{disabledMessage}'" : "");
                     bool isAllowed = false;
                     if (message.Author.IsAdmin())
                     {
-                        if (Settings.Singleton.AllowAdminsToBypassDisabledCommands)
+                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
                         {
                             _instrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
                             isAllowed = true;
@@ -234,7 +263,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         _instrumentationPerfmon.DisabledCommandsThatDidNotAllowBypass.Increment();
                         _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
                         _counters.RequestFailedCountN++;
-                        await message.ReplyAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later.");
+                        await message.ReplyAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
                         return;
                     }
                     _instrumentationPerfmon.DisabledCommandsThatWereInvokedToTheFrontendUser.Increment();
@@ -246,13 +275,13 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 _instrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
 
-                if (Settings.Singleton.ExecuteCommandsInNewThread)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExecuteCommandsInNewThread)
                 {
                     _instrumentationPerfmon.CommandsThatTryToExecuteInNewThread.Increment();
 
                     var isAllowed = true;
 
-                    if (Settings.Singleton.NewThreadsOnlyAvailableForAdmins)
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewThreadsOnlyAvailableForAdmins)
                     {
                         _instrumentationPerfmon.NewThreadCommandsThatAreOnlyAvailableToAdmins.Increment();
                         if (!message.Author.IsAdmin())
@@ -269,9 +298,10 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     if (isAllowed)
                     {
+                        inNewThread = true;
                         _instrumentationPerfmon.NewThreadCommandsThatWereAllowedToExecute.Increment();
                         _instrumentationPerfmon.NewThreadCountersPerSecond.Increment();
-                        inNewThread = ExecuteCommandInNewThread(commandAlias, messageContent, message, sw, command);
+                        ExecuteCommandInNewThread(commandAlias, messageContent, message, sw, command);
                         return;
                     }
 
@@ -304,16 +334,13 @@ namespace MFDLabs.Grid.Bot.Registries
             return;
         }
 
-        private bool ExecuteCommandInNewThread(string alias, string[] messageContent, SocketMessage message, Stopwatch sw, IStateSpecificCommandHandler command)
+        private void ExecuteCommandInNewThread(string alias, string[] messageContent, SocketMessage message, Stopwatch sw, IStateSpecificCommandHandler command)
         {
-            bool inNewThread;
-            var threadName = NetworkingGlobal.Singleton.GenerateUUIDV4();
+            SystemLogger.Singleton.LifecycleEvent("Queueing user work item for command '{0}'.", alias);
 
-            SystemLogger.Singleton.LifecycleEvent("Executing command '{0}' in new thread '{1}'.", alias, threadName);
+            // could we have 2 versions here where we pool it and background it?
 
-            inNewThread = true;
-
-            new Thread(async () =>
+            ThreadPool.QueueUserWorkItem(async s =>
             {
                 try
                 {
@@ -334,13 +361,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     _instrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
                     SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
                 }
-            })
-            {
-                IsBackground = false,
-                Name = threadName,
-                Priority = ThreadPriority.Normal,
-            }.Start();
-            return inNewThread;
+            });
         }
 
         private async Task HandleException(Exception ex, string alias, SocketMessage message)
@@ -350,6 +371,12 @@ namespace MFDLabs.Grid.Bot.Registries
             await message.Author.FireEventAsync("CommandException", $"The command {alias} threw: {ex.ToDetailedString()}");
 
             var exceptionID = Guid.NewGuid();
+
+            if (ex is NotSupportedException)
+            {
+                SystemLogger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                return;
+            }
 
             if (ex is ApplicationException)
             {
@@ -371,7 +398,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
                 _instrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
                 SystemLogger.Singleton.Warning("The grid service was not online.");
-                await message.ReplyAsync($"the grid service is not currently running, please ask <@!{Settings.Singleton.BotOwnerID}> to start the service.");
+                await message.ReplyAsync($"the grid service is not currently running, please ask <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start the service.");
                 return;
             }
 
@@ -386,13 +413,13 @@ namespace MFDLabs.Grid.Bot.Registries
                     await message.ReplyAsync("You are sending requests too fast, please slow down!");
                     return;
                 }
-				
-				if (fault.Message == "BatchJob Timeout")
-				{
-					_instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-					await message.ReplyAsync("The job timed out, please try again later.");
-					return;
-				}
+
+                if (fault.Message == "BatchJob Timeout")
+                {
+                    _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
+                    await message.ReplyAsync("The job timed out, please try again later.");
+                    return;
+                }
 
                 _instrumentationPerfmon.FailedFaultCommandsThatWereNotDuplicateInvocations.Increment();
                 _instrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
@@ -413,7 +440,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionID.ToString(), ex.ToDetailedString());
 
-            if (!Settings.Singleton.CareToLeakSensitiveExceptions)
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
                 _instrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
                 await message.Channel.SendMessageAsync(
@@ -429,7 +456,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             _instrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
 
-            await message.Channel.SendMessageAsync($"<@!{message.Author.Id}>, an unexpected Exception has occurred. Exception ID: {exceptionID}, send this ID to <@!{Settings.Singleton.BotOwnerID}>");
+            await message.Channel.SendMessageAsync($"<@!{message.Author.Id}>, an unexpected Exception has occurred. Exception ID: {exceptionID}, send this ID to <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
             return;
         }
 

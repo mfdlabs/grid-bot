@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class GetSetting : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Bot Instance Setting";
-        public string CommandDescription => $"Tries to get a setting from the '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' by name, if it is not found it will return the raw exception message.\nLayout: {Settings.Singleton.Prefix}getsetting settingName.";
+        public string CommandDescription => $"Tries to get a setting from the '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' by name, if it is not found it will return the raw exception message.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getsetting settingName.";
         public string[] CommandAliases => new string[] { "get", "getsetting" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

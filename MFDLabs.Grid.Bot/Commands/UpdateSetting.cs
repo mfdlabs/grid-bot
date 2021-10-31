@@ -14,7 +14,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class UpdateSetting : IStateSpecificCommandHandler
     {
         public string CommandName => "Update Bot Instance Setting";
-        public string CommandDescription => $"Attempts to update the value of a setting from '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}', if the setting is not found it throws, if the setting value cannot be converted it will throw.\nLayout: {Settings.Singleton.Prefix}update settingName ...settingValue";
+        public string CommandDescription => $"Attempts to update the value of a setting from '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}', if the setting is not found it throws, if the setting value cannot be converted it will throw.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}update settingName ...settingValue";
         public string[] CommandAliases => new string[] { "up", "update" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -36,7 +36,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (rawSettingValue.IsNullOrEmpty())
             {
-                if (!Settings.Singleton.AllowNullsWhenUpdatingSetting)
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
                     SystemLogger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is disabled, please supply a 'non-nullable' value.");

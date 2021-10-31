@@ -14,17 +14,17 @@ namespace MFDLabs.Grid.Bot.Utility
     {
         public IReadOnlyCollection<string> AllowedChannelIDs
         {
-            get { return (from id in Settings.Singleton.AllowedChannelIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
+            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
         public IReadOnlyCollection<string> AdministratorUserIDs
         {
-            get { return (from id in Settings.Singleton.AdministratorUserIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
+            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
         public IReadOnlyCollection<string> HigherPrivilagedUserIDs
         {
-            get { return (from id in Settings.Singleton.HigherPrivilagedUserIDs.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
+            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
         }
 
         public bool UserIsOwner(IUser user)
@@ -34,7 +34,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public bool UserIsOwner(ulong id)
         {
-            return id == Settings.Singleton.BotOwnerID;
+            return id == global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID;
         }
 
         public bool UserIsAdmin(IUser user)

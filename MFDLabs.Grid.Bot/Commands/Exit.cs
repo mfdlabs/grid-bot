@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             await message.ReplyAsync("911! Invoking suicide request!");
 
-            if (Settings.Singleton.KillCommandShouldForce)
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.KillCommandShouldForce)
             {
                 new SuicideHook().Callback('f');
                 return;

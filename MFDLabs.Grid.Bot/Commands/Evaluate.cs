@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class Evaluate : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate CSharp";
-        public string CommandDescription => $"Attempts to evaluate the given C# with Roslyn\nLayout: {Settings.Singleton.Prefix}evaluate ...scriptContents.";
+        public string CommandDescription => $"Attempts to evaluate the given C# with Roslyn\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}evaluate ...scriptContents.";
         public string[] CommandAliases => new string[] { "eval", "evaluate" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

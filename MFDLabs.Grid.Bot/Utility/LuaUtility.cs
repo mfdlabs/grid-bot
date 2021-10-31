@@ -22,14 +22,14 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var escapedString = script.EscapeNewLines().Escape();
 
-            if (!Settings.Singleton.ScriptExectionCareAboutBadTextCase) parsedScript = script.ToLower();
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) parsedScript = script.ToLower();
 
             SystemLogger.Singleton.Info("Check if script '{0}' contains blacklisted words.", escapedString);
 
             foreach (var keyword in GetBlacklistedKeywords())
             {
                 var parsedKeyword = keyword;
-                if (!Settings.Singleton.ScriptExectionCareAboutBadTextCase) parsedKeyword = keyword.ToLower();
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) parsedKeyword = keyword.ToLower();
                 if (parsedScript.Contains(parsedKeyword))
                 {
                     word = parsedKeyword;
@@ -45,7 +45,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public IEnumerable<string> GetBlacklistedKeywords()
         {
-            return from keyword in Settings.Singleton.BlacklistedScriptKeywords.Split(',') where !keyword.IsNullOrEmpty() select keyword;
+            return from keyword in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords.Split(',') where !keyword.IsNullOrEmpty() select keyword;
         }
     }
 }

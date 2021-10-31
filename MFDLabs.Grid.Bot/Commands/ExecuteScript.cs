@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class ExecuteScript : IStateSpecificCommandHandler
     {
         public string CommandName => "Execute Grid Server Lua Script";
-        public string CommandDescription => $"Attempts to execute the given script contents on a grid server instance\nLayout: {Settings.Singleton.Prefix}execute ...script.";
+        public string CommandDescription => $"Attempts to execute the given script contents on a grid server instance\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}execute ...script.";
         public string[] CommandAliases => new string[] { "x", "ex", "execute" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
@@ -52,7 +52,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                if (script.ContainsUnicode() && !Settings.Singleton.ScriptExecutionSupportUnicode && !userIsAdmin)
+                if (script.ContainsUnicode() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionSupportUnicode && !userIsAdmin)
                 {
                     await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, please remove any unicode characters from your script.");
                     return;
@@ -62,7 +62,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 bool didWriteAdminScript = false;
 
-                if (Settings.Singleton.AllowAdminScripts && SystemGlobal.Singleton.ContextIsAdministrator() && settings is ExecuteScriptGameServerSettings)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminScripts && SystemGlobal.Singleton.ContextIsAdministrator() && settings is ExecuteScriptGameServerSettings)
                 {
                     if (userIsAdmin)
                     {
@@ -72,7 +72,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                         bool allow = true;
 
-                        if (Settings.Singleton.AdminScriptsOnlyAllowedByOwner && !userIsOwner) allow = false;
+                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AdminScriptsOnlyAllowedByOwner && !userIsOwner) allow = false;
 
                         if (allow)
                         {
@@ -86,9 +86,9 @@ namespace MFDLabs.Grid.Bot.Commands
                                     return;
                                 }
 
-                                if (Settings.Singleton.AdminScriptPrependBaseURL)
+                                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AdminScriptPrependBaseURL)
                                 {
-                                    script = $"game:GetService(\"ContentProvider\"):SetBaseUrl(\"{Settings.Singleton.BaseURL}\");\n{script}";
+                                    script = $"game:GetService(\"ContentProvider\"):SetBaseUrl(\"{MFDLabs.Grid.Bot.Properties.Settings.Default.BaseURL}\");\n{script}";
                                 }
 
                                 lock (_writerLock)
@@ -115,7 +115,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 // bump to 20 seconds so it doesn't batch job timeout on first execution
                 var job = new Job() { id = NetworkingGlobal.Singleton.GenerateUUIDV4(), expirationInSeconds = didWriteAdminScript ? 20000 : 20 };
-                var result = LuaUtility.Singleton.ParseLuaValues(await SoapUtility.Singleton.BatchJobExAsync(job, scriptEx));
+                var result = LuaUtility.Singleton.ParseLuaValues(await GridServerArbiter.Singleton.BatchJobExAsync(job, scriptEx));
 
                 await message.ReplyAsync(result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
                 if (!result.IsNullOrEmpty())

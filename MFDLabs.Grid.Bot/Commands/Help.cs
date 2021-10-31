@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Bot Help";
         public string CommandDescription => "Attempts to return an embed on a State Specific command by name, or all commands within the user's permission scope, " +
-            $"if the command doesn't exist and the setting 'IsAllowedToEchoBackNotFoundCommandException' is enabled it will tell you it doesn't exist\nLayout: {Settings.Singleton.Prefix}help commandName?";
+            $"if the command doesn't exist and the setting 'IsAllowedToEchoBackNotFoundCommandException' is enabled it will tell you it doesn't exist\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}help commandName?";
         public string[] CommandAliases => new string[] { "h", "help" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
@@ -26,7 +26,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 if (embed == null)
                 {
-                    if (Settings.Singleton.IsAllowedToEchoBackNotFoundCommandException)
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         await message.ReplyAsync($"The command with the name '{commandName}' was not found.");
                     }

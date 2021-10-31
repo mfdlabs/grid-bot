@@ -12,13 +12,13 @@ namespace MFDLabs.Grid.Bot.Events
             if (message.Exception != null)
             {
 #if DEBUG
-                if (!(message.Exception is TaskCanceledException && !Settings.Singleton.DebugAllowTaskCanceledExceptions))
+                if (!(message.Exception is TaskCanceledException && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
                     SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}", message.Source, message.Message, message.Exception.ToDetailedString());
 #endif
                 return Task.CompletedTask;
             }
 
-            if (Settings.Singleton.ShouldLogDiscordInternals)
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
             {
                 switch (message.Severity)
                 {

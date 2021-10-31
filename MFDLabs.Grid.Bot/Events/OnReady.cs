@@ -16,14 +16,14 @@ namespace MFDLabs.Grid.Bot.Events
             );
 
             await BotGlobal.Singleton.Client.SetStatusAsync(
-                Settings.Singleton.BotGlobalUserStatus
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
             );
 
-            if (!Settings.Singleton.BotGlobalStatusMessage.IsNullOrEmpty())
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
                 await BotGlobal.Singleton.Client.SetGameAsync(
-                    Settings.Singleton.BotGlobalStatusMessage,
-                    Settings.Singleton.BotGlobalStreamURL,
-                    Settings.Singleton.BotGlobalActivityType
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
                 );
             return;
         }

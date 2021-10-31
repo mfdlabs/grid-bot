@@ -10,7 +10,7 @@ namespace MFDLabs
     [RunInstaller(true)]
     public class LogInstaller : EventLogInstaller
     {
-        public const string LogName = "Roblox";
+        public const string LogName = "MFDLABS";
         public const string SourceName = "Web Server";
         public LogInstaller()
         {

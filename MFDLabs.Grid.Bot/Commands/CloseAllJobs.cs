@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            await SoapUtility.Singleton.CloseAllJobsAsync();
+            await GridServerArbiter.Singleton.CloseAllJobsAsync();
             await message.ReplyAsync("Successfully closed all grid server jobs.");
         }
     }

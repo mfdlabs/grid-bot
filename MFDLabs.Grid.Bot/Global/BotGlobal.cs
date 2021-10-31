@@ -20,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Global
 
         internal async Task SingletonLaunch()
         {
-            await _client.LoginAsync(TokenType.Bot, Settings.Singleton.BotToken).ConfigureAwait(false);
+            await _client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken).ConfigureAwait(false);
             await _client.StartAsync().ConfigureAwait(false);
         }
 

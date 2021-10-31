@@ -17,10 +17,10 @@ namespace MFDLabs.Grid.Bot.Tasks
     internal sealed class ScreenshotTask : HoldsSocketMessagePortAsyncExpiringTaskThread<ScreenshotTask>
     {
         public override string Name => "Screenshot Relay";
-        public override TimeSpan ProcessActivationInterval => Settings.Singleton.ScreenshotRelayActivationTimeout;
+        public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayActivationTimeout;
         public override int PacketID => 2;
 
-        public override TimeSpan Expiration => Settings.Singleton.ScreenshotRelayExpiration;
+        public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExpiration;
 
         /* Will execute in a different thread when dispatching response. */
         public override async Task<PluginResult> OnReceive(Packet<SocketMessage> packet)
@@ -36,7 +36,7 @@ namespace MFDLabs.Grid.Bot.Tasks
 
                 using (packet.Item.Channel.EnterTypingState())
                 {
-                    var tte = SystemUtility.Singleton.OpenGridServer();
+                    var tte = SystemUtility.Singleton.OpenGridServer().Item1;
 
                     if (tte.TotalSeconds > 1.5)
                     {
@@ -53,7 +53,7 @@ namespace MFDLabs.Grid.Bot.Tasks
             else
             {
                 SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
-                if (Settings.Singleton.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
                 return PluginResult.ContinueProcessing;
             }
 
@@ -67,14 +67,14 @@ namespace MFDLabs.Grid.Bot.Tasks
             }
 
             await packet.Item.Channel.SendFileAsync(
-                Settings.Singleton.ScreenshotRelayOutputFilename
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayOutputFilename
             );
 
             TaskHelper.SetTimeout(() =>
             {
                 try
                 {
-                    File.Delete(Settings.Singleton.ScreenshotRelayOutputFilename);
+                    File.Delete(global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayOutputFilename);
                 }
                 catch { }
             }, TimeSpan.FromSeconds(2));
@@ -88,10 +88,10 @@ namespace MFDLabs.Grid.Bot.Tasks
             {
                 var psi = new ProcessStartInfo
                 {
-                    FileName = Settings.Singleton.ScreenshotRelayExecutableName,
+                    FileName = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExecutableName,
                 };
 
-                if (!Settings.Singleton.ScreenshotRelayShouldShowLauncherWindow)
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayShouldShowLauncherWindow)
                 {
                     psi.UseShellExecute = false;
                     psi.CreateNoWindow = true;
@@ -113,7 +113,7 @@ namespace MFDLabs.Grid.Bot.Tasks
 
                 SystemLogger.Singleton.Info(
                     "Successfully executed screenshot of Grid Server via {0}",
-                    Settings.Singleton.ScreenshotRelayExecutableName
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExecutableName
                 );
                 return true;
             }
@@ -127,7 +127,7 @@ namespace MFDLabs.Grid.Bot.Tasks
                 SystemLogger.Singleton.Debug(
                     "Took {0}s to execute screenshot of via {1}",
                     sw.Elapsed.TotalSeconds.ToString("f7"),
-                    Settings.Singleton.ScreenshotRelayExecutableName
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExecutableName
                 );
                 sw.Stop();
             }

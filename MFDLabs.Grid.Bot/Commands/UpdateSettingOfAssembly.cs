@@ -17,7 +17,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Update Remote Setting";
         public string CommandDescription => $"Updates a remote setting inside a different assembly, if the assembly is not found it throws, if the settings instance is not found it throws, if the settings instance is not an ApplicationSettingsBase child it throws, " +
-            $"if the settings value cannot be converted to the real type it throws\nLayout: {Settings.Singleton.Prefix}updateofassembly assemblyName settingsInstanceName settingName ...settingValue";
+            $"if the settings value cannot be converted to the real type it throws\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateofassembly assemblyName settingsInstanceName settingName ...settingValue";
         public string[] CommandAliases => new string[] { "upa", "updateofassembly" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -96,7 +96,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (rawSettingValue.IsNullOrEmpty())
             {
-                if (!Settings.Singleton.AllowNullsWhenUpdatingSetting)
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
                     SystemLogger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is disabled, please supply a 'non-nullable' value.");

@@ -37,8 +37,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         ).ToJson()
                 };
 
-                var result = LuaUtility.Singleton.ParseLuaValues(await SoapUtility.Singleton.OpenJobExAsync(job, script));
-                await SoapUtility.Singleton.CloseJobAsync("Test");
+                var result = LuaUtility.Singleton.ParseLuaValues(await GridServerArbiter.Singleton.OpenJobExAsync(job, script));
 
                 await message.ReplyAsync(result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
                 if (!result.IsNullOrEmpty())

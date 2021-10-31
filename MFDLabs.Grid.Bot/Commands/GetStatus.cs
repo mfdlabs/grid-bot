@@ -19,7 +19,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            await message.ReplyAsync((await SoapUtility.Singleton.GetStatusAsync()).ToJson());
+            await message.ReplyAsync((await GridServerArbiter.Singleton.GetStatusAsync()).ToJson());
         }
     }
 }

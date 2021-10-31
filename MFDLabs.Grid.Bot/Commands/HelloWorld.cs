@@ -16,7 +16,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            await message.ReplyAsync(await SoapUtility.Singleton.HelloWorldAsync());
+            await message.ReplyAsync(await GridServerArbiter.Singleton.HelloWorldAsync());
         }
     }
 }

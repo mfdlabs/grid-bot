@@ -40,16 +40,16 @@ namespace MFDLabs.Grid.Bot
                 }
             }
 
-            Manager.Singleton.Initialize(Settings.Singleton.GoogleAnalyticsTrackerID);
+            Manager.Singleton.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
 
 #if DEBUG
-            if (Settings.Singleton.OnLaunchWarnAboutDebugMode)
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
                 Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "Startup", "Warning", "Debug Mode Enabled", 1);
                 SystemLogger.Singleton.Warning(_DebugMode);
             }
 #endif
-            if (SystemGlobal.Singleton.ContextIsAdministrator() && Settings.Singleton.OnLaunchWarnAboutAdminMode)
+            if (SystemGlobal.Singleton.ContextIsAdministrator() && global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
             {
                 Manager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
                 SystemLogger.Singleton.Warning(_AdminMode);
@@ -76,7 +76,7 @@ namespace MFDLabs.Grid.Bot
 
             Console.Title = $"[{SystemGlobal.Singleton.CurrentProcess.Id:X}] '{SystemGlobal.Singleton.CurrentProcess.ProcessName}' @ '{SystemGlobal.Singleton.AssemblyVersion}' [{NetworkingGlobal.Singleton.GetLocalIP()}@{SystemGlobal.Singleton.GetMachineHost()} ({SystemGlobal.Singleton.GetMachineID()})]";
 
-            if (Settings.Singleton.ShouldLaunchCounterServer)
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
                 Manager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started", 1);
                 PerformanceServer.Singleton.Start();
@@ -84,7 +84,7 @@ namespace MFDLabs.Grid.Bot
 
             try
             {
-                new Program().MainAsync().GetAwaiter().GetResult();
+                MainAsync().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -96,24 +96,23 @@ namespace MFDLabs.Grid.Bot
             }
         }
 
-        private async Task MainAsync()
+        private static async Task MainAsync()
         {
             try
             {
                 ConsoleHookRegistry.Singleton.Register();
 
-                if (Settings.Singleton.BotToken.IsNullOrWhiteSpace())
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
                 {
                     Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "MainTask", "Error", $"MainTask Failure: No Bot Token.", 1);
                     SystemLogger.Singleton.Error(_NoBotToken);
                     SignalUtility.Singleton.InvokeInteruptSignal();
                     await Task.Delay(-1);
                 }
-
-                if (Settings.Singleton.RegisterCommandRegistryAtAppStart)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                     CommandRegistry.Singleton.RegisterOnce();
 
-                if (Settings.Singleton.OpenGridServerAtStartup)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup && global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                     SystemUtility.Singleton.OpenGridServer();
 
                 BotGlobal.Singleton.Initialize(new DiscordSocketClient());

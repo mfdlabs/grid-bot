@@ -15,9 +15,9 @@ namespace MFDLabs.Grid.Bot.Events
             var userIsAdmin = message.Author.IsAdmin();
             var userIsPrivilaged = message.Author.IsPrivilaged();
 
-            if (message.Author.IsBot && !Settings.Singleton.AllowParsingForBots) return;
+            if (message.Author.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
 
-            if (!Settings.Singleton.AllowAllChannels)
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAllChannels)
             {
                 if (!message.Channel.IsWhitelisted() && !userIsAdmin)
                     return;
@@ -27,11 +27,11 @@ namespace MFDLabs.Grid.Bot.Events
 
             if (!ParsePrefix(ref messageContent)) return;
 
-            if (!Settings.Singleton.IsEnabled)
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
             {
                 if (!userIsAdmin && !userIsPrivilaged)
                 {
-                    var failureMessage = Settings.Singleton.ReasonForDying;
+                    var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
                     if (failureMessage != null) await message.ReplyAsync(failureMessage);
 
@@ -66,13 +66,13 @@ namespace MFDLabs.Grid.Bot.Events
 
         private static bool ParsePrefix(ref string message)
         {
-            if (!message.StartsWith(Settings.Singleton.Prefix))
+            if (!message.StartsWith(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix))
             {
                 return false;
             }
             else
             {
-                message = message.Substring(Settings.Singleton.Prefix.Length);
+                message = message.Substring(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix.Length);
             }
 
             return true;

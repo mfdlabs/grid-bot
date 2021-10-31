@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class DisableCommand : IStateSpecificCommandHandler
     {
         public string CommandName => "Disable Bot Command";
-        public string CommandDescription => $"Tries to disable a command from the CommandRegistry\nLayout: {Settings.Singleton.Prefix}disable commandName.";
+        public string CommandDescription => $"Tries to disable a command from the CommandRegistry\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}disable commandName.";
         public string[] CommandAliases => new string[] { "disable" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -28,7 +28,9 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            if (!CommandRegistry.Singleton.SetIsEnabled(commandName, false))
+            var disabledMessage = string.Join(" ", messageContentArray.Skip(1));
+
+            if (!CommandRegistry.Singleton.SetIsEnabled(commandName, false, disabledMessage.IsNullOrWhiteSpace() ? null : disabledMessage))
             {
                 await message.ReplyAsync($"The command by the nameof '{commandName}' was not found.");
                 return;

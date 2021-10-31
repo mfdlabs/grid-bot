@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class EnableCommand : IStateSpecificCommandHandler
     {
         public string CommandName => "Enabled Bot Command";
-        public string CommandDescription => $"Tries to enable a command from the CommandRegistry\nLayout: {Settings.Singleton.Prefix}enable commandName.";
+        public string CommandDescription => $"Tries to enable a command from the CommandRegistry\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}enable commandName.";
         public string[] CommandAliases => new string[] { "enable" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

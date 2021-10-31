@@ -16,7 +16,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class GetSettingOfAssembly : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Remote Setting";
-        public string CommandDescription => $"Attempts to get an item from a remote settings instance for a different assembly, if the assembly is not found it will throw, if the settings instance is not found it will throw, if the settings are not ApplicationSettingsBase, it will throw.\nLayout: {Settings.Singleton.Prefix}getassemblysetting assemblyName settingsInstanceName settingName.";
+        public string CommandDescription => $"Attempts to get an item from a remote settings instance for a different assembly, if the assembly is not found it will throw, if the settings instance is not found it will throw, if the settings are not ApplicationSettingsBase, it will throw.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getassemblysetting assemblyName settingsInstanceName settingName.";
         public string[] CommandAliases => new string[] { "geta", "getassemblysetting" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

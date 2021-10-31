@@ -768,5 +768,41 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["GAOnMessage"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CommandRegistryOnlyMatchAlphabetCharactersForCommandName {
+            get {
+                return ((bool)(this["CommandRegistryOnlyMatchAlphabetCharactersForCommandName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SingleInstancedGridServer {
+            get {
+                return ((bool)(this["SingleInstancedGridServer"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts {
+            get {
+                return ((bool)(this["GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RestartShouldReOpenAllGridServerInstances {
+            get {
+                return ((bool)(this["RestartShouldReOpenAllGridServerInstances"]));
+            }
+        }
     }
 }

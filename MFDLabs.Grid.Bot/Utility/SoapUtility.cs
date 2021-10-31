@@ -13,9 +13,9 @@ namespace MFDLabs.Grid.Bot.Utility
             new BasicHttpBinding(BasicHttpSecurityMode.None)
             {
                 MaxReceivedMessageSize = int.MaxValue,
-                SendTimeout = Settings.Singleton.SoapUtilityRemoteServiceTimeout
+                SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
             },
-            new EndpointAddress("http://127.0.0.1:" + Settings.Singleton.SoapUtilityRemoteServicePort)
+            new EndpointAddress("http://127.0.0.1:" + global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServicePort)
         );
 
         private SoapUtility()
@@ -51,7 +51,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return HelloWorld();
@@ -69,7 +69,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await HelloWorldAsync();
@@ -87,7 +87,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return GetVersion();
@@ -105,7 +105,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await GetVersionAsync();
@@ -123,7 +123,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return GetStatus();
@@ -141,7 +141,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await GetStatusAsync();
@@ -159,7 +159,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return OpenJob(job, script);
@@ -177,7 +177,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await OpenJobAsync(job, script);
@@ -195,7 +195,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return OpenJobEx(job, script);
@@ -213,7 +213,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await OpenJobExAsync(job, script);
@@ -231,7 +231,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return RenewLease(jobID, expirationInSeconds);
@@ -249,7 +249,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await RenewLeaseAsync(jobID, expirationInSeconds);
@@ -266,7 +266,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return Execute(jobID, script);
@@ -284,7 +284,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await ExecuteAsync(jobID, script);
@@ -301,7 +301,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return ExecuteEx(jobID, script);
@@ -319,7 +319,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await ExecuteExAsync(jobID, script);
@@ -336,7 +336,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     CloseJob(jobID);
@@ -355,7 +355,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     await CloseJobAsync(jobID); return;
@@ -372,7 +372,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return BatchJob(job, script);
@@ -390,7 +390,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await BatchJobAsync(job, script);
@@ -407,7 +407,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return BatchJobEx(job, script);
@@ -425,7 +425,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await BatchJobExAsync(job, script);
@@ -442,7 +442,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return GetExpiration(jobID);
@@ -460,7 +460,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await GetExpirationAsync(jobID);
@@ -477,7 +477,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return GetAllJobs();
@@ -495,7 +495,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await GetAllJobsAsync();
@@ -512,7 +512,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return GetAllJobsEx();
@@ -530,7 +530,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await GetAllJobsExAsync();
@@ -547,7 +547,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return CloseExpiredJobs();
@@ -565,7 +565,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await CloseExpiredJobsAsync();
@@ -582,7 +582,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return CloseAllJobs();
@@ -600,7 +600,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await CloseAllJobsAsync();
@@ -617,7 +617,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return Diag(type, jobID);
@@ -635,7 +635,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await DiagAsync(type, jobID);
@@ -652,7 +652,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return DiagEx(type, jobID);
@@ -670,7 +670,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (Settings.Singleton.OpenServiceOnEndpointNotFoundException)
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
                     SystemUtility.Singleton.OpenGridServer();
                     return await DiagExAsync(type, jobID);

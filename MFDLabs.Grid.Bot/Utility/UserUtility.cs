@@ -18,22 +18,22 @@ namespace MFDLabs.Grid.Bot.Utility
         private readonly IUsersClient _SharedUsersClient = new UsersClient(
             StaticCounterRegistry.Instance,
             new UsersClientConfig(
-                Settings.Singleton.UsersServiceRemoteURL,
-                Settings.Singleton.UsersServiceMaxRedirects,
-                Settings.Singleton.UsersServiceRequestTimeout,
-                Settings.Singleton.UsersServiceMaxCircuitBreakerFailuresBeforeTrip,
-                Settings.Singleton.UsersServiceCircuitBreakerRetryInterval
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRemoteURL,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceMaxRedirects,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRequestTimeout,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceMaxCircuitBreakerFailuresBeforeTrip,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceCircuitBreakerRetryInterval
             )
         );
 
         private readonly IRbxDiscordUsersClient _SharedDiscordUsersClient = new RbxDiscordUsersClient(
             StaticCounterRegistry.Instance,
             new RbxDiscordUsersClientConfig(
-                Settings.Singleton.RbxDiscordUsersServiceRemoteURL,
-                Settings.Singleton.RbxDiscordUsersServiceMaxRedirects,
-                Settings.Singleton.RbxDiscordUsersServiceRequestTimeout,
-                Settings.Singleton.RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip,
-                Settings.Singleton.RbxDiscordUsersServiceCircuitBreakerRetryInterval
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRemoteURL,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxRedirects,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRequestTimeout,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceCircuitBreakerRetryInterval
             )
         );
 
@@ -60,14 +60,17 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public async Task<bool> GetIsUserBannedAsync(long id)
         {
-            var request = new MultiGetByUserIdRequest
+            try
             {
-                ExcludeBannedUsers = !Settings.Singleton.UserUtilityShouldResolveBannedUsers,
-                UserIds = new List<long> { id }
-            };
-            var response = await _SharedUsersClient.MultiGetUsersByIdsAsync(request);
-            if (response.Data.Count == 0) return true;
-            return false;
+                var request = new MultiGetByUserIdRequest
+                {
+                    ExcludeBannedUsers = !global::MFDLabs.Grid.Bot.Properties.Settings.Default.UserUtilityShouldResolveBannedUsers,
+                    UserIds = new List<long> { id }
+                };
+                var response = await _SharedUsersClient.MultiGetUsersByIdsAsync(request);
+                if (response.Data.Count == 0) return true;
+                return false;
+            } catch { return false; }
         }
 
         public long? GetUserIDByUsername(string username)
@@ -79,7 +82,7 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var request = new MultiGetByUsernameRequest
             {
-                ExcludeBannedUsers = !Settings.Singleton.UserUtilityShouldResolveBannedUsers,
+                ExcludeBannedUsers = !global::MFDLabs.Grid.Bot.Properties.Settings.Default.UserUtilityShouldResolveBannedUsers,
                 Usernames = new List<string> { username }
             };
 

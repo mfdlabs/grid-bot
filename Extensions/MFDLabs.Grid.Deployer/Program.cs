@@ -5,84 +5,114 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
+// TODO: Check the response of LMS so we aren't getting an IIS server for any reason !!
+
 namespace MFDLabs.Grid.Deployer
 {
     class Program
     {
-        public static void Main()
+        public static void Main(string[] args)
         {
-            OpenGridServer();
+            OpenGridServer(args);
         }
 
-        private static void OpenGridServer()
+        private static void OpenGridServer(string[] args)
         {
-            ConsoleExtended.WriteTitle("Trying to get the grid server's path...");
-
-            var gridServicePath = Registry.GetValue(
-                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerRegistryKeyName,
-                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerRegistryValueName,
-                null
-            );
-
-            if (gridServicePath == null)
+            bool onlyWebServer = false;
+            bool onlyGridServer = false;
+            int port = 0;
+            if (args.Length > 0)
             {
-                ConsoleExtended.WriteTitle("The grid server is not installed on this machine.");
-                Environment.Exit(1);
-                return;
+                var option = args[0].Substring(1).ToLower();
+                if (option == "onlyweb") onlyWebServer = true;
+                if (option == "onlygrid")
+                {
+                    onlyGridServer = true;
+                    if (args.Length > 1) port = Int32.Parse(args[1].Trim().ToLowerInvariant());
+                }
             }
 
-            ConsoleExtended.WriteTitle("Got grid server path '{0}'.", gridServicePath);
-            ConsoleExtended.WriteTitle("Trying to launch web server...");
-            ConsoleExtended.WriteTitle("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
 
-            if (!Directory.Exists(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath))
+            if (onlyGridServer) ConsoleExtended.WriteTitle("Only launching grid server...");
+            if (onlyWebServer) ConsoleExtended.WriteTitle("Only launching web server...");
+
+            if (!onlyGridServer)
             {
-                ConsoleExtended.WriteTitle("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
-                Environment.Exit(1);
-                return;
-            }
 
-            ConsoleExtended.WriteTitle("Found web server at '{0}', try launch now.", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
+                ConsoleExtended.WriteTitle("Trying to launch web server...");
+                ConsoleExtended.WriteTitle("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
 
-            LaunchWebServer();
-
-            if (!NetTools.IsServiceAvailable(
-                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupHost,
-                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupPort,
-                0
-            ))
-            {
-                ConsoleExtended.WriteTitle("Grid server was not running, try to launch.");
-
-                var gridServerCommand = string.Format(
-                    "{0}{1}",
-                    gridServicePath,
-                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableName
-                );
-
-                ConsoleExtended.WriteTitle("Got grid server command '{0}'.", gridServerCommand);
-
-                var psi = new ProcessStartInfo
+                if (!Directory.Exists(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath))
                 {
-                    FileName = gridServerCommand,
-                    Arguments = global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableLaunchArguments,
-                    WindowStyle = ProcessWindowStyle.Maximized
-                };
-
-                if (SystemGlobal.Singleton.ContextIsAdministrator())
-                {
-                    psi.Verb = "runas";
+                    ConsoleExtended.WriteTitle("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
+                    Environment.Exit(1);
+                    return;
                 }
 
-                var proc = new Process
+                ConsoleExtended.WriteTitle("Found web server at '{0}', try launch now.", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
+
+                LaunchWebServer();
+            }
+
+            ConsoleExtended.WriteTitle("Trying to get the grid server's path...");
+
+            if (!onlyWebServer)
+            {
+
+                var gridServicePath = Registry.GetValue(
+                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerRegistryKeyName,
+                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerRegistryValueName,
+                    null
+                );
+
+                if (gridServicePath == null)
                 {
-                    StartInfo = psi
-                };
+                    ConsoleExtended.WriteTitle("The grid server is not installed on this machine.");
+                    Environment.Exit(1);
+                    return;
+                }
 
-                proc.Start();
+                ConsoleExtended.WriteTitle("Got grid server path '{0}'.", gridServicePath);
+
+                if (!NetTools.IsServiceAvailable(
+                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupHost,
+                    port != 0 ? port : global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupPort,
+                    0
+                ))
+                {
+                    ConsoleExtended.WriteTitle("Grid server was not running, try to launch.");
+
+                    var gridServerCommand = string.Format(
+                        "{0}{1}",
+                        gridServicePath,
+                        global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableName
+                    );
+
+                    ConsoleExtended.WriteTitle("Got grid server command '{0}'.", gridServerCommand);
+
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = gridServerCommand,
+                        Arguments = port != 0 ? $"{port} -Console -Verbose" : global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableLaunchArguments,
+                        WindowStyle = ProcessWindowStyle.Maximized
+                    };
+
+                    if (SystemGlobal.Singleton.ContextIsAdministrator())
+                    {
+                        psi.Verb = "runas";
+                    }
+
+                    var proc = new Process
+                    {
+                        StartInfo = psi
+                    };
+
+                    proc.Start();
 
 
-                ConsoleExtended.WriteTitle("Successfully launched grid server.");
+                    ConsoleExtended.WriteTitle("Successfully launched grid server.");
+                    Environment.Exit(proc.Id);
+                }
             }
         }
 

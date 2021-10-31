@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            await message.ReplyAsync($"The current prefix is {Settings.Singleton.Prefix}");
+            await message.ReplyAsync($"The current prefix is {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}");
         }
     }
 }

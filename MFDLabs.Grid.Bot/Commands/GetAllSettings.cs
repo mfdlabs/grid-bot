@@ -21,13 +21,15 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (message.IsInPublicChannel() && !Settings.Singleton.AllowLogSettingsInPublicChannels)
+            if (message.IsInPublicChannel() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
             {
                 await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
                 return;
             }
 
-            var fields = Settings.Singleton.GetType().GetProperties(BindingFlags.Instance | BindingFlags.NonPublic);
+            throw new ApplicationException("Temporarily disabled until we figure out how to list settings inside an ApplicationSettingsBase instance");
+
+            var fields = global::MFDLabs.Grid.Bot.Properties.Settings.Default.GetType().GetProperties(BindingFlags.Instance | BindingFlags.NonPublic);
 
             var builder = new EmbedBuilder().WithTitle("All Application Settings.");
 
@@ -45,7 +47,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType.FullName})",
-                    $"`{field.GetValue(Settings.Singleton)}`",
+                    $"`{field.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default)}`",
                     false
                 );
                 i++;

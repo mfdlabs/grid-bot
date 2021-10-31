@@ -15,11 +15,11 @@ namespace MFDLabs.Grid.Bot.Utility
     public sealed class GridServerCommandUtility : SingletonBase<GridServerCommandUtility>
     {
         public object GetGridServerPath() 
-            => Registry.GetValue(Settings.Singleton.GridServerRegistryKeyName, Settings.Singleton.GridServerRegistryValueName, null);
+            => Registry.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName, global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName, null);
 
         private IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {
-            yield return Settings.Singleton.RemoteRenderAssetFetchUrl; // baseUrl
+            yield return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAssetFetchUrl; // baseUrl
             yield return url; // characterAppearanceUrl
             yield return "PNG"; // fileExtension . TODO setting so I can do JPEGs also.
             yield return x; // x
@@ -42,7 +42,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             ThumbnailCommandType thumbType;
 
-            if (Settings.Singleton.RenderThumbnailTypeShouldForceCloseup)
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderThumbnailTypeShouldForceCloseup)
             {
                 thumbType = ThumbnailCommandType.Closeup;
             }
@@ -56,11 +56,11 @@ namespace MFDLabs.Grid.Bot.Utility
 
             try
             {
-                var result = SoapUtility.Singleton.BatchJobEx(
+                var result = GridServerArbiter.Singleton.BatchJobEx(
                     new Job()
                     {
                         id = NetworkingGlobal.Singleton.GenerateUUIDV4(),
-                        expirationInSeconds = Settings.Singleton.RenderJobTimeoutInSeconds
+                        expirationInSeconds = global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderJobTimeoutInSeconds
                     },
                     Lua.NewScript(
                         NetworkingGlobal.Singleton.GenerateUUIDV4(),
@@ -95,8 +95,8 @@ namespace MFDLabs.Grid.Bot.Utility
             if (userId == -200000) throw new Exception("Test exception for handlers to hit.");
             return string.Format(
                 "https://{0}{1}?userId={2}&placeId={3}",
-                Settings.Singleton.RemoteRenderTaskAvatarFetchHost,
-                Settings.Singleton.RemoteRenderAvatarFetchUriPart,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderTaskAvatarFetchHost,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAvatarFetchUriPart,
                 userId,
                 placeId
             );
@@ -104,7 +104,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public LuaValue[] LaunchSimpleGame(string jobID, long placeID, long universeID)
         {
-            return SoapUtility.Singleton.OpenJobEx(
+            return GridServerArbiter.Singleton.OpenJobEx(
+                Guid.NewGuid().ToString(),
                 new Job() { id = jobID, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {
@@ -116,7 +117,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public Task<LuaValue[]> LaunchSimpleGameAsync(string jobID, long placeID, long universeID)
         {
-            return SoapUtility.Singleton.OpenJobExAsync(
+            return GridServerArbiter.Singleton.OpenJobExAsync(
+                Guid.NewGuid().ToString(),
                 new Job() { id = jobID, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {
@@ -129,7 +131,7 @@ namespace MFDLabs.Grid.Bot.Utility
         private string GetFileName(long userID, long placeID, ThumbnailSettings settings)
         {
             var args = settings.Arguments;
-            return $"{NetworkingGlobal.Singleton.GenerateUUIDV4()}_{userID}_{placeID}_{settings.Type}_{args[2]}_{args[3]}_{args[4]}_{args[5]}_{args[6]}_{args[7]}_{args[8]}_{args[9]}_{Settings.Singleton.RenderResultFileName}";
+            return $"{NetworkingGlobal.Singleton.GenerateUUIDV4()}_{userID}_{placeID}_{settings.Type}_{args[2]}_{args[3]}_{args[4]}_{args[5]}_{args[6]}_{args[7]}_{args[8]}_{args[9]}_{MFDLabs.Grid.Bot.Properties.Settings.Default.RenderResultFileName}";
         }
     }
 }

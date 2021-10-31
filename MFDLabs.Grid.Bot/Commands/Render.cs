@@ -11,14 +11,14 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class Render : IStateSpecificCommandHandler
     {
         public string CommandName => "Render User";
-        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID for the author and render them.\nLayout: {Settings.Singleton.Prefix}render robloxUserID?|discordUserMention?|...userName?";
+        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID for the author and render them.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render robloxUserID?|discordUserMention?|...userName?";
         public string[] CommandAliases => new string[] { "r", "render", "sexually-weird-render" };
-        public bool Internal => !Settings.Singleton.RenderingEnabled;
+        public bool Internal => !global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderingEnabled;
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!Settings.Singleton.RenderingEnabled)
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderingEnabled)
             {
                 if (!await message.RejectIfNotAdminAsync()) return;
             }

@@ -146,6 +146,8 @@
     <Compile Include="Commands\GetSetting.cs" />
     <Compile Include="Commands\GetStatus.cs" />
     <Compile Include="Commands\GridServerExecutionCommandTest.cs" />
+    <Compile Include="Commands\KillArbiterInstance.cs" />
+    <Compile Include="Commands\KillAllArbiterInstances.cs" />
     <Compile Include="Commands\OpenJob.cs" />
     <Compile Include="Commands\HelloWorld.cs" />
     <Compile Include="Commands\GetVersion.cs" />
@@ -187,7 +189,6 @@
     <Compile Include="PerformanceMonitors\RenderTaskPerformanceMonitor.cs" />
     <Compile Include="PerformanceMonitors\RenderTaskUserPerformanceMonitor.cs" />
     <Compile Include="Plugins\PacketMetricsPlugin.cs" />
-    <Compile Include="Settings.cs" />
     <Compile Include="Properties\Settings.cs" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
@@ -209,6 +210,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Utility\AdminUtility.cs" />
+    <Compile Include="Utility\GridServerArbiter.cs" />
     <Compile Include="Utility\GridServerCommandUtility.cs" />
     <Compile Include="Utility\JsonScriptingUtility.cs" />
     <Compile Include="Utility\LuaUtility.cs" />

@@ -12,7 +12,7 @@ namespace MFDLabs.Grid.Bot.Events
         internal static Task Invoke(Exception ex)
         {
 #if DEBUG
-            if (!(ex is TaskCanceledException && !Settings.Singleton.DebugAllowTaskCanceledExceptions))
+            if (!(ex is TaskCanceledException && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
                 SystemLogger.Singleton.Error(ex);
 #endif
             return Task.CompletedTask;

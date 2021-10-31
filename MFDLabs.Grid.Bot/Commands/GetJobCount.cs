@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var jobs = await SoapUtility.Singleton.GetAllJobsExAsync();
+            var jobs = await GridServerArbiter.Singleton.GetAllJobsExAsync();
 
             await message.ReplyAsync(jobs.Length.ToString());
         }

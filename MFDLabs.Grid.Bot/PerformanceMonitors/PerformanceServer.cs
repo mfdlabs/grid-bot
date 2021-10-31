@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
     {
         private readonly CounterHttpServer _server = new CounterHttpServer(
             StaticCounterRegistry.Instance,
-            Settings.Singleton.CounterServerPort,
+            global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
             (ex) =>
             {
                 if (!(ex is HttpListenerException httpEx && httpEx.ErrorCode == 0x3E3))
@@ -35,12 +35,12 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             }
 
             _server.Start();
-            SystemLogger.Singleton.Warning("Launched performance monitor server on host 'http://*:{0}'.", Settings.Singleton.CounterServerPort);
+            SystemLogger.Singleton.Warning("Launched performance monitor server on host 'http://*:{0}'.", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
         }
 
         internal void Stop()
         {
-            SystemLogger.Singleton.LifecycleEvent("Stopping performance monitor server on host 'http://*:{0}'...", Settings.Singleton.CounterServerPort);
+            SystemLogger.Singleton.LifecycleEvent("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
 
             if (!SystemGlobal.Singleton.ContextIsAdministrator())
             {
@@ -56,7 +56,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             {
             }
 
-            SystemLogger.Singleton.Warning("Stopped performance monitor server on port {0}.", Settings.Singleton.CounterServerPort);
+            SystemLogger.Singleton.Warning("Stopped performance monitor server on port {0}.", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
         }
     }
 }

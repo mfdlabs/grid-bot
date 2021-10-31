@@ -36,7 +36,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (message.IsInPublicChannel() && !Settings.Singleton.AllowLogSettingsInPublicChannels)
+            if (message.IsInPublicChannel() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
             {
                 await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
                 return;
