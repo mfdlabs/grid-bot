@@ -2240,6 +2240,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2286,6 +2287,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2331,6 +2333,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2376,6 +2379,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2421,6 +2425,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2466,6 +2471,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2511,6 +2517,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2556,6 +2563,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2601,6 +2609,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2646,6 +2655,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2691,6 +2701,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2736,6 +2747,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2781,6 +2793,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2826,6 +2839,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2871,6 +2885,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2916,6 +2931,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -2961,6 +2977,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3004,6 +3021,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3047,6 +3065,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3092,6 +3111,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3137,6 +3157,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3182,6 +3203,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3227,6 +3249,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3272,6 +3295,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3317,6 +3341,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3362,6 +3387,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3407,6 +3433,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3452,6 +3479,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3497,6 +3525,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3542,6 +3571,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3587,6 +3617,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3632,6 +3663,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3677,6 +3709,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3722,6 +3755,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3767,6 +3801,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?
@@ -3812,6 +3847,7 @@ namespace MFDLabs.Grid.Bot.Utility
                                 if (!TryOpen()) throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
                         }
                         catch (FaultException ex) { throw ex; }
+                        catch (TimeoutException ex) { throw ex; }
                         catch (Exception ex)
                         {
                             SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, currentMethod, ex.Message); // #if DEBUG here to show the full exception?

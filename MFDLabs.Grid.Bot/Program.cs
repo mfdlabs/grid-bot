@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Analytics.Google;
@@ -126,6 +127,12 @@ namespace MFDLabs.Grid.Bot
                 BotGlobal.Singleton.Client.Disconnected += OnDisconnected.Invoke;
                 BotGlobal.Singleton.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
                 BotGlobal.Singleton.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
+
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartBatchAllocate25ArbiterInstances)
+                    ThreadPool.QueueUserWorkItem((s) =>
+                    {
+                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(25, 5);
+                    });
 
                 await BotGlobal.Singleton.SingletonLaunch();
                 await Task.Delay(-1);

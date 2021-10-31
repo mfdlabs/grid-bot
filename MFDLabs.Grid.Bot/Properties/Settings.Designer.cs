@@ -804,5 +804,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["RestartShouldReOpenAllGridServerInstances"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OnStartBatchAllocate25ArbiterInstances {
+            get {
+                return ((bool)(this["OnStartBatchAllocate25ArbiterInstances"]));
+            }
+        }
     }
 }
