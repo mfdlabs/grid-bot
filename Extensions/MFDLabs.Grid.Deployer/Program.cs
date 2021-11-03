@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 
 // TODO: Check the response of LMS so we aren't getting an IIS server for any reason !!
+// GRID-6: Fix WS hang
 
 namespace MFDLabs.Grid.Deployer
 {
