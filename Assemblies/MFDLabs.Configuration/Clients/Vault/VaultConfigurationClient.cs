@@ -115,7 +115,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 { "Value", value },
                 { "Updated", updated }
             };
-            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"mfdlabs-sharp-v2/{groupName}/{name}", values, mountPoint: engine.Path).Wait();
+            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"mfdlabs-sharp-v2/{groupName}/{name}", values, mountPoint: engine.Path);
         }
 
         private readonly IVaultClient _client;
