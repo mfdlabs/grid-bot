@@ -36,8 +36,8 @@ This repository includes the following projects:
 These are projects used by MFDLABS Grid Instances and the Roblox Grid Bot to help aid in development.
 Please track the project here:
 
-- [Public Jira](https://mfdlabs.atlassian.net/projects/GRID/summary)
-- [Internal Jira (for staff on-site)](https://jira.mfdlabs.local/projects/GRID/summary)
+- [Public Jira](https://mfdlabs-pub.atlassian.net/browse/GRID)
+- [Internal Jira (for staff on-site)](https://jira.mfdlabs.local/browse/GRID)
 
 The internal Jira project is updated more, if you do not have access to this, please request access from [access@internal.mfdlabs.com](mailto:access@internal.mfdlabs.com) if you are already on-site, or if you are working abroad, [access@vpn.mfdlabs.com](mailto:access@vpn.mfdlabs.com) supplying the correct credentials to verify your position at MFDLABS
 
