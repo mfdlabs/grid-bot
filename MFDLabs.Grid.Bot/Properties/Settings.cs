@@ -1,7 +1,9 @@
-﻿#if WE_ON_THE_GRID
+﻿#if WE_ON_THE_GRID || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
 using System.Configuration;
 using MFDLabs.Configuration.Providers;
+#endif
 
+#if WE_ON_THE_GRID
 namespace MFDLabs.Grid.Bot.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
@@ -15,9 +17,6 @@ namespace MFDLabs.Grid.Bot.Properties
     }
 }
 #elif WE_ON_THE_RUN
-using System.Configuration;
-using MFDLabs.Configuration.Providers;
-
 namespace MFDLabs.Grid.Bot.Properties
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
@@ -31,9 +30,6 @@ namespace MFDLabs.Grid.Bot.Properties
     }
 }
 #elif WE_ARE_AN_ACTOR
-using System.Configuration;
-using MFDLabs.Configuration.Providers;
-
 namespace MFDLabs.Grid.Bot.Properties
 {
     [SettingsProvider(typeof(DataBaseProvider))]

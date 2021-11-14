@@ -5,7 +5,7 @@
     <RootNamespace>Discord.Analyzers</RootNamespace>
     <Description>A Discord.Net extension adding support for design-time analysis of the API usage.</Description>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-    <Configurations>Debug;Release;ReleaseNoDeploy</Configurations>
+    <Configurations>Debug;Release;ReleaseNoDeploy;DebugGridDeploy;ReleaseGridDeploy;DebugDeploy</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.3.1" />

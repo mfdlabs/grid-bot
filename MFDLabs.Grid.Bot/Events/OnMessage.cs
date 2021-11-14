@@ -55,8 +55,17 @@ namespace MFDLabs.Grid.Bot.Events
             // there is an issue here when parsing newlines, it will take all of the command and newline if `;command\nargs` is present as an entire command name
             // todo: try to remove newlines from this a much as we can, we can also try parsing the args by removing $`{command}\n` + $`{command}\r\n` ¯\_(ツ)_/¯
             var alias = messageContent[0].ToLower().Trim();
+            var contentArray = messageContent.Skip(1).Take(messageContent.Length - 1).ToArray();
 
-            await CommandRegistry.Singleton.CheckAndRunCommandByAlias(alias, messageContent.Skip(1).Take(messageContent.Length - 1).ToArray(), message);
+            if (alias.Contains('\n'))
+            {
+                alias = alias.Split('\n')[0];
+                messageContent[0] = messageContent[0].Replace($"{alias}\n", "");
+                contentArray = messageContent;
+            }
+
+
+            await CommandRegistry.Singleton.CheckAndRunCommandByAlias(alias, contentArray, message);
         }
 
         private static string[] GetContentArray(string messageContent)

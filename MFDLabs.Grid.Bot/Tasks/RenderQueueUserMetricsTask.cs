@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Discord;
-using MFDLabs.Analytics.Google;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.ErrorHandling.Extensions;
@@ -29,7 +28,8 @@ namespace MFDLabs.Grid.Bot
 
             public override PluginResult OnReceive(ref Packet<RenderTaskRequest> packet)
             {
-                var perfmon = GetUserPerformanceMonitor(packet.Item.Message.Author);
+                var message = packet.Item.Message;
+                var perfmon = GetUserPerformanceMonitor(message.Author);
 
                 try
                 {
@@ -40,7 +40,7 @@ namespace MFDLabs.Grid.Bot
                 }
                 catch (Exception ex)
                 {
-                    packet.Item.Message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
+                    message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
                     perfmon.TotalRendersThatFailed.Increment();
                     packet.Status = PacketProcessingStatus.Failure;
 #if DEBUG
@@ -50,17 +50,17 @@ namespace MFDLabs.Grid.Bot
 #endif
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
                     {
-                        packet.Item.Message.Channel.SendMessage(
-                            $"<@!{packet.Item.Message.Author.Id}>, An error occured with the reder task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                        message.Channel.SendMessage(
+                            $"<@!{message.Author.Id}>, An error occured with the reder task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
                             options: new RequestOptions()
                             {
                                 AuditLogReason = "Exception Occurred"
                             }
                         );
-                        packet.Item.Message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
+                        message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                         return PluginResult.ContinueProcessing;
                     }
-                    packet.Item.Message.Reply("An error occurred when trying to execute render task, please try again later.");
+                    message.Reply("An error occurred when trying to execute render task, please try again later.");
                     return PluginResult.ContinueProcessing;
                 }
             }
@@ -125,6 +125,9 @@ namespace MFDLabs.Grid.Bot
 
                 if (packet.Item != null)
                 {
+                    var message = packet.Item.Message;
+                    var contentArray = packet.Item.ContentArray;
+                    var originalCommandName = packet.Item.OriginalCommandName;
 
                     _perfmon.TotalItemsProcessed.Increment();
                     var sw = Stopwatch.StartNew();
@@ -132,17 +135,17 @@ namespace MFDLabs.Grid.Bot
                     try
                     {
                         _itemCount++;
-                        using (packet.Item.Message.Channel.EnterTypingState())
+                        using (message.Channel.EnterTypingState())
                         {
                             if (_processingItem)
                             {
-                                packet.Item.Message.Reply($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
+                                message.Reply($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
                             }
 
                             lock (_renderLock)
                             {
                                 _processingItem = true;
-                                if (packet.Item.OriginalCommandName == "sexually-weird-render")
+                                if (originalCommandName == "sexually-weird-render")
                                 {
                                     SystemLogger.Singleton.Warning("Someone found executed the one command, please no...");
 
@@ -156,11 +159,11 @@ namespace MFDLabs.Grid.Bot
                                     if (weirdStream == null || weirdFileName == null)
                                     {
                                         _perfmon.TotalItemsProcessedThatFailed.Increment();
-                                        packet.Item.Message.Reply($"You are sending render requests too fast, please slow down!");
+                                        message.Reply($"You are sending render requests too fast, please slow down!");
                                         return PluginResult.ContinueProcessing;
                                     }
                                     using (weirdStream)
-                                        packet.Item.Message.Channel.SendFile(
+                                        message.Channel.SendFile(
                                             weirdStream,
                                             weirdFileName
                                         );
@@ -170,16 +173,16 @@ namespace MFDLabs.Grid.Bot
                                 bool isAuthorCheck = false;
                                 long userId = 0;
 
-                                if (packet.Item.ContentArray.Length == 0)
+                                if (contentArray.Length == 0)
                                 {
                                     isAuthorCheck = true;
-                                    var nullableUserID = packet.Item.Message.Author.GetRobloxID();
+                                    var nullableUserID = message.Author.GetRobloxID();
 
                                     if (!nullableUserID.HasValue)
                                     {
                                         _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", packet.Item.Message.Author.ToString());
-                                        packet.Item.Message.Reply($"You have no Roblox account associated with you.");
+                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
+                                        message.Reply($"You have no Roblox account associated with you.");
                                         return PluginResult.ContinueProcessing;
                                     }
 
@@ -190,13 +193,13 @@ namespace MFDLabs.Grid.Bot
                                 string username = null;
 
                                 if (!isAuthorCheck)
-                                    if (!long.TryParse(packet.Item.ContentArray.ElementAtOrDefault(0), out userId))
+                                    if (!long.TryParse(contentArray.ElementAtOrDefault(0), out userId))
                                     {
                                         _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
 
-                                        if (packet.Item.Message.MentionedUsers.Count > 0)
+                                        if (message.MentionedUsers.Count > 0)
                                         {
-                                            var user = packet.Item.Message.MentionedUsers.ElementAt(0);
+                                            var user = message.MentionedUsers.ElementAt(0);
                                             // we have mentioned a user.
                                             var nullableUserID = user.GetRobloxID();
 
@@ -204,7 +207,7 @@ namespace MFDLabs.Grid.Bot
                                             {
                                                 _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
                                                 SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
-                                                packet.Item.Message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
+                                                message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
                                                 return PluginResult.ContinueProcessing;
                                             }
 
@@ -213,7 +216,7 @@ namespace MFDLabs.Grid.Bot
                                         else
                                         {
                                             SystemLogger.Singleton.Warning("The first parameter of the command was not a valid Int64, trying to get the userID by username lookup.");
-                                            username = packet.Item.ContentArray.Join(' ').EscapeNewLines().Escape();
+                                            username = contentArray.Join(' ').EscapeNewLines().Escape();
                                             if (!username.IsNullOrEmpty())
                                             {
                                                 SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
@@ -223,7 +226,7 @@ namespace MFDLabs.Grid.Bot
                                                 {
                                                     _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
                                                     SystemLogger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
-                                                    packet.Item.Message.Reply($"The user by the username of '{username}' was not found.");
+                                                    message.Reply($"The user by the username of '{username}' was not found.");
                                                     return PluginResult.ContinueProcessing;
                                                 }
 
@@ -234,7 +237,7 @@ namespace MFDLabs.Grid.Bot
                                             {
                                                 _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
                                                 SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
-                                                packet.Item.Message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{packet.Item.OriginalCommandName} userID|userName");
+                                                message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} userID|userName");
                                                 return PluginResult.ContinueProcessing;
                                             }
                                         }
@@ -245,23 +248,23 @@ namespace MFDLabs.Grid.Bot
                                         {
                                             _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
                                             SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize);
-                                            packet.Item.Message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
+                                            message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
                                             return PluginResult.ContinueProcessing;
                                         }
                                     }
 
-                                if (userId == -123123 && packet.Item.Message.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
+                                if (userId == -123123 && message.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
 
                                 if (UserUtility.Singleton.GetIsUserBanned(userId))
                                 {
                                     bool canSkip = false;
-                                    if (userId == -200000 && packet.Item.Message.Author.IsAdmin()) canSkip = true;
+                                    if (userId == -200000 && message.Author.IsAdmin()) canSkip = true;
 
                                     if (!canSkip)
                                     {
                                         SystemLogger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
                                         var user = userId == default ? username : userId.ToString();
-                                        packet.Item.Message.Reply($"The user '{user}' is banned or does not exist.");
+                                        message.Reply($"The user '{user}' is banned or does not exist.");
                                         return PluginResult.ContinueProcessing;
                                     }
                                 }
@@ -274,6 +277,7 @@ namespace MFDLabs.Grid.Bot
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
                                 );
 
+                                // get a stream and temp filename
                                 var (stream, fileName) = GridServerCommandUtility.Singleton.RenderUser(
                                     userId,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
@@ -284,12 +288,12 @@ namespace MFDLabs.Grid.Bot
                                 if (stream == null || fileName == null)
                                 {
                                     _perfmon.TotalItemsProcessedThatFailed.Increment();
-                                    packet.Item.Message.Reply($"You are sending render requests too fast, please slow down!");
+                                    message.Reply($"You are sending render requests too fast, please slow down!");
                                     return PluginResult.ContinueProcessing;
                                 }
 
                                 using (stream)
-                                    packet.Item.Message.Channel.SendFile(
+                                    message.Channel.SendFile(
                                         stream,
                                         fileName
                                     );

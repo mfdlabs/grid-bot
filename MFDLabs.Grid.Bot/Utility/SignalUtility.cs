@@ -18,10 +18,11 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                Manager.Singleton.TrackNetworkEvent("Shutdown", "SIGINT", "Shutdown via SIGINT", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Shutdown", "SIGINT", "Shutdown via SIGINT", 1);
                 PerformanceServer.Singleton.Stop();
                 await BotGlobal.Singleton.TryLogout();
-                SystemUtility.Singleton.KillGridServerSafe();
+                SystemUtility.Singleton.KillAllDeployersSafe();
+                SystemUtility.Singleton.KillAllGridServersSafe();
                 SystemUtility.Singleton.KillServerSafe();
                 LoggingSystem.Singleton.EndLifetimeWatch();
                 SystemLogger.Singleton.TryClearLocalLog(false, true);
@@ -35,9 +36,10 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                Manager.Singleton.TrackNetworkEvent("Shutdown", "SIGUSR1", "Shutdown via SIGINT", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Shutdown", "SIGUSR1", "Shutdown via SIGINT", 1);
                 PerformanceServer.Singleton.Stop();
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer) GridServerArbiter.Singleton.KillAllOpenInstances();
+                SystemUtility.Singleton.KillAllDeployersSafe();
                 await BotGlobal.Singleton.TryLogout();
                 LoggingSystem.Singleton.EndLifetimeWatch();
                 SystemLogger.Singleton.TryClearLocalLog(false, true);
@@ -51,24 +53,23 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                Manager.Singleton.TrackNetworkEvent("Restart", "SIGUSR2", "Restart via SIGINT", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Restart", "SIGUSR2", "Restart via SIGINT", 1);
                 await BotGlobal.Singleton.TryLogout();
                 SystemLogger.Singleton.TryClearLocalLog(true, false);
                 LoggingSystem.Singleton.RestartLifetimeWatch();
                 await BotGlobal.Singleton.SingletonLaunch();
+                SystemUtility.Singleton.KillAllDeployersSafe();
                 if (restartServers)
                 {
-                    if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                     {
-                        SystemUtility.Singleton.KillGridServerSafe();
+                        SystemUtility.Singleton.KillAllGridServersSafe();
                         SystemUtility.Singleton.KillServerSafe();
-                        SystemUtility.Singleton.OpenGridServer();
+                        SystemUtility.Singleton.OpenGridServerSafe();
                     } 
                     else
                     {
-                        var count = GridServerArbiter.Singleton.KillAllOpenInstances();
-                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RestartShouldReOpenAllGridServerInstances)
-                            GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(count);
+                        SystemUtility.Singleton.KillAllGridServersSafe();
                     }
                     PerformanceServer.Singleton.Stop();
                     PerformanceServer.Singleton.Start();

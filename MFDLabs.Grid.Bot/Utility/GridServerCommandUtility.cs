@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using MFDLabs.Abstractions;
+using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
@@ -14,8 +15,102 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class GridServerCommandUtility : SingletonBase<GridServerCommandUtility>
     {
-        public object GetGridServerPath() 
-            => Registry.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName, global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName, null);
+        public enum ScriptType
+        {
+            InternalScript,
+            InternalModule,
+            ThumbnailScript,
+            ThumbnailModule,
+            LuaPackage,
+            SharedCoreScript,
+            ClientCoreScript,
+            CoreModule,
+            ServerCoreScript,
+            StarterCharacterScript,
+            StarterPlayerScript,
+            StarterPlayerScript_NewStructure,
+            StarterPlayerScriptCommon,
+            HiddenCommon,
+            Hidden,
+            HiddenModule
+        }
+
+        public object GetGridServerPath(bool throwIfNoGridServer = true)
+        {
+            var value = Registry.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName, global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName, null);
+            if (value == null) if (throwIfNoGridServer) throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.Singleton.GetMachineID()}', please contact the datacenter administrator to sort this out.");
+            return value;
+        }
+
+        public string GetGridServerScriptPath(string scriptName, ScriptType scriptType = ScriptType.InternalScript, bool throwIfNoGridServer = true, bool test = false)
+        {
+            string prefix = GetGridServerPrefixByScriptType(scriptType, throwIfNoGridServer);
+
+            scriptName = scriptName.Replace("..", "");
+            var fullPath = $"{prefix}{scriptName}.lua";
+
+            if (test) if (!File.Exists(fullPath)) throw new ApplicationException($"Unable to find the script file '{scriptName}' at the path '{prefix}'");
+
+            return fullPath;
+        }
+
+        public string GetGridServerPrefixByScriptType(ScriptType scriptType, bool throwIfNoGridServer = true)
+        {
+            var prefix = (string)GetGridServerPath(throwIfNoGridServer);
+            switch (scriptType)
+            {
+                case ScriptType.InternalScript:
+                    prefix += "internalscripts\\scripts\\";
+                    break;
+                case ScriptType.InternalModule:
+                    prefix += "internalscripts\\modules\\";
+                    break;
+                case ScriptType.ThumbnailScript:
+                    prefix += "internalscripts\\thumbnails\\";
+                    break;
+                case ScriptType.ThumbnailModule:
+                    prefix += "internalscripts\\thumbnails\\modules\\";
+                    break;
+                case ScriptType.LuaPackage:
+                    prefix += "ExtraContent\\LuaPackages\\";
+                    break;
+                case ScriptType.SharedCoreScript:
+                    prefix += "ExtraContent\\scripts\\CoreScripts\\";
+                    break;
+                case ScriptType.ClientCoreScript:
+                    prefix += "ExtraContent\\scripts\\CoreScripts\\CoreScripts\\";
+                    break;
+                case ScriptType.CoreModule:
+                    prefix += "ExtraContent\\scripts\\CoreScripts\\Modules\\";
+                    break;
+                case ScriptType.ServerCoreScript:
+                    prefix += "ExtraContent\\scripts\\CoreScripts\\ServerCoreScripts\\";
+                    break;
+                case ScriptType.StarterCharacterScript:
+                    prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterCharacterScripts\\";
+                    break;
+                case ScriptType.StarterPlayerScript:
+                    prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts\\";
+                    break;
+                case ScriptType.StarterPlayerScript_NewStructure:
+                    prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts_NewStructure\\";
+                    break;
+                case ScriptType.StarterPlayerScriptCommon:
+                    prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScriptsCommon\\";
+                    break;
+                case ScriptType.HiddenCommon:
+                    prefix += "ExtraContent\\hidden\\common\\";
+                    break;
+                case ScriptType.Hidden:
+                    prefix += "Content\\hidden\\rcc\\";
+                    break;
+                case ScriptType.HiddenModule:
+                    prefix += "Content\\hidden\\rcc\\modules\\";
+                    break;
+            }
+
+            return prefix;
+        }
 
         private IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {
@@ -57,6 +152,7 @@ namespace MFDLabs.Grid.Bot.Utility
             try
             {
                 var result = GridServerArbiter.Singleton.BatchJobEx(
+                    "Render Queue",
                     new Job()
                     {
                         id = NetworkingGlobal.Singleton.GenerateUUIDV4(),
@@ -105,7 +201,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public LuaValue[] LaunchSimpleGame(string jobID, long placeID, long universeID)
         {
             return GridServerArbiter.Singleton.OpenJobEx(
-                Guid.NewGuid().ToString(),
+                "Game Server Queue",
                 new Job() { id = jobID, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {
@@ -118,7 +214,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public Task<LuaValue[]> LaunchSimpleGameAsync(string jobID, long placeID, long universeID)
         {
             return GridServerArbiter.Singleton.OpenJobExAsync(
-                Guid.NewGuid().ToString(),
+                "Game Server Queue",
                 new Job() { id = jobID, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {

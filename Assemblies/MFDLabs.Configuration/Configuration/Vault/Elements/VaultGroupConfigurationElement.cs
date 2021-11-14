@@ -13,8 +13,10 @@ namespace MFDLabs.Configuration.Elements.Vault
             _props.Add(_groupName);
             _vaultAddress = new ConfigurationProperty("address", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
             _props.Add(_vaultAddress);
-            _vaultToken = new ConfigurationProperty("token", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
-            _props.Add(_vaultToken);
+            _vaultRoleID = new ConfigurationProperty("roleId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _props.Add(_vaultRoleID);
+            _vaultSecretID = new ConfigurationProperty("secretId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _props.Add(_vaultSecretID);
             _overrideFileName = new ConfigurationProperty("overrideFileName", typeof(string), null, ConfigurationPropertyOptions.None);
             _props.Add(_overrideFileName);
         }
@@ -37,10 +39,16 @@ namespace MFDLabs.Configuration.Elements.Vault
             set { base[_vaultAddress] = value; }
         }
 
-        public string Token
+        public string RoleID
         {
-            get { return (string)base[_vaultToken]; }
-            set { base[_vaultToken] = value; }
+            get { return (string)base[_vaultRoleID]; }
+            set { base[_vaultRoleID] = value; }
+        }
+
+        public string SecretID
+        {
+            get { return (string)base[_vaultSecretID]; }
+            set { base[_vaultSecretID] = value; }
         }
 
         public string OverrideFileName
@@ -62,7 +70,8 @@ namespace MFDLabs.Configuration.Elements.Vault
         private static readonly ConfigurationProperty _updateInterval;
         private static readonly ConfigurationProperty _groupName;
         private static readonly ConfigurationProperty _vaultAddress;
-        private static readonly ConfigurationProperty _vaultToken;
+        private static readonly ConfigurationProperty _vaultRoleID;
+        private static readonly ConfigurationProperty _vaultSecretID;
         private static readonly ConfigurationProperty _overrideFileName;
     }
 }

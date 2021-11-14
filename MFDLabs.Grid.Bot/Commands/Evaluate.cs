@@ -40,7 +40,14 @@ namespace MFDLabs.Grid.Bot.Commands
                 try
                 {
                     // ref the current assembly
-                    result = await CSharpScript.RunAsync(scriptContents, ScriptOptions.Default.WithReferences(Assembly.GetExecutingAssembly()));
+                    result = await CSharpScript.RunAsync(
+                        scriptContents,
+                        ScriptOptions.Default.WithReferences(
+                            Assembly.GetExecutingAssembly()
+                        )
+                        .WithAllowUnsafe(true)
+                        .WithImports("System")
+                    );
                 }
                 catch (CompilationErrorException ex)
                 {

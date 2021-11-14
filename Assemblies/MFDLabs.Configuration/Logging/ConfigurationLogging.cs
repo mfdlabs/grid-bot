@@ -5,20 +5,20 @@ namespace MFDLabs.Configuration.Logging
 {
 	public static class ConfigurationLogging
 	{
-		public static void OverrideDefaultConfigurationLogging(Action<string> onError, Action<string> onWarning, Action<string> onInformation)
+		public static void OverrideDefaultConfigurationLogging(Action<string, object[]> onError, Action<string, object[]> onWarning, Action<string, object[]> onInformation)
 		{
 			var useEventLogger = global::MFDLabs.Configuration.Properties.Settings.Default.ConfigurationLoggingUseSystemLogger;
-			_OverrideOnError = onError ?? ((m) => 
+			_OverrideOnError = onError ?? ((m, a) => 
 			{ 
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Error(m);
+				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Error(m, a);
 			});
-			_OverrideOnWarning = onWarning ?? ((m) =>
+			_OverrideOnWarning = onWarning ?? ((m, a) =>
 			{
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Warning(m);
+				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Warning(m, a);
 			});
-			_OverrideOnInformation = onInformation ?? ((m) =>
+			_OverrideOnInformation = onInformation ?? ((m, a) =>
 			{
-				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Info(m);
+				if (useEventLogger) EventLogConsoleSystemLogger.Singleton.Info(m, a);
 			});
 		}
 
@@ -37,15 +37,24 @@ namespace MFDLabs.Configuration.Logging
 			Log(_OverrideOnInformation, format, args);
 		}
 
-		private static void Log(Action<string> overrideLogger, string format, params object[] args)
+		private static void Log(Action<string, object[]> overrideLogger, string format, params object[] args)
 		{
-			overrideLogger?.Invoke(string.Format(format, args));
+			overrideLogger?.Invoke(format, args);
 		}
 
-		private static Action<string> _OverrideOnError;
+		private static Action<string, object[]> _OverrideOnError = (m, a) =>
+		{
+			EventLogConsoleSystemLogger.Singleton.Error(m, a);
+		};
 
-		private static Action<string> _OverrideOnWarning;
+		private static Action<string, object[]> _OverrideOnWarning = (m, a) =>
+		{
+			EventLogConsoleSystemLogger.Singleton.Warning(m, a);
+		};
 
-		private static Action<string> _OverrideOnInformation;
+		private static Action<string, object[]> _OverrideOnInformation = (m, a) =>
+		{
+			EventLogConsoleSystemLogger.Singleton.Info(m, a);
+		};
 	}
 }

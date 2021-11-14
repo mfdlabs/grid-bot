@@ -77,7 +77,10 @@ namespace MFDLabs.Logging
                 format
             );
 
-            return string.Format(internalMessage, args);
+            if (args != null && args.Length > 0)
+                return string.Format(internalMessage, args);
+
+            return internalMessage;
         }
 
         [DebuggerStepThrough]
@@ -306,7 +309,8 @@ namespace MFDLabs.Logging
                         ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineHost());
                         ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
                         ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
-                        ConsoleGlobal.Singleton.WriteColoredContent(color, string.Format($" {format}\n", args));
+                        var message = args != null && args.Length > 0 ? string.Format($" {format}\n", args) : $" {format}\n";
+                        ConsoleGlobal.Singleton.WriteColoredContent(color, message);
                     }
                 }
             }
@@ -329,30 +333,30 @@ namespace MFDLabs.Logging
 
                     switch (logType)
                     {
-                    case "LOG":
-                        category = 1;
-                        break;
-                    case "WARNING":
-                        category = 2;
-                        break;
-                    case "TRACE":
-                        category = 3;
-                        break;
-                    case "DEBUG":
-                        category = 4;
-                        break;
-                    case "INFO":
-                        category = 5;
-                        break;
-                    case "ERROR":
-                        category = 6;
-                        break;
-                    case "VERBOSE":
-                        category = 7;
-                        break;
-                    case "LC-EVENT":
-                        category = 8;
-                        break;
+                        case "LOG":
+                            category = 1;
+                            break;
+                        case "WARNING":
+                            category = 2;
+                            break;
+                        case "TRACE":
+                            category = 3;
+                            break;
+                        case "DEBUG":
+                            category = 4;
+                            break;
+                        case "INFO":
+                            category = 5;
+                            break;
+                        case "ERROR":
+                            category = 6;
+                            break;
+                        case "VERBOSE":
+                            category = 7;
+                            break;
+                        case "LC-EVENT":
+                            category = 8;
+                            break;
                     }
 
                     _eventLog.WriteEntry(message, entryType, _eventId, category);

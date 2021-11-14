@@ -36,7 +36,7 @@ namespace MFDLabs.Grid.Bot.Tasks
 
                 using (packet.Item.Channel.EnterTypingState())
                 {
-                    var tte = SystemUtility.Singleton.OpenGridServer().Item1;
+                    var tte = SystemUtility.Singleton.OpenGridServerSafe().Item1;
 
                     if (tte.TotalSeconds > 1.5)
                     {

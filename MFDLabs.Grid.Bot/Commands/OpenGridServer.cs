@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var tto = SystemUtility.Singleton.OpenGridServer().Item1;
+            var tto = SystemUtility.Singleton.OpenGridServerSafe().Item1;
 
             await message.ReplyAsync($"Successfully opened grid server in '{tto.TotalSeconds}' seconds!");
         }

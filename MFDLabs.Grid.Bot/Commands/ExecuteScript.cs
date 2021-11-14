@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
+
+// TODO: Support reading from files
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -35,16 +38,30 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 var script = string.Join(" ", messageContentArray);
 
-                script = Regex.Replace(script, "[\"“‘”]", "\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                // todo: try and dynamically remove code blocks
-                //script = Regex.Replace(script, @"```(?:(?<lang>\S+)\n)?\s?(?<code>[^]+?)\s?```", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                script = script.Replace("`", "");
+
 
                 if (script.IsNullWhiteSpaceOrEmpty())
                 {
-                    await message.ReplyAsync("The script is actually required by the way.");
-                    return;
+                    // let's try and read the attachments.
+                    if (message.Attachments.Count == 0)
+                    {
+                        await message.ReplyAsync("The script or at least 1 attachment was expected.");
+                        return;
+                    }
+
+                    var firstAttachment = message.Attachments.First();
+                    if (!firstAttachment.Filename.EndsWith(".lua"))
+                    {
+                        await message.ReplyAsync("The attachment is required to be a valid Lua file.");
+                        return;
+                    }
+
+                    script = message.Attachments.First().GetAttachmentContentsAscii();
                 }
+
+                // remove phone specific quotes (why would you want them anyway? they are unicode)
+                script = script.EscapeQuotes();
+                script = script.GetCodeBlockContents();
 
                 if (LuaUtility.Singleton.CheckIfScriptContainsDisallowedText(script, out string keyword) && !userIsAdmin)
                 {
@@ -78,26 +95,27 @@ namespace MFDLabs.Grid.Bot.Commands
                         {
                             try
                             {
-                                var gridServicePath = GridServerCommandUtility.Singleton.GetGridServerPath();
-
-                                if (gridServicePath == null)
-                                {
-                                    await message.ReplyAsync($"The grid server was not correctly installed on the machine '{SystemGlobal.Singleton.GetMachineID()}', please contact the datacenter administrator to sort this out.");
-                                    return;
-                                }
-
                                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AdminScriptPrependBaseURL)
                                 {
                                     script = $"game:GetService(\"ContentProvider\"):SetBaseUrl(\"{MFDLabs.Grid.Bot.Properties.Settings.Default.BaseURL}\");\n{script}";
                                 }
 
+                                var adminScriptPath = GridServerCommandUtility.Singleton.GetGridServerScriptPath("admin");
+
+                                SystemLogger.Singleton.Debug("Writing admin script to path '{0}'", adminScriptPath);
+
                                 lock (_writerLock)
-                                    File.WriteAllText($"{gridServicePath}\\internalscripts\\scripts\\admin.lua", script, Encoding.ASCII);
+                                    File.WriteAllText(adminScriptPath, script, Encoding.ASCII);
 
                                 didWriteAdminScript = true;
 
-                                (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript("admin", new Dictionary<string, object>());
+                                (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript("admin");
 
+                            }
+                            catch (ApplicationException ex)
+                            {
+                                await message.ReplyAsync(ex.Message);
+                                return;
                             }
                             catch (Exception ex)
                             {
@@ -128,20 +146,13 @@ namespace MFDLabs.Grid.Bot.Commands
                         .WithColor(0x00, 0xff, 0x00)
                         .Build()
                     );
+
                 if (didWriteAdminScript)
                 {
-                    var gridServicePath = GridServerCommandUtility.Singleton.GetGridServerPath();
-
-                    if (gridServicePath == null)
-                    {
-                        await message.ReplyAsync($"The grid server was not correctly installed on the machine '{SystemGlobal.Singleton.GetMachineID()}', please contact the datacenter administrator to sort this out.");
-                        return;
-                    }
-
                     try
                     {
                         lock (_writerLock)
-                            File.Delete($"{gridServicePath}\\internalscripts\\scripts\\admin.lua");
+                            File.Delete(GridServerCommandUtility.Singleton.GetGridServerScriptPath("admin"));
                     }
                     catch (Exception ex)
                     {

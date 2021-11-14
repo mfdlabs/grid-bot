@@ -9,7 +9,14 @@ namespace MFDLabs.Grid.Bot.Hooks
 
         public void Callback(char key)
         {
-            SystemUtility.Singleton.OpenGridServer();
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+            {
+                SystemUtility.Singleton.OpenGridServerSafe();
+            }
+            else
+            {
+                GridServerArbiter.Singleton.QueueUpArbiteredInstance();
+            }
         }
     }
 }

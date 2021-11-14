@@ -17,6 +17,7 @@ namespace MFDLabs.Logging
     [DebuggerStepThrough]
     public sealed class SystemLogger : SingletonBase<SystemLogger>, ILogger
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly string _fileName =
 #if DEBUG
                         "\\dev_log_" +
@@ -65,7 +66,10 @@ namespace MFDLabs.Logging
                 format
             );
 
-            return string.Format(internalMessage, args);
+            if (args != null && args.Length > 0)
+                return string.Format(internalMessage, args);
+
+            return internalMessage;
         }
 
         [DebuggerStepThrough]
@@ -277,7 +281,8 @@ namespace MFDLabs.Logging
                         ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineHost());
                         ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
                         ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
-                        ConsoleGlobal.Singleton.WriteColoredContent(color, string.Format($" {format}\n", args));
+                        var message = args != null && args.Length > 0 ? string.Format($" {format}\n", args) : $" {format}\n";
+                        ConsoleGlobal.Singleton.WriteColoredContent(color, message);
                     }
                 }
             }

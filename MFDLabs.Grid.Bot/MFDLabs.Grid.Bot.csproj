@@ -75,6 +75,35 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseGridDeploy|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+    <Optimize>true</Optimize>
+    <WarningLevel>0</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugDeploy|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=3.11.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.3.11.0\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
@@ -127,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\HoldsSocketMessagePortAsyncExpiringTaskThread.cs" />
+    <Compile Include="Commands\SendMessageInGuildChannel.cs" />
     <Compile Include="Commands\EvaluateScript.cs" />
     <Compile Include="Commands\Evaluate.cs" />
     <Compile Include="Commands\CloseAllJobs.cs" />
@@ -167,10 +197,12 @@
     <Compile Include="Commands\UpdateSettingOfAssembly.cs" />
     <Compile Include="Commands\ViewConsole.cs" />
     <Compile Include="Commands\ViewCurrentConsole.cs" />
+    <Compile Include="Commands\WtfIsThis.cs" />
     <Compile Include="Events\OnBotGlobalAddedToGuild.cs" />
     <Compile Include="Events\OnLatencyUpdated.cs" />
     <Compile Include="Events\OnLoggedOut.cs" />
     <Compile Include="Events\OnLoggedIn.cs" />
+    <Compile Include="Extensions\IAttachmentExtensions.cs" />
     <Compile Include="Extensions\ISocketMessageChannelExtensions.cs" />
     <Compile Include="Extensions\IUserExtensions.cs" />
     <Compile Include="Hooks\ClearConsoleHook.cs" />
@@ -190,6 +222,47 @@
     <Compile Include="PerformanceMonitors\RenderTaskUserPerformanceMonitor.cs" />
     <Compile Include="Plugins\PacketMetricsPlugin.cs" />
     <Compile Include="Properties\Settings.cs" />
+    <None Include="Deploy\2021\2021.09.04-12.54.55_master_087c37f5e.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-12.58.39_master_1cb63f28c-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-13.00.48_master_e54f5d6e7-Debug.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-15.30.10_master_2d63dfcde-Debug.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-15.33.15_master_95343ffe9-Debug.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-15.46.05_master_241f8fd3e-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-15.55.43_master_07d4e7d66-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-17.00.30_master_d9181aa0d-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-17.28.56_master_f841a6b7b-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-17.32.11_master_8aec939f2-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.04-17.45.33_master_3417518cb-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.06-23.14.03_master_b28553f44-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.06-23.25.40_master_0d44e23fb-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.07-18.21.03_master_7d85a5fe3-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.09-18.37.26_master_0717a59fd-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.09-18.47.25_master_09804fd96-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.13-18.37.55_master_924a9f1cd-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.18-11.39.44_master_ef339a43c-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.18-12.05.27_master_4ac316381-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.18-12.25.29_master_e39765222-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.19-22.31.11_master_80d942be1-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.20-00.49.42_master_cefea0e9a-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.20-01.00.06_master_da1e7ecd1-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.21-21.40.07_master_f9b05aa10-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.22-00.01.02_master_c4f6b9008-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.23-16.55.20_master_e66a3f428-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.23-17.14.52_master_7e62bfa55-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.23-17.24.05_master_aebaf757a-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.23-17.42.12_master_20e8cc1de-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.23-23.31.24_master_349dccfbe-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.25-02.55.47_master_6d08e743a-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.25-17.16.22_master_ca0fd3ba9-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.26-23.25.16_master_3fd3c4ce8-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.28-02.50.27_master_84df3c1b6-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.09.28-15.43.14_master_2275eec1d-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.10.28-03.09.54_master_9d17d9f5f-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.10.31-01.46.59_master_8c2daea15-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\2021.10.31-03.49.39_master_98e329d3a-Release.mfdlabs-archive" />
+    <None Include="Deploy\2021\MFDLabs.Grid.Bot.exe.config" />
+    <None Include="Deploy\2021\MFDLabs.Grid.Deployer.exe.config" />
+    <None Include="RuntimeScripts\PointerMagic.csx" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
     <Compile Include="Events\OnConnected.cs" />
@@ -362,20 +435,66 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>SET CONFIG=$(ConfigurationName)
+    <PostBuildEvent>SET AppSettingsConfiguration=$(ConfigurationName)
+SET IsDebug=F
 
-IF '%25CONFIG%25' == 'ReleaseNoDeploy' (
-     SET CONFIG=Release
+rem Determine the current configuration
+IF "%25AppSettingsConfiguration%25"=="DebugGridDeploy" (
+    SET IsDebug=T
+    SET AppSettingsConfiguration=Debug-Vault
 )
+IF "%25AppSettingsConfiguration%25"=="DebugRunner" (
+    SET IsDebug=T
+    SET AppSettingsConfiguration=Debug-OnTheRun
+)
+IF "%25AppSettingsConfiguration%25"=="DebugActor" (
+    SET IsDebug=T
+    SET AppSettingsConfiguration=Debug-Root
+)
+IF "%25AppSettingsConfiguration%25"=="ReleaseGridDeploy" SET AppSettingsConfiguration=Release-Vault
+IF "%25AppSettingsConfiguration%25"=="ReleaseRunner" SET AppSettingsConfiguration=Release-OnTheRun
+IF "%25AppSettingsConfiguration%25"=="ReleaseActor" SET AppSettingsConfiguration=Release-Root
 
-COPY /Y "$(ProjectDir)App.%25CONFIG%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
-(IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ (RMDIR $(ProjectDir)$(OutDir)RuntimeScripts\ /S/Q))
+rem Deploying locally with no actor or runner
+IF "%25AppSettingsConfiguration%25"=="DebugDeploy" (
+    SET AppSettingsConfiguration=Debug
+    SET IsDebug=T
+)
+)
+IF "%25AppSettingsConfiguration%25"=="ReleaseNoDeploy" SET AppSettingsConfiguration=Release
+
+ECHO Deploying with configuration "%25AppSettingsConfiguration%25"
+
+rem Copy the current configuration settings to the target
+COPY /Y "$(ProjectDir)App.%25AppSettingsConfiguration%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+
+rem Delete the old runtime-scripts, in case there are any old files that are not in the new runtime-scripts
+IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ RMDIR $(ProjectDir)$(OutDir)RuntimeScripts\ /S/Q
+
+rem Copy the new runtime-scripts
 XCOPY $(ProjectDir)RuntimeScripts\ $(ProjectDir)$(OutDir)RuntimeScripts\ /E/H/C/I/F/Y
+
+rem Remove translation scripts
 RMDIR /S/Q "cs" "de" "es" "fr" "it" "ja" "ko" "pl" "pt-BR" "ru" "tr" "zh-Hans" "zh-Hant"
-IF '$(Configuration)' == 'Release' (
-      del /q "$(TargetDir)*.pdb"
-       ECHO "Deploying."
-       powershell -ExecutionPolicy Unrestricted "$(SolutionDir)Deploy.ps1" -root $(SolutionDir) -config $(Configuration)
+
+rem Determine if we are deploying a component build
+SET IsDeployment=F
+IF "$(Configuration)"=="DebugDeploy" SET IsDeployment=T
+IF "$(Configuration)"=="Release" SET IsDeployment=T
+IF "$(Configuration)"=="ReleaseGridDeploy" SET IsDeployment=T
+IF "$(Configuration)"=="ReleaseRunner" SET IsDeployment=T
+IF "$(Configuration)"=="ReleaseActor" SET IsDeployment=T
+
+SET DeploymentConfiguration=Release
+IF "%25IsDebug%25"=="T" SET DeploymentConfiguration=Debug
+
+IF "%25IsDeployment%25"=="T" (
+    rem Determine if we are deploying a debug or release build, if release delete all pdb files
+    IF NOT "%25IsDebug%25" == "T" del /q "$(TargetDir)*.pdb"
+
+    rem Call on the deploy script
+    ECHO "Deploying."
+    powershell -ExecutionPolicy Unrestricted "$(SolutionDir)Deploy.ps1" -root $(SolutionDir) -config %25DeploymentConfiguration%25
 )
 </PostBuildEvent>
   </PropertyGroup>

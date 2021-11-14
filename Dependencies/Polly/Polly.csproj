@@ -20,7 +20,7 @@
     <LangVersion>latest</LangVersion>
     <EmbedUntrackedSources>true</EmbedUntrackedSources> <!-- EmbedUntrackedSources for deterministic build -->
     <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
-    <Configurations>Debug;Release;ReleaseNoDeploy</Configurations>
+    <Configurations>Debug;Release;ReleaseNoDeploy;DebugGridDeploy;ReleaseGridDeploy;DebugDeploy</Configurations>
   </PropertyGroup>
   <PropertyGroup Label="SourceLink">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -31,6 +31,9 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='ReleaseGridDeploy'">
     <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='ReleaseNoDeploy'">

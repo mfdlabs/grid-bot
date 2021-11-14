@@ -99,8 +99,9 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, IDictionary<string, object> arguments)
+        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, IDictionary<string, object> arguments = default(IDictionary<string, object>))
         {
+            if (arguments == default) arguments = new Dictionary<string, object>();
             return GetGameServerExecutionScript(
                 type,
                 arguments,

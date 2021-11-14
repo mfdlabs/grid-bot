@@ -813,5 +813,23 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["OnStartBatchAllocate25ArbiterInstances"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OnStartCloseAllOpenGridServerInstances {
+            get {
+                return ((bool)(this["OnStartCloseAllOpenGridServerInstances"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool WtfCommandsEnabled {
+            get {
+                return ((bool)(this["WtfCommandsEnabled"]));
+            }
+        }
     }
 }

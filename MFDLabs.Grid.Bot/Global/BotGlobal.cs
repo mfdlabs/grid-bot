@@ -6,12 +6,12 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Global
 {
-    internal sealed class BotGlobal : SingletonBase<BotGlobal>
+    public sealed class BotGlobal : SingletonBase<BotGlobal>
     {
 
         private DiscordSocketClient _client;
 
-        internal DiscordSocketClient Client { get { return _client; } }
+        public DiscordSocketClient Client { get { return _client; } }
 
         internal void Initialize(DiscordSocketClient client)
         {

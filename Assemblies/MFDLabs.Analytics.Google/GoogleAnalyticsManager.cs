@@ -7,7 +7,7 @@ using MFDLabs.Networking;
 
 namespace MFDLabs.Analytics.Google
 {
-    public sealed class Manager : SingletonBase<Manager>
+    public sealed class GoogleAnalyticsManager : SingletonBase<GoogleAnalyticsManager>
     {
         public void Initialize(string trackerID)
         {

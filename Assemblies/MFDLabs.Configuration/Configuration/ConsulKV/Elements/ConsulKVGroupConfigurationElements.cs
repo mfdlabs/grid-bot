@@ -6,7 +6,7 @@ namespace MFDLabs.Configuration.Elements.ConsulKV
     {
         public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.BasicMap;
 
-        protected override string ElementName => "vaultConfigurationGroup";
+        protected override string ElementName => "consulKvConfigurationGroup";
 
         protected override ConfigurationPropertyCollection Properties
         {

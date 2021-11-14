@@ -1,4 +1,6 @@
-﻿namespace MFDLabs.Abstractions
+﻿using System.Diagnostics;
+
+namespace MFDLabs.Abstractions
 {
     /// <summary>
     /// Base singleton class, thread safe stuff.
@@ -11,6 +13,7 @@
         /// The singleton instance to be returned when indexing this singleton.
         /// The <see cref="TSingleton"/> parameter should have at least one public empty constructor.
         /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public static readonly TSingleton Singleton = new TSingleton();
     }
 }

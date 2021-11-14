@@ -41,22 +41,22 @@ namespace MFDLabs.Grid.Bot
                 }
             }
 
-            Manager.Singleton.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
+            GoogleAnalyticsManager.Singleton.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
 
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
-                Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "Startup", "Warning", "Debug Mode Enabled", 1);
+                GoogleAnalyticsManager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "Startup", "Warning", "Debug Mode Enabled", 1);
                 SystemLogger.Singleton.Warning(_DebugMode);
             }
 #endif
             if (SystemGlobal.Singleton.ContextIsAdministrator() && global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
             {
-                Manager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
                 SystemLogger.Singleton.Warning(_AdminMode);
             }
 
-            Manager.Singleton.TrackNetworkEvent(
+            GoogleAnalyticsManager.Singleton.TrackNetworkEvent(
                 "Startup",
                 "Info",
                 string.Format(
@@ -79,7 +79,7 @@ namespace MFDLabs.Grid.Bot
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
-                Manager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started", 1);
                 PerformanceServer.Singleton.Start();
             }
 
@@ -89,7 +89,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
-                Manager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.", 1);
                 SystemLogger.Singleton.LifecycleEvent(_PrimaryTaskError);
                 SystemLogger.Singleton.Error(ex.Message);
                 PerformanceServer.Singleton.Stop();
@@ -105,7 +105,7 @@ namespace MFDLabs.Grid.Bot
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
                 {
-                    Manager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "MainTask", "Error", $"MainTask Failure: No Bot Token.", 1);
+                    GoogleAnalyticsManager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "MainTask", "Error", $"MainTask Failure: No Bot Token.", 1);
                     SystemLogger.Singleton.Error(_NoBotToken);
                     SignalUtility.Singleton.InvokeInteruptSignal();
                     await Task.Delay(-1);
@@ -114,7 +114,7 @@ namespace MFDLabs.Grid.Bot
                     CommandRegistry.Singleton.RegisterOnce();
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup && global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                    SystemUtility.Singleton.OpenGridServer();
+                    SystemUtility.Singleton.OpenGridServerSafe();
 
                 BotGlobal.Singleton.Initialize(new DiscordSocketClient());
 
@@ -128,10 +128,13 @@ namespace MFDLabs.Grid.Bot
                 BotGlobal.Singleton.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
                 BotGlobal.Singleton.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
 
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
+                    SystemUtility.Singleton.KillAllGridServersSafe();
+
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartBatchAllocate25ArbiterInstances)
                     ThreadPool.QueueUserWorkItem((s) =>
                     {
-                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(25, 5);
+                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(5, 5);
                     });
 
                 await BotGlobal.Singleton.SingletonLaunch();
@@ -139,7 +142,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
-                Manager.Singleton.TrackNetworkEvent("MainTask", "Error", $"MainTask Failure: {ex.ToDetailedString()}.");
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("MainTask", "Error", $"MainTask Failure: {ex.ToDetailedString()}.");
                 SystemLogger.Singleton.LifecycleEvent(_InitializationError);
                 SystemLogger.Singleton.Error(ex.Message);
                 SignalUtility.Singleton.InvokeInteruptSignal();

@@ -155,7 +155,6 @@ namespace MFDLabs
 
             if (!(ex is NotLoggedException))
             {
-                // If the following line fails, run "installutil.exe Roblox.Common.dll"
                 EventLog.WriteEntry(sourceName, s, type, eventID, category);
                 foreach (IExceptionHandlerListener listener in listeners)
                 {

@@ -124,18 +124,23 @@ namespace MFDLabs.Grid.Bot.Registries
                 char key = Console.ReadKey(true).KeyChar;
 
                 var consoleHook = GetConsoleHook(key);
-                try
-                {
-                    consoleHook?.Callback(key);
-                }
-                catch (Exception ex)
-                {
+
+                if (consoleHook != default)
+                    ThreadPool.QueueUserWorkItem((s) =>
+                    {
+                        try
+                        {
+                            consoleHook?.Callback(key);
+                        }
+                        catch (Exception ex)
+                        {
 #if DEBUG
-                    SystemLogger.Singleton.Error(ex);
+                            SystemLogger.Singleton.Error(ex);
 #else
-                    SystemLogger.Singleton.Warning(ex.Message);
+                            SystemLogger.Singleton.Warning(ex.Message);
 #endif
-                }
+                        }
+                    });
             }
         }
     }

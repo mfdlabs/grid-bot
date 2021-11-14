@@ -26,7 +26,7 @@ namespace MFDLabs.Configuration.Providers
             {
                 var configuration = GetGroupConfigurationElement();
                 var address = _address = configuration.Address;
-                _configurationClient = new VaultConfigurationClient(address, configuration.Token);
+                _configurationClient = new VaultConfigurationClient(address, configuration.RoleID, configuration.SecretID);
                 ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Vault Client point to address '{0}'.", address);
                 var updateInterval = configuration.UpdateInterval;
                 _timer = new SelfDisposingTimer(RefreshRegisteredProviders, updateInterval, updateInterval);
@@ -82,7 +82,7 @@ namespace MFDLabs.Configuration.Providers
         {
             if (string.IsNullOrEmpty(name))
             {
-                name = GetType().FullName;
+                name = GetType().Name;
             }
             base.Initialize(name, col);
         }
