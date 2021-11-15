@@ -6,16 +6,32 @@ using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines;
+using MFDLabs.Logging;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {
     public class VaultConfigurationClient
     {
+#if DEBUG
+        const string AppConfiguration = "Debug";
+#else
+        const string AppConfiguration = "Release";
+#endif
+
         public VaultConfigurationClient(string address, string roleId, string secretId)
         {
             var authMethod = new AppRoleAuthMethodInfo(roleId, secretId);
             var settings = new VaultClientSettings(address, authMethod);
             _client = new VaultClient(settings);
+            _vaultClientRefreshTimer = new Timer(RefreshToken, null, TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
+        }
+
+        private void RefreshToken(object s)
+        {
+            _vaultClientRefreshTimer.Change(-1, -1);
+            EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Refreshing the VaultClient's token...");
+            _client.V1.Auth.Token.RenewSelfAsync().Wait();
+            _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
 
         public IReadOnlyCollection<T> FetchWithRetries<T>(Func<string, IReadOnlyCollection<T>> getterFunc, string groupName, int maxAttempts)
@@ -44,15 +60,15 @@ namespace MFDLabs.Configuration.Clients.Vault
                     {
                         {  "version", "2" }
                     },
-                Path = $"kv/"
+                Path = "mfdlabs-sharp-v2/"
             };
 
             var theseSettings = new List<ISetting>();
 
-            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"mfdlabs-sharp-v2/{groupName}", engine.Path).Result;
+            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
             foreach (var path in paths.Data.Keys)
             {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"mfdlabs-sharp-v2/{groupName}/{path}", mountPoint: engine.Path).Result;
+                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}", mountPoint: engine.Path).Result;
                 var values = secret.Data.Data;
                 theseSettings.Add(new Setting()
                 {
@@ -75,15 +91,15 @@ namespace MFDLabs.Configuration.Clients.Vault
                     {
                         {  "version", "2" }
                     },
-                Path = $"kv/"
+                Path = "mfdlabs-sharp-v2/"
             };
 
             var theseSettings = new List<IConnectionString>();
 
-            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"mfdlabs-sharp-v2/{groupName}", engine.Path).Result;
+            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
             foreach (var path in paths.Data.Keys)
             {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"mfdlabs-sharp-v2/{groupName}/{path}", mountPoint: engine.Path).Result;
+                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}", mountPoint: engine.Path).Result;
                 var values = secret.Data.Data;
                 theseSettings.Add(new ConnectionString()
                 {
@@ -105,7 +121,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 {
                     {  "version", "2" }
                 },
-                Path = $"kv/"
+                Path = "mfdlabs-sharp-v2/"
             };
 
             var values = new Dictionary<string, object>
@@ -115,9 +131,10 @@ namespace MFDLabs.Configuration.Clients.Vault
                 { "Value", value },
                 { "Updated", updated }
             };
-            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"mfdlabs-sharp-v2/{groupName}/{name}", values, mountPoint: engine.Path);
+            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"{AppConfiguration}/{groupName}/{name}", values, mountPoint: engine.Path);
         }
 
         private readonly IVaultClient _client;
+        private readonly Timer _vaultClientRefreshTimer;
     }
 }

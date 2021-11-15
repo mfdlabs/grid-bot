@@ -54,6 +54,10 @@
       <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
       <Name>MFDLabs.Abstractions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj">
+      <Project>{b3e34cff-1aa2-4d0d-8b27-c18e55e2adc1}</Project>
+      <Name>MFDLabs.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
       <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
       <Name>MFDLabs.Diagnostics</Name>

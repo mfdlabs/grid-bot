@@ -47,8 +47,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\DebugGridDeploy\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>7.3</LangVersion>
@@ -56,8 +56,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseGridDeploy|AnyCPU'">
-    <OutputPath>bin\ReleaseGridDeploy\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
     <Optimize>true</Optimize>
     <WarningLevel>0</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -77,6 +77,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -87,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Partials\ConsoleStaticExtensions.cs" />
+    <Compile Include="Properties\Settings.cs" />
     <Compile Include="Tooling\NetTools.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +99,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.release-vault.config" />
+    <None Include="App.debug-vault.config" />
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -110,6 +114,10 @@
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
       <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
       <Name>MFDLabs.Abstractions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj">
+      <Project>{b3e34cff-1aa2-4d0d-8b27-c18e55e2adc1}</Project>
+      <Name>MFDLabs.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
       <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
@@ -125,5 +133,24 @@ xcopy /C/I/Y "$(TargetPath).config" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDi
     <PostBuildEvent>xcopy /C/I/Y "$(TargetPath)" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"
 xcopy /C/I/Y "$(TargetPath).config" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"
 xcopy /C/I/Y "$(TargetDir)$(TargetName).pdb" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>SET AppSettingsConfiguration=$(ConfigurationName)
+
+rem Determine the current configuration
+IF "%25AppSettingsConfiguration%25"=="DebugGridDeploy" SET AppSettingsConfiguration=Debug-Vault
+IF "%25AppSettingsConfiguration%25"=="DebugRunner" SET AppSettingsConfiguration=Debug-OnTheRun
+IF "%25AppSettingsConfiguration%25"=="DebugActor" SET AppSettingsConfiguration=Debug-Root
+IF "%25AppSettingsConfiguration%25"=="ReleaseGridDeploy" SET AppSettingsConfiguration=Release-Vault
+IF "%25AppSettingsConfiguration%25"=="ReleaseRunner" SET AppSettingsConfiguration=Release-OnTheRun
+IF "%25AppSettingsConfiguration%25"=="ReleaseActor" SET AppSettingsConfiguration=Release-Root
+
+ECHO Deploying with configuration "%25AppSettingsConfiguration%25"
+
+rem Copy the current configuration settings to the target
+COPY /Y "$(ProjectDir)App.%25AppSettingsConfiguration%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+
+xcopy /C/I/Y "$(TargetPath)" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"
+xcopy /C/I/Y "$(TargetPath).config" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
