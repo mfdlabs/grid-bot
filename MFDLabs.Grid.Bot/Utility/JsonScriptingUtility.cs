@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MFDLabs.Abstractions;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Networking;
@@ -99,12 +100,13 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, IDictionary<string, object> arguments = default(IDictionary<string, object>))
+        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, params (string, object)[] arguments)
         {
-            if (arguments == default) arguments = new Dictionary<string, object>();
+            var args = new Dictionary<string, object>();
+            if (arguments.Length > 0) args = arguments.ToDictionary(i => i.Item1, i => i.Item2);
             return GetGameServerExecutionScript(
                 type,
-                arguments,
+                args,
                 1818,
                 777,
                 1,

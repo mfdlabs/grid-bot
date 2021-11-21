@@ -30,7 +30,7 @@ namespace MFDLabs.Http.Client
             {
                 throw new ArgumentNullException("httpRequest");
             }
-            return _CircuitBreakerPolicies.GetOrAdd(GetCircuitBreakerPolicyKey(httpRequest), new Func<string, ICircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>>>(CreateCircuitBreakerPolicy));
+            return _CircuitBreakerPolicies.GetOrAdd(GetCircuitBreakerPolicyKey(httpRequest), CreateCircuitBreakerPolicy);
         }
 
         public void Dispose()

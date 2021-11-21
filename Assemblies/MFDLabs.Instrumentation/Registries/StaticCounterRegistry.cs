@@ -10,7 +10,7 @@ namespace MFDLabs.Instrumentation
 
         static StaticCounterRegistry()
         {
-            new CounterReporter(Instance, new Action<Exception>(HandleException)).Start();
+            new CounterReporter(Instance, HandleException).Start();
         }
 
         private static void HandleException(Exception ex)

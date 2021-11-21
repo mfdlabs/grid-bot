@@ -538,9 +538,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AdminScriptPrependBaseURL {
+        public bool ScriptExecutionPrependBaseURL {
             get {
-                return ((bool)(this["AdminScriptPrependBaseURL"]));
+                return ((bool)(this["ScriptExecutionPrependBaseURL"]));
             }
         }
         
@@ -829,6 +829,15 @@ namespace MFDLabs.Grid.Bot.Properties {
         public bool WtfCommandsEnabled {
             get {
                 return ((bool)(this["WtfCommandsEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ScriptExecutionRequireProtections {
+            get {
+                return ((bool)(this["ScriptExecutionRequireProtections"]));
             }
         }
     }

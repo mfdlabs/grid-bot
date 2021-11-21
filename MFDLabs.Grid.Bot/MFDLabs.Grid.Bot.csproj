@@ -56,6 +56,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>
     </DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>app.ico</ApplicationIcon>
@@ -74,6 +75,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -93,6 +95,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugDeploy|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -156,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\HoldsSocketMessagePortAsyncExpiringTaskThread.cs" />
+    <Compile Include="Commands\BatchOpenGridServers.cs" />
     <Compile Include="Commands\SendMessageInGuildChannel.cs" />
     <Compile Include="Commands\EvaluateScript.cs" />
     <Compile Include="Commands\Evaluate.cs" />
@@ -187,7 +191,7 @@
     <Compile Include="Commands\OpenGridServer.cs" />
     <Compile Include="Commands\PrefixCheck.cs" />
     <Compile Include="Commands\ReloadSettingsOfAssembly.cs" />
-    <Compile Include="Commands\ReloadSettings.cs" />
+    <Compile Include="Commands\ReloadSettingsAndResources.cs" />
     <Compile Include="Commands\Render.cs" />
     <Compile Include="Commands\RestartBot.cs" />
     <Compile Include="Commands\ThrowTest.cs" />
@@ -221,47 +225,14 @@
     <Compile Include="PerformanceMonitors\RenderTaskPerformanceMonitor.cs" />
     <Compile Include="PerformanceMonitors\RenderTaskUserPerformanceMonitor.cs" />
     <Compile Include="Plugins\PacketMetricsPlugin.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Settings.cs" />
-    <None Include="Deploy\2021\2021.09.04-12.54.55_master_087c37f5e.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-12.58.39_master_1cb63f28c-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-13.00.48_master_e54f5d6e7-Debug.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-15.30.10_master_2d63dfcde-Debug.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-15.33.15_master_95343ffe9-Debug.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-15.46.05_master_241f8fd3e-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-15.55.43_master_07d4e7d66-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-17.00.30_master_d9181aa0d-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-17.28.56_master_f841a6b7b-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-17.32.11_master_8aec939f2-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.04-17.45.33_master_3417518cb-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.06-23.14.03_master_b28553f44-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.06-23.25.40_master_0d44e23fb-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.07-18.21.03_master_7d85a5fe3-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.09-18.37.26_master_0717a59fd-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.09-18.47.25_master_09804fd96-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.13-18.37.55_master_924a9f1cd-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.18-11.39.44_master_ef339a43c-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.18-12.05.27_master_4ac316381-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.18-12.25.29_master_e39765222-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.19-22.31.11_master_80d942be1-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.20-00.49.42_master_cefea0e9a-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.20-01.00.06_master_da1e7ecd1-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.21-21.40.07_master_f9b05aa10-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.22-00.01.02_master_c4f6b9008-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.23-16.55.20_master_e66a3f428-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.23-17.14.52_master_7e62bfa55-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.23-17.24.05_master_aebaf757a-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.23-17.42.12_master_20e8cc1de-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.23-23.31.24_master_349dccfbe-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.25-02.55.47_master_6d08e743a-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.25-17.16.22_master_ca0fd3ba9-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.26-23.25.16_master_3fd3c4ce8-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.28-02.50.27_master_84df3c1b6-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.09.28-15.43.14_master_2275eec1d-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.10.28-03.09.54_master_9d17d9f5f-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.10.31-01.46.59_master_8c2daea15-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\2021.10.31-03.49.39_master_98e329d3a-Release.mfdlabs-archive" />
-    <None Include="Deploy\2021\MFDLabs.Grid.Bot.exe.config" />
-    <None Include="Deploy\2021\MFDLabs.Grid.Deployer.exe.config" />
+    <None Include="Lua\SafeLuaMode.formatted.lua" />
+    <None Include="Lua\SafeLuaMode.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
@@ -432,7 +403,12 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>SET AppSettingsConfiguration=$(ConfigurationName)

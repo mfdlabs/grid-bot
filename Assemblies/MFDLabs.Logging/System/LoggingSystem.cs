@@ -8,10 +8,7 @@ namespace MFDLabs.Logging.Diagnostics
     {
         private readonly Stopwatch _globalWatch;
 
-        public Stopwatch GlobalLifetimeWatch
-        {
-            get { return _globalWatch; }
-        }
+        public Stopwatch GlobalLifetimeWatch => _globalWatch;
 
         public LoggingSystem()
         {

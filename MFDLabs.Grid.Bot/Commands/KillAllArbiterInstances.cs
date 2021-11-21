@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -24,7 +25,10 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var totalItemsKilled = GridServerArbiter.Singleton.KillAllOpenInstances();
+            if (!bool.TryParse(messageContentArray.ElementAtOrDefault(0), out bool @unsafe))
+                @unsafe = false;
+
+            var totalItemsKilled = @unsafe ? GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe() : GridServerArbiter.Singleton.KillAllOpenInstances();
 
             if (totalItemsKilled == 0)
             {

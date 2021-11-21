@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MFDLabs.Abstractions;
 using MFDLabs.Grid.ComputeCloud;
+using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
 
@@ -70,8 +71,23 @@ namespace MFDLabs.Grid.Bot.Utility
         }
 
         private const int GridServerStartPort = 47999;
-        private readonly List<ArbiteredGridServerInstance> _instances = new List<ArbiteredGridServerInstance>();
+        private readonly List<GridServerInstance> _instances = new List<GridServerInstance>();
         private readonly List<int> _allocatedPorts = new List<int>();
+        private readonly ICounterRegistry _counterRegistry = StaticCounterRegistry.Instance;
+
+        public int KillAllOpenInstancesUnsafe()
+        {
+            var instanceCount = _instances.Count;
+            SystemLogger.Singleton.LifecycleEvent("Disposing of all grid server instances");
+            foreach (var instance in _instances.ToArray())
+            {
+                SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.Name);
+                _allocatedPorts.Remove(instance.Port);
+                _instances.Remove(instance);
+                instance.Dispose();
+            }
+            return instanceCount;
+        }
 
         public int KillAllOpenInstances()
         {
@@ -87,6 +103,20 @@ namespace MFDLabs.Grid.Bot.Utility
                     instance.Dispose();
                 }
             return instanceCount;
+        }
+
+        public bool KillInstanceByNameUnsafe(string name, string hostName = "localhost")
+        {
+            var instance = GetInstance(name, hostName);
+            if (instance != null)
+            {
+                _allocatedPorts.Remove(instance.Port);
+                _instances.Remove(instance);
+                instance.Dispose();
+                return true;
+            }
+
+            return false;
         }
 
         public bool KillInstanceByName(string name, string hostName = "localhost")
@@ -105,23 +135,23 @@ namespace MFDLabs.Grid.Bot.Utility
             return false;
         }
 
-        public List<ArbiteredGridServerInstance> BatchQueueUpArbiteredInstances(int count = 1, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true)
+        public List<GridServerInstance> BatchQueueUpArbiteredInstances(int count = 1, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true)
         {
-            var instances = new List<ArbiteredGridServerInstance>();
+            var instances = new List<GridServerInstance>();
             for (int i = 0; i < count; i++) instances.Add(QueueUpArbiteredInstance(null, maxAttemptsToHitGridServer, hostName, startUp));
             return instances;
         }
 
-        public List<ArbiteredGridServerInstance> BatchQueueUpArbiteredInstancesUnsafe(int count = 1, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true)
+        public List<GridServerInstance> BatchQueueUpArbiteredInstancesUnsafe(int count = 1, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true)
         {
-            var instances = new List<ArbiteredGridServerInstance>();
+            var instances = new List<GridServerInstance>();
             for (int i = 0; i < count; i++) instances.Add(QueueUpArbiteredInstanceUnsafe(null, maxAttemptsToHitGridServer, hostName, startUp));
             return instances;
         }
 
         //warning: THIS HAS ZERO THREAD SAFETY !!!
         //it also pools start up, so we may not get the arbiter back for a while!!!!!!
-        public ArbiteredGridServerInstance QueueUpArbiteredInstanceUnsafe(string name = null, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true, bool openNowInNewThread = true)
+        public GridServerInstance QueueUpArbiteredInstanceUnsafe(string name = null, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true, bool openNowInNewThread = true)
         {
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
@@ -130,7 +160,7 @@ namespace MFDLabs.Grid.Bot.Utility
             _allocatedPorts.Add(currentAllocatedPort);
 
             SystemUtility.Singleton.OpenWebServerIfNotOpen();
-            var instance = new ArbiteredGridServerInstance(
+            var instance = new GridServerInstance(
                 hostName,
                 NetUtility.FindNextAvailablePort(currentAllocatedPort),
                 name ?? Guid.NewGuid().ToString(),
@@ -145,7 +175,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return instance;
         }
 
-        public ArbiteredGridServerInstance QueueUpPersistentArbiteredInstanceUnsafe(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false, bool startUp = true, bool openNowInNewThread = true)
+        public GridServerInstance QueueUpPersistentArbiteredInstanceUnsafe(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false, bool startUp = true, bool openNowInNewThread = true)
         {
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
@@ -154,7 +184,7 @@ namespace MFDLabs.Grid.Bot.Utility
             _allocatedPorts.Add(currentAllocatedPort);
 
             SystemUtility.Singleton.OpenWebServerIfNotOpen();
-            var instance = new ArbiteredGridServerInstance(
+            var instance = new GridServerInstance(
                 hostName,
                 NetUtility.FindNextAvailablePort(currentAllocatedPort),
                 name,
@@ -169,7 +199,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return instance;
         }
 
-        public ArbiteredGridServerInstance QueueUpArbiteredInstance(string name = null, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true, bool openNowInNewThread = false)
+        public GridServerInstance QueueUpArbiteredInstance(string name = null, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool startUp = true, bool openNowInNewThread = false)
         {
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
@@ -179,7 +209,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 _allocatedPorts.Add(currentAllocatedPort);
 
             SystemUtility.Singleton.OpenWebServerIfNotOpen();
-            var instance = new ArbiteredGridServerInstance(
+            var instance = new GridServerInstance(
                 hostName,
                 NetUtility.FindNextAvailablePort(currentAllocatedPort),
                 name ?? Guid.NewGuid().ToString(),
@@ -194,7 +224,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 _instances.Add(instance);
             return instance;
         }
-        public ArbiteredGridServerInstance QueueUpPersistentArbiteredInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false, bool startUp = true, bool openNowInNewThread = false)
+        public GridServerInstance QueueUpPersistentArbiteredInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false, bool startUp = true, bool openNowInNewThread = false)
         {
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
@@ -204,7 +234,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 _allocatedPorts.Add(currentAllocatedPort);
 
             SystemUtility.Singleton.OpenWebServerIfNotOpen();
-            var instance = new ArbiteredGridServerInstance(
+            var instance = new GridServerInstance(
                 hostName,
                 NetUtility.FindNextAvailablePort(currentAllocatedPort),
                 name,
@@ -220,39 +250,39 @@ namespace MFDLabs.Grid.Bot.Utility
             return instance;
         }
 
-        public ArbiteredGridServerInstance GetInstance(string name, string hostName = "localhost")
+        public GridServerInstance GetInstance(string name, string hostName = "localhost")
         {
             lock (_instances)
                 return (from instance in _instances where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName select instance).FirstOrDefault();
         }
 
-        public ArbiteredGridServerInstance GetOrCreateInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "hostname")
+        public GridServerInstance GetOrCreateInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "hostname")
         {
             var instance = GetInstance(name, hostName);
             if (instance == null) return QueueUpArbiteredInstance(name, maxAttemptsToHitGridServer, hostName);
             return instance;
         }
 
-        public ArbiteredGridServerInstance GetPersistentInstance(string name, string hostName = "localhost")
+        public GridServerInstance GetPersistentInstance(string name, string hostName = "localhost")
         {
             lock (_instances)
                 return (from instance in _instances where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName && instance.Persistent == true select instance).FirstOrDefault();
         }
 
-        public ArbiteredGridServerInstance GetOrCreatePersistentInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "hostname", bool isPoolable = false, bool openNowInNewThread = false)
+        public GridServerInstance GetOrCreatePersistentInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "hostname", bool isPoolable = false, bool openNowInNewThread = false)
         {
             var instance = GetPersistentInstance(name, hostName);
             if (instance == null) return QueueUpPersistentArbiteredInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable, openNowInNewThread);
             return instance;
         }
 
-        public ArbiteredGridServerInstance GetAvailableInstance()
+        public GridServerInstance GetAvailableInstance()
         {
             lock (_instances)
                 return (from instance in _instances where instance.IsPoolable == true && instance.IsAvailable == true select instance).FirstOrDefault();
         }
 
-        public ArbiteredGridServerInstance GetOrCreateAvailableInstance(int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool openNowInNewThread = false)
+        public GridServerInstance GetOrCreateAvailableInstance(int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool openNowInNewThread = false)
         {
             var instance = GetAvailableInstance();
             if (instance == null) return QueueUpArbiteredInstance(null, maxAttemptsToHitGridServer, hostName, openNowInNewThread);
@@ -2199,7 +2229,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         // should this be an IDisposable?
         [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
-        internal sealed class ArbiteredGridServerInstance : ComputeCloudServiceSoapClient, IDisposable
+        internal sealed class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable
         {
             private readonly int _maxAttemptsToHitGridServer;
             private readonly bool _isPersistent;
@@ -2231,20 +2261,20 @@ namespace MFDLabs.Grid.Bot.Utility
 
 
 
-            public ArbiteredGridServerInstance(string host, int port, string name, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
+            public GridServerInstance(string host, int port, string name, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
                 : this(new EndpointAddress($"http://{host}:{port}"), name, maxAttemptsToHitGridServer, persistent, poolable, openNowInNewThread)
             { }
 
-            public ArbiteredGridServerInstance(EndpointAddress remoteAddress, string name, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
+            public GridServerInstance(EndpointAddress remoteAddress, string name, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
                 : this(remoteAddress, name, false, maxAttemptsToHitGridServer, persistent, poolable, openNowInNewThread)
             {
             }
 
-            public ArbiteredGridServerInstance(string host, int port, string name, bool openProcessNow, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
+            public GridServerInstance(string host, int port, string name, bool openProcessNow, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
                 : this(new EndpointAddress($"http://{host}:{port}"), name, openProcessNow, maxAttemptsToHitGridServer, persistent, poolable, openNowInNewThread)
             { }
 
-            public ArbiteredGridServerInstance(EndpointAddress remoteAddress, string name, bool openProcessNow, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
+            public GridServerInstance(EndpointAddress remoteAddress, string name, bool openProcessNow, int maxAttemptsToHitGridServer = 5, bool persistent = false, bool poolable = true, bool openNowInNewThread = false)
                 : base(DefaultHTTPBinding, remoteAddress)
             {
                 if (maxAttemptsToHitGridServer < 1) throw new ArgumentOutOfRangeException("maxAttemptsToHitGridServer");
@@ -3943,7 +3973,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             private string GetDebuggerDisplay() => _name;
 
-            public override bool Equals(object obj) => obj is ArbiteredGridServerInstance instance && _maxAttemptsToHitGridServer == instance._maxAttemptsToHitGridServer && _isPersistent == instance._isPersistent && _name == instance._name;
+            public override bool Equals(object obj) => obj is GridServerInstance instance && _maxAttemptsToHitGridServer == instance._maxAttemptsToHitGridServer && _isPersistent == instance._isPersistent && _name == instance._name;
 
             // auto generated
             public override int GetHashCode()

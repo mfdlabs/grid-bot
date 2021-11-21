@@ -65,7 +65,7 @@ namespace MFDLabs.EventLog
 
         public void Error(Exception ex)
         {
-            LogIfNeededLazy(LogLevel.Error, new Func<string>(ex.ToString));
+            LogIfNeededLazy(LogLevel.Error, ex.ToString);
         }
 
         public void Error(string format, params object[] args)

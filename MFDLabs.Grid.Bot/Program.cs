@@ -113,9 +113,6 @@ namespace MFDLabs.Grid.Bot
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                     CommandRegistry.Singleton.RegisterOnce();
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup && global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                    SystemUtility.Singleton.OpenGridServerSafe();
-
                 BotGlobal.Singleton.Initialize(new DiscordSocketClient());
 
                 BotGlobal.Singleton.Client.Log += OnLogMessage.Invoke;
@@ -131,10 +128,13 @@ namespace MFDLabs.Grid.Bot
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
                     SystemUtility.Singleton.KillAllGridServersSafe();
 
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup && global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                    SystemUtility.Singleton.OpenGridServerSafe();
+
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartBatchAllocate25ArbiterInstances)
                     ThreadPool.QueueUserWorkItem((s) =>
                     {
-                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(5, 5);
+                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(25, 5);
                     });
 
                 await BotGlobal.Singleton.SingletonLaunch();

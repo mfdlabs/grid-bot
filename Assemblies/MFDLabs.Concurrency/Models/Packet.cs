@@ -3,6 +3,28 @@ using System.Diagnostics;
 
 namespace MFDLabs.Concurrency
 {
+    namespace Unsafe
+    {
+        /// <inheritdoc />
+        public unsafe struct Packet
+        {
+            /// <inheritdoc />
+            public int id { get; set; }
+
+            /// <inheritdoc />
+            public int sequence_id { get; set; }
+
+            /// <inheritdoc />
+            public byte* data { get; set; }
+
+            /// <inheritdoc />
+            public DateTime created { get; set; }
+
+            /// <inheritdoc />
+            public PacketProcessingStatus status { get; set; }
+        }
+    }
+
     /// <summary>
     /// The <see cref="IPacket"/> to be used with factories.
     /// </summary>

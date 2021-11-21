@@ -101,6 +101,10 @@
     <Compile Include="Base\BasePlugin.cs" />
     <Compile Include="Base\BaseTaskThread.cs" />
     <Compile Include="Base\ExpiringTaskThread.cs" />
+    <Compile Include="Base\Unsafe\UnsafeBasePlugin.cs" />
+    <Compile Include="Base\Unsafe\UnsafeBaseTaskThread.cs" />
+    <Compile Include="Base\Unsafe\UnsafeExpiringTaskThread.cs" />
+    <Compile Include="Base\Unsafe\UsafeBaseTask.cs" />
     <Compile Include="Enums\PacketProcessingStatus.cs" />
     <Compile Include="Enums\PluginResult.cs" />
     <Compile Include="Implementation\AsyncHelper.cs" />
@@ -128,6 +132,10 @@
     <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
       <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
       <Name>MFDLabs.Abstractions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
+      <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
+      <Name>MFDLabs.Diagnostics</Name>
     </ProjectReference>
     <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj">
       <Project>{d3cde6e3-28aa-44c9-98bf-1bf5dba6c714}</Project>

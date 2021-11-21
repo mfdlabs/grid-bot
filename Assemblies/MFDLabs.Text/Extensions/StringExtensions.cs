@@ -29,8 +29,12 @@ namespace MFDLabs.Text.Extensions
         public static string GetCodeBlockContents(this string s)
         {
             var match = s.GetCodeBlockMatch();
-            if (match != null && match.Groups.Count == 3) return match.Groups[2].Value;
-            return s; // Return the value here again?
+            if (match != null && match.Groups.Count == 3)
+            {
+                if (!s.Contains($"```{match.Groups[1].Value}\n")) return $"{match.Groups[1].Value} {match.Groups[2].Value}";
+                return match.Groups[2].Value;
+            }
+            return s.Replace("`", ""); // Return the value here again?
         }
         public static string GetCodeBlockSyntaxType(this string s)
         {

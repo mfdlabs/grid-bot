@@ -3,6 +3,7 @@ using MFDLabs.Analytics.Google;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.Concurrency.Base.Async;
+using MFDLabs.Concurrency.Base.Unsafe;
 
 #if DEBUG
 using MFDLabs.Logging;
@@ -10,6 +11,27 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Plugins
 {
+    internal sealed class UnsafePacketMetricsPlugin : UnsafeBasePlugin<UnsafePacketMetricsPlugin>
+    {
+        public override unsafe PluginResult OnReceive(Concurrency.Unsafe.Packet* packet)
+        {
+            GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received unsafe result packet '{packet->id}' with the sequence '{packet->sequence_id}' at '{packet->created}' with the status of '{packet->status}'");
+            if (packet->data != null)
+            {
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"The packet '{packet->id}' with the sequence '{packet->sequence_id}' had an item with the typeof '{packet->data->GetType().FullName}'");
+            }
+#if DEBUG
+            SystemLogger.Singleton.Info("Received result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet->id, packet->sequence_id, packet->created, packet->status);
+
+            if (packet->data != null)
+            {
+                SystemLogger.Singleton.Info("The packet '{0}' with the sequence '{1}' had an item with the typeof '{2}'", packet->id, packet->sequence_id, packet->data->GetType().FullName);
+            }
+#endif
+            return PluginResult.ContinueProcessing;
+        }
+    }
+
     internal sealed class PacketMetricsPlugin<TItem> : BasePlugin<PacketMetricsPlugin<TItem>, TItem>
         where TItem : class
     {

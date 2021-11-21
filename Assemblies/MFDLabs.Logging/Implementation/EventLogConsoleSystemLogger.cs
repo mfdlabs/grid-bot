@@ -91,19 +91,13 @@ namespace MFDLabs.Logging
                 if (level <= MaxLogLevel())
                 {
                     var str = ConstructLoggerMessage(logType, format, args);
-                    var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLabs\\Logs";
+                    var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLABS\\Logs";
 
                     if (!Directory.Exists(dirName + "\\..\\"))
-                    {
                         Directory.CreateDirectory(dirName + "\\..\\");
-                    }
-
                     if (!Directory.Exists(dirName))
-                    {
                         Directory.CreateDirectory(dirName);
-                    }
-
-                    File.AppendAllText(dirName + _fileName, str);
+                    try { File.AppendAllText(dirName + _fileName, str); } catch { }
                 }
             }
         }

@@ -9,6 +9,13 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public sealed class LuaUtility : SingletonBase<LuaUtility>
     {
+        internal string SafeLuaMode
+#if DEBUG
+            => global::MFDLabs.Grid.Bot.Properties.Resources.SafeLuaMode_formatted;
+#else
+            => global::MFDLabs.Grid.Bot.Properties.Resources.SafeLuaMode;
+#endif
+
         public string ParseLuaValues(LuaValue[] result)
         {
             return Lua.ToString(result);

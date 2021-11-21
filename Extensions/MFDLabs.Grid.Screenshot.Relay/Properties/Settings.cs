@@ -17,7 +17,7 @@ namespace MFDLabs.Grid.Screenshot.Relay.Properties
     }
 }
 #elif WE_ON_THE_RUN
-namespace MFDLabs.Grid.Bot.Properties
+namespace MFDLabs.Grid.Screenshot.Relay.Properties
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
     internal sealed partial class Settings
@@ -30,7 +30,7 @@ namespace MFDLabs.Grid.Bot.Properties
     }
 }
 #elif WE_ARE_AN_ACTOR
-namespace MFDLabs.Grid.Bot.Properties
+namespace MFDLabs.Grid.Screenshot.Relay.Properties
 {
     [SettingsProvider(typeof(DataBaseProvider))]
     internal sealed partial class Settings

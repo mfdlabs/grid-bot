@@ -6,9 +6,9 @@ using MFDLabs.Grid.Bot.Interfaces;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
-    internal sealed class ReloadSettings : IStateSpecificCommandHandler
+    internal sealed class ReloadSettingsAndResources : IStateSpecificCommandHandler
     {
-        public string CommandName => "Reload Bot Instance Settings";
+        public string CommandName => "Reload Bot Instance Settings and Resources";
         public string CommandDescription => "Attempts to reload the settings from the current application domain's configuration file.";
         public string[] CommandAliases => new string[] { "reload", "reloadsettings" };
         public bool Internal => true;
