@@ -9,10 +9,13 @@ namespace MFDLabs.Analytics.Google
 {
     public sealed class GoogleAnalyticsManager : SingletonBase<GoogleAnalyticsManager>
     {
+
+        public ICounterRegistry Registry { get; } = new CounterRegistry();
+
         public void Initialize(string trackerID)
         {
             _sharedGAClient = new GAClient(
-                StaticCounterRegistry.Instance,
+                Registry,
                 new GAClientConfig(
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GoogleAnalyticsURL,
                     trackerID,

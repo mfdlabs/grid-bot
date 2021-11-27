@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -9,16 +9,14 @@ using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Text.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
-    internal sealed class Evaluate : IStateSpecificCommandHandler
+    internal sealed class PsExec : IStateSpecificCommandHandler
     {
-        public string CommandName => "Evaluate CSharp";
-        public string CommandDescription => $"Attempts to evaluate the given C# with Roslyn\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}evaluate ...scriptContents.";
-        public string[] CommandAliases => new string[] { "eval", "evaluate" };
+        public string CommandName => "Execute PowerShell";
+        public string CommandDescription => $"Attempts to evaluate the given Powershell\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}psexec ...command.";
+        public string[] CommandAliases => new string[] { "ps", "psexec" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -43,27 +41,21 @@ namespace MFDLabs.Grid.Bot.Commands
 
             scriptContents = scriptContents.EscapeQuotes().GetCodeBlockContents();
 
-            ScriptState<object> result;
 
             using (message.Channel.EnterTypingState())
             {
+                Process result;
 
                 try
                 {
-                    // ref the current assembly
-                    result = await CSharpScript.RunAsync(
-                        scriptContents,
-                        ScriptOptions.Default.WithReferences(
-                            Assembly.GetExecutingAssembly()
-                        )
-                        .WithAllowUnsafe(true)
-                        .WithImports("System")
-                    );
-                }
-                catch (CompilationErrorException ex)
-                {
-                    await HandleException(message, ex);
-                    return;
+                    result = new Process();
+                    result.StartInfo.FileName = "powershell.exe";
+                    result.StartInfo.Arguments = $"-ExecutionPolicy Unrestricted -Command {scriptContents}";
+                    result.StartInfo.UseShellExecute = false;
+                    result.StartInfo.RedirectStandardOutput = true;
+                    result.StartInfo.RedirectStandardError = true;
+                    result.Start();
+                    result.WaitForExit(20000);
                 }
                 catch (Exception ex)
                 {
@@ -71,18 +63,27 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                await message.ReplyAsync(result.ReturnValue == null ? "Executed script with no return!" : $"Executed script with return:");
-                if (result.ReturnValue != null)
+                var returnValue = result.StandardOutput.ReadToEnd();
+                var errorValue = result.StandardError.ReadToEnd();
+
+                if (!errorValue.IsNullOrEmpty())
                 {
-                    if (result.ReturnValue.ToString().Length > EmbedBuilder.MaxDescriptionLength)
+                    await HandleException(message, new Exception(errorValue));
+                    return;
+                }
+
+                await message.ReplyAsync(returnValue.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
+                if (!returnValue.IsNullOrEmpty())
+                {
+                    if (returnValue.Length > EmbedBuilder.MaxDescriptionLength)
                     {
-                        await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(result.ReturnValue.ToString())), "eval.txt");
+                        await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(returnValue)), "psexec.txt");
                         return;
                     }
                     await message.Channel.SendMessageAsync(
                         embed: new EmbedBuilder()
                         .WithTitle("Return value")
-                        .WithDescription($"```\n{result.ReturnValue}\n```")
+                        .WithDescription($"```\n{returnValue}\n```")
                         .WithAuthor(message.Author)
                         .WithCurrentTimestamp()
                         .WithColor(0x00, 0xff, 0x00)
@@ -94,11 +95,11 @@ namespace MFDLabs.Grid.Bot.Commands
 
         private async Task HandleException(SocketMessage message, Exception ex)
         {
-            await message.ReplyAsync($"an exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:");
+            await message.ReplyAsync($"an exception occurred when trying to execute the given PowerShell, please review this error to see if your input was malformed:");
 
             if (ex.Message.Length > EmbedBuilder.MaxDescriptionLength)
             {
-                await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)), "eval-error.txt");
+                await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)), "psexec-error.txt");
                 return;
             }
 

@@ -17,6 +17,13 @@ namespace MFDLabs.Logging
     [DebuggerStepThrough]
     public sealed class EventLogSystemLogger : SingletonBase<EventLogSystemLogger>, ILogger
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _localIp = NetworkingGlobal.Singleton.GetLocalIP();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _machineId = SystemGlobal.Singleton.GetMachineID();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _machineHost = SystemGlobal.Singleton.GetMachineHost();
+
         private readonly string _fileName =
 #if DEBUG
                         "\\dev_log_" +
@@ -67,9 +74,9 @@ namespace MFDLabs.Logging
 #else
                 "Release",
 #endif
-                NetworkingGlobal.Singleton.GetLocalIP(),
-                SystemGlobal.Singleton.GetMachineID(),
-                SystemGlobal.Singleton.GetMachineHost(),
+                _localIp,
+                _machineId,
+                _machineHost,
                 global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
                 logType.ToUpper(),
                 format

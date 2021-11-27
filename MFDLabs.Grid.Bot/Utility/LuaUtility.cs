@@ -11,9 +11,9 @@ namespace MFDLabs.Grid.Bot.Utility
     {
         internal string SafeLuaMode
 #if DEBUG
-            => global::MFDLabs.Grid.Bot.Properties.Resources.SafeLuaMode_formatted;
+            => global::MFDLabs.Grid.Bot.Properties.Resources.LuaVM_formatted;
 #else
-            => global::MFDLabs.Grid.Bot.Properties.Resources.SafeLuaMode;
+            => global::MFDLabs.Grid.Bot.Properties.Resources.LuaVM;
 #endif
 
         public string ParseLuaValues(LuaValue[] result)
@@ -50,9 +50,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return false;
         }
 
-        public IEnumerable<string> GetBlacklistedKeywords()
-        {
-            return from keyword in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords.Split(',') where !keyword.IsNullOrEmpty() select keyword;
-        }
+        public IEnumerable<string> GetBlacklistedKeywords() 
+            => (from keyword in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords.Split(',') where !keyword.IsNullOrEmpty() select keyword);
     }
 }

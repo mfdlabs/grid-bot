@@ -7,8 +7,10 @@ using MFDLabs.Concurrency;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Base;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.Bot.Plugins;
 using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Threading;
 
@@ -19,6 +21,7 @@ namespace MFDLabs.Grid.Bot.Tasks
         public override string Name => "Screenshot Relay";
         public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayActivationTimeout;
         public override int PacketID => 2;
+        public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
 
         public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExpiration;
 

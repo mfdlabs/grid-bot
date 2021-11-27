@@ -81,17 +81,11 @@ namespace MFDLabs.Instrumentation
         }
 
         internal static readonly TimeSpan SubmissionInterval = TimeSpan.FromSeconds(30.0);
-
         private static readonly CounterKey _NumberOfDataPointsSentCounterKey = new CounterKey("MFDLabs.Instrumentation", "NumberOfDataPointsSent", null);
-
         private readonly ICounterRegistry _CounterRegistry;
-
         private readonly Action<Exception> _ExceptionHandler;
-
         private readonly IConfigurationProvider _ConfigurationProvider;
-
         private readonly Timer _Timer;
-
         private readonly InfluxWriter _InfluxWriter;
     }
 }

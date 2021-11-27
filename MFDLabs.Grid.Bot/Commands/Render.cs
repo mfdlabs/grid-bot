@@ -23,9 +23,9 @@ namespace MFDLabs.Grid.Bot.Commands
                 if (!await message.RejectIfNotAdminAsync()) return;
             }
 
-            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.", typeof(RenderTaskRequest).FullName, typeof(RenderQueueUserMetricsTask).FullName);
+            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.", typeof(SocketTaskRequest).FullName, typeof(RenderQueueUserMetricsTask).FullName);
 
-            RenderQueueUserMetricsTask.Singleton.Port.Post(new RenderTaskRequest()
+            RenderQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest()
             {
                 ContentArray = messageContentArray,
                 Message = message,

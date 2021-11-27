@@ -19,29 +19,30 @@ namespace MFDLabs.Grid.Bot
 {
     namespace Tasks
     {
-        internal sealed class RenderQueueUserMetricsTask : ExpiringTaskThread<RenderQueueUserMetricsTask, RenderTaskRequest>
+        internal sealed class RenderQueueUserMetricsTask : ExpiringTaskThread<RenderQueueUserMetricsTask, SocketTaskRequest>
         {
             public override string Name => "Render Queue";
             public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
             public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
+            public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
             public override int PacketID => 5;
 
-            public override PluginResult OnReceive(ref Packet<RenderTaskRequest> packet)
+            public override PluginResult OnReceive(ref Packet<SocketTaskRequest> packet)
             {
                 var message = packet.Item.Message;
                 var perfmon = GetUserPerformanceMonitor(message.Author);
 
                 try
                 {
-                    perfmon.TotalRenders.Increment();
-                    var result = SharedRenderQueueTaskPlugin.Singleton.OnReceive(ref packet);
-                    perfmon.TotalRendersThatSucceeded.Increment();
+                    perfmon.TotalItemsProcessed.Increment();
+                    var result = RenderExecutionTaskPlugin.Singleton.OnReceive(ref packet);
+                    perfmon.TotalItemsProcessedThatSucceeded.Increment();
                     return result;
                 }
                 catch (Exception ex)
                 {
                     message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
-                    perfmon.TotalRendersThatFailed.Increment();
+                    perfmon.TotalItemsProcessedThatFailed.Increment();
                     packet.Status = PacketProcessingStatus.Failure;
 #if DEBUG
                     SystemLogger.Singleton.Error(ex);
@@ -65,44 +66,29 @@ namespace MFDLabs.Grid.Bot
                 }
             }
 
-            private RenderTaskUserPerformanceMonitor GetUserPerformanceMonitor(IUser user)
+            private UserTaskPerformanceMonitor GetUserPerformanceMonitor(IUser user)
             {
-                var perfmon = (from userPerfmon in _userPerformanceMonitors.OfType<(ulong, RenderTaskUserPerformanceMonitor)>() where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
+                var perfmon = (from userPerfmon in _userPerformanceMonitors.OfType<(ulong, UserTaskPerformanceMonitor)>() where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
 
                 if (perfmon == default)
                 {
-                    perfmon = new RenderTaskUserPerformanceMonitor(CounterRegistry, user);
+                    perfmon = new UserTaskPerformanceMonitor(CounterRegistry, "RenderTask", user);
                     _userPerformanceMonitors.Add((user.Id, perfmon));
                 }
 
                 return perfmon;
             }
 
-            private readonly ICollection<(ulong, RenderTaskUserPerformanceMonitor)> _userPerformanceMonitors = new List<(ulong, RenderTaskUserPerformanceMonitor)>();
+            private readonly ICollection<(ulong, UserTaskPerformanceMonitor)> _userPerformanceMonitors = new List<(ulong, UserTaskPerformanceMonitor)>();
         }
     }
 
     namespace Plugins
     {
-
-        internal sealed class SharedRenderQueueTaskPlugin : BasePlugin<SharedRenderQueueTaskPlugin, RenderTaskRequest>
-        {
-            public override PluginResult OnReceive(ref Packet<RenderTaskRequest> packet)
-            {
-                return RenderExecutionTaskPlugin.Singleton.OnReceive(ref packet);
-            }
-        }
-
         // This cannot be an async task thread because it use locks in 2 different places. sorry
         //jakob: have you ever tried to write code that works? ha. never in a million years!!
-        internal sealed class RenderExecutionTaskPlugin : BasePlugin<RenderExecutionTaskPlugin, RenderTaskRequest>
+        internal sealed class RenderExecutionTaskPlugin : BasePlugin<RenderExecutionTaskPlugin, SocketTaskRequest>
         {
-            public RenderExecutionTaskPlugin()
-                : base()
-            {
-                _perfmon = new RenderTaskPerformanceMonitor(StaticCounterRegistry.Instance); // simplify this init pls
-            }
-
             #region Concurrency
 
             private readonly object _renderLock = new object();
@@ -113,13 +99,13 @@ namespace MFDLabs.Grid.Bot
 
             #region Metrics
 
-            private readonly RenderTaskPerformanceMonitor _perfmon;
+            private readonly RenderTaskPerformanceMonitor _perfmon = new RenderTaskPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
 
             #endregion Metrics
 
-            public override PluginResult OnReceive(ref Packet<RenderTaskRequest> packet)
+            public override PluginResult OnReceive(ref Packet<SocketTaskRequest> packet)
             {
-                var metrics = PacketMetricsPlugin<RenderTaskRequest>.Singleton.OnReceive(ref packet);
+                var metrics = PacketMetricsPlugin<SocketTaskRequest>.Singleton.OnReceive(ref packet);
 
                 if (metrics == PluginResult.StopProcessingAndDeallocate) return PluginResult.StopProcessingAndDeallocate;
 

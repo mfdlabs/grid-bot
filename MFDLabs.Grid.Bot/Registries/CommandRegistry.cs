@@ -12,9 +12,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +28,6 @@ using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Reflection.Extensions;
@@ -43,7 +44,7 @@ namespace MFDLabs.Grid.Bot.Registries
         private readonly ICollection<IStateSpecificCommandHandler> _stateSpecificCommandHandlers = new List<IStateSpecificCommandHandler>();
         private ICollection<(IStateSpecificCommandHandler, string)> _disabledCommandsReasons = new List<(IStateSpecificCommandHandler, string)>();
 
-        private readonly CommandRegistryInstrumentationPerformanceMonitor _instrumentationPerfmon = new CommandRegistryInstrumentationPerformanceMonitor(StaticCounterRegistry.Instance);
+        private readonly CommandRegistryInstrumentationPerformanceMonitor _instrumentationPerfmon = new CommandRegistryInstrumentationPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
 
         private string GetCommandNamespace()
         {
@@ -200,7 +201,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             if (
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
-                !Regex.IsMatch(commandAlias, @"^[a-zA-Z]*$")
+                !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$")
             )
             {
                 SystemLogger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
@@ -425,6 +426,13 @@ namespace MFDLabs.Grid.Bot.Registries
                 _instrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
 
                 await message.ReplyAsync($"an exception occurred on the grid server, please review this error to see if your input was malformed:");
+
+                if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
+                    return;
+                }
+
                 await message.Channel.SendMessageAsync(
                     embed: new EmbedBuilder()
                     .WithColor(0xff, 0x00, 0x00)

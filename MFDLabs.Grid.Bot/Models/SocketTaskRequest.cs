@@ -2,7 +2,7 @@
 
 namespace MFDLabs.Grid.Bot.Models
 {
-    internal sealed class RenderTaskRequest
+    internal sealed class SocketTaskRequest
     {
         public SocketMessage Message { get; set; }
         public string[] ContentArray { get; set; }

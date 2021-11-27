@@ -28,7 +28,12 @@ namespace MFDLabs.Grid.Deployer
                 if (option == "onlygrid")
                 {
                     onlyGridServer = true;
-                    if (args.Length > 1) port = Int32.Parse(args[1].Trim().ToLowerInvariant());
+                    if (args.Length > 1) 
+                        if (!int.TryParse(args[1].Trim().ToLowerInvariant(), out port))
+                        {
+                            ConsoleExtended.WriteTitle("The port argument was specified but wasn't a valid int32");
+                            Environment.Exit(-1);
+                        }
                 }
             }
 
@@ -45,7 +50,7 @@ namespace MFDLabs.Grid.Deployer
                 if (!Directory.Exists(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath))
                 {
                     ConsoleExtended.WriteTitle("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath);
-                    Environment.Exit(1);
+                    Environment.Exit(-2);
                     return;
                 }
 
@@ -68,7 +73,7 @@ namespace MFDLabs.Grid.Deployer
                 if (gridServicePath == null)
                 {
                     ConsoleExtended.WriteTitle("The grid server is not installed on this machine.");
-                    Environment.Exit(1);
+                    Environment.Exit(-4);
                     return;
                 }
 
@@ -126,7 +131,7 @@ namespace MFDLabs.Grid.Deployer
             if (attempt > global::MFDLabs.Grid.Deployer.Properties.Settings.Default.MaxAttemptsToLaunchWebServer)
             {
                 ConsoleExtended.WriteTitle("Max attempts exceeded when trying to launch the web server.");
-                Environment.Exit(1);
+                Environment.Exit(-3);
                 return;
             }
 

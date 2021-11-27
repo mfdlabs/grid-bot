@@ -24,7 +24,7 @@ namespace MFDLabs.Concurrency.Base
         /// <summary>
         /// The <see cref="ICounterRegistry"/> to be used by the task with the <see cref="TaskThreadMonitor"/>.
         /// </summary>
-        public virtual ICounterRegistry CounterRegistry { get; } = StaticCounterRegistry.Instance;
+        public abstract ICounterRegistry CounterRegistry { get; }
 
         /// <summary>
         /// The <see cref="IPacket.ID"/> to be set when creating new <see cref="Packet{TItem}"/>s

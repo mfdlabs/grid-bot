@@ -22,7 +22,7 @@ namespace MFDLabs.Grid.Bot.Interfaces
         string CommandDescription { get; }
 
         /// <summary>
-        /// Refers to the command names that invoke this <see cref="IStateSpecificCommandHandler"/>, like <code language="cs">new string[] { "h", "help" }</code>
+        /// Refers to the command names that invoke this <see cref="IStateSpecificCommandHandler"/>, like <code language="csharp">new string[] { "h", "help" }</code>
         /// </summary>
         string[] CommandAliases { get; }
 

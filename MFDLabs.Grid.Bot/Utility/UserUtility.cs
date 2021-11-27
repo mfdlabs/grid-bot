@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Discord;
 using MFDLabs.Abstractions;
 using MFDLabs.Discord.RbxUsers.Client;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Http.Client;
-using MFDLabs.Instrumentation;
 using MFDLabs.Users.Client;
 using MFDLabs.Users.Client.Models.Users;
 
@@ -16,7 +16,7 @@ namespace MFDLabs.Grid.Bot.Utility
     public sealed class UserUtility : SingletonBase<UserUtility>
     {
         private readonly IUsersClient _SharedUsersClient = new UsersClient(
-            StaticCounterRegistry.Instance,
+            PerfmonCounterRegistryProvider.Registry,
             new UsersClientConfig(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRemoteURL,
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceMaxRedirects,
@@ -27,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Utility
         );
 
         private readonly IRbxDiscordUsersClient _SharedDiscordUsersClient = new RbxDiscordUsersClient(
-            StaticCounterRegistry.Instance,
+            PerfmonCounterRegistryProvider.Registry,
             new RbxDiscordUsersClientConfig(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRemoteURL,
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxRedirects,

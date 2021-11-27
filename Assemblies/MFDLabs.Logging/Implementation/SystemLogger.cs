@@ -18,6 +18,13 @@ namespace MFDLabs.Logging
     public sealed class SystemLogger : SingletonBase<SystemLogger>, ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _localIp = NetworkingGlobal.Singleton.GetLocalIP();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _machineId = SystemGlobal.Singleton.GetMachineID();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string _machineHost = SystemGlobal.Singleton.GetMachineHost();
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly string _fileName =
 #if DEBUG
                         "\\dev_log_" +
@@ -58,9 +65,9 @@ namespace MFDLabs.Logging
 #else
                 "Release",
 #endif
-                NetworkingGlobal.Singleton.GetLocalIP(),
-                SystemGlobal.Singleton.GetMachineID(),
-                SystemGlobal.Singleton.GetMachineHost(),
+                _localIp,
+                _machineId,
+                _machineHost,
                 global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
                 logType.ToUpper(),
                 format
@@ -270,9 +277,9 @@ namespace MFDLabs.Logging
 #else
                         ConsoleGlobal.Singleton.WriteContentStr("Release");
 #endif
-                        ConsoleGlobal.Singleton.WriteContentStr(NetworkingGlobal.Singleton.GetLocalIP());
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineID());
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.GetMachineHost());
+                        ConsoleGlobal.Singleton.WriteContentStr(_localIp);
+                        ConsoleGlobal.Singleton.WriteContentStr(_machineId);
+                        ConsoleGlobal.Singleton.WriteContentStr(_machineHost);
                         ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
                         ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
                         var message = args != null && args.Length > 0 ? string.Format($" {format}\n", args) : $" {format}\n";

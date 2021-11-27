@@ -11,6 +11,7 @@ using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
@@ -55,7 +56,6 @@ namespace MFDLabs.Grid.Bot
                 GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
                 SystemLogger.Singleton.Warning(_AdminMode);
             }
-
             GoogleAnalyticsManager.Singleton.TrackNetworkEvent(
                 "Startup",
                 "Info",

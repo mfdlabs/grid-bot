@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -67,6 +68,12 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 await message.ReplyAsync(result.ReturnValue == null ? "Executed script with no return!" : $"Executed script with return:");
                 if (result.ReturnValue != null)
+                {
+                    if (result.ReturnValue.ToString().Length > EmbedBuilder.MaxDescriptionLength)
+                    {
+                        await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(result.ReturnValue.ToString())), "eval.txt");
+                        return;
+                    }
                     await message.Channel.SendMessageAsync(
                         embed: new EmbedBuilder()
                         .WithTitle("Return value")
@@ -76,12 +83,20 @@ namespace MFDLabs.Grid.Bot.Commands
                         .WithColor(0x00, 0xff, 0x00)
                         .Build()
                     );
+                }
             }
         }
 
         private async Task HandleException(SocketMessage message, Exception ex)
         {
             await message.ReplyAsync($"an exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:");
+
+            if (ex.Message.Length > EmbedBuilder.MaxDescriptionLength)
+            {
+                await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)), "eval-error.txt");
+                return;
+            }
+
             await message.Channel.SendMessageAsync(
                 embed: new EmbedBuilder()
                 .WithColor(0xff, 0x00, 0x00)

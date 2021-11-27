@@ -66,7 +66,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 proc.Start();
                 proc.WaitForExit();
 
-                if (proc.ExitCode == 1) throw new ApplicationException($"Unable to open the {(onlyWebServer ? "Web" : onlyGridServer ? "Grid" : "Web and Grid")} server due to an internal exception on the machine '{SystemGlobal.Singleton.GetMachineID()} ({SystemGlobal.Singleton.GetMachineHost()})', please contact a datacenter administrator.");
+                GridDeployerUtility.Singleton.CheckHResult(proc.ExitCode);
 
                 procId = proc.ExitCode;
 

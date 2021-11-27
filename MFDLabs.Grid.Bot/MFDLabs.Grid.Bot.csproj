@@ -160,6 +160,7 @@
   <ItemGroup>
     <Compile Include="Base\HoldsSocketMessagePortAsyncExpiringTaskThread.cs" />
     <Compile Include="Commands\BatchOpenGridServers.cs" />
+    <Compile Include="Commands\PsExec.cs" />
     <Compile Include="Commands\SendMessageInGuildChannel.cs" />
     <Compile Include="Commands\EvaluateScript.cs" />
     <Compile Include="Commands\Evaluate.cs" />
@@ -219,11 +220,13 @@
     <Compile Include="Hooks\ResetHook.cs" />
     <Compile Include="Hooks\UtcNowHook.cs" />
     <Compile Include="Interfaces\IConsoleHook.cs" />
-    <Compile Include="Models\RenderTaskRequest.cs" />
+    <Compile Include="Models\SocketTaskRequest.cs" />
     <Compile Include="PerformanceMonitors\CommandRegistryInstrumentationPerformanceMonitor.cs" />
+    <Compile Include="PerformanceMonitors\PerfmonCounterRegistryProvider.cs" />
     <Compile Include="PerformanceMonitors\PerformanceServer.cs" />
+    <Compile Include="PerformanceMonitors\ScriptExecutionTaskPerformanceMonitor.cs" />
     <Compile Include="PerformanceMonitors\RenderTaskPerformanceMonitor.cs" />
-    <Compile Include="PerformanceMonitors\RenderTaskUserPerformanceMonitor.cs" />
+    <Compile Include="PerformanceMonitors\UserTaskPerformanceMonitor.cs" />
     <Compile Include="Plugins\PacketMetricsPlugin.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -231,8 +234,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\Settings.cs" />
-    <None Include="Lua\SafeLuaMode.formatted.lua" />
-    <None Include="Lua\SafeLuaMode.lua" />
+    <None Include="Lua\LuaVM.formatted.lua" />
+    <None Include="Lua\LuaVM.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
@@ -253,7 +256,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Tasks\ScriptExecutionQueueUserMetricsTask.cs" />
     <Compile Include="Utility\AdminUtility.cs" />
+    <Compile Include="Utility\GridDeployerUtility.cs" />
     <Compile Include="Utility\GridServerArbiter.cs" />
     <Compile Include="Utility\GridServerCommandUtility.cs" />
     <Compile Include="Utility\JsonScriptingUtility.cs" />
@@ -449,6 +454,13 @@ IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ RMDIR $(ProjectDir)$(OutDir)Runti
 
 rem Copy the new runtime-scripts
 XCOPY $(ProjectDir)RuntimeScripts\ $(ProjectDir)$(OutDir)RuntimeScripts\ /E/H/C/I/F/Y
+
+rem Delete the old lua scripts, in case there are any old files that are not in the new lua scripts
+IF EXIST $(ProjectDir)$(OutDir)Lua\ RMDIR $(ProjectDir)$(OutDir)Lua\ /S/Q
+
+rem Copy the new lua scripts
+XCOPY $(ProjectDir)Lua\ $(ProjectDir)$(OutDir)Lua\ /E/H/C/I/F/Y
+
 
 rem Remove translation scripts
 RMDIR /S/Q "cs" "de" "es" "fr" "it" "ja" "ko" "pl" "pt-BR" "ru" "tr" "zh-Hans" "zh-Hant"

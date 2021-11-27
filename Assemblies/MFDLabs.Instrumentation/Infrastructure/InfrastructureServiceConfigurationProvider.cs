@@ -87,22 +87,14 @@ namespace MFDLabs.Instrumentation.Infrastructure
             }
         }
 
-        private const string _InfrastructureServiceEndpoint = "https://infrastructure.simulpong.com";
-
+        private const string _InfrastructureServiceEndpoint = "infrastructure.simulping.com";
         private const string _MachineNameVariableKey = "RobloxInstrumentationMachineName";
-
         private static readonly TimeSpan _ConfigurationReloadInterval = TimeSpan.FromMinutes(10.0);
-
         private readonly string _MachineName;
-
         private readonly Action<Exception> _ExceptionHandler;
-
         private readonly string _ConfigurationUrl;
-
         private readonly Timer _Timer;
-
         private ICollectionConfiguration _CollectionConfiguration;
-
         private byte[] _LastJsonConfiguration;
 
         [DataContract]

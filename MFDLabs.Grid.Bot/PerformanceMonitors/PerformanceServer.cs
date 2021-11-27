@@ -9,7 +9,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
     internal sealed class PerformanceServer : SingletonBase<PerformanceServer>
     {
         private readonly CounterHttpServer _server = new CounterHttpServer(
-            StaticCounterRegistry.Instance,
+            PerfmonCounterRegistryProvider.Registry,
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
             (ex) =>
             {

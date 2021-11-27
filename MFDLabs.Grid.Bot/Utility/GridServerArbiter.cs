@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Utility
     // so what if we have 2 instances with the same name but on different ports?
     // should we queue them up regardless, or only queue them if it's not persistent
     // seems about right :)
-    internal sealed class GridServerArbiter : SingletonBase<GridServerArbiter>
+    public sealed class GridServerArbiter : SingletonBase<GridServerArbiter>
     {
         private class NetUtility
         {
@@ -73,7 +73,7 @@ namespace MFDLabs.Grid.Bot.Utility
         private const int GridServerStartPort = 47999;
         private readonly List<GridServerInstance> _instances = new List<GridServerInstance>();
         private readonly List<int> _allocatedPorts = new List<int>();
-        private readonly ICounterRegistry _counterRegistry = StaticCounterRegistry.Instance;
+        //private readonly ICounterRegistry _counterRegistry = StaticCounterRegistry.Instance;
 
         public int KillAllOpenInstancesUnsafe()
         {
@@ -2229,7 +2229,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         // should this be an IDisposable?
         [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
-        internal sealed class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable
+        public sealed class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable
         {
             private readonly int _maxAttemptsToHitGridServer;
             private readonly bool _isPersistent;

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
@@ -27,7 +25,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
         /// <summary>
         /// The <see cref="ICounterRegistry"/> to be used by the task with the <see cref="TaskThreadMonitor"/>.
         /// </summary>
-        public virtual ICounterRegistry CounterRegistry { get; } = StaticCounterRegistry.Instance;
+        public abstract ICounterRegistry CounterRegistry { get; }
 
         /// <summary>
         /// The <see cref="IPacket.ID"/> to be set when creating new <see cref="Packet{TItem}"/>s
