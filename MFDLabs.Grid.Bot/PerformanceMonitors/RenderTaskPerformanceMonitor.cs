@@ -29,7 +29,6 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             TotalItemsProcessedThatHadInvalidUserIDs = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadInvalidUserIDs", instance);
             TotalItemsProcessedThatHadNullOrEmptyUsernames = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadNullOrEmptyUsernames", instance);
             TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount", instance);
-
         }
     }
 }

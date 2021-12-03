@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using System.Text;
 using Discord;
 using MFDLabs.Concurrency;
@@ -57,6 +58,42 @@ namespace MFDLabs.Grid.Bot
                     message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
                     perfmon.TotalItemsProcessedThatFailed.Increment();
                     packet.Status = PacketProcessingStatus.Failure;
+
+                    if (ex is FaultException fault)
+                    {
+                        SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+
+                        if (fault.Message == "Cannot invoke BatchJob while another job is running")
+                        {
+                            message.Reply("You are sending requests too fast, please slow down!");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        if (fault.Message == "BatchJob Timeout")
+                        {
+                            message.Reply("The job timed out, please try again later.");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        message.Reply("an exception occurred on the grid server, please review this error to see if your input was malformed:");
+
+                        if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
+                        {
+                            message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        message.Channel.SendMessage(
+                            embed: new EmbedBuilder()
+                            .WithColor(0xff, 0x00, 0x00)
+                            .WithTitle("GridServer exception.")
+                            .WithAuthor(message.Author)
+                            .WithDescription($"```\n{fault.Message}\n```")
+                            .Build()
+                        );
+                        return PluginResult.ContinueProcessing;
+                    }
+
 #if DEBUG
                     SystemLogger.Singleton.Error(ex);
 #else
@@ -64,14 +101,17 @@ namespace MFDLabs.Grid.Bot
 #endif
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
                     {
-                        message.Channel.SendMessage(
-                            $"<@!{message.Author.Id}>, An error occured with the reder task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
-                            options: new RequestOptions()
-                            {
-                                AuditLogReason = "Exception Occurred"
-                            }
+                        var detail = ex.ToDetailedString();
+                        if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+                        {
+                            message.Channel.SendFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        message.Reply(
+                            "An error occured with the script execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                            embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                         );
-                        message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                         return PluginResult.ContinueProcessing;
                     }
                     message.Reply("An error occurred when trying to execute script task, please try again later.");

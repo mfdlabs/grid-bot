@@ -753,7 +753,7 @@ namespace MFDLabs.Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("UA-201817978-5")]
         public string GoogleAnalyticsTrackerID {
             get {
                 return ((string)(this["GoogleAnalyticsTrackerID"]));

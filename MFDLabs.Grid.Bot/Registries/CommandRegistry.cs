@@ -381,7 +381,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             if (ex is ApplicationException)
             {
-                SystemLogger.Singleton.Warning("Application threw an exception {0}", ex.Message);
+                SystemLogger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
                 await message.ReplyAsync($"The command threw an exception: {ex.Message}");
                 return;
             }
@@ -450,15 +450,18 @@ namespace MFDLabs.Grid.Bot.Registries
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
+                var detail = ex.ToDetailedString();
+                if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                    return;
+                }
+
                 _instrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
-                await message.Channel.SendMessageAsync(
-                    $"<@!{message.Author.Id}>, [EID-{exceptionID}] An error occured and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
-                    options: new RequestOptions()
-                    {
-                        AuditLogReason = "Exception Occurred"
-                    }
+                message.Reply(
+                    "An error occured with the script execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                    embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                 );
-                await message.Channel.SendMessageAsync(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                 return;
             }
 

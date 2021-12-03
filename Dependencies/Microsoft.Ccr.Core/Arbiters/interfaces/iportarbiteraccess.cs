@@ -3,9 +3,7 @@
     public interface IPortArbiterAccess
     {
         IPortElement TestForElement();
-
         IPortElement[] TestForMultipleElements(int count);
-
         void PostElement(IPortElement element);
 
         PortMode Mode { get; set; }

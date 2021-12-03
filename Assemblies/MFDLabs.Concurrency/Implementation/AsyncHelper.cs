@@ -24,7 +24,7 @@ namespace MFDLabs.Concurrency
             }
         }
 
-        static readonly string performanceCategory = "MFDLABS.AsyncHelper";
+        static readonly string performanceCategory = "MFDLABS AsyncHelper";
         static readonly PerformanceCounter perfTotalAsyncCalls;
         static readonly PerformanceCounter timeoutCounts;
         static readonly PerformanceCounter riskyTimeoutCounts;

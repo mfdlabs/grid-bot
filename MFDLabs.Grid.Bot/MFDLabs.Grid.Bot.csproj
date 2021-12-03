@@ -237,6 +237,7 @@
     <None Include="Lua\LuaVM.formatted.lua" />
     <None Include="Lua\LuaVM.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
+    <Compile Include="Runner.cs" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
     <Compile Include="Events\OnConnected.cs" />

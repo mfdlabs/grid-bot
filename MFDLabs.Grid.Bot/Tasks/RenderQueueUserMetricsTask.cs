@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using Discord;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
@@ -51,14 +53,17 @@ namespace MFDLabs.Grid.Bot
 #endif
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
                     {
-                        message.Channel.SendMessage(
-                            $"<@!{message.Author.Id}>, An error occured with the reder task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
-                            options: new RequestOptions()
-                            {
-                                AuditLogReason = "Exception Occurred"
-                            }
+                        var detail = ex.ToDetailedString();
+                        if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+                        {
+                            message.Channel.SendFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        message.Reply(
+                            "An error occured with the render execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                            embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                         );
-                        message.Channel.SendMessage(embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build());
                         return PluginResult.ContinueProcessing;
                     }
                     message.Reply("An error occurred when trying to execute render task, please try again later.");

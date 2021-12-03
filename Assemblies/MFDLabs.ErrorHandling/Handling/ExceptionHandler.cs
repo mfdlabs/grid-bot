@@ -12,7 +12,7 @@ namespace MFDLabs
         // Called when an exception has been logged.
         void exceptionLogged();
     }
-    // Throw this exception or an exception derived from this if you don't want it to show up in the Roblox Event Log.
+    // Throw this exception or an exception derived from this if you don't want it to show up in the MFDLABS Event Log.
     // This should be used to return an error to the user, but something that technically isn't broken in the system.
     // For example failing validation for a control would be a good candidate as it is nothing for us to fix in the code base.
     public class NotLoggedException : Exception
