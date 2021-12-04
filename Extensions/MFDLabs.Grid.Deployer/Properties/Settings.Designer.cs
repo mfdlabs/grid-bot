@@ -70,15 +70,6 @@ namespace MFDLabs.Grid.Deployer.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:\\buildAgent\\work\\0800fc577294c34f")]
-        public string WebServerWorkspacePath {
-            get {
-                return ((string)(this["WebServerWorkspacePath"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("npm run Build-And-Run")]
         public string WebServerWorkspaceCommand {
             get {
@@ -110,6 +101,24 @@ namespace MFDLabs.Grid.Deployer.Properties {
         public int MaxAttemptsToLaunchWebServer {
             get {
                 return ((int)(this["MaxAttemptsToLaunchWebServer"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Roblox\\WebSrv")]
+        public string WebServerWorkspacePath {
+            get {
+                return ((string)(this["WebServerWorkspacePath"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("robloxup")]
+        public string LatencyMeasurementsHealthCheckExpectedResponseText {
+            get {
+                return ((string)(this["LatencyMeasurementsHealthCheckExpectedResponseText"]));
             }
         }
     }

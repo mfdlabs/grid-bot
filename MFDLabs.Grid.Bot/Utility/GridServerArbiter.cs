@@ -64,6 +64,7 @@ namespace MFDLabs.Grid.Bot.Utility
         #endregion |Instrumentation|
 
         #region |Networking Utility|
+
         private class NetUtility
         {
             private const string MutexPostfix = "NetUtility";
@@ -971,7 +972,7 @@ namespace MFDLabs.Grid.Bot.Utility
             #region Auto-Generated Items
 
             private string GetDebuggerDisplay()
-                => $"[{(_isPersistent ? "Persistent" : "Expiring")}] [{(_isPoolable ? "Poolable" : "Non Poolable")}] Instance [http://{_name}:{Port}], State = {(IsOpened ? "Opened" : "Closed")}";
+                => $"[{(_isPersistent ? "Persistent" : "Disposable")}] [{(_isPoolable ? "Poolable" : "Non Poolable")}] Instance [http://{_name}:{Port}], State = {(IsOpened ? "Opened" : "Closed")}";
 
             public override bool Equals(object obj) => obj is GridServerInstance instance && _maxAttemptsToHitGridServer == instance._maxAttemptsToHitGridServer && _isPersistent == instance._isPersistent && _name == instance._name;
 

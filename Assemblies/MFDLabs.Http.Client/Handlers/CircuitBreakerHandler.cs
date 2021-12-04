@@ -29,7 +29,7 @@ namespace MFDLabs.Http.Client
             try
             {
                 base.Invoke(context);
-                policy.NotifyRequestFinished(context, null);
+                policy.NotifyRequestFinished(context);
             }
             catch (Exception exception)
             {

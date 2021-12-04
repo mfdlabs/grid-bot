@@ -858,5 +858,32 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((global::System.TimeSpan)(this["ScriptExecutionQueueExpiration"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://mfdlabs.sp.backtrace.io:6097")]
+        public string CrashHandlerURL {
+            get {
+                return ((string)(this["CrashHandlerURL"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9f55e8c1e2a0bc06f874371f33d7c24e38b88c48f3c3cd853fc95174a13beb9b")]
+        public string CrashHandlerAccessToken {
+            get {
+                return ((string)(this["CrashHandlerAccessToken"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CrashHandlerExitWhenDone {
+            get {
+                return ((bool)(this["CrashHandlerExitWhenDone"]));
+            }
+        }
     }
 }

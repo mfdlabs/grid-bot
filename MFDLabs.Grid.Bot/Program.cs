@@ -1,48 +1,47 @@
-﻿using System;
-using System.IO;
-
-namespace MFDLabs.Grid.Bot
+﻿namespace MFDLabs.Grid.Bot
 {
     public sealed class Program
     {
         private static string GetBadConfigurationError()
-            => $"Could not locate the application configuration at the files '{AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' " +
-            $"or '{Directory.GetCurrentDirectory()}\\app.config' with your distribution, please install the app correctly and try again.";
+            => $"Could not locate the application configuration at the files '{System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' " +
+            $"or '{System.IO.Directory.GetCurrentDirectory()}\\app.config' with your distribution, please install the app correctly and try again.";
 
         public static void Main()
         {
-            if (!File.Exists(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile))
-                if (File.Exists($"{Directory.GetCurrentDirectory()}\\app.config"))
-                    AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = $"{Directory.GetCurrentDirectory()}\\app.config";
+            if (!System.IO.File.Exists(System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile))
+                if (System.IO.File.Exists($"{System.IO.Directory.GetCurrentDirectory()}\\app.config"))
+                    System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = $"{System.IO.Directory.GetCurrentDirectory()}\\app.config";
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[URGENT]: {GetBadConfigurationError()}");
-                    Console.ResetColor();
+                    System.Console.ForegroundColor = System.ConsoleColor.Red;
+                    System.Console.WriteLine($"[URGENT]: {GetBadConfigurationError()}");
+                    System.Console.ResetColor();
                     return;
                 }
 
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            System.AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
-                if (e.ExceptionObject is FileNotFoundException || e.ExceptionObject is TypeLoadException)
+                if (e.ExceptionObject is System.IO.FileNotFoundException || e.ExceptionObject is System.TypeLoadException)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"There was an error loading a type or dependency, please review the following error: {(e.ExceptionObject as Exception).Message}");
-                    Console.ResetColor();
-                    Environment.Exit(1);
+                    System.Console.ForegroundColor = System.ConsoleColor.Yellow;
+                    System.Console.WriteLine($"There was an error loading a type or dependency, please review the following error: {(e.ExceptionObject as System.Exception).Message}");
+                    System.Console.ResetColor();
+                    System.Environment.Exit(1);
                     return;
                 }
 
-                Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.ForegroundColor = System.ConsoleColor.Red;
 #if DEBUG
-                Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {e.ExceptionObject}");
+                System.Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {e.ExceptionObject}");
 #else
                 Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {(e.ExceptionObject as Exception).Message}");
 #endif
-                Console.ResetColor();
+                System.Console.ResetColor();
+
+                CrashHandler.Upload(e.ExceptionObject as System.Exception);
             };
 
-            Runner.Invoke();
+            MFDLabs.Grid.Bot.Runner.Invoke();
         }
     }
 }

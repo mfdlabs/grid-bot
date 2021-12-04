@@ -34,13 +34,18 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MockSystemRoleSet.cs" />
+    <Compile Include="BaseRole.cs" />
+    <Compile Include="Enums\RolePermissions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj">
       <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>
       <Name>Discord.Net.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj">
+      <Project>{600046c9-f766-43d1-915d-90e981d0601e}</Project>
+      <Name>MFDLabs.Hashicorp.VaultClient</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

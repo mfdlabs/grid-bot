@@ -1,9 +1,9 @@
-﻿using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Deployer.Tooling;
-using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
+using MFDLabs.Diagnostics;
+using MFDLabs.Grid.Deployer.Tooling;
+using Microsoft.Win32;
 
 // TODO: Check the response of LMS so we aren't getting an IIS server for any reason !!
 
@@ -79,7 +79,7 @@ namespace MFDLabs.Grid.Deployer
 
                 ConsoleExtended.WriteTitle("Got grid server path '{0}'.", gridServicePath);
 
-                if (!NetTools.IsServiceAvailable(
+                if (!NetTools.IsServiceAvailableTcp(
                     global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupHost,
                     port != 0 ? port : global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerLookupPort,
                     0
@@ -135,12 +135,24 @@ namespace MFDLabs.Grid.Deployer
                 return;
             }
 
-            if (NetTools.IsServiceAvailable(
+            // Make this check if the HTTP server responds with the correct text
+            // because there may be something else that is hogging the port
+            if (NetTools.IsServiceAvailableHttp(
                 global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerLookupHost,
                 80,
-                0
+                0,
+                out bool upButWrongText,
+                "/checkhealth",
+                global::MFDLabs.Grid.Deployer.Properties.Settings.Default.LatencyMeasurementsHealthCheckExpectedResponseText
             ))
             {
+                if (upButWrongText)
+                {
+                    ConsoleExtended.WriteTitle("The service was up, but it didn't return the OK response we expected.");
+                    Environment.Exit(-5);
+                    return;
+                }
+
                 ConsoleExtended.WriteTitle("Successfully launched web server at {0} attempts.", attempt);
                 return;
             }

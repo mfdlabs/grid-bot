@@ -203,6 +203,7 @@
     <Compile Include="Commands\ViewConsole.cs" />
     <Compile Include="Commands\ViewCurrentConsole.cs" />
     <Compile Include="Commands\WtfIsThis.cs" />
+    <Compile Include="CrashHandler.cs" />
     <Compile Include="Events\OnBotGlobalAddedToGuild.cs" />
     <Compile Include="Events\OnLatencyUpdated.cs" />
     <Compile Include="Events\OnLoggedOut.cs" />
@@ -372,6 +373,10 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj">
       <Project>{ff4b1e10-8697-41db-8850-5f4d9f60b9d0}</Project>
       <Name>MFDLabs.Users.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Backtrace\Backtrace.csproj">
+      <Project>{f9c3f667-d954-4563-9e46-30aac9fc07dd}</Project>
+      <Name>Backtrace</Name>
     </ProjectReference>
     <ProjectReference Include="..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj">
       <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>

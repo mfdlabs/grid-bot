@@ -10,7 +10,8 @@ namespace MFDLabs.Grid.Bot.Utility
             BadPort = -1,
             NoWebServerFound = -2,
             WebServerMaxLaunchAttemptsExceeded = -3,
-            NoGridServerFound = -4
+            NoGridServerFound = -4,
+            WebServerUpButBadHealthCheck = -5
         }
 
         public void CheckHResult(int hResult)
@@ -29,6 +30,8 @@ namespace MFDLabs.Grid.Bot.Utility
                     throw new ApplicationException("The grid deployer exceeded it's maximum attempts when trying to launch the web server.");
                 case GridDeployerExitCodes.NoGridServerFound:
                     throw new ApplicationException("The grid deployer tried to launch a grid server but it couldn't find the grid server's path in Win32 registry.");
+                case GridDeployerExitCodes.WebServerUpButBadHealthCheck:
+                    throw new ApplicationException("The web server was up, but it didn't return the OK response the grid deployer expected, most likely there is another service hogging the healthcheck port.");
                 default: break;
             }
         }

@@ -49,7 +49,7 @@ namespace MFDLabs.Diagnostics
             _currentPlatform = DevicePlatformHelper.CurrentDevicePlatform();
             _currentArch = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
             _envVersion = Environment.Version.ToString();
-            _assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            _assemblyVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
         }
 
         public string GetMachineHost()

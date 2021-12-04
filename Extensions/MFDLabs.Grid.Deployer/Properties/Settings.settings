@@ -17,9 +17,6 @@
     <Setting Name="WebServerLookupHost" Type="System.String" Scope="Application">
       <Value Profile="(Default)">lms.simulpong.com</Value>
     </Setting>
-    <Setting Name="WebServerWorkspacePath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\buildAgent\work\0800fc577294c34f</Value>
-    </Setting>
     <Setting Name="WebServerWorkspaceCommand" Type="System.String" Scope="Application">
       <Value Profile="(Default)">npm run Build-And-Run</Value>
     </Setting>
@@ -31,6 +28,12 @@
     </Setting>
     <Setting Name="MaxAttemptsToLaunchWebServer" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">15</Value>
+    </Setting>
+    <Setting Name="WebServerWorkspacePath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">C:\Roblox\WebSrv</Value>
+    </Setting>
+    <Setting Name="LatencyMeasurementsHealthCheckExpectedResponseText" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">robloxup</Value>
     </Setting>
   </Settings>
 </SettingsFile>

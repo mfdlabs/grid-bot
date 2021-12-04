@@ -38,12 +38,16 @@ namespace MFDLabs.Discord.RbxUsers.Client
 
             AddHandlerBefore<SendHttpRequestHandler>(metricsHandler);
             string circuitBreakerIdentifier = _ClientCircuitBreakerPart + httpClientSettings.ClientName;
-            DefaultCircuitBreakerPolicyConfig circuitBreakerPolicyConfig = new DefaultCircuitBreakerPolicyConfig
+            var circuitBreakerPolicyConfig = new DefaultCircuitBreakerPolicyConfig
             {
                 FailuresAllowedBeforeTrip = config.CircuitBreakerFailuresAllowedBeforeTrip,
                 RetryInterval = config.CircuitBreakerRetryInterval
             };
-            DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>> circuitBreakerPolicy = new DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>>(circuitBreakerIdentifier, circuitBreakerPolicyConfig, new DefaultTripReasonAuthority());
+            var circuitBreakerPolicy = new DefaultCircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>>(
+                circuitBreakerIdentifier,
+                circuitBreakerPolicyConfig,
+                new DefaultTripReasonAuthority()
+            );
             new CircuitBreakerPolicyMetricsEventHandler(counterRegistry).RegisterEvents(circuitBreakerPolicy, _CategoryName, httpClientSettings.ClientName);
             AddHandlerAfter<RequestFailureThrowsHandler>(new CircuitBreakerHandler(circuitBreakerPolicy));
         }
