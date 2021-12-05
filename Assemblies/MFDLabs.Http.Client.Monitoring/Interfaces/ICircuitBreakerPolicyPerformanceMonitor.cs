@@ -3,7 +3,6 @@
     public interface ICircuitBreakerPolicyPerformanceMonitor
     {
         void IncrementRequestsThatTripCircuitBreakerPerSecond();
-
         void IncrementRequestsTrippedByCircuitBreakerPerSecond();
     }
 }

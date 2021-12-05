@@ -11,16 +11,10 @@ namespace MFDLabs.Http.Client
         public override bool IsReasonForTrip(IExecutionContext<IHttpRequest, IHttpResponse> executionContext, Exception exception)
         {
             if (exception != null)
-            {
-                if (exception is HttpException && TryGetInnerExceptionOfType<WebException>(exception, out var ex))
-                {
+                if (exception is HttpException && TryGetInnerExceptionOfType<WebException>(exception, out var ex)) 
                     return _WebExceptionStatusesToTripOn.Contains(ex.Status);
-                }
-            }
             else if (executionContext?.Output != null && !executionContext.Output.IsSuccessful)
-            {
                 return _HttpStatusCodesToTripOn.Contains(executionContext.Output.StatusCode);
-            }
             return false;
         }
 

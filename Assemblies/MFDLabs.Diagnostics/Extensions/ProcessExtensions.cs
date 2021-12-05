@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿#if NETFRAMEWORK
+
+using System.Diagnostics;
 
 namespace MFDLabs.Diagnostics.Extensions
 {
@@ -10,3 +12,5 @@ namespace MFDLabs.Diagnostics.Extensions
         }
     }
 }
+
+#endif

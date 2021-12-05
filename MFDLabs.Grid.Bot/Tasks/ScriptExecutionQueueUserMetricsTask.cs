@@ -75,15 +75,15 @@ namespace MFDLabs.Grid.Bot
                             return PluginResult.ContinueProcessing;
                         }
 
-                        message.Reply("an exception occurred on the grid server, please review this error to see if your input was malformed:");
+                        message.Reply("An exception occurred on the grid server, please review this error to see if your input was malformed:");
 
                         if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
                         {
-                            message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
+                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
                             return PluginResult.ContinueProcessing;
                         }
 
-                        message.Channel.SendMessage(
+                        message.Reply(
                             embed: new EmbedBuilder()
                             .WithColor(0xff, 0x00, 0x00)
                             .WithTitle("GridServer exception.")
@@ -104,7 +104,7 @@ namespace MFDLabs.Grid.Bot
                         var detail = ex.ToDetailedString();
                         if (detail.Length > EmbedBuilder.MaxDescriptionLength)
                         {
-                            message.Channel.SendFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
                             return PluginResult.ContinueProcessing;
                         }
 
@@ -121,7 +121,7 @@ namespace MFDLabs.Grid.Bot
 
             private UserTaskPerformanceMonitor GetUserPerformanceMonitor(IUser user)
             {
-                var perfmon = (from userPerfmon in _userPerformanceMonitors.OfType<(ulong, UserTaskPerformanceMonitor)>() where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
+                var perfmon = (from userPerfmon in _userPerformanceMonitors where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
 
                 if (perfmon == default)
                 {
@@ -273,16 +273,16 @@ namespace MFDLabs.Grid.Bot
                                     var job = new Job() { id = scriptID, expirationInSeconds = userIsAdmin ? 20000 : 20 };
                                     var result = LuaUtility.Singleton.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
 
-                                    message.Reply(result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
                                     if (!result.IsNullOrEmpty())
                                     {
                                         if (result.Length > MaxResultLength)
                                         {
                                             _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
-                                            message.Channel.SendFile(new MemoryStream(Encoding.UTF8.GetBytes(result)), "execute-result.txt");
+                                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)), "execute-result.txt");
                                             return PluginResult.ContinueProcessing;
                                         }
-                                        message.Channel.SendMessage(
+                                        message.Reply(
+                                            result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:",
                                             embed: new EmbedBuilder()
                                             .WithTitle("Return value")
                                             .WithDescription($"```\n{result}\n```")

@@ -9,8 +9,8 @@ namespace MFDLabs.Http.ServiceClient
     {
         public ApiKeyHandler(Func<string> apiKeyGetter, Func<bool> apiKeyViaHeaderEnabledGetter)
         {
-            _GetApiKey = apiKeyGetter ?? throw new ArgumentNullException("apiKeyGetter");
-            _ApiKeyViaHeaderEnabled = apiKeyViaHeaderEnabledGetter ?? throw new ArgumentNullException("apiKeyViaHeaderEnabledGetter");
+            _GetApiKey = apiKeyGetter ?? throw new ArgumentNullException(nameof(apiKeyGetter));
+            _ApiKeyViaHeaderEnabled = apiKeyViaHeaderEnabledGetter ?? throw new ArgumentNullException(nameof(apiKeyViaHeaderEnabledGetter));
         }
 
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
@@ -18,13 +18,11 @@ namespace MFDLabs.Http.ServiceClient
             AddApiKey(context.Input);
             base.Invoke(context);
         }
-
         public override Task InvokeAsync(IExecutionContext<IHttpRequest, IHttpResponse> context, CancellationToken cancellationToken)
         {
             AddApiKey(context.Input);
             return base.InvokeAsync(context, cancellationToken);
         }
-
         private void AddApiKey(IHttpRequest request)
         {
             if (_ApiKeyViaHeaderEnabled())
@@ -34,27 +32,17 @@ namespace MFDLabs.Http.ServiceClient
             }
             request.Url = AppendApiKey(request.Url);
         }
-
         private Uri AppendApiKey(Uri url)
         {
             var apiKeyQuery = $"{_ApiKeyQueryParameterName}={_GetApiKey()}";
-            if (url.AbsoluteUri.Contains(apiKeyQuery))
-            {
-                return url;
-            }
-            if (url.AbsoluteUri.Contains("?"))
-            {
-                return new Uri($"{url.AbsoluteUri}&{apiKeyQuery}");
-            }
+            if (url.AbsoluteUri.Contains(apiKeyQuery)) return url;
+            if (url.AbsoluteUri.Contains("?")) return new Uri($"{url.AbsoluteUri}&{apiKeyQuery}");
             return new Uri($"{url.AbsoluteUri}?{apiKeyQuery}");
         }
 
         private const string _ApiKeyQueryParameterName = "apiKey";
-
         private const string _ApiKeyHeaderName = "Roblox-Api-Key";
-
         private readonly Func<string> _GetApiKey;
-
         private readonly Func<bool> _ApiKeyViaHeaderEnabled;
     }
 }

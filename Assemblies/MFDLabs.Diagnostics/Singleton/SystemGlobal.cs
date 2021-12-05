@@ -66,10 +66,14 @@ namespace MFDLabs.Diagnostics
                 : Environment.MachineName;
         }
 
+#if NETFRAMEWORK
+
         // TODO: Pull out to MFDLabs.Security
         public bool ContextIsAdministrator()
         {
             return WindowsIdentity.GetCurrent().IsAdministrator();
         }
+
+#endif
     }
 }

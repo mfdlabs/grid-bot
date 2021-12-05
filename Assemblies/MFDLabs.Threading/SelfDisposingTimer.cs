@@ -11,42 +11,28 @@ namespace MFDLabs.Threading
             _period = period;
             _timer = new Timer((weakThis) => OnTimer((WeakReference)weakThis), new WeakReference(this), startTime, period);
         }
-
-        private static void OnTimer(WeakReference self)
-        {
-            if (!(self.Target is SelfDisposingTimer currentTimer))
-            {
-                return;
-            }
-            currentTimer._act();
-        }
-
-        public bool Change(TimeSpan dueTime, TimeSpan period)
-        {
-            _period = period;
-            return _timer.Change(dueTime, period);
-        }
-
-        public void Stop()
-        {
-            _timer.Dispose();
-            _timer = null;
-        }
-
         ~SelfDisposingTimer()
         {
             _timer?.Dispose();
         }
 
-        public void Pause()
+        private static void OnTimer(WeakReference self)
         {
-            _timer.Change(-1, -1);
+            if (!(self.Target is SelfDisposingTimer currentTimer)) return;
+            currentTimer._act();
         }
-
-        public void Unpause()
+        public bool Change(TimeSpan dueTime, TimeSpan period)
         {
-            _timer.Change(_period, _period);
+            _period = period;
+            return _timer.Change(dueTime, period);
         }
+        public void Stop()
+        {
+            _timer.Dispose();
+            _timer = null;
+        }
+        public void Pause() => _timer.Change(-1, -1);
+        public void Unpause() => _timer.Change(_period, _period);
 
         private readonly Action _act;
         private Timer _timer;

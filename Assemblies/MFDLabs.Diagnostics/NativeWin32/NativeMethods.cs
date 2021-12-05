@@ -1,6 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿#if NETFRAMEWORK
 
-using ULONG = System.Int32;
+using System.Runtime.InteropServices;
+
 using DWORD = System.UInt32;
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
@@ -17,15 +18,7 @@ namespace MFDLabs.Diagnostics.NativeWin32
         internal static extern bool CloseHandle(HANDLE hObject);
         [DllImport("oleacc.dll", SetLastError = true)]
         internal static extern HANDLE GetProcessHandleFromHwnd([In] HWND hwnd);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MIB_TCPSTATS
-        {
-            public DWORD dwRtoAlgorithm;
-            public DWORD dwNumConns;
-        }
-
-        [DllImport("iphlpapi.dll", SetLastError = true)]
-        public extern static ULONG GetTcpStatistics([Out] out MIB_TCPSTATS pStats);
     }
 }
+
+#endif

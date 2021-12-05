@@ -17,23 +17,14 @@ namespace MFDLabs.Instrumentation
                       Password = influxPassword
                   }
              )
-        {
-        }
-
+        { }
         public ConfigurationProvider(string hostIdentifier, string influxDatabaseName, IReadOnlyList<string> influxEndpoints)
             : this(hostIdentifier, null, null, influxDatabaseName, influxEndpoints, null)
-        {
-        }
+        { }
+        public ConfigurationProvider(string hostIdentifier, string farmIdentifier, string superFarmIdentifier, string influxDatabaseName, IReadOnlyList<string> influxEndpoints, InfluxCredentials influxCredentials = null) 
+            => _Configuration = new CollectionConfiguration(hostIdentifier, farmIdentifier, superFarmIdentifier, influxDatabaseName, influxEndpoints, influxCredentials);
 
-        public ConfigurationProvider(string hostIdentifier, string farmIdentifier, string superFarmIdentifier, string influxDatabaseName, IReadOnlyList<string> influxEndpoints, InfluxCredentials influxCredentials = null)
-        {
-            _Configuration = new CollectionConfiguration(hostIdentifier, farmIdentifier, superFarmIdentifier, influxDatabaseName, influxEndpoints, influxCredentials);
-        }
-
-        public ICollectionConfiguration GetConfiguration()
-        {
-            return _Configuration;
-        }
+        public ICollectionConfiguration GetConfiguration() => _Configuration;
 
         private readonly ICollectionConfiguration _Configuration;
     }

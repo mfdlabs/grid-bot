@@ -14,9 +14,7 @@ namespace MFDLabs.Instrumentation.Infrastructure
         public InfrastructureServiceConfigurationProvider(string machineName, Action<Exception> exceptionHandler)
         {
             if (!machineName.IsNullOrWhiteSpace())
-            {
                 _MachineName = machineName;
-            }
             else
             {
                 var machineNameVariable = Environment.GetEnvironmentVariable(_MachineNameVariableKey, EnvironmentVariableTarget.Process);
@@ -27,64 +25,47 @@ namespace MFDLabs.Instrumentation.Infrastructure
 
             _ExceptionHandler = exceptionHandler ?? throw new ArgumentNullException("exceptionHandler");
             _ConfigurationUrl = string.Format("https://{0}/v2/GetPerfmonConfiguration?hostName={1}", _InfrastructureServiceEndpoint, Uri.EscapeDataString(_MachineName));
-            _Timer = new Timer((state) =>
-            {
-                ReloadConfiguration();
-            }, null, _ConfigurationReloadInterval, _ConfigurationReloadInterval);
+            _Timer = new Timer(s => ReloadConfiguration(), null, _ConfigurationReloadInterval, _ConfigurationReloadInterval);
         }
 
         public ICollectionConfiguration GetConfiguration()
         {
-            if (_CollectionConfiguration == null)
-            {
-                ReloadConfiguration();
-            }
+            if (_CollectionConfiguration == null) ReloadConfiguration();
             return _CollectionConfiguration;
         }
-
         public void Dispose()
         {
-            if (_Timer == null)
-            {
-                return;
-            }
+            if (_Timer == null) return;
             _Timer.Dispose();
         }
-
         private void ReloadConfiguration()
         {
             try
             {
                 _Timer.Change(-1, -1);
                 byte[] response;
-                using (var webClient = new WebClient())
-                {
+                using (var webClient = new WebClient()) 
                     response = webClient.DownloadData(_ConfigurationUrl);
-                }
                 if (_LastJsonConfiguration == null || !_LastJsonConfiguration.SequenceEqual(response) || _CollectionConfiguration == null)
                 {
                     using (var memoryStream = new MemoryStream(response))
                     {
                         var configurationDto = (ConfigurationDto)new DataContractJsonSerializer(typeof(ConfigurationDto)).ReadObject(memoryStream);
-                        _CollectionConfiguration = new InfrastructureServiceCollectionConfiguration(_MachineName, configurationDto.ServerFarmName, configurationDto.SuperFarmName, configurationDto.PerfmonDatabase, configurationDto.InfluxDbUrls, null, configurationDto.IsInfluxDbShardingOnWritesEnabled);
+                        _CollectionConfiguration = new InfrastructureServiceCollectionConfiguration(
+                            _MachineName,
+                            configurationDto.ServerFarmName,
+                            configurationDto.SuperFarmName,
+                            configurationDto.PerfmonDatabase,
+                            configurationDto.InfluxDbUrls,
+                            null,
+                            configurationDto.IsInfluxDbShardingOnWritesEnabled
+                        );
                     }
                     _LastJsonConfiguration = response;
                 }
             }
-            catch (Exception ex)
-            {
-                try
-                {
-                    _ExceptionHandler?.Invoke(ex);
-                }
-                catch
-                {
-                }
-            }
-            finally
-            {
-                _Timer.Change(_ConfigurationReloadInterval, _ConfigurationReloadInterval);
-            }
+            catch (Exception ex) { try { _ExceptionHandler?.Invoke(ex); } catch { } }
+            finally { _Timer.Change(_ConfigurationReloadInterval, _ConfigurationReloadInterval); }
         }
 
         private const string _InfrastructureServiceEndpoint = "infrastructure.simulping.com";
@@ -102,16 +83,12 @@ namespace MFDLabs.Instrumentation.Infrastructure
         {
             [DataMember]
             public string ServerFarmName { get; set; }
-
             [DataMember]
             public string SuperFarmName { get; set; }
-
             [DataMember]
             public string PerfmonDatabase { get; set; }
-
             [DataMember]
             public string[] InfluxDbUrls { get; set; }
-
             [DataMember]
             public bool IsInfluxDbShardingOnWritesEnabled { get; set; }
         }

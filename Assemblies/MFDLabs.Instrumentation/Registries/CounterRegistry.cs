@@ -14,7 +14,6 @@ namespace MFDLabs.Instrumentation
                 (key) => new RateOfCountsPerSecondCounter(category, name, instance)
             );
         }
-
         public IAverageValueCounter GetAverageValueCounter(string category, string name, string instance = null)
         {
             return _AverageValueCounters.GetOrAdd(
@@ -22,7 +21,6 @@ namespace MFDLabs.Instrumentation
                 (key) => new AverageValueCounter(category, name, instance)
             );
         }
-
         public IMaximumValueCounter GetMaximumValueCounter(string category, string name, string instance = null)
         {
             return _MaximumValueCounters.GetOrAdd(
@@ -30,7 +28,6 @@ namespace MFDLabs.Instrumentation
                 (key) => new MaximumValueCounter(category, name, instance)
             );
         }
-
         public IRawValueCounter GetRawValueCounter(string category, string name, string instance = null)
         {
             return _RawValueCounters.GetOrAdd(
@@ -38,7 +35,6 @@ namespace MFDLabs.Instrumentation
                 (key) => new RawValueCounter(category, name, instance)
             );
         }
-
         public IFractionCounter GetFractionCounter(string category, string name, string instance = null)
         {
             return _FractionCounters.GetOrAdd(
@@ -46,7 +42,6 @@ namespace MFDLabs.Instrumentation
                 (key) => new FractionCounter(category, name, instance)
             );
         }
-
         public IPercentileCounter GetPercentileCounter(string category, string nameFormatString, byte[] percentiles, string instance = null)
         {
             ValidateStringParameter(category, "category");
@@ -59,19 +54,14 @@ namespace MFDLabs.Instrumentation
                 instance,
                 Convert.ToBase64String(percentiles)
             );
-            return _PercentileCounters.GetOrAdd(key, (_) =>
+            return _PercentileCounters.GetOrAdd(key, _ =>
             {
                 var counterKeys = new Dictionary<byte, CounterKey>();
                 foreach (byte percentile in percentiles)
-                {
-                    string name = string.Format(nameFormatString, percentile.ToString("D2"));
-                    CounterKey value = new CounterKey(category, name, instance);
-                    counterKeys[percentile] = value;
-                }
+                    counterKeys[percentile] = new CounterKey(category, string.Format(nameFormatString, percentile.ToString("D2")), instance);
                 return new PercentileCounter(counterKeys, nameFormatString, instance, category);
             });
         }
-
         public IPercentileCounter GetPercentileCounter(string category, string name, string instanceFormatString, byte[] percentiles)
         {
             ValidateStringParameter(category, "category");
@@ -85,7 +75,7 @@ namespace MFDLabs.Instrumentation
                 instanceFormatString,
                 Convert.ToBase64String(percentiles)
             );
-            return _PercentileCounters.GetOrAdd(key, (k) =>
+            return _PercentileCounters.GetOrAdd(key, k =>
             {
                 var counterKeys = new Dictionary<byte, CounterKey>();
                 foreach (byte percentile in percentiles)
@@ -97,96 +87,45 @@ namespace MFDLabs.Instrumentation
                 return new PercentileCounter(counterKeys, name, instanceFormatString, category);
             });
         }
-
         public IReadOnlyCollection<KeyValuePair<CounterKey, double>> FlushCounters()
         {
             var counters = new List<KeyValuePair<CounterKey, double>>();
-            foreach (var counterKey in GetAllRegisteredCounters())
-            {
+            foreach (var counterKey in GetAllRegisteredCounters()) 
                 counters.Add(new KeyValuePair<CounterKey, double>(counterKey.Key, counterKey.Flush()));
-            }
             foreach (var percentileCounterKey in _PercentileCounters)
-            {
                 counters.AddRange(percentileCounterKey.Value.Flush());
-            }
             return counters;
         }
-
         public IReadOnlyCollection<KeyValuePair<CounterKey, double>> GetCounterValues()
         {
             var counters = new List<KeyValuePair<CounterKey, double>>();
-            foreach (var counterKey in GetAllRegisteredCounters())
-            {
+            foreach (var counterKey in GetAllRegisteredCounters()) 
                 counters.Add(new KeyValuePair<CounterKey, double>(counterKey.Key, counterKey.Get()));
-            }
-            foreach (var percentileCounterKey in _PercentileCounters)
-            {
+            foreach (var percentileCounterKey in _PercentileCounters) 
                 counters.AddRange(percentileCounterKey.Value.Get());
-            }
             return counters;
         }
-
-        public IReadOnlyCollection<byte> GetDefaultPercentiles()
-        {
-            return _DefaultPercentiles;
-        }
-
+        public IReadOnlyCollection<byte> GetDefaultPercentiles() => _DefaultPercentiles;
         private IEnumerable<CounterBase> GetAllRegisteredCounters()
         {
-            foreach (var rateOfCountPerSecondCounterKey in _RateOfCountsPerSecondCounters)
-            {
-                yield return rateOfCountPerSecondCounterKey.Value;
-            }
-            foreach (var averageValueCounterKey in _AverageValueCounters)
-            {
-                yield return averageValueCounterKey.Value;
-            }
-            foreach (var maxValueCounterKey in _MaximumValueCounters)
-            {
-                yield return maxValueCounterKey.Value;
-            }
-            foreach (var rawValueCounterKey in _RawValueCounters)
-            {
-                yield return rawValueCounterKey.Value;
-            }
-            foreach (var fractionCounterKey in _FractionCounters)
-            {
-                yield return fractionCounterKey.Value;
-            }
+            foreach (var rateOfCountPerSecondCounterKey in _RateOfCountsPerSecondCounters) yield return rateOfCountPerSecondCounterKey.Value;
+            foreach (var averageValueCounterKey in _AverageValueCounters) yield return averageValueCounterKey.Value;
+            foreach (var maxValueCounterKey in _MaximumValueCounters) yield return maxValueCounterKey.Value;
+            foreach (var rawValueCounterKey in _RawValueCounters) yield return rawValueCounterKey.Value;
+            foreach (var fractionCounterKey in _FractionCounters) yield return fractionCounterKey.Value;
             yield break;
         }
-
         private void ValidateStringParameter(string parameter, string parameterName)
         {
-            if (parameter.IsNullOrWhiteSpace())
-            {
-                throw new ArgumentException(parameterName);
-            }
+            if (parameter.IsNullOrWhiteSpace()) throw new ArgumentException(parameterName);
         }
 
-        private static readonly byte[] _DefaultPercentiles = new byte[]
-        {
-            1,
-            5,
-            10,
-            25,
-            50,
-            75,
-            90,
-            95,
-            99
-        };
-
+        private static readonly byte[] _DefaultPercentiles = new byte[] { 1, 5, 10, 25, 50, 75, 90, 95, 99 };
         private readonly ConcurrentDictionary<CounterKey, RateOfCountsPerSecondCounter> _RateOfCountsPerSecondCounters = new ConcurrentDictionary<CounterKey, RateOfCountsPerSecondCounter>();
-
         private readonly ConcurrentDictionary<CounterKey, AverageValueCounter> _AverageValueCounters = new ConcurrentDictionary<CounterKey, AverageValueCounter>();
-
         private readonly ConcurrentDictionary<CounterKey, MaximumValueCounter> _MaximumValueCounters = new ConcurrentDictionary<CounterKey, MaximumValueCounter>();
-
         private readonly ConcurrentDictionary<CounterKey, FractionCounter> _FractionCounters = new ConcurrentDictionary<CounterKey, FractionCounter>();
-
         private readonly ConcurrentDictionary<CounterKey, RawValueCounter> _RawValueCounters = new ConcurrentDictionary<CounterKey, RawValueCounter>();
-
         private readonly ConcurrentDictionary<string, PercentileCounter> _PercentileCounters = new ConcurrentDictionary<string, PercentileCounter>();
     }
 }

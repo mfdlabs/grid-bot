@@ -5,22 +5,14 @@ namespace MFDLabs.Grid.Commands
     public class SetLimitsCommand : GridCommand
     {
         public override string Mode => "SetLimits";
-
         public override int MessageVersion => 1;
-
         public SetLimitsSettings Limits { get; }
 
-        public SetLimitsCommand(SetLimitsSettings limitSettings)
-        {
-            Limits = limitSettings;
-        }
+        public SetLimitsCommand(SetLimitsSettings limitSettings) => Limits = limitSettings;
 
         public string ToJsonString(bool useStringForNumber)
         {
-            if (!useStringForNumber)
-            {
-                return JsonConvert.SerializeObject(this);
-            }
+            if (!useStringForNumber) return JsonConvert.SerializeObject(this);
             return JsonConvert.SerializeObject(new
             {
                 Mode,

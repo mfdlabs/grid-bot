@@ -5,16 +5,11 @@ namespace MFDLabs.Instrumentation
 {
     public class DurationRecorder : IDurationRecorder
     {
-        public DurationRecorder(Func<Stopwatch, double> watchReader)
-        {
-            _WatchReader = watchReader ?? throw new ArgumentNullException("watchReader");
-        }
+        public DurationRecorder(Func<Stopwatch, double> watchReader) 
+            => _WatchReader = watchReader ?? throw new ArgumentNullException("watchReader");
 
         public static DurationRecorder CreateWithMillisecondWatchReader()
-        {
-            return new DurationRecorder((Stopwatch watch) => watch.Elapsed.TotalMilliseconds);
-        }
-
+            => new DurationRecorder((Stopwatch watch) => watch.Elapsed.TotalMilliseconds);
         public void RecordDuration(Action operation, IAverageValueCounter counter)
         {
             var sw = Stopwatch.StartNew();
@@ -22,7 +17,6 @@ namespace MFDLabs.Instrumentation
             sw.Stop();
             counter.Sample(_WatchReader(sw));
         }
-
         public T RecordDuration<T>(Func<T> operation, IAverageValueCounter counter)
         {
             var sw = Stopwatch.StartNew();
@@ -31,7 +25,6 @@ namespace MFDLabs.Instrumentation
             counter.Sample(_WatchReader(sw));
             return result;
         }
-
         public void RecordDuration(Action operation, IPercentileCounter counter)
         {
             var sw = Stopwatch.StartNew();
@@ -39,7 +32,6 @@ namespace MFDLabs.Instrumentation
             sw.Stop();
             counter.Sample(_WatchReader(sw));
         }
-
         public T RecordDuration<T>(Func<T> operation, IPercentileCounter counter)
         {
             var sw = Stopwatch.StartNew();

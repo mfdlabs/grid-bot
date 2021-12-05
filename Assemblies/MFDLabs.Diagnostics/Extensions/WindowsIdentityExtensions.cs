@@ -1,4 +1,6 @@
-﻿using System.Security.Principal;
+﻿#if NETFRAMEWORK
+
+using System.Security.Principal;
 
 namespace MFDLabs.Diagnostics.Extensions
 {
@@ -7,3 +9,5 @@ namespace MFDLabs.Diagnostics.Extensions
         public static bool IsAdministrator(this WindowsIdentity id) => new WindowsPrincipal(id).IsInRole(WindowsBuiltInRole.Administrator);
     }
 }
+
+#endif

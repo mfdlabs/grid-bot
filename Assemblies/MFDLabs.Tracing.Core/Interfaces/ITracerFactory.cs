@@ -8,7 +8,6 @@ namespace MFDLabs.Tracing.Core
         event EventHandler TracerOutdated;
 
         ITracingWrapper GetTracingWrapper();
-
         ITracer GetTracer();
     }
 }

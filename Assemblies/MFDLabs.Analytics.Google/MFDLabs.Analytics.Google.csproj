@@ -1,79 +1,49 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3EDC3274-D4ED-4AA1-A347-00A9B4F9FC9D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MFDLabs.Analytics.Google</RootNamespace>
-    <AssemblyName>MFDLabs.Analytics.Google</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>false</Deterministic>
+    <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
+  
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Configuration" />
   </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="GoogleAnalyticsManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
+    <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
-      <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
-      <Name>MFDLabs.Abstractions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj">
-      <Project>{b3e34cff-1aa2-4d0d-8b27-c18e55e2adc1}</Project>
-      <Name>MFDLabs.Configuration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
-      <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
-      <Name>MFDLabs.Diagnostics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Google.Analytics.Client\MFDLabs.Google.Analytics.Client.csproj">
-      <Project>{897d935e-9198-4452-8ff0-3020102ff1f7}</Project>
-      <Name>MFDLabs.Google.Analytics.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
-      <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
-      <Name>MFDLabs.Instrumentation</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj">
-      <Project>{66691ad6-1713-4996-951a-31a7c81e8f9e}</Project>
-      <Name>MFDLabs.Networking</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Properties\Settings.settings">
+    <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  
+  <ItemGroup>
+	<ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
+	<ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+	<ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+	<ProjectReference Include="..\MFDLabs.Google.Analytics.Client\MFDLabs.Google.Analytics.Client.csproj" />
+	<ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+	<ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
+  </ItemGroup>
+
 </Project>

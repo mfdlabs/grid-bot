@@ -8,17 +8,11 @@ namespace MFDLabs.Http.Client
 {
     public class CircuitBreakerHandler : PipelineHandler<IHttpRequest, IHttpResponse>, IDisposable
     {
-        public CircuitBreakerHandler(IHttpClientCircuitBreakerProvider httpClientCircuitBreakerProvider)
-        {
-            _HttpClientCircuitBreakerProvider = httpClientCircuitBreakerProvider ?? throw new ArgumentNullException("httpClientCircuitBreakerProvider");
-        }
-
+        public CircuitBreakerHandler(IHttpClientCircuitBreakerProvider httpClientCircuitBreakerProvider) 
+            => _HttpClientCircuitBreakerProvider = httpClientCircuitBreakerProvider ?? throw new ArgumentNullException("httpClientCircuitBreakerProvider");
         public CircuitBreakerHandler(ICircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>> circuitBreakerPolicy)
         {
-            if (circuitBreakerPolicy == null)
-            {
-                throw new ArgumentNullException("circuitBreakerPolicy");
-            }
+            if (circuitBreakerPolicy == null) throw new ArgumentNullException(nameof(circuitBreakerPolicy));
             _HttpClientCircuitBreakerProvider = new StaticHttpClientCircuitBreakerProvider(circuitBreakerPolicy);
         }
 
@@ -37,7 +31,6 @@ namespace MFDLabs.Http.Client
                 throw;
             }
         }
-
         public override async Task InvokeAsync(IExecutionContext<IHttpRequest, IHttpResponse> context, CancellationToken cancellationToken)
         {
             var policy = _HttpClientCircuitBreakerProvider.GetCircuitBreakerPolicy(context.Input);
@@ -53,19 +46,14 @@ namespace MFDLabs.Http.Client
                 throw;
             }
         }
-
         public void Dispose()
         {
-            if (_Disposed)
-            {
-                return;
-            }
+            if (_Disposed) return;
             _HttpClientCircuitBreakerProvider.Dispose();
             _Disposed = true;
         }
 
         private readonly IHttpClientCircuitBreakerProvider _HttpClientCircuitBreakerProvider;
-
         private bool _Disposed;
     }
 }

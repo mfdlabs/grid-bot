@@ -8,13 +8,9 @@ namespace MFDLabs.Http.ServiceClient
 
         public ServiceOperationErrorException(IHttpResponse response, PayloadError payloadError)
             : base(response, GetExceptionMessage(response, payloadError))
-        {
-            Code = payloadError?.Code;
-        }
+            => Code = payloadError?.Code;
 
-        private static string GetExceptionMessage(IHttpResponse response, PayloadError payloadError)
-        {
-            return $"{BuildExceptionMessage(response)}\n\tError code: {payloadError?.Code}";
-        }
+        private static string GetExceptionMessage(IHttpResponse response, PayloadError payloadError) 
+            => $"{BuildExceptionMessage(response)}\n\tError code: {payloadError?.Code}";
     }
 }

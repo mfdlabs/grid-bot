@@ -6,7 +6,6 @@ namespace MFDLabs.Http
     {
         public HttpException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
+        { }
     }
 }

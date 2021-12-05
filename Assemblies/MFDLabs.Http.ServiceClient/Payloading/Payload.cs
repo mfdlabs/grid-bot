@@ -9,7 +9,6 @@ namespace MFDLabs.Http.ServiceClient
     {
         [DataMember(Name = "data")]
         public T Data { get; set; }
-
         [DataMember(Name = "error", EmitDefaultValue = false)]
         public PayloadError Error { get; set; }
     }

@@ -6,7 +6,6 @@
     public abstract class GridCommand
     {
         public abstract string Mode { get; }
-
         public abstract int MessageVersion { get; }
     }
 }

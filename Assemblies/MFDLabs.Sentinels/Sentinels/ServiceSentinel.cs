@@ -19,20 +19,14 @@ namespace MFDLabs.Sentinels
 
         private void OnTimerCallback(object state)
         {
-            if (_IsDisposed)
-            {
-                return;
-            }
+            if (_IsDisposed) return;
             var currentTimerState = (Timer)state;
             try
             {
                 currentTimerState.Change(-1, -1);
                 IsHealthy = _HealthChecker();
             }
-            catch (Exception)
-            {
-                IsHealthy = false;
-            }
+            catch (Exception) { IsHealthy = false; }
             finally
             {
                 try
@@ -41,17 +35,12 @@ namespace MFDLabs.Sentinels
                     currentTimerState.Change(monitorInterval, monitorInterval);
                 }
                 catch
-                {
-                }
+                { }
             }
         }
-
         protected virtual void Dispose(bool disposing)
         {
-            if (_IsDisposed)
-            {
-                return;
-            }
+            if (_IsDisposed) return;
             if (disposing)
             {
                 _MonitorTimer.CheckAndDispose();
@@ -59,7 +48,6 @@ namespace MFDLabs.Sentinels
             }
             _IsDisposed = true;
         }
-
         public void Dispose()
         {
             Dispose(true);
@@ -67,11 +55,8 @@ namespace MFDLabs.Sentinels
         }
 
         private readonly Func<bool> _HealthChecker;
-
         private bool _IsDisposed;
-
         protected readonly Func<TimeSpan> _MonitorIntervalGetter;
-
         protected Timer _MonitorTimer;
     }
 }

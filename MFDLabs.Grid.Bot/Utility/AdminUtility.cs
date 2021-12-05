@@ -87,9 +87,8 @@ namespace MFDLabs.Grid.Bot.Utility
         public async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
         {
             var isPrivilaged = UserIsPrivilaged(message.Author);
-            var isAdmin = UserIsAdmin(message.Author);
 
-            if (!isPrivilaged && !isAdmin)
+            if (!isPrivilaged)
             {
                 SystemLogger.Singleton.Warning("User '{0}' is not on the admin whitelist or the privilaged users list. Please take this with caution as leaked internal methods may be abused!", message.Author.Id);
                 await message.ReplyAsync("Only privilaged users or administrators can execute that command.");

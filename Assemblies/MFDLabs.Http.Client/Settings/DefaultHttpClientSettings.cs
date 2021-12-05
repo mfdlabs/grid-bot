@@ -7,9 +7,7 @@ namespace MFDLabs.Http.Client
     public class DefaultHttpClientSettings : IHttpClientSettings
     {
         public string UserAgent { get; } = $"MFDLabs.Http.Client ({Environment.MachineName})";
-
         public int MaxRedirects { get; } = 50;
-
-        public TimeSpan RequestTimeout { get; } = TimeSpan.FromSeconds(100.0);
+        public TimeSpan RequestTimeout { get; } = TimeSpan.FromSeconds(100);
     }
 }

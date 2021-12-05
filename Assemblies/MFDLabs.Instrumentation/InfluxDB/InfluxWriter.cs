@@ -9,17 +9,12 @@ namespace MFDLabs.Instrumentation
 {
     internal class InfluxWriter
     {
-        internal InfluxWriter(Action<Exception> exceptionHandler)
-        {
-            _ExceptionHandler = exceptionHandler ?? throw new ArgumentException("exceptionHandler");
-        }
+        internal InfluxWriter(Action<Exception> exceptionHandler) 
+            => _ExceptionHandler = exceptionHandler ?? throw new ArgumentException("exceptionHandler");
 
         public void Persist(ICollectionConfiguration configuration, IReadOnlyCollection<KeyValuePair<CounterKey, double>> datapoints)
         {
-            if (datapoints.Count == 0)
-            {
-                return;
-            }
+            if (datapoints.Count == 0) return;
             var groupByEndpoint = GroupByEndpoint(configuration, datapoints);
             try
             {
@@ -56,37 +51,19 @@ namespace MFDLabs.Instrumentation
                     try
                     {
                         using (var client = new ExtendedWebClient())
-                        {
                             client.UploadStringGzipped(
                                 $"{group.Key}/write?db={configuration.InfluxDatabaseName}&precision=s",
                                 builder.ToString(),
                                 configuration.InfluxCredentials?.Username,
                                 configuration.InfluxCredentials?.Password
                             );
-                        }
                     }
-                    catch (WebException ex)
-                    {
-                        _ExceptionHandler(CreateDetailedException(ex, group.Key));
-                    }
-                    catch (Exception ex)
-                    {
-                        _ExceptionHandler(ex);
-                    }
+                    catch (WebException ex) { _ExceptionHandler(CreateDetailedException(ex, group.Key)); }
+                    catch (Exception ex) { _ExceptionHandler(ex); }
                 }
             }
-            catch (Exception ex)
-            {
-                try
-                {
-                    _ExceptionHandler(ex);
-                }
-                catch
-                {
-                }
-            }
+            catch (Exception ex) { try { _ExceptionHandler(ex); } catch { } }
         }
-
         internal Dictionary<string, List<KeyValuePair<CounterKey, double>>> GroupByEndpoint(ICollectionConfiguration configuration, IEnumerable<KeyValuePair<CounterKey, double>> datapoints)
         {
             var groupsByEndpoint = new Dictionary<string, List<KeyValuePair<CounterKey, double>>>();
@@ -104,31 +81,20 @@ namespace MFDLabs.Instrumentation
             }
             return groupsByEndpoint;
         }
-
         private static Exception CreateDetailedException(WebException ex, string baseUrl)
         {
-            Exception result;
             try
             {
                 var response = ex.Response?.GetResponseStream();
 
                 string responseBody = null;
-                if (response != null)
-                {
-                    using (var reader = new StreamReader(response))
-                    {
+                if (response != null) 
+                    using (var reader = new StreamReader(response)) 
                         responseBody = reader.ReadToEnd();
-                    }
-                }
-                result = new Exception(string.Format("Failed to write to InfluxDB server {0}. Response body = {1}. Status = {2}", baseUrl, responseBody, ex.Status), ex);
+                return new Exception(string.Format("Failed to write to InfluxDB server {0}. Response body = {1}. Status = {2}", baseUrl, responseBody, ex.Status), ex);
             }
-            catch
-            {
-                result = ex;
-            }
-            return result;
+            catch { return ex; }
         }
-
         private static string EscapeTagName(string stringToEscape)
         {
             stringToEscape = stringToEscape.Replace(" ", "\\ ");

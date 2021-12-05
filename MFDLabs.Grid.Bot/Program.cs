@@ -34,7 +34,7 @@
 #if DEBUG
                 System.Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {e.ExceptionObject}");
 #else
-                Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {(e.ExceptionObject as Exception).Message}");
+                System.Console.WriteLine($"[URGENT]: Unhandled global exception occurred: {(e.ExceptionObject as System.Exception).Message}");
 #endif
                 System.Console.ResetColor();
 

@@ -1,16 +1,26 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {
     public static class SocketMessageExtensions
     {
         public static async Task<RestUserMessage> ReplyAsync(this SocketMessage message, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, MessageReference messageReference = null)
-            => await message.Channel.SendMessageAsync($"<@{message.Author.Id}>, {text}", isTTS, embed, options, new AllowedMentions(AllowedMentionTypes.Users), messageReference);
-        public static void Reply(this SocketMessage message, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, MessageReference messageReference = null)
+            => await message.Channel.SendMessageAsync($"<@{message.Author.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}", isTTS, embed, options, new AllowedMentions(AllowedMentionTypes.Users), messageReference);
+        public static async Task<RestUserMessage> ReplyWithFileAsync(this SocketMessage message, string fileName, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, bool isSpoiler = false, MessageReference messageReference = null)
+            => await message.Channel.SendFileAsync(fileName, $"<@{message.Author.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}", isTTS, embed, options, isSpoiler, new AllowedMentions(AllowedMentionTypes.Users), messageReference);
+        public static async Task<RestUserMessage> ReplyWithFileAsync(this SocketMessage message, Stream stream, string fileName, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, bool isSpoiler = false, MessageReference messageReference = null)
+            => await message.Channel.SendFileAsync(stream, fileName, $"<@{message.Author.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}", isTTS, embed, options, isSpoiler, new AllowedMentions(AllowedMentionTypes.Users), messageReference);
+        public static RestUserMessage ReplyWithFile(this SocketMessage message, string fileName, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, bool isSpoiler = false, MessageReference messageReference = null)
+            => message.ReplyWithFileAsync(fileName, text, isTTS, embed, options, isSpoiler, messageReference).GetAwaiter().GetResult();
+        public static RestUserMessage ReplyWithFile(this SocketMessage message, Stream stream, string fileName, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, bool isSpoiler = false, MessageReference messageReference = null)
+            => message.ReplyWithFileAsync(stream, fileName, text, isTTS, embed, options, isSpoiler, messageReference).GetAwaiter().GetResult();
+        public static RestUserMessage Reply(this SocketMessage message, string text = null, bool isTTS = false, Embed embed = null, RequestOptions options = null, MessageReference messageReference = null)
             => message.ReplyAsync(text, isTTS, embed, options, messageReference).GetAwaiter().GetResult();
         public static bool IsInPublicChannel(this SocketMessage message) => message.Channel as SocketGuildChannel != null;
         public static async Task<bool> RejectIfNotAdminAsync(this SocketMessage message) => await AdminUtility.Singleton.RejectIfNotAdminAsync(message);

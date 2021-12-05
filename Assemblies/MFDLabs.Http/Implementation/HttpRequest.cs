@@ -9,14 +9,10 @@ namespace MFDLabs.Http
     public class HttpRequest : IHttpRequest
     {
         public HttpMethod Method { get; set; }
-
         public Uri Url { get; set; }
-
         public IHttpRequestHeaders Headers { get; set; }
-
         [ExcludeFromCodeCoverage]
         public HttpContent Body { get; set; }
-
         public TimeSpan? Timeout { get; set; }
 
         public HttpRequest(HttpMethod method, Uri url)
@@ -28,10 +24,7 @@ namespace MFDLabs.Http
 
         public void SetJsonRequestBody(object requestBody)
         {
-            if (requestBody == null)
-            {
-                throw new ArgumentNullException("requestBody");
-            }
+            if (requestBody == null) throw new ArgumentNullException(nameof(requestBody));
             Body = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(requestBody)));
             Headers.ContentType = _JsonContentType;
         }

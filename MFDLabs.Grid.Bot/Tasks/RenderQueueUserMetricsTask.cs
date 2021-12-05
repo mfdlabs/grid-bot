@@ -56,7 +56,7 @@ namespace MFDLabs.Grid.Bot
                         var detail = ex.ToDetailedString();
                         if (detail.Length > EmbedBuilder.MaxDescriptionLength)
                         {
-                            message.Channel.SendFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
                             return PluginResult.ContinueProcessing;
                         }
 
@@ -154,7 +154,7 @@ namespace MFDLabs.Grid.Bot
                                         return PluginResult.ContinueProcessing;
                                     }
                                     using (weirdStream)
-                                        message.Channel.SendFile(
+                                        message.ReplyWithFile(
                                             weirdStream,
                                             weirdFileName
                                         );
@@ -173,7 +173,7 @@ namespace MFDLabs.Grid.Bot
                                     {
                                         _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
                                         SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
-                                        message.Reply($"You have no Roblox account associated with you.");
+                                        message.Reply("You have no Roblox account associated with you.");
                                         return PluginResult.ContinueProcessing;
                                     }
 
@@ -284,7 +284,7 @@ namespace MFDLabs.Grid.Bot
                                 }
 
                                 using (stream)
-                                    message.Channel.SendFile(
+                                    message.ReplyWithFile(
                                         stream,
                                         fileName
                                     );

@@ -12,27 +12,14 @@ namespace MFDLabs.Pipeline
 
         public virtual void Invoke(IExecutionContext<TInput, TOutput> context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
-            if (NextHandler == null)
-            {
-                return;
-            }
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (NextHandler == null) return;
             NextHandler.Invoke(context);
         }
-
         public virtual Task InvokeAsync(IExecutionContext<TInput, TOutput> context, CancellationToken cancellationToken)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
-            if (NextHandler == null)
-            {
-                return Task.CompletedTask;
-            }
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (NextHandler == null) return Task.CompletedTask;
             return NextHandler.InvokeAsync(context, cancellationToken);
         }
     }

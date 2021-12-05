@@ -15,9 +15,7 @@ namespace MFDLabs.Sentinels
 
         public CircuitBreakerException(CircuitBreakerBase circuitBreaker)
             : this(circuitBreaker.Name, circuitBreaker.Tripped)
-        {
-        }
-
+        { }
         public CircuitBreakerException(string circuitBreakerName, DateTime? circuitBreakerTripped)
         {
             _CircuitBreakerName = circuitBreakerName;
@@ -25,7 +23,6 @@ namespace MFDLabs.Sentinels
         }
 
         private readonly string _CircuitBreakerName;
-
         private readonly DateTime? _CircuitBreakerTripped;
     }
 }

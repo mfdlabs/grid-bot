@@ -6,7 +6,6 @@ using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines;
-using MFDLabs.Logging;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {
@@ -29,8 +28,9 @@ namespace MFDLabs.Configuration.Clients.Vault
         private void RefreshToken(object s)
         {
             _vaultClientRefreshTimer.Change(-1, -1);
-            EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Refreshing the VaultClient's token...");
+            ConfigurationLogging.Info("Refreshing vault client's token, current is '{0}'", _client.V1.Auth.Token.LookupSelfAsync().Result.Data.Id);
             _client.V1.Auth.Token.RenewSelfAsync().Wait();
+            ConfigurationLogging.Info("Refreshed vault client's token, new token is '{0}'", _client.V1.Auth.Token.LookupSelfAsync().Result.Data.Id);
             _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
 

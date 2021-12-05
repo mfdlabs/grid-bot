@@ -9,7 +9,6 @@ namespace MFDLabs.Http.Client
     public class HttpClient : IHttpClient, IDisposable
     {
         internal CookieContainer CookieContainer { get; }
-
         public IExecutionPlan<IHttpRequest, IHttpResponse> HttpExecutionPlan { get; internal set; }
 
         public HttpClient(CookieContainer cookieContainer = null, IHttpClientSettings httpClientSettings = null, IHttpMessageHandlerBuilder httpMessageHandlerBuilder = null)
@@ -25,24 +24,15 @@ namespace MFDLabs.Http.Client
 
         public IHttpResponse Send(IHttpRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException("request");
-            }
+            if (request == null) throw new ArgumentNullException(nameof(request));
             return HttpExecutionPlan.Execute(request);
         }
-
         public Task<IHttpResponse> SendAsync(IHttpRequest request, CancellationToken cancellationToken)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException("request");
-            }
+            if (request == null) throw new ArgumentNullException(nameof(request));
             return HttpExecutionPlan.ExecuteAsync(request, cancellationToken);
         }
-
         public void Dispose()
-        {
-        }
+        { }
     }
 }

@@ -5,8 +5,6 @@ using MFDLabs.Pipeline;
 using MFDLabs.Tracing.Core;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-
 namespace MFDLabs.Http.Client.Monitoring
 {
     public class TracingHandler : PipelineHandler<IHttpRequest, IHttpResponse>
@@ -16,34 +14,24 @@ namespace MFDLabs.Http.Client.Monitoring
             TrySpanInjection(context);
             base.Invoke(context);
         }
-
         public override Task InvokeAsync(IExecutionContext<IHttpRequest, IHttpResponse> context, CancellationToken cancellationToken)
         {
             TrySpanInjection(context);
             return base.InvokeAsync(context, cancellationToken);
         }
-
         private static void TrySpanInjection(IExecutionContext<IHttpRequest, IHttpResponse> context)
         {
             try
             {
                 if (TracingMetadata.IsTracingEnabled())
-                {
-                    foreach (var header in TracingMetadata.TracingWrapper.ExtractSpanContextAsHttpHeaders())
-                    {
+                    foreach (var header in TracingMetadata.TracingWrapper.ExtractSpanContextAsHttpHeaders()) 
                         context.Input.Headers.AddOrUpdate(header.Key, header.Value);
-                    }
-                }
             }
             catch (Exception ex)
             {
-                if (TracingMetadata.Logger != null)
-                {
+                if (TracingMetadata.Logger != null) 
                     TracingMetadata.Logger.LogDebug("TracingHandler error while extracting span headers {0}", ex);
-                }
             }
         }
     }
 }
-
-#pragma warning restore CS0618 // Type or member is obsolete

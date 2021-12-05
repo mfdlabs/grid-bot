@@ -14,10 +14,7 @@ namespace MFDLabs.EventLog
         protected override void Log(LogLevel logLevel, string format, params object[] args)
         {
             var message = (args != null && args.Length != 0) ? string.Format(format, args) : format;
-            if (_RemoveLineBreaks)
-            {
-                message = message.Replace("\r", "").Replace("\n", ", ");
-            }
+            if (_RemoveLineBreaks) message = message.Replace("\r", "").Replace("\n", ", ");
             Console.WriteLine($"{DateTime.Now} - {logLevel} - {message}");
         }
 

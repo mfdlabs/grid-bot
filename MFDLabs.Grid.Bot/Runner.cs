@@ -31,6 +31,14 @@ namespace MFDLabs.Grid.Bot
         {
             SystemLogger.Singleton.LifecycleEvent(_BadActorMessage);
 
+#if WE_ON_THE_GRID || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
+            MFDLabs.Configuration.Logging.ConfigurationLogging.OverrideDefaultConfigurationLogging(
+                SystemLogger.Singleton.Error,
+                SystemLogger.Singleton.Warning,
+                SystemLogger.Singleton.Info
+            );
+#endif
+
             GoogleAnalyticsManager.Singleton.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
 
 #if DEBUG

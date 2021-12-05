@@ -148,7 +148,13 @@ IF "%25AppSettingsConfiguration%25"=="ReleaseActor" SET AppSettingsConfiguration
 ECHO Deploying with configuration "%25AppSettingsConfiguration%25"
 
 rem Copy the current configuration settings to the target
-COPY /Y "$(ProjectDir)App.%25AppSettingsConfiguration%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+IF NOT "%25AppSettingsConfiguration%25"=="Debug" (
+    IF NOT "%25AppSettingsConfiguration%25"=="Release" (
+        echo Copying configuration settings $(ProjectDir)App.%25AppSettingsConfiguration%25.config to $(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config
+        COPY /Y "$(ProjectDir)App.%25AppSettingsConfiguration%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
+    )
+)
+
 
 xcopy /C/I/Y "$(TargetPath)" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"
 xcopy /C/I/Y "$(TargetPath).config" "$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)"</PostBuildEvent>

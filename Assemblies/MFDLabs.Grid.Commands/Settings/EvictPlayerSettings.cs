@@ -4,9 +4,6 @@
     {
         public long PlayerId { get; }
 
-        public EvictPlayerSettings(long playerId)
-        {
-            PlayerId = playerId;
-        }
+        public EvictPlayerSettings(long playerId) => PlayerId = playerId;
     }
 }

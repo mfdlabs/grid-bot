@@ -12,25 +12,26 @@ namespace MFDLabs.Instrumentation.PrometheusListener
             sanitizedVariableName = Regex.Replace(sanitizedVariableName, PrometheusConstants.RegexReplacementChars, PrometheusConstants.ReplacementString);
             var sanitizedInstanceName = (instance == null) ? PrometheusConstants.EmptyVal : Regex.Replace(instance, PrometheusConstants.RegexReplacementChars, PrometheusConstants.ReplacementString);
             var sanitizedCategoryName = (category == null) ? PrometheusConstants.EmptyVal : Regex.Replace(category, PrometheusConstants.RegexReplacementChars, PrometheusConstants.ReplacementString);
-            List<QuantileEpsilonPair> objectives = new List<QuantileEpsilonPair>();
-            foreach (var percentile in percentiles)
-            {
-                objectives.Add(new QuantileEpsilonPair(percentile / 100.0, PrometheusConstants.MaxPercentileError));
-            }
-            var summary = Metrics.CreateSummary(sanitizedVariableName, helpText, new SummaryConfiguration
-            {
-                LabelNames = new string[]
+            var objectives = new List<QuantileEpsilonPair>();
+            foreach (var percentile in percentiles) objectives.Add(new QuantileEpsilonPair(percentile / 100, PrometheusConstants.MaxPercentileError));
+            var summary = Metrics.CreateSummary(
+                sanitizedVariableName,
+                helpText,
+                new SummaryConfiguration
                 {
-                    "instance",
-                    "category",
-                    "machineName",
-                    "host",
-                    "ServerFarm",
-                    "SuperFarm"
-                },
-                Objectives = objectives,
-                MaxAge = CounterReporter.SubmissionInterval
-            });
+                    LabelNames = new string[]
+                    {
+                        "instance",
+                        "category",
+                        "machineName",
+                        "host",
+                        "ServerFarm",
+                        "SuperFarm"
+                    },
+                    Objectives = objectives,
+                    MaxAge = CounterReporter.SubmissionInterval
+                }
+            );
             _SummaryChild = summary.WithLabels(
                 sanitizedInstanceName,
                 sanitizedCategoryName,
@@ -43,10 +44,7 @@ namespace MFDLabs.Instrumentation.PrometheusListener
 
         internal void AddDataPoint(double data)
         {
-            if (PrometheusServerWrapper.Instance.UpdatingCountersEnabled)
-            {
-                _SummaryChild.Observe(data);
-            }
+            if (PrometheusServerWrapper.Instance.UpdatingCountersEnabled) _SummaryChild.Observe(data);
         }
 
         private readonly Summary.Child _SummaryChild;

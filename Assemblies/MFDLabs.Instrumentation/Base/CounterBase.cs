@@ -4,18 +4,11 @@
     {
         public CounterKey Key { get; }
 
-        protected CounterBase(string category, string name, string instance)
-        {
-            Key = new CounterKey(category, name, instance);
-        }
+        protected CounterBase(string category, string name, string instance) 
+            => Key = new CounterKey(category, name, instance);
 
-        public double GetLastFlushValue()
-        {
-            return LastFlushValue;
-        }
-
+        public double GetLastFlushValue() => LastFlushValue;
         internal abstract double Flush();
-
         internal abstract double Get();
 
         internal double LastFlushValue;

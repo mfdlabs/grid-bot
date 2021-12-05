@@ -6,7 +6,6 @@ namespace MFDLabs.Instrumentation.LegacySupport
     {
         public NoCountersSpecifiedForCategoryException(string categoryName)
             : base(categoryName)
-        {
-        }
+        { }
     }
 }

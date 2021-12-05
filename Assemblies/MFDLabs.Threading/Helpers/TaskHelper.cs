@@ -17,30 +17,11 @@ namespace MFDLabs.Threading
                 action();
             });
         }
-        public static void SetTimeoutFromDays(Action action, double days)
-        {
-            SetTimeout(action, TimeSpan.FromDays(days));
-        }
-        public static void SetTimeoutFromHours(Action action, double hours)
-        {
-            SetTimeout(action, TimeSpan.FromHours(hours));
-        }
-        public static void SetTimeoutFromMilliseconds(Action action, double milliseconds)
-        {
-            SetTimeout(action, TimeSpan.FromMilliseconds(milliseconds));
-        }
-        public static void SetTimeoutFromMinutes(Action action, double minutes)
-        {
-            SetTimeout(action, TimeSpan.FromMinutes(minutes));
-        }
-        public static void SetTimeoutFromSeconds(Action action, double seconds)
-        {
-            SetTimeout(action, TimeSpan.FromSeconds(seconds));
-        }
-
-        public static void SetTimeoutFromTicks(Action action, long ticks)
-        {
-            SetTimeout(action, TimeSpan.FromTicks(ticks));
-        }
+        public static void SetTimeoutFromDays(Action action, double days) => SetTimeout(action, TimeSpan.FromDays(days));
+        public static void SetTimeoutFromHours(Action action, double hours) => SetTimeout(action, TimeSpan.FromHours(hours));
+        public static void SetTimeoutFromMilliseconds(Action action, double milliseconds) => SetTimeout(action, TimeSpan.FromMilliseconds(milliseconds));
+        public static void SetTimeoutFromMinutes(Action action, double minutes) => SetTimeout(action, TimeSpan.FromMinutes(minutes));
+        public static void SetTimeoutFromSeconds(Action action, double seconds) => SetTimeout(action, TimeSpan.FromSeconds(seconds));
+        public static void SetTimeoutFromTicks(Action action, long ticks) => SetTimeout(action, TimeSpan.FromTicks(ticks));
     }
 }

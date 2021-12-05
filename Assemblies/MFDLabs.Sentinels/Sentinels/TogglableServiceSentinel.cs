@@ -7,10 +7,8 @@ namespace MFDLabs.Sentinels
         public bool IsRunning { get; private set; }
 
         public TogglableServiceSentinel(Func<bool> healthChecker, Func<TimeSpan> monitorIntervalGetter, bool isHealthy = true)
-            : base(healthChecker, monitorIntervalGetter, isHealthy)
-        {
-            IsRunning = true;
-        }
+            : base(healthChecker, monitorIntervalGetter, isHealthy) 
+            => IsRunning = true;
 
         public void StopSentinel()
         {
@@ -20,7 +18,6 @@ namespace MFDLabs.Sentinels
                 IsRunning = false;
             }
         }
-
         public void StartSentinel()
         {
             if (!IsRunning)

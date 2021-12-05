@@ -7,10 +7,7 @@ namespace MFDLabs.Http.Client.Monitoring
     {
         public PerInstancePerformanceMonitor(ICounterRegistry registry, string categoryName, string instanceName)
         {
-            if (registry == null)
-            {
-                throw new ArgumentNullException("registry");
-            }
+            if (registry == null) throw new ArgumentNullException(nameof(registry));
             AverageResponseTime = registry.GetAverageValueCounter(categoryName, _AverageResponseTimeCounterName, instanceName);
             FailuresPerSecond = registry.GetRateOfCountsPerSecondCounter(categoryName, _FailuresPerSecondCounterName, instanceName);
             RequestsOutstanding = registry.GetRawValueCounter(categoryName, _RequestsOutstandingCounterName, instanceName);
@@ -18,19 +15,13 @@ namespace MFDLabs.Http.Client.Monitoring
         }
 
         public IAverageValueCounter AverageResponseTime { get; }
-
         public IRateOfCountsPerSecondCounter FailuresPerSecond { get; }
-
         public IRawValueCounter RequestsOutstanding { get; }
-
         public IRateOfCountsPerSecondCounter SuccessesPerSecond { get; }
 
         private const string _AverageResponseTimeCounterName = "Avg Response Time";
-
         private const string _FailuresPerSecondCounterName = "Failures/s";
-
         private const string _RequestsOutstandingCounterName = "Requests Outstanding";
-
         private const string _SuccessesPerSecondCounterName = "Requests/s";
     }
 }
