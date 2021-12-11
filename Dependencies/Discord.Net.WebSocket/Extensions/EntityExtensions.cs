@@ -9,7 +9,7 @@ namespace Discord.WebSocket
     {
         public static IActivity ToEntity(this API.Game model)
         {
-            // Custom Status Game
+            #region  Custom Status Game
             if (model.Id.IsSpecified && model.Id.Value == "custom")
             {
                 return new CustomStatusGame()
@@ -21,8 +21,9 @@ namespace Discord.WebSocket
                     CreatedAt = DateTimeOffset.FromUnixTimeMilliseconds(model.CreatedAt.Value),
                 };
             }
+            #endregion
 
-            // Spotify Game
+            #region Spotify Game
             if (model.SyncId.IsSpecified)
             {
                 var assets = model.Assets.GetValueOrDefault()?.ToEntity();
@@ -46,8 +47,9 @@ namespace Discord.WebSocket
                     Flags = model.Flags.GetValueOrDefault(),
                 };
             }
+            #endregion
 
-            // Rich Game
+            #region Rich Game
             if (model.ApplicationId.IsSpecified)
             {
                 ulong appId = model.ApplicationId.Value;
@@ -66,7 +68,9 @@ namespace Discord.WebSocket
                     Flags = model.Flags.GetValueOrDefault()
                 };
             }
-            // Stream Game
+            #endregion
+
+            #region  Stream Game
             if (model.StreamUrl.IsSpecified)
             {
                 return new StreamingGame(
@@ -77,10 +81,13 @@ namespace Discord.WebSocket
                     Details = model.Details.GetValueOrDefault()
                 };
             }
-            // Normal Game
+            #endregion
+
+            #region  Normal Game
             return new Game(model.Name, model.Type.GetValueOrDefault() ?? ActivityType.Playing,
                 model.Flags.IsSpecified ? model.Flags.Value : ActivityProperties.None,
                 model.Details.GetValueOrDefault());
+            #endregion
         }
 
         // (Small, Large)

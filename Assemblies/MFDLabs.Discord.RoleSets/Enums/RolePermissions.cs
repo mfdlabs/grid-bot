@@ -22,6 +22,5 @@ namespace MFDLabs.Discord.RoleSets.Enums
     [Flags]
     public enum RolePermissions : byte
     {
-
     }
 }

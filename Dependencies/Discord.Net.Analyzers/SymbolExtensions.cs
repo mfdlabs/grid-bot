@@ -1,12 +1,6 @@
-﻿using Discord.Commands;
+﻿using System;
 using Microsoft.CodeAnalysis;
-/* Unmerged change from project 'Discord.Net.Analyzers (netstandard2.1)'
-Before:
 using Discord.Commands;
-After:
-using System;
-*/
-
 
 namespace Discord.Analyzers
 {

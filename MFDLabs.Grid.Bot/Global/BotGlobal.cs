@@ -32,7 +32,7 @@ namespace MFDLabs.Grid.Bot.Global
             {
                 try
                 {
-                    await _client.LogoutAsync().ConfigureAwait(false);
+                    //await _client.LogoutAsync().ConfigureAwait(false);
                     await _client.StopAsync().ConfigureAwait(false);
                     SystemLogger.Singleton.Info("Bot successfully logged out and stopped!");
                 }

@@ -1,9 +1,10 @@
-using Discord.Commands.Builders;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+
+using Discord.Commands.Builders;
 
 namespace Discord.Commands
 {
@@ -79,11 +80,11 @@ namespace Discord.Commands
             {
                 if (!IsValidModuleDefinition(typeInfo))
                     continue;
-
+                
                 if (builtTypes.Contains(typeInfo))
                     continue;
-
-                builder.AddModule((module) =>
+                
+                builder.AddModule((module) => 
                 {
                     BuildModule(module, typeInfo, service, services);
                     BuildSubTypes(module, typeInfo.DeclaredNestedTypes, builtTypes, service, services);
@@ -115,9 +116,8 @@ namespace Discord.Commands
                         builder.AddAliases(alias.Aliases);
                         break;
                     case GroupAttribute group:
-                        builder.Name = builder.Name ?? group.Prefix;
+                        builder.Name ??= group.Prefix;
                         builder.Group = group.Prefix;
-                        builder.AddAliases(group.Prefix);
                         break;
                     case PreconditionAttribute precondition:
                         builder.AddPrecondition(precondition);
@@ -139,7 +139,7 @@ namespace Discord.Commands
 
             foreach (var method in validCommands)
             {
-                builder.AddCommand((command) =>
+                builder.AddCommand((command) => 
                 {
                     BuildCommand(command, typeInfo, method, service, services);
                 });
@@ -149,7 +149,7 @@ namespace Discord.Commands
         private static void BuildCommand(CommandBuilder builder, TypeInfo typeInfo, MethodInfo method, CommandService service, IServiceProvider serviceprovider)
         {
             var attributes = method.GetCustomAttributes();
-
+            
             foreach (var attribute in attributes)
             {
                 switch (attribute)
@@ -157,7 +157,7 @@ namespace Discord.Commands
                     case CommandAttribute command:
                         builder.AddAliases(command.Text);
                         builder.RunMode = command.RunMode;
-                        builder.Name = builder.Name ?? command.Text;
+                        builder.Name ??= command.Text;
                         builder.IgnoreExtraArgs = command.IgnoreExtraArgs ?? service._ignoreExtraArgs;
                         break;
                     case NameAttribute name:
@@ -191,7 +191,7 @@ namespace Discord.Commands
             int pos = 0, count = parameters.Length;
             foreach (var paramInfo in parameters)
             {
-                builder.AddParameter((parameter) =>
+                builder.AddParameter((parameter) => 
                 {
                     BuildParameter(parameter, paramInfo, pos++, count, service, serviceprovider);
                 });
@@ -290,7 +290,7 @@ namespace Discord.Commands
                     return reader;
             }
 
-            //We dont have a cached type reader, create one
+            //We don't have a cached type reader, create one
             reader = ReflectionUtils.CreateObject<TypeReader>(typeReaderType.GetTypeInfo(), service, services);
             service.AddTypeReader(paramType, reader, false);
 

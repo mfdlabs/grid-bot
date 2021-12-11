@@ -1,3 +1,4 @@
+using Discord.Rest;
 using System.Diagnostics;
 using Model = Discord.API.VoiceRegion;
 

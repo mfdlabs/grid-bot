@@ -1,12 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using System.Collections.Generic;
 
 namespace Discord.Commands.Builders
 {
     public class ParameterBuilder
     {
+        #region ParameterBuilder
         private readonly List<ParameterPreconditionAttribute> _preconditions;
         private readonly List<Attribute> _attributes;
 
@@ -23,8 +25,9 @@ namespace Discord.Commands.Builders
 
         public IReadOnlyList<ParameterPreconditionAttribute> Preconditions => _preconditions;
         public IReadOnlyList<Attribute> Attributes => _attributes;
+#endregion
 
-        //Automatic
+        #region Automatic
         internal ParameterBuilder(CommandBuilder command)
         {
             _preconditions = new List<ParameterPreconditionAttribute>();
@@ -32,7 +35,9 @@ namespace Discord.Commands.Builders
 
             Command = command;
         }
-        //User-defined
+        #endregion
+
+        #region User-defined
         internal ParameterBuilder(CommandBuilder command, string name, Type type)
             : this(command)
         {
@@ -49,7 +54,7 @@ namespace Discord.Commands.Builders
             if (type.GetTypeInfo().IsValueType)
                 DefaultValue = Activator.CreateInstance(type);
             else if (type.IsArray)
-                type = ParameterType.GetElementType();
+                DefaultValue = Array.CreateInstance(type.GetElementType(), 0);
             ParameterType = type;
         }
 
@@ -126,10 +131,11 @@ namespace Discord.Commands.Builders
 
         internal ParameterInfo Build(CommandInfo info)
         {
-            if ((TypeReader ?? (TypeReader = GetReader(ParameterType))) == null)
+            if ((TypeReader ??= GetReader(ParameterType)) == null)
                 throw new InvalidOperationException($"No type reader found for type {ParameterType.Name}, one must be specified");
 
             return new ParameterInfo(this, info, Command.Module.Service);
         }
+        #endregion
     }
 }

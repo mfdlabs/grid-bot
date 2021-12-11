@@ -214,9 +214,13 @@
     <Compile Include="Events\OnLatencyUpdated.cs" />
     <Compile Include="Events\OnLoggedOut.cs" />
     <Compile Include="Events\OnLoggedIn.cs" />
+    <Compile Include="Events\OnSlashCommand.cs" />
+    <Compile Include="Extensions\DiscordSocketClientExtensions.cs" />
     <Compile Include="Extensions\IAttachmentExtensions.cs" />
     <Compile Include="Extensions\ISocketMessageChannelExtensions.cs" />
     <Compile Include="Extensions\IUserExtensions.cs" />
+    <Compile Include="Extensions\SocketCommandBaseExtensions.cs" />
+    <Compile Include="Extensions\SocketGuildExtensions.cs" />
     <Compile Include="Hooks\ClearConsoleHook.cs" />
     <Compile Include="Hooks\CommandRegistryMetricsReportHook.cs" />
     <Compile Include="Hooks\SuicideHook.cs" />
@@ -245,6 +249,7 @@
     <None Include="Lua\LuaVM.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
     <Compile Include="Runner.cs" />
+    <Compile Include="SlashCommands\Test.cs" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
     <Compile Include="Tasks\ScreenshotTask.cs" />
     <Compile Include="Events\OnConnected.cs" />
@@ -388,12 +393,16 @@
       <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>
       <Name>Discord.Net.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Dependencies\Discord.Net.Interactions\Discord.Net.Interactions.csproj">
+      <Project>{9dc67bd9-28aa-4870-8a36-7dd4e1cabc22}</Project>
+      <Name>Discord.Net.Interactions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Dependencies\Discord.Net.Rest\Discord.Net.Rest.csproj">
-      <Project>{E772DF88-34B3-4B39-B0A4-DE61E1746D4C}</Project>
+      <Project>{e772df88-34b3-4b39-b0a4-de61e1746d4c}</Project>
       <Name>Discord.Net.Rest</Name>
     </ProjectReference>
     <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj">
-      <Project>{2245FDE3-16A9-42D7-8C21-74B3A8951C6A}</Project>
+      <Project>{2245fde3-16a9-42d7-8c21-74b3a8951c6a}</Project>
       <Name>Discord.Net.WebSocket</Name>
     </ProjectReference>
     <ProjectReference Include="..\Dependencies\Microsoft.Ccr.Core\Microsoft.Ccr.Core.csproj">

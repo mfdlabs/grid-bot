@@ -1,8 +1,8 @@
 using Discord.Commands.Builders;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -123,7 +123,7 @@ namespace Discord.Commands
 
         public async Task<PreconditionResult> CheckPreconditionsAsync(ICommandContext context, IServiceProvider services = null)
         {
-            services = services ?? EmptyServiceProvider.Instance;
+            services ??= EmptyServiceProvider.Instance;
 
             async Task<PreconditionResult> CheckGroups(IEnumerable<PreconditionAttribute> preconditions, string type)
             {
@@ -164,7 +164,7 @@ namespace Discord.Commands
 
         public async Task<ParseResult> ParseAsync(ICommandContext context, int startIndex, SearchResult searchResult, PreconditionResult preconditionResult = null, IServiceProvider services = null)
         {
-            services = services ?? EmptyServiceProvider.Instance;
+            services ??= EmptyServiceProvider.Instance;
 
             if (!searchResult.IsSuccess)
                 return ParseResult.FromError(searchResult);
@@ -175,7 +175,7 @@ namespace Discord.Commands
 
             return await CommandParser.ParseArgsAsync(this, context, _commandService._ignoreExtraArgs, services, input, 0, _commandService._quotationMarkAliasMap).ConfigureAwait(false);
         }
-
+        
         public Task<IResult> ExecuteAsync(ICommandContext context, ParseResult parseResult, IServiceProvider services)
         {
             if (!parseResult.IsSuccess)
@@ -201,7 +201,7 @@ namespace Discord.Commands
         }
         public async Task<IResult> ExecuteAsync(ICommandContext context, IEnumerable<object> argList, IEnumerable<object> paramList, IServiceProvider services)
         {
-            services = services ?? EmptyServiceProvider.Instance;
+            services ??= EmptyServiceProvider.Instance;
 
             try
             {

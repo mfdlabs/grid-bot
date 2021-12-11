@@ -40,7 +40,7 @@ namespace Discord.Rest
             Name = model.Name;
             Permissions = new GuildPermissions(model.Permissions);
         }
-
+        
         public async Task LeaveAsync(RequestOptions options = null)
         {
             await Discord.ApiClient.LeaveGuildAsync(Id, options).ConfigureAwait(false);

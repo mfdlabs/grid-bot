@@ -40,6 +40,7 @@ namespace Discord
         /// <summary>
         ///     Parses a provided user mention string.
         /// </summary>
+        /// <param name="text">The user mention.</param>
         /// <exception cref="ArgumentException">Invalid mention format.</exception>
         public static ulong ParseUser(string text)
         {
@@ -50,6 +51,8 @@ namespace Discord
         /// <summary>
         ///     Tries to parse a provided user mention string.
         /// </summary>
+        /// <param name="text">The user mention.</param>
+        /// <param name="userId">The UserId of the user.</param>
         public static bool TryParseUser(string text, out ulong userId)
         {
             if (text.Length >= 3 && text[0] == '<' && text[1] == '@' && text[text.Length - 1] == '>')
@@ -58,7 +61,7 @@ namespace Discord
                     text = text.Substring(3, text.Length - 4); //<@!123>
                 else
                     text = text.Substring(2, text.Length - 3); //<@123>
-
+                
                 if (ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out userId))
                     return true;
             }
@@ -84,7 +87,7 @@ namespace Discord
             if (text.Length >= 3 && text[0] == '<' && text[1] == '#' && text[text.Length - 1] == '>')
             {
                 text = text.Substring(2, text.Length - 3); //<#123>
-
+                
                 if (ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out channelId))
                     return true;
             }
@@ -110,7 +113,7 @@ namespace Discord
             if (text.Length >= 4 && text[0] == '<' && text[1] == '@' && text[2] == '&' && text[text.Length - 1] == '>')
             {
                 text = text.Substring(3, text.Length - 4); //<@&123>
-
+                
                 if (ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out roleId))
                     return true;
             }

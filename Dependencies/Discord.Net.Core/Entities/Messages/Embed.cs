@@ -44,7 +44,7 @@ namespace Discord
             Type = type;
             Fields = ImmutableArray.Create<EmbedField>();
         }
-        internal Embed(EmbedType type,
+        internal Embed(EmbedType type, 
             string title,
             string description,
             string url,
@@ -52,10 +52,10 @@ namespace Discord
             Color? color,
             EmbedImage? image,
             EmbedVideo? video,
-            EmbedAuthor? author,
-            EmbedFooter? footer,
-            EmbedProvider? provider,
-            EmbedThumbnail? thumbnail,
+            EmbedAuthor? author, 
+            EmbedFooter? footer, 
+            EmbedProvider? provider, 
+            EmbedThumbnail? thumbnail, 
             ImmutableArray<EmbedField> fields)
         {
             Type = type;

@@ -1,6 +1,6 @@
-﻿using Discord.API.Rest;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Discord.API.Rest;
 using ImageModel = Discord.API.Image;
 using Model = Discord.API.Webhook;
 
@@ -33,6 +33,5 @@ namespace Discord.Rest
         {
             await client.ApiClient.DeleteWebhookAsync(webhook.Id, options).ConfigureAwait(false);
         }
-
     }
 }

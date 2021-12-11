@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Analytics.Google;
 using MFDLabs.Diagnostics;
@@ -44,31 +46,32 @@ namespace MFDLabs.Grid.Bot
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
-                GoogleAnalyticsManager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "Startup", "Warning", "Debug Mode Enabled", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Debug Mode Enabled");
                 SystemLogger.Singleton.Warning(_DebugMode);
             }
 #endif
             if (SystemGlobal.Singleton.ContextIsAdministrator() && global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
                 SystemLogger.Singleton.Warning(_AdminMode);
             }
             GoogleAnalyticsManager.Singleton.TrackNetworkEvent(
                 "Startup",
                 "Info",
                 string.Format(
-                    "Process '{0}' opened with file name '{1}' (version {2}).",
+                    "Process '{0}' opened with file name '{1}' at path '{2}' (version {3}).",
                     SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
                     SystemGlobal.Singleton.CurrentProcess.ProcessName,
+                    Directory.GetCurrentDirectory(),
                     SystemGlobal.Singleton.AssemblyVersion
-                ),
-                1
+                )
             );
 
             SystemLogger.Singleton.Debug(
-                "Process '{0}' opened with file name '{1}' (version {2}).",
+                "Process '{0}' opened with file name '{1}' at path '{2}' (version {3}).",
                 SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
                 SystemGlobal.Singleton.CurrentProcess.ProcessName,
+                Directory.GetCurrentDirectory(),
                 SystemGlobal.Singleton.AssemblyVersion
             );
 
@@ -76,7 +79,7 @@ namespace MFDLabs.Grid.Bot
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started");
                 PerformanceServer.Singleton.Start();
             }
 
@@ -86,7 +89,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.", 1);
+                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.");
                 SystemLogger.Singleton.LifecycleEvent(_PrimaryTaskError);
 #if DEBUG
                 SystemLogger.Singleton.Error(ex);
@@ -106,15 +109,25 @@ namespace MFDLabs.Grid.Bot
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
                 {
-                    GoogleAnalyticsManager.Singleton.TrackEvent(NetworkingGlobal.Singleton.LocalIP, "MainTask", "Error", $"MainTask Failure: No Bot Token.", 1);
+                    GoogleAnalyticsManager.Singleton.TrackNetworkEvent("MainTask", "Error", "MainTask Failure: No Bot Token.");
                     SystemLogger.Singleton.Error(_NoBotToken);
                     SignalUtility.Singleton.InvokeInteruptSignal();
                     await Task.Delay(-1);
                 }
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
-                    CommandRegistry.Singleton.RegisterOnce();
+                
+                BotGlobal.Singleton.Initialize(
+                    new DiscordSocketClient(
+                        new DiscordSocketConfig
+                        {
+                            GatewayIntents = GatewayIntents.GuildMessages | GatewayIntents.DirectMessages | GatewayIntents.Guilds,
+                            LogGatewayIntentWarnings = false,
+#if DEBUG
+                            LogLevel = LogSeverity.Debug,
+#endif
+                        }
+                    )
+                );
 
-                BotGlobal.Singleton.Initialize(new DiscordSocketClient());
 
                 BotGlobal.Singleton.Client.Log += OnLogMessage.Invoke;
                 BotGlobal.Singleton.Client.LoggedIn += OnLoggedIn.Invoke;
@@ -122,7 +135,7 @@ namespace MFDLabs.Grid.Bot
                 BotGlobal.Singleton.Client.Ready += OnReady.Invoke;
                 BotGlobal.Singleton.Client.Connected += OnConnected.Invoke;
                 BotGlobal.Singleton.Client.MessageReceived += OnMessage.Invoke;
-                BotGlobal.Singleton.Client.Disconnected += OnDisconnected.Invoke;
+                BotGlobal.Singleton.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
                 BotGlobal.Singleton.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
                 BotGlobal.Singleton.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
 
@@ -139,6 +152,9 @@ namespace MFDLabs.Grid.Bot
                     });
 
                 await BotGlobal.Singleton.SingletonLaunch();
+
+
+
                 await Task.Delay(-1);
             }
             catch (Exception ex)

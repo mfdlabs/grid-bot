@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Discord;
+using Discord.WebSocket;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.ErrorHandling.Extensions;
@@ -21,6 +22,72 @@ namespace MFDLabs.Grid.Bot
 {
     namespace Tasks
     {
+        internal sealed class RenderQueueSlashCommandUserMetricsTask : ExpiringTaskThread<RenderQueueSlashCommandUserMetricsTask, SocketSlashCommand>
+        {
+            public override string Name => "Render Queue V2";
+            public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
+            public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
+            public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
+            public override int PacketID => 6;
+
+            public override PluginResult OnReceive(ref Packet<SocketSlashCommand> packet)
+            {
+                var message = packet.Item;
+                var perfmon = GetUserPerformanceMonitor(message.User);
+
+                try
+                {
+                    perfmon.TotalItemsProcessed.Increment();
+                    var result = RenderExecutionSlashCommandTaskPlugin.Singleton.OnReceive(ref packet);
+                    perfmon.TotalItemsProcessedThatSucceeded.Increment();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    message.User.FireEvent("RenderQueueV2Failure", ex.ToDetailedString());
+                    perfmon.TotalItemsProcessedThatFailed.Increment();
+                    packet.Status = PacketProcessingStatus.Failure;
+#if DEBUG
+                    SystemLogger.Singleton.Error(ex);
+#else
+                    SystemLogger.Singleton.Warning("An error occurred when trying to execute render task: {0}", ex.Message);
+#endif
+                    if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
+                    {
+                        var detail = ex.ToDetailedString();
+                        if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+                        {
+                            message.RespondWithFileEphemeral(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                            return PluginResult.ContinueProcessing;
+                        }
+
+                        message.RespondEphemeral(
+                            "An error occured with the render execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                            embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
+                        );
+                        return PluginResult.ContinueProcessing;
+                    }
+                    message.RespondEphemeral("An error occurred when trying to execute render task, please try again later.");
+                    return PluginResult.ContinueProcessing;
+                }
+            }
+
+            private UserTaskPerformanceMonitor GetUserPerformanceMonitor(IUser user)
+            {
+                var perfmon = (from userPerfmon in _userPerformanceMonitors.OfType<(ulong, UserTaskPerformanceMonitor)>() where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
+
+                if (perfmon == default)
+                {
+                    perfmon = new UserTaskPerformanceMonitor(CounterRegistry, "RenderTask", user);
+                    _userPerformanceMonitors.Add((user.Id, perfmon));
+                }
+
+                return perfmon;
+            }
+
+            private readonly ICollection<(ulong, UserTaskPerformanceMonitor)> _userPerformanceMonitors = new List<(ulong, UserTaskPerformanceMonitor)>();
+        }
+
         internal sealed class RenderQueueUserMetricsTask : ExpiringTaskThread<RenderQueueUserMetricsTask, SocketTaskRequest>
         {
             public override string Name => "Render Queue";
@@ -90,6 +157,128 @@ namespace MFDLabs.Grid.Bot
 
     namespace Plugins
     {
+        // This cannot be an async task thread because it use locks in 2 different places. sorry
+        //jakob: have you ever tried to write code that works? ha. never in a million years!!
+        internal sealed class RenderExecutionSlashCommandTaskPlugin : BasePlugin<RenderExecutionSlashCommandTaskPlugin, SocketSlashCommand>
+        {
+            #region Concurrency
+
+            private readonly object _renderLock = new object();
+            private bool _processingItem = false;
+            private int _itemCount = 0;
+
+            #endregion Concurrency
+
+            #region Metrics
+
+            private readonly RenderTaskPerformanceMonitor _perfmon = new RenderTaskPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
+
+            #endregion Metrics
+
+            public override PluginResult OnReceive(ref Packet<SocketSlashCommand> packet)
+            {
+                var metrics = PacketMetricsPlugin<SocketSlashCommand>.Singleton.OnReceive(ref packet);
+
+                if (metrics == PluginResult.StopProcessingAndDeallocate) return PluginResult.StopProcessingAndDeallocate;
+
+                if (packet.Item != null)
+                {
+                    var message = packet.Item;
+
+                    _perfmon.TotalItemsProcessed.Increment();
+                    var sw = Stopwatch.StartNew();
+
+                    try
+                    {
+                        _itemCount++;
+                        using (message.Channel.EnterTypingState())
+                        {
+                            if (_processingItem)
+                            {
+                                message.RespondEphemeral($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
+                            }
+
+                            lock (_renderLock)
+                            {
+                                _processingItem = true;
+
+                                long userId = Convert.ToInt64((from uid in message.Data.Options where uid.Name == "user_id" select uid).FirstOrDefault().Value);
+
+
+                                if (userId > global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
+                                {
+                                    _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
+                                    SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize);
+                                    message.RespondEphemeral($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
+                                    return PluginResult.ContinueProcessing;
+                                }
+
+
+                                if (userId == -123123 && message.User.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
+
+                                if (UserUtility.Singleton.GetIsUserBanned(userId))
+                                {
+                                    bool canSkip = false;
+                                    if (userId == -200000 && message.User.IsAdmin()) canSkip = true;
+
+                                    if (!canSkip)
+                                    {
+                                        SystemLogger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
+                                        message.RespondEphemeral($"The user '{userId}' is banned or does not exist.");
+                                        return PluginResult.ContinueProcessing;
+                                    }
+                                }
+
+                                SystemLogger.Singleton.Info(
+                                    "Trying to render the character for the user '{0}' with the place '{1}', and the dimensions of {2}x{3}",
+                                    userId,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                                );
+
+                                // get a stream and temp filename
+                                var (stream, fileName) = GridServerCommandUtility.Singleton.RenderUser(
+                                    userId,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                                );
+
+                                if (stream == null || fileName == null)
+                                {
+                                    _perfmon.TotalItemsProcessedThatFailed.Increment();
+                                    message.RespondEphemeral($"You are sending render requests too fast, please slow down!");
+                                    return PluginResult.ContinueProcessing;
+                                }
+
+                                using (stream)
+                                    message.RespondWithFileEphemeral(
+                                        stream,
+                                        fileName
+                                    );
+
+                                return PluginResult.ContinueProcessing;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        _itemCount--;
+                        _processingItem = false;
+                        sw.Stop();
+                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                    }
+                }
+                else
+                {
+                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
+                    return PluginResult.ContinueProcessing;
+                }
+            }
+        }
+
         // This cannot be an async task thread because it use locks in 2 different places. sorry
         //jakob: have you ever tried to write code that works? ha. never in a million years!!
         internal sealed class RenderExecutionTaskPlugin : BasePlugin<RenderExecutionTaskPlugin, SocketTaskRequest>
@@ -309,5 +498,7 @@ namespace MFDLabs.Grid.Bot
                 }
             }
         }
+
+
     }
 }

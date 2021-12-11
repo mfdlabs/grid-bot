@@ -44,9 +44,9 @@ namespace Discord
                 return (x, y) switch
                 {
                     (null, null) => true,
-                    (null, _) => false,
-                    (_, null) => false,
-                    var (l, r) => l.Id.Equals(r.Id)
+                    (null, _)    => false,
+                    (_, null)    => false,
+                    var (l, r)   => l.Id.Equals(r.Id)
                 };
             }
 

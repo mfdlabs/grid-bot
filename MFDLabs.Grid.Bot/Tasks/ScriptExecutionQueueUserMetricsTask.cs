@@ -282,7 +282,7 @@ namespace MFDLabs.Grid.Bot
                                             return PluginResult.ContinueProcessing;
                                         }
                                         message.Reply(
-                                            result.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:",
+                                            "Executed script with return:",
                                             embed: new EmbedBuilder()
                                             .WithTitle("Return value")
                                             .WithDescription($"```\n{result}\n```")
@@ -291,7 +291,11 @@ namespace MFDLabs.Grid.Bot
                                             .WithColor(0x00, 0xff, 0x00)
                                             .Build()
                                         );
+
+                                        return PluginResult.ContinueProcessing;
                                     }
+                                    message.Reply("Executed script with no return!");
+
                                 }
                                 catch (IOException)
                                 {

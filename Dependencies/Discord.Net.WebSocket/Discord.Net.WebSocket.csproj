@@ -5,10 +5,9 @@
     <AssemblyName>Discord.Net.WebSocket</AssemblyName>
     <RootNamespace>Discord.WebSocket</RootNamespace>
     <Description>A core Discord.Net library containing the WebSocket client and models.</Description>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net461;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net6.0;net5.0;net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">net6.0;net5.0;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Debug;Release;ReleaseNoDeploy;DebugGridDeploy;ReleaseGridDeploy;DebugDeploy</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Discord.Net.Core\Discord.Net.Core.csproj" />

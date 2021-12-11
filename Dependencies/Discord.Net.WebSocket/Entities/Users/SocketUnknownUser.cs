@@ -19,6 +19,7 @@ namespace Discord.WebSocket
         public override ushort DiscriminatorValue { get; internal set; }
         /// <inheritdoc />
         public override string AvatarId { get; internal set; }
+
         /// <inheritdoc />
         public override bool IsBot { get; internal set; }
 

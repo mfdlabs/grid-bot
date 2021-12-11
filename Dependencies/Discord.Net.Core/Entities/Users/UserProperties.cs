@@ -65,5 +65,9 @@ namespace Discord
         ///     Flag given to users that are discord certified moderators who has give discord's exam.
         /// </summary>
         DiscordCertifiedModerator = 1 << 18,
+        /// <summary>
+        ///     Flag given to bots that use only outgoing webhooks, exclusively.
+        /// </summary>
+        BotHTTPInteractions = 1 << 19,
     }
 }

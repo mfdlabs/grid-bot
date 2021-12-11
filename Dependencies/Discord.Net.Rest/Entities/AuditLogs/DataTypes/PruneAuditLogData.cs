@@ -1,5 +1,5 @@
-﻿using EntryModel = Discord.API.AuditLogEntry;
-using Model = Discord.API.AuditLog;
+﻿using Model = Discord.API.AuditLog;
+using EntryModel = Discord.API.AuditLogEntry;
 
 namespace Discord.Rest
 {

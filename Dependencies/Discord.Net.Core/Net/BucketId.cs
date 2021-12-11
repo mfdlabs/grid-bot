@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Discord.Net
@@ -98,7 +99,7 @@ namespace Discord.Net
             => Equals(obj as BucketId);
 
         public override int GetHashCode()
-            => IsHashBucket ? (BucketHash, string.Join("/", MajorParameters.Select(x => x.Value))).GetHashCode() : (HttpMethod, Endpoint).GetHashCode();
+            =>  IsHashBucket ? (BucketHash, string.Join("/", MajorParameters.Select(x => x.Value))).GetHashCode() : (HttpMethod, Endpoint).GetHashCode();
 
         public override string ToString()
             => GetBucketHash() ?? GetUniqueEndpoint();
@@ -112,6 +113,6 @@ namespace Discord.Net
             if (GetType() != other.GetType())
                 return false;
             return ToString() == other.ToString();
-        }
+        }        
     }
 }

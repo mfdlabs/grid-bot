@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Model = Discord.API.Channel;
 
 namespace Discord.Rest
@@ -11,7 +15,7 @@ namespace Discord.Rest
     public class RestNewsChannel : RestTextChannel, INewsChannel
     {
         internal RestNewsChannel(BaseDiscordClient discord, IGuild guild, ulong id)
-            : base(discord, guild, id)
+            :base(discord, guild, id)
         {
         }
         internal new static RestNewsChannel Create(BaseDiscordClient discord, IGuild guild, Model model)

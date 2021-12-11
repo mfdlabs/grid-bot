@@ -26,6 +26,7 @@ using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Logging;
@@ -44,11 +45,19 @@ namespace MFDLabs.Grid.Bot.Registries
         private readonly ICollection<IStateSpecificCommandHandler> _stateSpecificCommandHandlers = new List<IStateSpecificCommandHandler>();
         private ICollection<(IStateSpecificCommandHandler, string)> _disabledCommandsReasons = new List<(IStateSpecificCommandHandler, string)>();
 
+        private readonly ICollection<IStateSpecificSlashCommandHandler> _stateSpecificSlashCommandHandlers = new List<IStateSpecificSlashCommandHandler>();
+        private ICollection<(IStateSpecificSlashCommandHandler, string)> _disabledSlashCommandsReasons = new List<(IStateSpecificSlashCommandHandler, string)>();
+
         private readonly CommandRegistryInstrumentationPerformanceMonitor _instrumentationPerfmon = new CommandRegistryInstrumentationPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
 
-        private string GetCommandNamespace()
+        private string GetDefaultCommandNamespace()
         {
             return $"{typeof(Program).Namespace}.Commands";
+        }
+
+        private string GetSlashCommandNamespace()
+        {
+            return $"{typeof(Program).Namespace}.SlashCommands";
         }
 
         public Embed ConstructHelpEmbedForSingleCommand(string commandName, IUser author)
@@ -149,6 +158,178 @@ namespace MFDLabs.Grid.Bot.Registries
             }
 
             return true;
+        }
+
+        public async Task CheckAndRunSlashCommand(SocketSlashCommand command)
+        {
+            var commandAlias = command.CommandName;
+
+            _instrumentationPerfmon.CommandsPerSecond.Increment();
+
+            var channel = command.Channel as SocketGuildChannel;
+            var channelName = channel != null ? channel.Name.Escape() : command.Channel.Name;
+            var channelId = channel == null ? command.Channel.Id : channel.Id;
+            var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {command.Channel.Name}.";
+            var guildId = channel != null ? channel.Guild.Id : command.Channel.Id;
+            var username = $"{command.User.Username.Escape()}#{command.User.Discriminator}";
+            var userId = command.User.Id;
+
+            InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
+            _counters.RequestCountN++;
+            SystemLogger.Singleton.Verbose(
+                "Try execute the slash command '{0}' from '{1}' ({2}) in guild '{3}' ({4}) - channel '{5}' ({6}).",
+                commandAlias,
+                username,
+                userId,
+                guildName,
+                guildId,
+                channelName,
+                channelId
+            );
+
+            await command.User.FireEventAsync(
+                "SlashCommandExecuted",
+                string.Format(
+                    "Try execute the slash command '{0}' from '{1}' ({2}) in guild '{3}' ({4}) - channel '{5}' ({6}).",
+                    commandAlias,
+                    username,
+                    userId,
+                    guildName,
+                    guildId,
+                    channelName,
+                    channelId
+                )
+            );
+
+            // May never get hit ever
+            /*if (commandAlias.IsNullOrWhiteSpace())
+            {
+                SystemLogger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
+                await command.User.FireEventAsync("InvalidSlashCommand", "Got prefix but command alias was empty");
+                return;
+            }*/
+
+            var sw = Stopwatch.StartNew();
+            var inNewThread = false;
+
+            try
+            {
+                if (!wasRegistered) RegisterOnce();
+
+                var cmd = GetSlashCommandByCommandAlias(commandAlias);
+
+                if (cmd == null)
+                {
+                    await command.User.FireEventAsync("SlashCommandNotFound", $"{channelId} {commandAlias}");
+                    _instrumentationPerfmon.CommandsThatDidNotExist.Increment();
+                    _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
+                    _counters.RequestFailedCountN++;
+                    SystemLogger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
+                    {
+                        _instrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
+                        await command.RespondEphemeralAsync($"The slash command with the name '{commandAlias}' was not found.");
+                    }
+                    _instrumentationPerfmon.NotFoundCommandsThatDidNotTellTheFrontendUser.Increment();
+                    return;
+                }
+
+                _instrumentationPerfmon.CommandsThatExist.Increment();
+
+                if (!cmd.IsEnabled)
+                {
+                    var disabledMessage = (from c in _disabledSlashCommandsReasons where c.Item1 == command select c.Item2).FirstOrDefault();
+
+                    await command.User.FireEventAsync("SlashCommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
+                    _instrumentationPerfmon.CommandsThatAreDisabled.Increment();
+                    SystemLogger.Singleton.Warning("The slash command '{0}' is disabled. {1}", commandAlias, disabledMessage != null ? $"Because: '{disabledMessage}'" : "");
+                    bool isAllowed = false;
+                    if (command.User.IsAdmin())
+                    {
+                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
+                        {
+                            _instrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
+                            isAllowed = true;
+                        }
+                        else
+                        {
+                            _instrumentationPerfmon.DisabledCommandsThatDidNotAllowAdminBypass.Increment();
+                            isAllowed = false;
+                        }
+                    }
+
+                    if (!isAllowed)
+                    {
+                        _instrumentationPerfmon.DisabledCommandsThatDidNotAllowBypass.Increment();
+                        _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
+                        _counters.RequestFailedCountN++;
+                        await command.RespondEphemeralAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
+                        return;
+                    }
+                    _instrumentationPerfmon.DisabledCommandsThatWereInvokedToTheFrontendUser.Increment();
+                }
+                else
+                {
+                    _instrumentationPerfmon.CommandsThatAreEnabled.Increment();
+                }
+
+                _instrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
+
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExecuteCommandsInNewThread)
+                {
+                    _instrumentationPerfmon.CommandsThatTryToExecuteInNewThread.Increment();
+
+                    var isAllowed = true;
+
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewThreadsOnlyAvailableForAdmins)
+                    {
+                        _instrumentationPerfmon.NewThreadCommandsThatAreOnlyAvailableToAdmins.Increment();
+                        if (!command.User.IsAdmin())
+                        {
+                            _instrumentationPerfmon.NewThreadCommandsThatDidNotPassAdministratorCheck.Increment();
+                            isAllowed = false;
+                        }
+                        else
+                        {
+                            _instrumentationPerfmon.NewThreadCommandsThatPassedAdministratorCheck.Increment();
+                            isAllowed = true;
+                        }
+                    }
+
+                    if (isAllowed)
+                    {
+                        inNewThread = true;
+                        _instrumentationPerfmon.NewThreadCommandsThatWereAllowedToExecute.Increment();
+                        _instrumentationPerfmon.NewThreadCountersPerSecond.Increment();
+                        ExecuteSlashCommandInNewThread(commandAlias, command, cmd, sw);
+                        return;
+                    }
+
+                    _instrumentationPerfmon.NewThreadCommandsThatWereNotAllowedToExecute.Increment();
+                }
+                else
+                {
+                    _instrumentationPerfmon.CommandsThatDidNotTryNewThreadExecution.Increment();
+                }
+
+                await cmd.Invoke(command);
+
+                _instrumentationPerfmon.SucceededCommandsPerSecond.Increment();
+                _counters.RequestSucceededCountN++;
+            }
+            catch (Exception ex)
+            {
+                await HandleSlashCommandException(ex, commandAlias, command);
+            }
+            finally
+            {
+                sw.Stop();
+                _instrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
+                _instrumentationPerfmon.CommandsThatFinished.Increment();
+                SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.", sw.Elapsed.TotalSeconds, commandAlias, inNewThread ? " in new thread" : "");
+            }
+
+            return;
         }
 
         public async Task CheckAndRunCommandByAlias(string commandAlias, string[] messageContent, SocketMessage message)
@@ -335,6 +516,35 @@ namespace MFDLabs.Grid.Bot.Registries
             return;
         }
 
+        private void ExecuteSlashCommandInNewThread(string alias, SocketSlashCommand command, IStateSpecificSlashCommandHandler handler, Stopwatch sw)
+        {
+            SystemLogger.Singleton.LifecycleEvent("Queueing user work item for slash command '{0}'.", alias);
+
+            ThreadPool.QueueUserWorkItem(async s =>
+            {
+                try
+                {
+                    _instrumentationPerfmon.NewThreadCommandsThatPassedChecks.Increment();
+                    // We do not expect a result here.
+                    await handler.Invoke(command);
+                    _instrumentationPerfmon.SucceededCommandsPerSecond.Increment();
+                    _counters.RequestSucceededCountN++;
+                }
+                catch (Exception ex)
+                {
+                    await HandleSlashCommandException(ex, alias, command);
+                }
+                finally
+                {
+                    sw.Stop();
+                    _instrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
+                    _instrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
+                    SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
+                }
+
+            });
+        }
+
         private void ExecuteCommandInNewThread(string alias, string[] messageContent, SocketMessage message, Stopwatch sw, IStateSpecificCommandHandler command)
         {
             SystemLogger.Singleton.LifecycleEvent("Queueing user work item for command '{0}'.", alias);
@@ -363,6 +573,111 @@ namespace MFDLabs.Grid.Bot.Registries
                     SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
                 }
             });
+        }
+
+        private async Task HandleSlashCommandException(Exception ex, string alias, SocketSlashCommand command)
+        {
+            _instrumentationPerfmon.FailedCommandsPerSecond.Increment();
+            _counters.RequestFailedCountN++;
+            await command.User.FireEventAsync("SlashCommandException", $"The command {alias} threw: {ex.ToDetailedString()}");
+
+            var exceptionID = Guid.NewGuid();
+
+            if (ex is NotSupportedException)
+            {
+                SystemLogger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                return;
+            }
+
+            if (ex is ApplicationException)
+            {
+                SystemLogger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
+                await command.RespondEphemeralAsync($"The command threw an exception: {ex.Message}");
+                return;
+            }
+
+            if (ex is TimeoutException)
+            {
+                _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
+                SystemLogger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
+                await command.RespondEphemeralAsync("the command you tried to execute has timed out, please try identify the leading cause of a timeout.");
+                return;
+            }
+
+            if (ex is EndpointNotFoundException)
+            {
+                _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
+                _instrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
+                SystemLogger.Singleton.Warning("The grid service was not online.");
+                await command.RespondEphemeralAsync($"the grid service is not currently running, please ask <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start the service.");
+                return;
+            }
+
+            if (ex is FaultException fault)
+            {
+                _instrumentationPerfmon.FailedCommandsThatTriggeredAFaultException.Increment();
+                SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+
+                if (fault.Message == "Cannot invoke BatchJob while another job is running")
+                {
+                    _instrumentationPerfmon.FailedFaultCommandsThatWereDuplicateInvocations.Increment();
+                    await command.RespondEphemeralAsync("You are sending requests too fast, please slow down!");
+                    return;
+                }
+
+                if (fault.Message == "BatchJob Timeout")
+                {
+                    _instrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
+                    await command.RespondEphemeralAsync("The job timed out, please try again later.");
+                    return;
+                }
+
+                _instrumentationPerfmon.FailedFaultCommandsThatWereNotDuplicateInvocations.Increment();
+                _instrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
+
+                if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await command.RespondWithFileEphemeralAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "An exception occurred on the grid server, please review this error to see if your input was malformed:");
+                    return;
+                }
+
+                await command.RespondEphemeralAsync(
+                    "An exception occurred on the grid server, please review this error to see if your input was malformed:",
+                    embed: new EmbedBuilder()
+                    .WithColor(0xff, 0x00, 0x00)
+                    .WithTitle("GridServer exception.")
+                    .WithAuthor(command.User)
+                    .WithDescription($"```\n{fault.Message}\n```")
+                    .Build()
+                );
+                return;
+            }
+
+            _instrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
+
+            SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionID.ToString(), ex.ToDetailedString());
+
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
+            {
+                var detail = ex.ToDetailedString();
+                if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await command.RespondWithFileEphemeralAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt");
+                    return;
+                }
+
+                _instrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
+                await command.RespondEphemeralAsync(
+                    "An error occured with the script execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                    embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
+                );
+                return;
+            }
+
+            _instrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
+
+            await command.RespondEphemeralAsync($"An unexpected Exception has occurred. Exception ID: {exceptionID}, send this ID to <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
+            return;
         }
 
         private async Task HandleException(Exception ex, string alias, SocketMessage message)
@@ -425,15 +740,14 @@ namespace MFDLabs.Grid.Bot.Registries
                 _instrumentationPerfmon.FailedFaultCommandsThatWereNotDuplicateInvocations.Increment();
                 _instrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
 
-                await message.ReplyAsync($"an exception occurred on the grid server, please review this error to see if your input was malformed:");
-
                 if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
                 {
-                    await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
+                    await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "An exception occurred on the grid server, please review this error to see if your input was malformed:");
                     return;
                 }
 
                 await message.Channel.SendMessageAsync(
+                    "An exception occurred on the grid server, please review this error to see if your input was malformed:",
                     embed: new EmbedBuilder()
                     .WithColor(0xff, 0x00, 0x00)
                     .WithTitle("GridServer exception.")
@@ -458,7 +772,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 }
 
                 _instrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
-                message.Reply(
+                await message.ReplyAsync(
                     "An error occured with the script execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
                     embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                 );
@@ -467,7 +781,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             _instrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
 
-            await message.Channel.SendMessageAsync($"<@!{message.Author.Id}>, an unexpected Exception has occurred. Exception ID: {exceptionID}, send this ID to <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
+            await message.ReplyAsync($"An unexpected Exception has occurred. Exception ID: {exceptionID}, send this ID to <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
             return;
         }
 
@@ -475,6 +789,12 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             lock (_stateSpecificCommandHandlers)
                 return (from command in _stateSpecificCommandHandlers where command.CommandAliases.Contains(alias) select command).FirstOrDefault();
+        }
+
+        public IStateSpecificSlashCommandHandler GetSlashCommandByCommandAlias(string alias)
+        {
+            lock (_stateSpecificCommandHandlers)
+                return (from command in _stateSpecificSlashCommandHandlers where command.CommandAlias == alias select command).FirstOrDefault();
         }
 
         private void ParseAndInsertIntoCommandRegistry()
@@ -486,78 +806,177 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 try
                 {
-                    var @namespace = GetCommandNamespace();
+                    var defaultCommandNamespace = GetDefaultCommandNamespace();
+                    var slashCommandNamespace = GetSlashCommandNamespace();
 
-                    SystemLogger.Singleton.Info("Got command namespace '{0}'.", @namespace);
+                    SystemLogger.Singleton.Info("Got default command namespace '{0}'.", defaultCommandNamespace);
+                    SystemLogger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
 
-                    var types = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(@namespace);
+                    var defaultCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(defaultCommandNamespace);
+                    var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
 
-                    if (types.Length == 0)
+                    if (slashCommandTypes.Length == 0)
                     {
                         _instrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                        SystemLogger.Singleton.Warning("There were no commands found in the namespace '{0}'.", @namespace);
-                        return;
+                        SystemLogger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
                     }
-
-                    foreach (var type in types)
+                    else
                     {
-                        if (type.IsClass)
+                        foreach (var type in slashCommandTypes)
                         {
-                            var commandHandler = Activator.CreateInstance(type);
-                            if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)
+                            if (type.IsClass)
                             {
-                                SystemLogger.Singleton.Info("Parsing command '{0}'.", type.FullName);
-
-                                if (trueCommandHandler.CommandAliases.Length < 1)
+                                var commandHandler = Activator.CreateInstance(type);
+                                if (commandHandler is IStateSpecificSlashCommandHandler trueCommandHandler)
                                 {
-                                    _instrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                    SystemLogger.Singleton.Trace(
-                                        "Exception when reading '{0}': Expected the sizeof field 'CommandAliases' to be greater than 0, got {1}",
-                                        type.FullName,
-                                        trueCommandHandler.CommandAliases.Length
-                                    );
+                                    SystemLogger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
 
-                                    continue;
-                                }
-
-                                if (trueCommandHandler.CommandName.IsNullOrEmpty())
-                                {
-                                    _instrumentationPerfmon.StateSpecificCommandsThatHadNoName.Increment();
-                                    SystemLogger.Singleton.Trace(
-                                        "Exception when reading '{0}': Expected field 'CommandName' to be not null",
-                                        type.FullName
-                                    );
-
-                                    continue;
-                                }
-
-                                if (trueCommandHandler.CommandDescription != null)
-                                {
-                                    if (trueCommandHandler.CommandDescription.Length == 0)
+                                    if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
                                     {
-                                        _instrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                        SystemLogger.Singleton.Warning(
-                                            "Exception when reading '{0}': Expected field 'CommandDescription' to have a size greater than 0",
+                                        _instrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
+                                        SystemLogger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' to not be null or empty",
                                             type.FullName
                                         );
+
+                                        continue;
                                     }
+                                    if (trueCommandHandler.CommandName.IsNullOrEmpty())
+                                    {
+                                        _instrumentationPerfmon.StateSpecificCommandsThatHadNoName.Increment();
+                                        SystemLogger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected field 'CommandName' to be not null",
+                                            type.FullName
+                                        );
+
+                                        continue;
+                                    }
+
+                                    if (trueCommandHandler.CommandDescription != null)
+                                    {
+                                        if (trueCommandHandler.CommandDescription.Length == 0)
+                                        {
+                                            _instrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
+                                            SystemLogger.Singleton.Warning(
+                                                "Exception when reading '{0}': Expected field 'CommandDescription' to have a size greater than 0",
+                                                type.FullName
+                                            );
+                                        }
+                                    }
+
+                                    _instrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
+
+                                    var builder = new SlashCommandBuilder();
+
+                                    builder.WithName(trueCommandHandler.CommandAlias);
+                                    builder.WithDescription($"{trueCommandHandler.CommandName} ({trueCommandHandler.CommandAlias}): {trueCommandHandler.CommandDescription}");
+                                    builder.WithDefaultPermission(true);
+
+                                    if (trueCommandHandler.Options != null)
+                                        builder.AddOptions(trueCommandHandler.Options);
+
+                                    if (trueCommandHandler.GuildId != null)
+                                    {
+                                        var guild = BotGlobal.Singleton.Client.GetGuild(trueCommandHandler.GuildId.Value);
+
+                                        if (guild == null)
+                                        {
+                                            SystemLogger.Singleton.Trace(
+                                                "Exception when reading '{0}': Unknown Guild '{1}'",
+                                                type.FullName,
+                                                trueCommandHandler.GuildId
+                                            );
+
+                                            continue;
+                                        }
+
+                                        guild.CreateApplicationCommand(builder.Build());
+                                    }
+                                    else
+                                    {
+                                        BotGlobal.Singleton.Client.CreateGlobalApplicationCommand(builder.Build());
+                                    }
+
+                                    _stateSpecificSlashCommandHandlers.Add(trueCommandHandler);
                                 }
-
-                                _instrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
-
-                                _stateSpecificCommandHandlers.Add(trueCommandHandler);
                             }
                             else
                             {
-                                _instrumentationPerfmon.CommandThatWereNotStateSpecific.Increment();
+                                _instrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
                             }
                         }
-                        else
+                    }
+
+                    if (defaultCommandTypes.Length == 0)
+                    {
+                        _instrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
+                        SystemLogger.Singleton.Warning("There were no default commands found in the namespace '{0}'.", defaultCommandNamespace);
+                    }
+                    else
+                    {
+                        foreach (var type in defaultCommandTypes)
                         {
-                            _instrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
+                            if (type.IsClass)
+                            {
+                                var commandHandler = Activator.CreateInstance(type);
+                                if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)
+                                {
+                                    SystemLogger.Singleton.Info("Parsing command '{0}'.", type.FullName);
+
+                                    if (trueCommandHandler.CommandAliases.Length < 1)
+                                    {
+                                        _instrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
+                                        SystemLogger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected the sizeof field 'CommandAliases' to be greater than 0, got {1}",
+                                            type.FullName,
+                                            trueCommandHandler.CommandAliases.Length
+                                        );
+
+                                        continue;
+                                    }
+
+                                    if (trueCommandHandler.CommandName.IsNullOrEmpty())
+                                    {
+                                        _instrumentationPerfmon.StateSpecificCommandsThatHadNoName.Increment();
+                                        SystemLogger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected field 'CommandName' to be not null",
+                                            type.FullName
+                                        );
+
+                                        continue;
+                                    }
+
+                                    if (trueCommandHandler.CommandDescription != null)
+                                    {
+                                        if (trueCommandHandler.CommandDescription.Length == 0)
+                                        {
+                                            _instrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
+                                            SystemLogger.Singleton.Warning(
+                                                "Exception when reading '{0}': Expected field 'CommandDescription' to have a size greater than 0",
+                                                type.FullName
+                                            );
+                                        }
+                                    }
+
+                                    _instrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
+
+
+
+                                    _stateSpecificCommandHandlers.Add(trueCommandHandler);
+                                }
+                                else
+                                {
+                                    _instrumentationPerfmon.CommandThatWereNotStateSpecific.Increment();
+                                }
+                            }
+                            else
+                            {
+                                _instrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
+                            }
                         }
                     }
                 }
+
                 catch (Exception ex)
                 {
                     _instrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();

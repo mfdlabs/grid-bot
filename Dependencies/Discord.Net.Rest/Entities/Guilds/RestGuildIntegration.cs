@@ -59,7 +59,7 @@ namespace Discord.Rest
             RoleId = model.RoleId;
             User = RestUser.Create(Discord, model.User);
         }
-
+        
         public async Task DeleteAsync()
         {
             await Discord.ApiClient.DeleteGuildIntegrationAsync(GuildId, Id).ConfigureAwait(false);

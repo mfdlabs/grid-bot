@@ -1,12 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Discord.Commands.Builders
 {
     public class CommandBuilder
     {
+        #region CommandBuilder
         private readonly List<PreconditionAttribute> _preconditions;
         private readonly List<ParameterBuilder> _parameters;
         private readonly List<Attribute> _attributes;
@@ -27,8 +28,9 @@ namespace Discord.Commands.Builders
         public IReadOnlyList<ParameterBuilder> Parameters => _parameters;
         public IReadOnlyList<Attribute> Attributes => _attributes;
         public IReadOnlyList<string> Aliases => _aliases;
+        #endregion
 
-        //Automatic
+        #region Automatic
         internal CommandBuilder(ModuleBuilder module)
         {
             Module = module;
@@ -38,7 +40,9 @@ namespace Discord.Commands.Builders
             _attributes = new List<Attribute>();
             _aliases = new List<string>();
         }
-        //User-defined
+        #endregion
+
+        #region User-defined
         internal CommandBuilder(ModuleBuilder module, string primaryAlias, Func<ICommandContext, object[], IServiceProvider, CommandInfo, Task> callback)
             : this(module)
         {
@@ -140,5 +144,6 @@ namespace Discord.Commands.Builders
 
             return new CommandInfo(this, info, service);
         }
+        #endregion
     }
 }

@@ -1,7 +1,6 @@
-#pragma warning disable CS1591
-using Discord.Net.Converters;
-using Newtonsoft.Json;
 using System;
+using Newtonsoft.Json;
+using Discord.Net.Converters;
 
 namespace Discord.API
 {

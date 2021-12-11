@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31424.327
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Bot", "MFDLabs.Grid.Bot\MFDLabs.Grid.Bot.csproj", "{A854E7F4-873B-413F-98CF-AB4D4D682D17}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Concurrency", "Asse
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.ErrorHandling", "Assemblies\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj", "{D3CDE6E3-28AA-44C9-98BF-1BF5DBA6C714}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Reflection", "Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj", "{C85A3DAF-E246-432B-B363-7478C6D6541F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Reflection", "Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj", "{C85A3DAF-E246-432B-B363-7478C6D6541F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.ComputeCloud", "Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj", "{4254CFD2-14DA-419D-A7FC-DA835CDC513B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.ComputeCloud", "Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj", "{4254CFD2-14DA-419D-A7FC-DA835CDC513B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Deployer", "Extensions\MFDLabs.Grid.Deployer\MFDLabs.Grid.Deployer.csproj", "{97A80733-86E9-4CCA-92B5-443193EEC53B}"
 EndProject
@@ -29,22 +29,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReferenceExtensions", "Refe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Screenshot.Relay", "Extensions\MFDLabs.Grid.Screenshot.Relay\MFDLabs.Grid.Screenshot.Relay.csproj", "{417DC5CA-7C4C-458E-8733-57D851453427}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Commands", "Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj", "{8441F32B-F58E-42B4-BE35-4181BF5C0C68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Commands", "Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj", "{8441F32B-F58E-42B4-BE35-4181BF5C0C68}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0ABFDB40-F5DB-4B80-8E7F-E97EA7A35FA7}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Http", "Assemblies\MFDLabs.Http\MFDLabs.Http.csproj", "{DF178C70-FE6D-4050-8996-133FB6074958}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Http", "Assemblies\MFDLabs.Http\MFDLabs.Http.csproj", "{DF178C70-FE6D-4050-8996-133FB6074958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Http.Client", "Assemblies\MFDLabs.Http.Client\MFDLabs.Http.Client.csproj", "{BE0EF3CB-B89F-4509-9F60-E5246B152FE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Http.Client", "Assemblies\MFDLabs.Http.Client\MFDLabs.Http.Client.csproj", "{BE0EF3CB-B89F-4509-9F60-E5246B152FE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Pipeline", "Assemblies\MFDLabs.Pipeline\MFDLabs.Pipeline.csproj", "{2B95A007-9843-4972-A007-7F92CAA4238B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Pipeline", "Assemblies\MFDLabs.Pipeline\MFDLabs.Pipeline.csproj", "{2B95A007-9843-4972-A007-7F92CAA4238B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Instrumentation", "Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj", "{227F9D1C-E72B-4CC5-A889-01A1AA4CED35}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Instrumentation", "Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj", "{227F9D1C-E72B-4CC5-A889-01A1AA4CED35}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Tracing.Core", "Assemblies\MFDLabs.Tracing.Core\MFDLabs.Tracing.Core.csproj", "{B83D8E79-BFB2-492E-BFA4-6A6BC77469A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Tracing.Core", "Assemblies\MFDLabs.Tracing.Core\MFDLabs.Tracing.Core.csproj", "{B83D8E79-BFB2-492E-BFA4-6A6BC77469A3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metrics", "Metrics", "{CC020303-7BEC-4F6B-A929-50119E5797DF}"
 EndProject
@@ -52,25 +52,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Http", "Http", "{35EDBAA7-6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Grid", "Grid", "{2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Http.Client.Monitoring", "Assemblies\MFDLabs.Http.Client.Monitoring\MFDLabs.Http.Client.Monitoring.csproj", "{5144814E-EB60-4C86-BF66-D6024F515D4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Http.Client.Monitoring", "Assemblies\MFDLabs.Http.Client.Monitoring\MFDLabs.Http.Client.Monitoring.csproj", "{5144814E-EB60-4C86-BF66-D6024F515D4F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Logging", "Logging", "{90317702-8FDC-4DB1-A55D-78204BCD1239}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.EventLog", "Assemblies\MFDLabs.EventLog\MFDLabs.EventLog.csproj", "{3FCA88DB-360C-4FD9-AB58-9E84433F8943}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.EventLog", "Assemblies\MFDLabs.EventLog\MFDLabs.EventLog.csproj", "{3FCA88DB-360C-4FD9-AB58-9E84433F8943}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contextual", "Contextual", "{4DCB86B0-EE10-472A-BAF7-90FAAA905656}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.RequestContext", "Assemblies\MFDLabs.RequestContext\MFDLabs.RequestContext.csproj", "{AF7DD657-91AB-4685-BFFD-3E1C2707433F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.RequestContext", "Assemblies\MFDLabs.RequestContext\MFDLabs.RequestContext.csproj", "{AF7DD657-91AB-4685-BFFD-3E1C2707433F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Http.ServiceClient", "Assemblies\MFDLabs.Http.ServiceClient\MFDLabs.Http.ServiceClient.csproj", "{F37EE7E8-D769-4EB8-9F47-2A522B4034FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Http.ServiceClient", "Assemblies\MFDLabs.Http.ServiceClient\MFDLabs.Http.ServiceClient.csproj", "{F37EE7E8-D769-4EB8-9F47-2A522B4034FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceClients", "ServiceClients", "{8E7AA611-95BB-4BE8-8EF6-C95E7F850B0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Users.Client", "Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj", "{FF4B1E10-8697-41DB-8850-5F4D9F60B9D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Users.Client", "Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj", "{FF4B1E10-8697-41DB-8850-5F4D9F60B9D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Drawing", "Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj", "{16F214D5-7539-4B0C-A8EE-8D8D8D9DAA67}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Drawing", "Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj", "{16F214D5-7539-4B0C-A8EE-8D8D8D9DAA67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Diagnostics", "Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj", "{6BB5491D-4509-4C18-A2CF-332AAE8E0F1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Diagnostics", "Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj", "{6BB5491D-4509-4C18-A2CF-332AAE8E0F1D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Concurrency", "Concurrency", "{5085E5BB-08B3-4628-B0A7-80BF0B362215}"
 EndProject
@@ -82,23 +82,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExceptionHelpers", "Excepti
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExecutionPlan", "ExecutionPlan", "{1B007BE3-A85E-4B8F-9100-8CA924FFD139}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Threading", "Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj", "{9089974E-F0C9-40AF-9BD7-28309B884DC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Threading", "Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj", "{9089974E-F0C9-40AF-9BD7-28309B884DC3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Base", "Base", "{25CDFF21-2E85-4609-93F2-516B28F94313}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Abstractions", "Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj", "{67A6181A-6389-4B08-89DD-64F3E1051C59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Abstractions", "Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj", "{67A6181A-6389-4B08-89DD-64F3E1051C59}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Logging", "Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj", "{091C5862-CC55-434A-80EB-F3E030B15DFE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Text", "Text", "{E606E22E-BFC6-40C1-9833-D6BC8B4FC0DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Text", "Assemblies\MFDLabs.Text\MFDLabs.Text.csproj", "{884C78DA-C49F-46F2-8D95-3382C24D9791}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Text", "Assemblies\MFDLabs.Text\MFDLabs.Text.csproj", "{884C78DA-C49F-46F2-8D95-3382C24D9791}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Networking", "Networking", "{CA252871-B1D5-4E32-A2F7-8727C43205ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Networking", "Assemblies\MFDLabs.Networking\MFDLabs.Networking.csproj", "{66691AD6-1713-4996-951A-31A7C81E8F9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Networking", "Assemblies\MFDLabs.Networking\MFDLabs.Networking.csproj", "{66691AD6-1713-4996-951A-31A7C81E8F9E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Sentinels", "Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj", "{B396D961-6EA1-4BB9-AC74-880F832CD37E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Sentinels", "Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj", "{B396D961-6EA1-4BB9-AC74-880F832CD37E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Analyzers", "Dependencies\Discord.Net.Analyzers\Discord.Net.Analyzers.csproj", "{530607DB-A0B0-41A0-BFE6-AB32E9694050}"
 EndProject
@@ -189,11 +189,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F8FDDA43
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Discord", "Discord", "{E36F9354-C3E1-4826-800D-4AB3E224DB7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Discord.RoleSets", "Assemblies\MFDLabs.Discord.RoleSets\MFDLabs.Discord.RoleSets.csproj", "{AF62128F-7566-41EC-BF74-278050FA1651}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Discord.RoleSets", "Assemblies\MFDLabs.Discord.RoleSets\MFDLabs.Discord.RoleSets.csproj", "{AF62128F-7566-41EC-BF74-278050FA1651}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configuration", "Configuration", "{6DC1A29E-D4DF-4D5A-8C15-8E59513730CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Configuration", "Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj", "{B3E34CFF-1AA2-4D0D-8B27-C18E55E2ADC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Configuration", "Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj", "{B3E34CFF-1AA2-4D0D-8B27-C18E55E2ADC1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hashicorp", "Hashicorp", "{94FD2B94-2532-4D89-A9B7-81371A8C3890}"
 EndProject
@@ -201,7 +201,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Hashicorp.VaultClie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Hashicorp.ConsulClient", "Assemblies\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj", "{DA34F8B5-AD37-478D-8963-671221CF9E36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Discord.RbxUsers.Client", "Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj", "{AF81A713-E6AE-4AD1-877E-E292F7C53F9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Discord.RbxUsers.Client", "Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj", "{AF81A713-E6AE-4AD1-877E-E292F7C53F9E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{FF90A277-AFDF-4BC6-884A-2F29DDCAF3CA}"
 EndProject
@@ -209,13 +209,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Concurrency.Unit.Te
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Analytics", "Analytics", "{F50AF8E4-71B5-4E45-8038-6767BFF4C31D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Analytics.Google", "Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj", "{3EDC3274-D4ED-4AA1-A347-00A9B4F9FC9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Analytics.Google", "Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj", "{3EDC3274-D4ED-4AA1-A347-00A9B4F9FC9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Google.Analytics.Client", "Assemblies\MFDLabs.Google.Analytics.Client\MFDLabs.Google.Analytics.Client.csproj", "{897D935E-9198-4452-8FF0-3020102FF1F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Google.Analytics.Client", "Assemblies\MFDLabs.Google.Analytics.Client\MFDLabs.Google.Analytics.Client.csproj", "{897D935E-9198-4452-8FF0-3020102FF1F7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CrashHandler", "CrashHandler", "{741A9414-75AA-4C76-B291-941E7A048F2C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backtrace", "Dependencies\Backtrace\Backtrace.csproj", "{F9C3F667-D954-4563-9E46-30AAC9FC07DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Interactions", "Dependencies\Discord.Net.Interactions\Discord.Net.Interactions.csproj", "{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -779,6 +781,18 @@ Global
 		{F9C3F667-D954-4563-9E46-30AAC9FC07DD}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
 		{F9C3F667-D954-4563-9E46-30AAC9FC07DD}.ReleaseNoDeploy|Any CPU.ActiveCfg = Release|Any CPU
 		{F9C3F667-D954-4563-9E46-30AAC9FC07DD}.ReleaseNoDeploy|Any CPU.Build.0 = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseNoDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseNoDeploy|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -861,6 +875,7 @@ Global
 		{897D935E-9198-4452-8FF0-3020102FF1F7} = {8E7AA611-95BB-4BE8-8EF6-C95E7F850B0B}
 		{741A9414-75AA-4C76-B291-941E7A048F2C} = {C606B0D0-A00D-4147-939C-EC93AE76C870}
 		{F9C3F667-D954-4563-9E46-30AAC9FC07DD} = {741A9414-75AA-4C76-B291-941E7A048F2C}
+		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22} = {BB11CCBE-C170-4BCE-8296-578C2E807FDC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}
