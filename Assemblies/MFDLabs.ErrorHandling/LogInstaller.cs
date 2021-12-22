@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿#if NETFRAMEWORK
+
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -26,9 +28,11 @@ namespace MFDLabs
             base.Install(stateSaver);
 
             // Change policy to overwrite as needed
-            System.Diagnostics.EventLog log = new EventLog(LogName);
+            var log = new EventLog(LogName);
             log.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 5);
             log.MaximumKilobytes = 16000;
         }
     }
 }
+
+#endif

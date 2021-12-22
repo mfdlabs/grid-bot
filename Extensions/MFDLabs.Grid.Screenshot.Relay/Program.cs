@@ -2,20 +2,18 @@
 using MFDLabs.Drawing;
 using System;
 
-using HWND = System.IntPtr;
-
 namespace MFDLabs.Grid.Screenshot.Relay
 {
-    public class Program
+    internal static class Program
     {
         public static void Main()
         {
-            HWND hwnd = ProcessHelper.GetWindowHandle(
+            var hwnd = ProcessHelper.GetWindowHandle(
                 global::MFDLabs.Grid.Screenshot.Relay.Properties.Settings.Default.GridServerExecutableNameNoExtension
             );
             try
             {
-                var bitMap = BitmapExtensions.GetBitmapForWindowByWindowHandle(hwnd);
+                var bitMap = hwnd.GetBitmapForWindowByWindowHandle();
                 bitMap.Save(
                     global::MFDLabs.Grid.Screenshot.Relay.Properties.Settings.Default.OutputScreenshotFileName
                 );
@@ -24,7 +22,6 @@ namespace MFDLabs.Grid.Screenshot.Relay
             {
                 Console.WriteLine("The grid server was not running.");
             }
-            return;
         }
     }
 }

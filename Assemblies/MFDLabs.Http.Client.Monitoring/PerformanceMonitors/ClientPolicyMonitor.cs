@@ -6,11 +6,11 @@ namespace MFDLabs.Http.Client.Monitoring
 {
     public sealed class ClientPolicyMonitor
     {
-        public IRateOfCountsPerSecondCounter RequestsTrippedByCircuitBreakerPerSecond { get; }
+        private IRateOfCountsPerSecondCounter RequestsTrippedByCircuitBreakerPerSecond { get; }
 
-        public IRateOfCountsPerSecondCounter FailedRequestsThatTripCircuitBreakerPerSecond { get; }
+        private IRateOfCountsPerSecondCounter FailedRequestsThatTripCircuitBreakerPerSecond { get; }
 
-        public IRateOfCountsPerSecondCounter RequestsExceedingTimeoutPerSecond { get; }
+        private IRateOfCountsPerSecondCounter RequestsExceedingTimeoutPerSecond { get; }
 
         public ClientPolicyMonitor(ICounterRegistry counterRegistry, string categoryName, string instanceName)
         {

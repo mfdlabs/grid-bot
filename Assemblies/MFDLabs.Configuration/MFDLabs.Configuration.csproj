@@ -6,6 +6,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -38,7 +39,6 @@
   </ItemGroup>
   
   <ItemGroup>
-	<ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
 	<ProjectReference Include="..\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj" />
 	<ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
 	<ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />

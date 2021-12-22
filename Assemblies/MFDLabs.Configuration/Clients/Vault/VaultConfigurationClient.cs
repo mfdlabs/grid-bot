@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using MFDLabs.Configuration.Logging;
 using MFDLabs.Configuration.Settings;
@@ -12,9 +13,9 @@ namespace MFDLabs.Configuration.Clients.Vault
     public class VaultConfigurationClient
     {
 #if DEBUG
-        const string AppConfiguration = "Debug";
+        private const string AppConfiguration = "Debug";
 #else
-        const string AppConfiguration = "Release";
+        private const string AppConfiguration = "Release";
 #endif
 
         public VaultConfigurationClient(string address, string roleId, string secretId)
@@ -28,15 +29,16 @@ namespace MFDLabs.Configuration.Clients.Vault
         private void RefreshToken(object s)
         {
             _vaultClientRefreshTimer.Change(-1, -1);
-            ConfigurationLogging.Info("Refreshing vault client's token, current is '{0}'", _client.V1.Auth.Token.LookupSelfAsync().Result.Data.Id);
+            ConfigurationLogging.Info("Renewing vault client's token, '{0}...'",
+                _client.V1.Auth.Token.LookupSelfAsync()
+                    .Result.Data.Id.Substring(0, 6));
             _client.V1.Auth.Token.RenewSelfAsync().Wait();
-            ConfigurationLogging.Info("Refreshed vault client's token, new token is '{0}'", _client.V1.Auth.Token.LookupSelfAsync().Result.Data.Id);
             _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
 
-        public IReadOnlyCollection<T> FetchWithRetries<T>(Func<string, IReadOnlyCollection<T>> getterFunc, string groupName, int maxAttempts)
+        public static IReadOnlyCollection<T> FetchWithRetries<T>(Func<string, IReadOnlyCollection<T>> getterFunc, string groupName, int maxAttempts)
         {
-            for (int i = 0; i < maxAttempts; i++)
+            for (var i = 0; i < maxAttempts; i++)
             {
                 try
                 {
@@ -48,12 +50,12 @@ namespace MFDLabs.Configuration.Clients.Vault
                     Thread.Sleep(i * global::MFDLabs.Configuration.Properties.Settings.Default.VaultConfigurationFetcherBackoffBaseMilliseconds);
                 }
             }
-            return new T[0];
+            return Array.Empty<T>();
         }
 
         public IReadOnlyCollection<ISetting> GetAllSettings(string groupName)
         {
-            var engine = new SecretsEngine()
+            var engine = new SecretsEngine
             {
                 Type = SecretsEngineType.KeyValueV2,
                 Config = new Dictionary<string, object>
@@ -63,23 +65,22 @@ namespace MFDLabs.Configuration.Clients.Vault
                 Path = "mfdlabs-sharp-v2/"
             };
 
-            var theseSettings = new List<ISetting>();
-
             var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
-            foreach (var path in paths.Data.Keys)
-            {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}", mountPoint: engine.Path).Result;
-                var values = secret.Data.Data;
-                theseSettings.Add(new Setting()
+            return (from values in
+                    from secret in
+                        from path in
+                            paths.Data.Keys
+                        select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                            mountPoint: engine.Path).Result
+                    select secret.Data.Data
+                select new Setting
                 {
                     GroupName = groupName,
-                    Name = (string)values["Name"],
-                    Type = (string)values["Type"],
-                    Updated = (DateTime)values["Updated"],
-                    Value = (string)values["Value"]
-                });
-            }
-            return theseSettings.ToArray();
+                    Name = (string) values["Name"],
+                    Type = (string) values["Type"],
+                    Updated = (DateTime) values["Updated"],
+                    Value = (string) values["Value"]
+                }).Cast<ISetting>().ToArray();
         }
 
         public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
@@ -94,22 +95,21 @@ namespace MFDLabs.Configuration.Clients.Vault
                 Path = "mfdlabs-sharp-v2/"
             };
 
-            var theseSettings = new List<IConnectionString>();
-
             var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
-            foreach (var path in paths.Data.Keys)
-            {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}", mountPoint: engine.Path).Result;
-                var values = secret.Data.Data;
-                theseSettings.Add(new ConnectionString()
+            return (from values in
+                    from secret in
+                        from path in
+                            paths.Data.Keys
+                        select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                            mountPoint: engine.Path).Result
+                    select secret.Data.Data
+                select new ConnectionString
                 {
                     GroupName = groupName,
-                    Name = (string)values["Name"],
-                    Updated = (DateTime)values["Updated"],
-                    Value = (string)values["Value"]
-                });
-            }
-            return theseSettings.ToArray();
+                    Name = (string) values["Name"],
+                    Updated = (DateTime) values["Updated"],
+                    Value = (string) values["Value"]
+                }).Cast<IConnectionString>().ToArray();
         }
 
         public void SetProperty(string groupName, string name, string type, string value, DateTime updated)

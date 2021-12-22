@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Ccr.Core;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -8,44 +9,37 @@ namespace MFDLabs.Concurrency
     /// </summary>
     public class AsyncWorkQueue<T>
     {
-        internal class WorkItem
+        private class WorkItem
         {
-            private readonly Action _CompletionTask;
-            private readonly T _Item;
-            private readonly SuccessFailurePort _Result;
+            private readonly Action _completionTask;
+            private readonly T _item;
+            private readonly SuccessFailurePort _result;
 
-            internal Action CompletionTask
-            {
-                get { return _CompletionTask; }
-            }
-            internal T Item
-            {
-                get { return _Item; }
-            }
-            internal SuccessFailurePort Result
-            {
-                get { return _Result; }
-            }
+            internal Action CompletionTask => _completionTask;
+
+            internal T Item => _item;
+
+            internal SuccessFailurePort Result => _result;
 
             internal WorkItem(T item)
             {
-                _Item = item;
+                _item = item;
             }
             internal WorkItem(T item, Action completionTask)
             {
-                _CompletionTask = completionTask;
-                _Item = item;
+                _completionTask = completionTask;
+                _item = item;
             }
             internal WorkItem(T item, SuccessFailurePort result)
             {
-                _Item = item;
-                _Result = result;
+                _item = item;
+                _result = result;
             }
         }
 
-        private readonly DispatcherQueue _DispatcherQueue;
-        private readonly AsyncItemHandler _ItemHandler;
-        private readonly Port<WorkItem> _QueuedItems = new Port<WorkItem>();
+        private readonly DispatcherQueue _dispatcherQueue;
+        private readonly AsyncItemHandler _itemHandler;
+        private readonly Port<WorkItem> _queuedItems = new Port<WorkItem>();
 
         /// <summary>
         /// Constructs a new CCR based WorkQueue
@@ -54,15 +48,15 @@ namespace MFDLabs.Concurrency
         /// <param name="itemHandler"></param>
         public AsyncWorkQueue(DispatcherQueue dispatcherQueue, AsyncItemHandler itemHandler)
         {
-            _DispatcherQueue = dispatcherQueue;
-            _ItemHandler = itemHandler ?? throw new ApplicationException("AsyncWorkQueue initialization failed. Valid AsyncItemHandler required.");
+            _dispatcherQueue = dispatcherQueue;
+            _itemHandler = itemHandler ?? throw new ApplicationException("AsyncWorkQueue initialization failed. Valid AsyncItemHandler required.");
 
-            var receiver = Arbiter.Receive<WorkItem>(
+            var receiver = Arbiter.Receive(
                 true,
-                _QueuedItems,
-                (workItem) => DoWork(workItem)
+                _queuedItems,
+                DoWork
             );
-            Arbiter.Activate(_DispatcherQueue, receiver);
+            Arbiter.Activate(_dispatcherQueue, receiver);
         }
 
         private void DoCompletionTask(SuccessFailurePort itemHandlerResult, Action completionTask)
@@ -70,20 +64,15 @@ namespace MFDLabs.Concurrency
             var choice = Arbiter.Choice(
                 itemHandlerResult,
                 (success) => completionTask(),
-                (failure) => ExceptionHandler.LogException(failure)
+                ExceptionHandler.LogException
             );
-            Arbiter.Activate(_DispatcherQueue, choice);
+            Arbiter.Activate(_dispatcherQueue, choice);
         }
         private void DoWork(WorkItem workItem)
         {
-            SuccessFailurePort result;
+            var result = workItem.Result ?? new SuccessFailurePort();
 
-            if (workItem.Result != null)
-                result = workItem.Result;
-            else
-                result = new SuccessFailurePort();
-
-            _ItemHandler(workItem.Item, result);
+            _itemHandler(workItem.Item, result);
 
             if (workItem.CompletionTask != null)
                 DoCompletionTask(result, workItem.CompletionTask);
@@ -95,7 +84,7 @@ namespace MFDLabs.Concurrency
         /// <param name="item"></param>
         public void EnqueueWorkItem(T item)
         {
-            _QueuedItems.Post(new WorkItem(item));
+            _queuedItems.Post(new WorkItem(item));
         }
         /// <summary>
         /// Queue a work item
@@ -104,7 +93,7 @@ namespace MFDLabs.Concurrency
         /// <param name="completionTask"></param>
         public void EnqueueWorkItem(T item, Action completionTask)
         {
-            _QueuedItems.Post(new WorkItem(item, completionTask));
+            _queuedItems.Post(new WorkItem(item, completionTask));
         }
         /// <summary>
         /// Queue a work item
@@ -113,7 +102,7 @@ namespace MFDLabs.Concurrency
         /// <param name="result"></param>
         public void EnqueueWorkItem(T item, SuccessFailurePort result)
         {
-            _QueuedItems.Post(new WorkItem(item, result));
+            _queuedItems.Post(new WorkItem(item, result));
         }
 
         /// <summary>

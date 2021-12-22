@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MFDLabs.Abstractions;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Networking;
 using MFDLabs.Text.Extensions;
 
+// ReSharper disable MemberCanBePrivate.Global
+
 namespace MFDLabs.Grid.Bot.Utility
 {
-    public sealed class JsonScriptingUtility : SingletonBase<JsonScriptingUtility>
+    public static class JsonScriptingUtility
     {
         // should this return the settings or the command?
-        public (string, ThumbnailSettings) GetThumbnailScript(ThumbnailCommandType type, params object[] args)
+        public static (string, ThumbnailSettings) GetThumbnailScript(ThumbnailCommandType type, params object[] args)
         {
             var settings = new ThumbnailSettings(
                 type,
@@ -26,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, GameServerSettings) GetGameServerScript(long placeId, long universeId, int matchmakingContextId, string jobSignature, string gameCode, string baseUrl, Guid gameId, string machineAddress, int serverId, int gsmInterval, int maxPlayers, int maxGameInstances, string apiKey, int preferredPlayerCapacity, string placeVisitAccessKey, int datacenterId, long creatorId, string creatorType, int placeVersion, long? vipOwnerId, string placeFetchUrl, string metadata, int? preferredPort)
+        public static (string, GameServerSettings) GetGameServerScript(long placeId, long universeId, int matchmakingContextId, string jobSignature, string gameCode, string baseUrl, Guid gameId, string machineAddress, int serverId, int gsmInterval, int maxPlayers, int maxGameInstances, string apiKey, int preferredPlayerCapacity, string placeVisitAccessKey, int datacenterId, long creatorId, string creatorType, int placeVersion, long? vipOwnerId, string placeFetchUrl, string metadata, int? preferredPort)
         {
             var settings = new GameServerSettings(
                 placeId,
@@ -62,7 +63,7 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, ExecuteScriptGameServerSettings) GetGameServerExecutionScript(string type, IDictionary<string, object> arguments, long placeId, long universeId, int matchmakingContextId, string jobSignature, string gameCode, string baseUrl, Guid gameId, string machineAddress, int serverId, int gsmInterval, int maxPlayers, int maxGameInstances, string apiKey, int preferredPlayerCapacity, string placeVisitAccessKey, int datacenterId, long creatorId, string creatorType, int placeVersion, long? vipOwnerId, string placeFetchUrl, string metadata, int? preferredPort)
+        public static (string, ExecuteScriptGameServerSettings) GetGameServerExecutionScript(string type, IDictionary<string, object> arguments, long placeId, long universeId, int matchmakingContextId, string jobSignature, string gameCode, string baseUrl, Guid gameId, string machineAddress, int serverId, int gsmInterval, int maxPlayers, int maxGameInstances, string apiKey, int preferredPlayerCapacity, string placeVisitAccessKey, int datacenterId, long creatorId, string creatorType, int placeVersion, long? vipOwnerId, string placeFetchUrl, string metadata, int? preferredPort)
         {
             var settings = new ExecuteScriptGameServerSettings(
                 type,
@@ -100,7 +101,7 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, params (string, object)[] arguments)
+        public static (string, ExecuteScriptGameServerSettings) GetSharedGameServerExecutionScript(string type, params (string, object)[] arguments)
         {
             var args = new Dictionary<string, object>();
             if (arguments.Length > 0) args = arguments.ToDictionary(i => i.Item1, i => i.Item2);
@@ -110,16 +111,16 @@ namespace MFDLabs.Grid.Bot.Utility
                 1818,
                 777,
                 1,
-                NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                NetworkingGlobal.GenerateUuidv4(),
                 null,
                 "sitetest4.robloxlabs.com",
                 Guid.NewGuid(),
-                NetworkingGlobal.Singleton.GetLocalIP(),
+                NetworkingGlobal.GetLocalIp(),
                 1,
                 1000,
                 100,
                 10,
-                NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                NetworkingGlobal.GenerateUuidv4(),
                 10,
                 null,
                 251,
@@ -133,22 +134,22 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        public (string, GameServerSettings) GetSharedGameServerScript(string jobID, long placeID, long universeID)
+        public static (string, GameServerSettings) GetSharedGameServerScript(string jobId, long placeId, long universeId)
         {
             return GetGameServerScript(
-                placeID,
-                universeID,
+                placeId,
+                universeId,
                 1,
-                $"{jobID}-Sig2",
+                $"{jobId}-Sig2",
                 null,
                 "sitetest4.robloxlabs.com",
                 Guid.NewGuid(),
-                NetworkingGlobal.Singleton.GetLocalIP(),
+                NetworkingGlobal.GetLocalIp(),
                 1,
                 200,
                 10,
                 1,
-                NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                NetworkingGlobal.GenerateUuidv4(),
                 1,
                 null,
                 200,
@@ -156,7 +157,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 "User",
                 1,
                 null,
-                $"https://assetdelivery.sitetest4.robloxlabs.com/v1/asset?id={placeID}",
+                $"https://assetdelivery.sitetest4.robloxlabs.com/v1/asset?id={placeId}",
                 null,
                 null
             );

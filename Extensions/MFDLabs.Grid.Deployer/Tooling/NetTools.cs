@@ -5,19 +5,19 @@ using System.Threading;
 
 namespace MFDLabs.Grid.Deployer.Tooling
 {
-    internal class NetTools
+    internal static class NetTools
     {
-        static internal bool IsServiceAvailableHttp(string host, int port, int retrycount, out bool upButWrongText, string path = "/", string healthyText = "OK")
+        internal static bool IsServiceAvailableHttp(string host, int port, int retrycount, out bool upButWrongText, string path = "/", string healthyText = "OK")
         {
             upButWrongText = false;
-            bool bAvailable = false;
-            int waitcount = 0;
+            var bAvailable = false;
+            var waitcount = 0;
             var kind = port == 443 ? "https" : "http";
             var url = $"{kind}://{host}:{port}{path}";
             while (!bAvailable)
             {
-                WebClient http = new WebClient();
-                http.Headers.Add("User-Agent", $"MFDLABS/WebServerHealthCheck+MFDLabs.Grid.Deployer::{url}->{healthyText}::{SystemGlobal.Singleton.AssemblyVersion}");
+                var http = new WebClient();
+                http.Headers.Add("User-Agent", $"MFDLABS/WebServerHealthCheck+MFDLabs.Grid.Deployer::{url}->{healthyText}::{SystemGlobal.AssemblyVersion}");
                 try
                 {
                     var result = http.DownloadString(url);
@@ -51,14 +51,14 @@ namespace MFDLabs.Grid.Deployer.Tooling
             return bAvailable;
         }
 
-        static internal bool IsServiceAvailableTcp(string host, int port, int retrycount)
+        internal static bool IsServiceAvailableTcp(string host, int port, int retrycount)
         {
             // busy wait untill our service is ready to accept connections
-            bool bAvailable = false;
-            int waitcount = 0;
+            var bAvailable = false;
+            var waitcount = 0;
             while (!bAvailable)
             {
-                TcpClient tcp = new TcpClient();
+                var tcp = new TcpClient();
                 try
                 {
                     tcp.Connect(host, port);

@@ -10,8 +10,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class KillArbiterInstance : IStateSpecificCommandHandler
     {
         public string CommandName => "Shutdown an arbiter instance";
-        public string CommandDescription => "Attempts to shutdown an arbiter instance, if it was no running, or was running on a higher context than us, it will tell the frontend user.";
-        public string[] CommandAliases => new string[] { "kai", "killarbiterinstance" };
+        public string CommandDescription => "Attempts to shutdown an arbiter instance, if it was no running, or was " +
+                                            "running on a higher context than us, it will tell the frontend user.";
+        public string[] CommandAliases => new[] { "kai", "killarbiterinstance" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

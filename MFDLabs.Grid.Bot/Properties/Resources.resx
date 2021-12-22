@@ -124,4 +124,34 @@
   <data name="LuaVM_formatted" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Lua\LuaVM.formatted.lua;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="CrashHandler_UploadRunning" xml:space="preserve">
+    <value>Crash Handler running...</value>
+  </data>
+  <data name="CrashHandler_Upload_Success" xml:space="preserve">
+    <value>Crash handler successfuly uploaded dump!</value>
+  </data>
+  <data name="CrashHandler_Upload_Failure" xml:space="preserve">
+    <value>Crash Handler failed to upload the contents of the crash.</value>
+  </data>
+  <data name="Runner_Invoke_Title" xml:space="preserve">
+    <value>[{0:X}] '{1}' @ '{2}' [{3}@{4} ({5})]</value>
+  </data>
+  <data name="SignalUtility_InvokeInteruptSignal" xml:space="preserve">
+    <value>Got SIGINT. Will start shutdown procedure within 1 second.</value>
+  </data>
+  <data name="SignalUtility_InvokeUserSignal1" xml:space="preserve">
+    <value>Got SIGUSR1. Will exit app without closing child processes (only if single instanced) with 1 second.</value>
+  </data>
+  <data name="SignalUtility_InvokeUserSignal2" xml:space="preserve">
+    <value>Got SIGUSR2. Will close all child processes, and clear LocalLog within 1 second.</value>
+  </data>
+  <data name="Program_Main_UnhandledException" xml:space="preserve">
+    <value>There was an error loading a type or dependency, please review the following error: {0}</value>
+  </data>
+  <data name="Program_Main_BadConfiguration" xml:space="preserve">
+    <value>[URGENT]: {0}</value>
+  </data>
+  <data name="Program_Main_GlobalException" xml:space="preserve">
+    <value>[URGENT]: Unhandled global exception occurred: {0}</value>
+  </data>
 </root>

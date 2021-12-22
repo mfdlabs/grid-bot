@@ -5,7 +5,7 @@ namespace MFDLabs.EventLog
     public interface ILogger
     {
         Func<LogLevel> MaxLogLevel { get; set; }
-        bool LogThreadID { get; set; }
+        bool LogThreadId { get; set; }
 
         void Debug(string format, params object[] args);
         void Debug(Func<string> messageGetter);

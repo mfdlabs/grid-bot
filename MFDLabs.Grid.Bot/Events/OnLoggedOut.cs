@@ -3,7 +3,7 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnLoggedOut
+    internal static class OnLoggedOut
     {
         internal static Task Invoke()
         {

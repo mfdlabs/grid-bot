@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Get Grid Server Version";
         public string CommandDescription => "Attempts to fetch the Grid Server's version via SoapUtility.";
-        public string[] CommandAliases => new string[] { "gv", "getversion" };
+        public string[] CommandAliases => new[] { "gv", "getversion" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

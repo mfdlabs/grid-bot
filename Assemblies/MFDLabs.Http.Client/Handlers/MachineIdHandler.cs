@@ -11,17 +11,17 @@ namespace MFDLabs.Http.Client
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
         {
             var machineId = GetMachineId();
-            if (!machineId.IsNullOrWhiteSpace()) context.Input.Headers.AddOrUpdate(_MachineIdHeaderName, machineId);
+            if (!machineId.IsNullOrWhiteSpace()) context.Input.Headers.AddOrUpdate(MachineIdHeaderName, machineId);
             base.Invoke(context);
         }
         public override Task InvokeAsync(IExecutionContext<IHttpRequest, IHttpResponse> context, CancellationToken cancellationToken)
         {
             var machineId = GetMachineId();
-            if (!machineId.IsNullOrWhiteSpace()) context.Input.Headers.AddOrUpdate(_MachineIdHeaderName, machineId);
+            if (!machineId.IsNullOrWhiteSpace()) context.Input.Headers.AddOrUpdate(MachineIdHeaderName, machineId);
             return base.InvokeAsync(context, cancellationToken);
         }
-        private string GetMachineId() => Environment.MachineName;
+        private static string GetMachineId() => Environment.MachineName;
 
-        private const string _MachineIdHeaderName = "Roblox-Machine-Id";
+        private const string MachineIdHeaderName = "Roblox-Machine-Id";
     }
 }

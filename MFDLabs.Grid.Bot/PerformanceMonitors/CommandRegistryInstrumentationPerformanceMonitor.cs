@@ -6,7 +6,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     internal sealed class CommandRegistryInstrumentationPerformanceMonitor
     {
-        private const string _Category = "MFDLabs.Grid.PerfmonV2";
+        private const string Category = "MFDLabs.Grid.PerfmonV2";
 
         internal IRawValueCounter CommandsPerSecond { get; }
         internal IRawValueCounter FailedCommandsPerSecond { get; }
@@ -59,58 +59,58 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         {
             if (counterRegistry == null)
             {
-                throw new ArgumentNullException("counterRegistry");
+                throw new ArgumentNullException(nameof(counterRegistry));
             }
 
-            var instance = $"{SystemGlobal.Singleton.GetMachineID()} ({SystemGlobal.Singleton.GetMachineHost()})";
+            var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
 
-            CommandsPerSecond = counterRegistry.GetRawValueCounter(_Category, "CommandsPerSecond", instance);
-            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsPerSecond", instance);
-            NewThreadCountersPerSecond = counterRegistry.GetRawValueCounter(_Category, "NewThreadCountersPerSecond", instance);
-            SucceededCommandsPerSecond = counterRegistry.GetRawValueCounter(_Category, "SucceededCommandsPerSecond", instance);
-            NotFoundCommandsThatToldTheFrontendUser = counterRegistry.GetRawValueCounter(_Category, "NotFoundCommandsThatToldTheFrontendUser", instance);
-            NotFoundCommandsThatDidNotTellTheFrontendUser = counterRegistry.GetRawValueCounter(_Category, "NotFoundCommandsThatDidNotTellTheFrontendUser", instance);
-            CommandsThatExist = counterRegistry.GetRawValueCounter(_Category, "CommandsThatExist", instance);
-            CommandsThatAreDisabled = counterRegistry.GetRawValueCounter(_Category, "CommandsThatAreDisabled", instance);
-            DisabledCommandsThatAllowedAdminBypass = counterRegistry.GetRawValueCounter(_Category, "DisabledCommandsThatAllowedAdminBypass", instance);
-            DisabledCommandsThatDidNotAllowAdminBypass = counterRegistry.GetRawValueCounter(_Category, "DisabledCommandsThatDidNotAllowAdminBypass", instance);
-            DisabledCommandsThatDidNotAllowBypass = counterRegistry.GetRawValueCounter(_Category, "DisabledCommandsThatDidNotAllowBypass", instance);
-            DisabledCommandsThatWereInvokedToTheFrontendUser = counterRegistry.GetRawValueCounter(_Category, "DisabledCommandsThatWereInvokedToTheFrontendUser", instance);
-            CommandsThatAreEnabled = counterRegistry.GetRawValueCounter(_Category, "CommandsThatAreEnabled", instance);
-            CommandsThatTryToExecuteInNewThread = counterRegistry.GetRawValueCounter(_Category, "CommandsThatTryToExecuteInNewThread", instance);
-            NewThreadCommandsThatAreOnlyAvailableToAdmins = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatAreOnlyAvailableToAdmins", instance);
-            NewThreadCommandsThatDidNotPassAdministratorCheck = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatDidNotPassAdministratorCheck", instance);
-            NewThreadCommandsThatPassedAdministratorCheck = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatPassedAdministratorCheck", instance);
-            NewThreadCommandsThatWereAllowedToExecute = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatWereAllowedToExecute", instance);
-            NewThreadCommandsThatWereNotAllowedToExecute = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatWereNotAllowedToExecute", instance);
-            CommandsThatDidNotTryNewThreadExecution = counterRegistry.GetRawValueCounter(_Category, "CommandsThatDidNotTryNewThreadExecution", instance);
-            CommandsThatPassedAllChecks = counterRegistry.GetRawValueCounter(_Category, "CommandsThatPassedAllChecks", instance);
-            CommandsNotExecutedInNewThread = counterRegistry.GetRawValueCounter(_Category, "CommandsNotExecutedInNewThread", instance);
-            FailedCommandsThatTimedOut = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatTimedOut", instance);
-            FailedCommandsThatTriedToAccessOfflineGridServer = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatTriedToAccessOfflineGridServer", instance);
-            FailedCommandsThatTriggeredAFaultException = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatTriggeredAFaultException", instance);
-            FailedFaultCommandsThatWereDuplicateInvocations = counterRegistry.GetRawValueCounter(_Category, "FailedFaultCommandsThatWereDuplicateInvocations", instance);
-            FailedFaultCommandsThatWereNotDuplicateInvocations = counterRegistry.GetRawValueCounter(_Category, "FailedFaultCommandsThatWereNotDuplicateInvocations", instance);
-            FailedFaultCommandsThatWereLuaExceptions = counterRegistry.GetRawValueCounter(_Category, "FailedFaultCommandsThatWereLuaExceptions", instance);
-            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatWereUnknownExceptions", instance);
-            FailedCommandsThatWereUnknownExceptions = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsPerSecond", instance);
-            FailedCommandsThatLeakedExceptionInfo = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatLeakedExceptionInfo", instance);
-            FailedCommandsThatWerePublicallyMasked = counterRegistry.GetRawValueCounter(_Category, "FailedCommandsThatWerePublicallyMasked", instance);
-            CommandsParsedAndInsertedIntoRegistry = counterRegistry.GetRawValueCounter(_Category, "CommandsParsedAndInsertedIntoRegistry", instance);
-            CommandNamespacesThatHadNoClasses = counterRegistry.GetRawValueCounter(_Category, "CommandNamespacesThatHadNoClasses", instance);
-            CommandsInNamespaceThatWereNotClasses = counterRegistry.GetRawValueCounter(_Category, "CommandsInNamespaceThatWereNotClasses", instance);
-            CommandThatWereNotStateSpecific = counterRegistry.GetRawValueCounter(_Category, "CommandThatWereNotStateSpecific", instance);
-            StateSpecificCommandsThatHadNoAliases = counterRegistry.GetRawValueCounter(_Category, "StateSpecificCommandsThatHadNoAliases", instance);
-            StateSpecificCommandsThatHadNoName = counterRegistry.GetRawValueCounter(_Category, "StateSpecificCommandsThatHadNoName", instance);
-            StateSpecificCommandsThatHadNoNullButEmptyDescription = counterRegistry.GetRawValueCounter(_Category, "StateSpecificCommandsThatHadNoNullButEmptyDescription", instance);
-            StateSpecificCommandsThatWereAddedToTheRegistry = counterRegistry.GetRawValueCounter(_Category, "StateSpecificCommandsThatWereAddedToTheRegistry", instance);
-            CommandRegistryRegistrationsThatFailed = counterRegistry.GetRawValueCounter(_Category, "CommandRegistryRegistrationsThatFailed", instance);
-            CommandsThatDidNotExist = counterRegistry.GetRawValueCounter(_Category, "CommandsThatDidNotExist", instance);
-            CommandsThatFinished = counterRegistry.GetRawValueCounter(_Category, "CommandsThatFinished", instance);
-            NewThreadCommandsThatFinished = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatFinished", instance);
-            NewThreadCommandsThatPassedChecks = counterRegistry.GetRawValueCounter(_Category, "NewThreadCommandsThatPassedChecks", instance);
-            AverageRequestTime = counterRegistry.GetAverageValueCounter(_Category, "AverageRequestTime", instance);
-            AverageThreadRequestTime = counterRegistry.GetAverageValueCounter(_Category, "AverageThreadRequestTime", instance);
+            CommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "CommandsPerSecond", instance);
+            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "FailedCommandsPerSecond", instance);
+            NewThreadCountersPerSecond = counterRegistry.GetRawValueCounter(Category, "NewThreadCountersPerSecond", instance);
+            SucceededCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "SucceededCommandsPerSecond", instance);
+            NotFoundCommandsThatToldTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "NotFoundCommandsThatToldTheFrontendUser", instance);
+            NotFoundCommandsThatDidNotTellTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "NotFoundCommandsThatDidNotTellTheFrontendUser", instance);
+            CommandsThatExist = counterRegistry.GetRawValueCounter(Category, "CommandsThatExist", instance);
+            CommandsThatAreDisabled = counterRegistry.GetRawValueCounter(Category, "CommandsThatAreDisabled", instance);
+            DisabledCommandsThatAllowedAdminBypass = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatAllowedAdminBypass", instance);
+            DisabledCommandsThatDidNotAllowAdminBypass = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatDidNotAllowAdminBypass", instance);
+            DisabledCommandsThatDidNotAllowBypass = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatDidNotAllowBypass", instance);
+            DisabledCommandsThatWereInvokedToTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatWereInvokedToTheFrontendUser", instance);
+            CommandsThatAreEnabled = counterRegistry.GetRawValueCounter(Category, "CommandsThatAreEnabled", instance);
+            CommandsThatTryToExecuteInNewThread = counterRegistry.GetRawValueCounter(Category, "CommandsThatTryToExecuteInNewThread", instance);
+            NewThreadCommandsThatAreOnlyAvailableToAdmins = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatAreOnlyAvailableToAdmins", instance);
+            NewThreadCommandsThatDidNotPassAdministratorCheck = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatDidNotPassAdministratorCheck", instance);
+            NewThreadCommandsThatPassedAdministratorCheck = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatPassedAdministratorCheck", instance);
+            NewThreadCommandsThatWereAllowedToExecute = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatWereAllowedToExecute", instance);
+            NewThreadCommandsThatWereNotAllowedToExecute = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatWereNotAllowedToExecute", instance);
+            CommandsThatDidNotTryNewThreadExecution = counterRegistry.GetRawValueCounter(Category, "CommandsThatDidNotTryNewThreadExecution", instance);
+            CommandsThatPassedAllChecks = counterRegistry.GetRawValueCounter(Category, "CommandsThatPassedAllChecks", instance);
+            CommandsNotExecutedInNewThread = counterRegistry.GetRawValueCounter(Category, "CommandsNotExecutedInNewThread", instance);
+            FailedCommandsThatTimedOut = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTimedOut", instance);
+            FailedCommandsThatTriedToAccessOfflineGridServer = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTriedToAccessOfflineGridServer", instance);
+            FailedCommandsThatTriggeredAFaultException = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTriggeredAFaultException", instance);
+            FailedFaultCommandsThatWereDuplicateInvocations = counterRegistry.GetRawValueCounter(Category, "FailedFaultCommandsThatWereDuplicateInvocations", instance);
+            FailedFaultCommandsThatWereNotDuplicateInvocations = counterRegistry.GetRawValueCounter(Category, "FailedFaultCommandsThatWereNotDuplicateInvocations", instance);
+            FailedFaultCommandsThatWereLuaExceptions = counterRegistry.GetRawValueCounter(Category, "FailedFaultCommandsThatWereLuaExceptions", instance);
+            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatWereUnknownExceptions", instance);
+            FailedCommandsThatWereUnknownExceptions = counterRegistry.GetRawValueCounter(Category, "FailedCommandsPerSecond", instance);
+            FailedCommandsThatLeakedExceptionInfo = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatLeakedExceptionInfo", instance);
+            FailedCommandsThatWerePublicallyMasked = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatWerePublicallyMasked", instance);
+            CommandsParsedAndInsertedIntoRegistry = counterRegistry.GetRawValueCounter(Category, "CommandsParsedAndInsertedIntoRegistry", instance);
+            CommandNamespacesThatHadNoClasses = counterRegistry.GetRawValueCounter(Category, "CommandNamespacesThatHadNoClasses", instance);
+            CommandsInNamespaceThatWereNotClasses = counterRegistry.GetRawValueCounter(Category, "CommandsInNamespaceThatWereNotClasses", instance);
+            CommandThatWereNotStateSpecific = counterRegistry.GetRawValueCounter(Category, "CommandThatWereNotStateSpecific", instance);
+            StateSpecificCommandsThatHadNoAliases = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoAliases", instance);
+            StateSpecificCommandsThatHadNoName = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoName", instance);
+            StateSpecificCommandsThatHadNoNullButEmptyDescription = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoNullButEmptyDescription", instance);
+            StateSpecificCommandsThatWereAddedToTheRegistry = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatWereAddedToTheRegistry", instance);
+            CommandRegistryRegistrationsThatFailed = counterRegistry.GetRawValueCounter(Category, "CommandRegistryRegistrationsThatFailed", instance);
+            CommandsThatDidNotExist = counterRegistry.GetRawValueCounter(Category, "CommandsThatDidNotExist", instance);
+            CommandsThatFinished = counterRegistry.GetRawValueCounter(Category, "CommandsThatFinished", instance);
+            NewThreadCommandsThatFinished = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatFinished", instance);
+            NewThreadCommandsThatPassedChecks = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatPassedChecks", instance);
+            AverageRequestTime = counterRegistry.GetAverageValueCounter(Category, "AverageRequestTime", instance);
+            AverageThreadRequestTime = counterRegistry.GetAverageValueCounter(Category, "AverageThreadRequestTime", instance);
         }
     }
 }

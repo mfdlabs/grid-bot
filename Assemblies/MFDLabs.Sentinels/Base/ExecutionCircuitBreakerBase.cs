@@ -6,10 +6,10 @@ namespace MFDLabs.Sentinels
 {
     public abstract class ExecutionCircuitBreakerBase : CircuitBreakerBase
     {
-        private bool IsTimeForRetry => Now >= _NextRetry;
+        private bool IsTimeForRetry => Now >= _nextRetry;
         protected abstract TimeSpan RetryInterval { get; }
 
-        private bool ShouldRetry() => Interlocked.CompareExchange(ref _ShouldRetrySignal, 1, 0) == 0;
+        private bool ShouldRetry() => Interlocked.CompareExchange(ref _shouldRetrySignal, 1, 0) == 0;
         private void AttemptToProceed()
         {
             try { Test(); }
@@ -22,14 +22,12 @@ namespace MFDLabs.Sentinels
             try { action(); }
             catch (Exception ex)
             {
-                if (ShouldTrip(ex))
-                {
-                    _NextRetry = Now.Add(RetryInterval);
-                    Trip();
-                }
+                if (!ShouldTrip(ex)) throw;
+                _nextRetry = Now.Add(RetryInterval);
+                Trip();
                 throw;
             }
-            finally { Interlocked.Exchange(ref _ShouldRetrySignal, 0); }
+            finally { Interlocked.Exchange(ref _shouldRetrySignal, 0); }
             Reset();
         }
         public async Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default)
@@ -38,24 +36,22 @@ namespace MFDLabs.Sentinels
             try { await action(cancellationToken).ConfigureAwait(false); }
             catch (Exception ex)
             {
-                if (ShouldTrip(ex))
-                {
-                    _NextRetry = Now.Add(RetryInterval);
-                    Trip();
-                }
+                if (!ShouldTrip(ex)) throw;
+                _nextRetry = Now.Add(RetryInterval);
+                Trip();
                 throw;
             }
-            finally { Interlocked.Exchange(ref _ShouldRetrySignal, 0); }
+            finally { Interlocked.Exchange(ref _shouldRetrySignal, 0); }
             Reset();
         }
         public override bool Reset()
         {
             var result = base.Reset();
-            _NextRetry = DateTime.MinValue;
+            _nextRetry = DateTime.MinValue;
             return result;
         }
 
-        private DateTime _NextRetry = DateTime.MinValue;
-        private int _ShouldRetrySignal;
+        private DateTime _nextRetry = DateTime.MinValue;
+        private int _shouldRetrySignal;
     }
 }

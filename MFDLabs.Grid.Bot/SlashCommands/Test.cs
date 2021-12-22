@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
+
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -24,3 +26,6 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         }
     }
 }
+
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS

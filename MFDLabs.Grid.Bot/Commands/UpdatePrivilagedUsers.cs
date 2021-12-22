@@ -12,8 +12,13 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class UpdatePrivilagedUsers : IStateSpecificCommandHandler
     {
         public string CommandName => "Update Privilaged Users List";
-        public string CommandDescription => $"Updates the privilaged users list. This is not persistent, unless this instance has either of the following enviroment variables defined: WE_ON_THE_GRID, WE_ON_THE_RUN, WE_ARE_AN_ACTOR\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateprivilagedusers add/remove userMention|userID";
-        public string[] CommandAliases => new string[] { "upusers", "updateprivilagedusers" };
+        public string CommandDescription => "Updates the privilaged users list. " +
+                                            "This is not persistent, unless this instance has either of the " +
+                                            "following enviroment variables defined: WE_ON_THE_GRID, WE_ON_THE_RUN, " +
+                                            "WE_ARE_AN_ACTOR\nLayout: " +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateprivilagedusers " +
+                                            $"add/remove userMention|userID";
+        public string[] CommandAliases => new[] { "upusers", "updateprivilagedusers" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -52,7 +57,9 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
                 else
                 {
-                    await message.ReplyAsync($"The user of '{(user == null ? "Null User" : user.Escape().EscapeNewLines())}' was not a valid '{typeof(long)}' or was not a valid mention.");
+                    await message.ReplyAsync(
+                        $"The user of '{(user == null ? "Null User" : user.Escape().EscapeNewLines())}'" +
+                        $" was not a valid '{typeof(long)}' or was not a valid mention.");
                     return;
                 }
             }
@@ -64,7 +71,7 @@ namespace MFDLabs.Grid.Bot.Commands
             if (!wasMention)
             {
                 IUser u;
-                if ((u = await BotGlobal.Singleton.Client.GetUserAsync(uid)) == null)
+                if ((u = await BotGlobal.Client.GetUserAsync(uid)) == null)
                 {
                     await message.ReplyAsync($"The user '{uid}' was not found.");
                     return;
@@ -86,7 +93,7 @@ namespace MFDLabs.Grid.Bot.Commands
             var higherPrivilagedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',').ToList();
 
 
-            switch (subCommand.ToLowerInvariant())
+            switch (subCommand?.ToLowerInvariant())
             {
             case "add":
                 if (!higherPrivilagedUsers.Contains(user))
@@ -97,7 +104,9 @@ namespace MFDLabs.Grid.Bot.Commands
                     await message.ReplyAsync($"Successfully added '{user}' to the privilaged users whitelist.");
                     break;
                 }
-                await message.ReplyAsync($"The user '{user}' is already a higher privilaged user, if you want to remove them, please re-run this command like: '{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
+                await message.ReplyAsync($"The user '{user}' is already a higher privilaged user, " +
+                                         $"if you want to remove them, please re-run this command " +
+                                         $"like: '{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
                 break;
             case "remove":
                 if (higherPrivilagedUsers.Contains(user))
@@ -108,7 +117,9 @@ namespace MFDLabs.Grid.Bot.Commands
                     await message.ReplyAsync($"Successfully added '{user}' to the privilaged users whitelist.");
                     break;
                 }
-                await message.ReplyAsync($"The user '{user}' is not a higher privilaged user, if you want to add them, please re-run this command like: '{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
+                await message.ReplyAsync($"The user '{user}' is not a higher privilaged user, " +
+                                         $"if you want to add them, please re-run this command like: " +
+                                         $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
                 break;
             default:
                 await message.ReplyAsync($"Unknown subcommand '{subCommand}', the allowed subcommands are: 'add', 'remove'.");

@@ -7,8 +7,8 @@ namespace MFDLabs.Sentinels
     public class ThresholdExecutionCircuitBreaker : ExecutionCircuitBreakerBase
     {
         protected internal override string Name { get; }
-        protected override TimeSpan RetryInterval => _RetryIntervalCalculator();
-        protected override DateTime Now => _UtcNowGetter();
+        protected override TimeSpan RetryInterval => _retryIntervalCalculator();
+        protected override DateTime Now => _utcNowGetter();
 
         public ThresholdExecutionCircuitBreaker(string name, Func<Exception, bool> failureDetector, Func<TimeSpan> retryIntervalCalculator, Func<int> exceptionCountForTripping, Func<TimeSpan> exceptionIntervalForTripping) 
             : this(name, failureDetector, retryIntervalCalculator, exceptionCountForTripping, exceptionIntervalForTripping, () => DateTime.UtcNow)
@@ -17,36 +17,36 @@ namespace MFDLabs.Sentinels
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentException("Cannot be null, empty or whitespace", nameof(name));
             Name = name;
-            _FailureDetector = failureDetector ?? throw new ArgumentNullException(nameof(failureDetector));
-            _RetryIntervalCalculator = retryIntervalCalculator ?? throw new ArgumentNullException(nameof(retryIntervalCalculator));
-            _ExceptionCountForTripping = exceptionCountForTripping ?? throw new ArgumentNullException(nameof(exceptionCountForTripping));
-            _ExceptionIntervalForTripping = exceptionIntervalForTripping ?? throw new ArgumentNullException(nameof(exceptionIntervalForTripping));
-            _UtcNowGetter = utcNowGetter ?? throw new ArgumentNullException(nameof(utcNowGetter));
+            _failureDetector = failureDetector ?? throw new ArgumentNullException(nameof(failureDetector));
+            _retryIntervalCalculator = retryIntervalCalculator ?? throw new ArgumentNullException(nameof(retryIntervalCalculator));
+            _exceptionCountForTripping = exceptionCountForTripping ?? throw new ArgumentNullException(nameof(exceptionCountForTripping));
+            _exceptionIntervalForTripping = exceptionIntervalForTripping ?? throw new ArgumentNullException(nameof(exceptionIntervalForTripping));
+            _utcNowGetter = utcNowGetter ?? throw new ArgumentNullException(nameof(utcNowGetter));
         }
 
         private void ResetExceptionCount()
         {
-            Interlocked.Exchange(ref _ExceptionCount, 0);
-            _ExceptionCountIntervalEnd = Now.Add(_ExceptionIntervalForTripping());
+            Interlocked.Exchange(ref _exceptionCount, 0);
+            _exceptionCountIntervalEnd = Now.Add(_exceptionIntervalForTripping());
         }
         protected override bool ShouldTrip(Exception ex)
         {
             if (ex == null) throw new ArgumentNullException(nameof(ex));
-            if (_FailureDetector(ex))
+            if (_failureDetector(ex))
             {
-                if (_ExceptionCountIntervalEnd < Now) ResetExceptionCount();
-                Interlocked.Increment(ref _ExceptionCount);
-                if (_ExceptionCount > _ExceptionCountForTripping()) return true;
+                if (_exceptionCountIntervalEnd < Now) ResetExceptionCount();
+                Interlocked.Increment(ref _exceptionCount);
+                if (_exceptionCount > _exceptionCountForTripping()) return true;
             }
             return false;
         }
 
-        private readonly Func<Exception, bool> _FailureDetector;
-        private readonly Func<TimeSpan> _RetryIntervalCalculator;
-        private readonly Func<int> _ExceptionCountForTripping;
-        private readonly Func<TimeSpan> _ExceptionIntervalForTripping;
-        private readonly Func<DateTime> _UtcNowGetter;
-        private DateTime _ExceptionCountIntervalEnd = DateTime.MinValue;
-        private int _ExceptionCount;
+        private readonly Func<Exception, bool> _failureDetector;
+        private readonly Func<TimeSpan> _retryIntervalCalculator;
+        private readonly Func<int> _exceptionCountForTripping;
+        private readonly Func<TimeSpan> _exceptionIntervalForTripping;
+        private readonly Func<DateTime> _utcNowGetter;
+        private DateTime _exceptionCountIntervalEnd = DateTime.MinValue;
+        private int _exceptionCount;
     }
 }

@@ -12,7 +12,7 @@ namespace MFDLabs.Http.Client
         { }
 
         public HttpRequestBuilder(IHttpRequestBuilderSettings httpRequestBuilderSettings) 
-            => _HttpRequestBuilderSettings = httpRequestBuilderSettings ?? throw new ArgumentNullException("httpRequestBuilderSettings");
+            => _httpRequestBuilderSettings = httpRequestBuilderSettings ?? throw new ArgumentNullException(nameof(httpRequestBuilderSettings));
 
         public IHttpRequest BuildRequest(HttpMethod httpMethod, string path, IEnumerable<(string, string)> queryStringParameters = null)
         {
@@ -31,7 +31,7 @@ namespace MFDLabs.Http.Client
             => new HttpRequest(httpMethod, CreateUriBuilder(path, queryStringParameters).Uri);
         private UriBuilder CreateUriBuilder(string path, IEnumerable<(string, string)> queryStringParameters)
         {
-            var builder = new UriBuilder(_HttpRequestBuilderSettings.Endpoint) { Path = path };
+            var builder = new UriBuilder(_httpRequestBuilderSettings.Endpoint) { Path = path };
             if (queryStringParameters != null) builder.Query = BuildQueryString(queryStringParameters);
             return builder;
         }
@@ -41,17 +41,17 @@ namespace MFDLabs.Http.Client
             foreach (var (key, value) in queryStringParameters)
             {
                 if (key.IsNullOrWhiteSpace()) throw new ArgumentException("Query string parameter key cannot be null or whitespace", nameof(queryStringParameters));
-                builder.Append("&");
-                if (_HttpRequestBuilderSettings.EncodeQueryParametersEnabled)
+                builder.Append('&');
+                if (_httpRequestBuilderSettings.EncodeQueryParametersEnabled)
                 {
                     builder.Append(Uri.EscapeDataString(key));
-                    builder.Append("=");
+                    builder.Append('=');
                     builder.Append(Uri.EscapeDataString(value ?? string.Empty));
                 }
                 else
                 {
                     builder.Append(key);
-                    builder.Append("=");
+                    builder.Append('=');
                     builder.Append(value ?? string.Empty);
                 }
             }
@@ -66,6 +66,6 @@ namespace MFDLabs.Http.Client
             if (requestData == null) throw new ArgumentNullException(nameof(requestData));
         }
 
-        private readonly IHttpRequestBuilderSettings _HttpRequestBuilderSettings;
+        private readonly IHttpRequestBuilderSettings _httpRequestBuilderSettings;
     }
 }

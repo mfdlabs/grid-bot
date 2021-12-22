@@ -1,43 +1,55 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord;
+using Discord.Net;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnLogMessage
+    internal static class OnLogMessage
     {
         internal static Task Invoke(LogMessage message)
         {
             if (message.Exception != null)
             {
+                if (message.Exception?.InnerException is WebSocketClosedException) return Task.CompletedTask;
+
 #if DEBUG
-                if (!(message.Exception is TaskCanceledException && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
-                    SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}", message.Source, message.Message, message.Exception.ToDetailedString());
+                if (!(message.Exception is TaskCanceledException &&
+                      !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
+                    SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
+                        message.Source,
+                        message.Message,
+                        message.Exception.ToDetailedString());
 #endif
                 return Task.CompletedTask;
             }
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
+                return Task.CompletedTask;
+            
+            switch (message)
             {
-                switch (message.Severity)
-                {
-                    case LogSeverity.Warning:
-                        SystemLogger.Singleton.Warning("DiscordInternal-WARNING-{0}: {1}", message.Source, message.Message);
-                        break;
-                    case LogSeverity.Debug:
-                        SystemLogger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
-                        break;
-                    case LogSeverity.Info:
-                        SystemLogger.Singleton.Info("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
-                        break;
-                    case LogSeverity.Verbose:
-                        SystemLogger.Singleton.Log("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
-                        break;
-                    case LogSeverity.Error | LogSeverity.Critical:
-                        SystemLogger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);
-                        break;
-                }
+                case {Severity: LogSeverity.Warning}:
+                    SystemLogger.Singleton.Warning("DiscordInternal-WARNING-{0}: {1}", message.Source, message.Message);
+                    break;
+                case {Severity: LogSeverity.Debug}:
+                    SystemLogger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
+                    break;
+                case {Severity: LogSeverity.Info}:
+                    SystemLogger.Singleton.Info("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
+                    break;
+                case {Severity: LogSeverity.Verbose}:
+                    SystemLogger.Singleton.Verbose("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
+                    break;
+                case {Severity: LogSeverity.Error | LogSeverity.Critical}:
+                    SystemLogger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);
+                    break;
+                case {Severity: LogSeverity.Critical}:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return Task.CompletedTask;

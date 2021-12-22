@@ -18,7 +18,7 @@ namespace MFDLabs.Http
         public HttpRequest(HttpMethod method, Uri url)
         {
             Method = method;
-            Url = url ?? throw new ArgumentNullException("url");
+            Url = url ?? throw new ArgumentNullException(nameof(url));
             Headers = new HttpRequestHeaders();
         }
 
@@ -26,9 +26,9 @@ namespace MFDLabs.Http
         {
             if (requestBody == null) throw new ArgumentNullException(nameof(requestBody));
             Body = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(requestBody)));
-            Headers.ContentType = _JsonContentType;
+            Headers.ContentType = JsonContentType;
         }
 
-        private const string _JsonContentType = "application/json";
+        private const string JsonContentType = "application/json";
     }
 }

@@ -49,6 +49,7 @@ namespace MFDLabs.Users.Client
         UserStatusResponse GetUserStatus(long userId);
 
         /// <summary>Retrieves the username history for a particular user.</summary>
+        /// <param name="userId"></param>
         /// <param name="limit">The amount of results per request.</param>
         /// <param name="cursor">The paging cursor for the previous or next page.</param>
         /// <param name="sortOrder">The order the results are sorted in.</param>
@@ -57,6 +58,7 @@ namespace MFDLabs.Users.Client
         Task<ApiPageResponse<UsernameHistoryResponse>> GetUsernameHistoryAsync(long userId, int? limit, string cursor, SortOrder? sortOrder);
 
         /// <summary>Retrieves the username history for a particular user.</summary>
+        /// <param name="userId"></param>
         /// <param name="limit">The amount of results per request.</param>
         /// <param name="cursor">The paging cursor for the previous or next page.</param>
         /// <param name="sortOrder">The order the results are sorted in.</param>

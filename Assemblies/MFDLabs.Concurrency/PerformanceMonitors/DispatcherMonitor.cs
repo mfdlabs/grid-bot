@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Microsoft.Ccr.Core;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -11,55 +13,42 @@ namespace MFDLabs.Concurrency
     /// </summary>
     public class DispatcherMonitor : IDisposable
     {
-        readonly Dispatcher dispatcher;
-        readonly ICollection<Thread> threads = new HashSet<Thread>();
-        Thread thread;
+        private readonly Dispatcher _dispatcher;
+        private readonly ICollection<Thread> _threads = new HashSet<Thread>();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Construct new dispatcher monitor
+        /// </summary>
+        /// <param name="dispatcher"></param>
         public DispatcherMonitor(Dispatcher dispatcher)
         {
-            this.dispatcher = dispatcher;
+            _dispatcher = dispatcher;
             GatherWorkerThreads();
-            dispatcher.UnhandledException += new UnhandledExceptionEventHandler(dispatcher_UnhandledException);
+            dispatcher.UnhandledException += dispatcher_UnhandledException;
 
-            thread = new Thread(Monitor);
-            thread.IsBackground = true;
-            thread.Name = "DispatcherMonitor: " + dispatcher.Name;
+            var thread = new Thread(Monitor)
+            {
+                IsBackground = true,
+                Name = "DispatcherMonitor: " + dispatcher.Name
+            };
             thread.Start();
         }
 
-        void dispatcher_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void dispatcher_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            ExceptionHandler.LogException(new ApplicationException(string.Format("{0} had an unhandled exception", dispatcher.Name), e.ExceptionObject as Exception));
+            ExceptionHandler.LogException(new ApplicationException($"{_dispatcher.Name} had an unhandled exception",
+                e.ExceptionObject as Exception));
         }
 
-        void Monitor()
+        private static void Monitor()
         {
-            int count = 0;
             const int iterations = 4;
-            TimeSpan sleep = TimeSpan.Zero;
+            var sleep = TimeSpan.Zero;
             while (true)
             {
                 try
                 {
-                    var pendingTaskCount = dispatcher.PendingTaskCount;
-
-                    var trigger = 0;
-
-                    if (trigger <= 0)
-                        sleep = TimeSpan.FromSeconds(10);
-                    else if (pendingTaskCount > trigger)
-                    {
-                        count++;
-                        if (count >= iterations)
-                        {
-                            ReportBacklog(pendingTaskCount);
-                            sleep = TimeSpan.FromMinutes(1);
-                        }
-                    }
-                    else
-                        count = 0;
-
+                    sleep = TimeSpan.FromSeconds(10);
                 }
                 catch (ThreadAbortException)
                 {
@@ -79,7 +68,7 @@ namespace MFDLabs.Concurrency
                 {
                     var wait = TimeSpan.Parse("00:00:03");
                     if (wait != TimeSpan.Zero)
-                        System.Threading.Thread.Sleep((int)(wait.TotalMilliseconds / iterations));
+                        System.Threading.Thread.Sleep((int) (wait.TotalMilliseconds / iterations));
                     else
                         System.Threading.Thread.Sleep(TimeSpan.FromSeconds(10));
                 }
@@ -90,14 +79,14 @@ namespace MFDLabs.Concurrency
         {
             // Grab all the threads for debugging!
             // TODO: Make this more robust. It's pretty kludgy
-            int count = 2 * dispatcher.WorkerThreadCount;
-            for (int i = 0; i < 2 * dispatcher.WorkerThreadCount; ++i)
-                dispatcher.DispatcherQueues[0].Enqueue
+            var count = 2 * _dispatcher.WorkerThreadCount;
+            for (var i = 0; i < 2 * _dispatcher.WorkerThreadCount; ++i)
+                _dispatcher.DispatcherQueues[0].Enqueue
                 (Arbiter.FromHandler(() =>
                 {
                     System.Threading.Thread.Sleep(200);
-                    lock (threads)
-                        threads.Add(System.Threading.Thread.CurrentThread);
+                    lock (_threads)
+                        _threads.Add(System.Threading.Thread.CurrentThread);
                     System.Threading.Interlocked.Decrement(ref count);
                 }));
 
@@ -111,46 +100,50 @@ namespace MFDLabs.Concurrency
         /// <returns></returns>
         private IEnumerable<StackTrace> GetWorkerStacks()
         {
-            foreach (var t in threads)
+            lock (_threads)
             {
-                StackTrace trace;
+                foreach (var t in _threads)
+                {
+                    StackTrace trace;
 #pragma warning disable 0618
-                t.Suspend();
-                try
-                {
-                    trace = new System.Diagnostics.StackTrace(t, true);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-                finally
-                {
-                    t.Resume();
-                }
+                    t.Suspend();
+                    try
+                    {
+                        trace = new System.Diagnostics.StackTrace(t, true);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    finally
+                    {
+                        t.Resume();
+                    }
 #pragma warning restore 0618
-                yield return trace;
+                    yield return trace;
+                }
             }
         }
 
         private void ReportBacklog(int pendingTasks)
         {
-            string message = string.Format("CcrService detected a backlog of {0}. These are the currently running tasks:\r\n\r\n", pendingTasks);
-            foreach (var trace in GetWorkerStacks())
-                message += trace.ToString() + "\r\n\r\n";
+            var message = $"CcrService detected a backlog of {pendingTasks}. These are the currently running tasks:\r\n\r\n";
+            message = GetWorkerStacks().Aggregate(message, (current, trace) => current + trace + "\r\n\r\n");
             ExceptionHandler.LogException(message, EventLogEntryType.Warning, 4061);
         }
 
 
         #region IDisposable Members
+
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (dispatcher != null)
-                dispatcher.Dispose();
+            if (_dispatcher != null)
+                _dispatcher.Dispose();
 
-            threads.Clear();
+            _threads.Clear();
         }
+
         #endregion
     }
 }

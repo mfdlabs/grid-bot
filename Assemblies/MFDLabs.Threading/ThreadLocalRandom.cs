@@ -6,10 +6,8 @@ namespace MFDLabs.Threading
     public class ThreadLocalRandom
     {
         public ThreadLocalRandom(int initialSeed)
-        {
-            _initSeed = initialSeed;
-            _rnd = new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref _initSeed)));
-        }
+            => _rnd = new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref initialSeed)));
+
         public ThreadLocalRandom() 
             : this(Environment.TickCount)
         {
@@ -21,6 +19,5 @@ namespace MFDLabs.Threading
         public double NextDouble() => _rnd.Value.NextDouble();
 
         private readonly ThreadLocal<Random> _rnd;
-        private int _initSeed;
     }
 }

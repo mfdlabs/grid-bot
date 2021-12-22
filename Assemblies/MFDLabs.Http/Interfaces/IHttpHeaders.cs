@@ -4,7 +4,7 @@ namespace MFDLabs.Http
 {
     public interface IHttpHeaders
     {
-        IReadOnlyList<string> Keys { get; }
+        IEnumerable<string> Keys { get; }
         string ContentType { get; set; }
 
         void Add(string name, string value);

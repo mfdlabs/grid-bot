@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,71 +11,85 @@ using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Google.Analytics.Client
 {
-    public class GAClient : IGAClient
+    public class GaClient : IGaClient
     {
-        public GAClient(ICounterRegistry counterRegistry, GAClientConfig config)
+        public GaClient(ICounterRegistry counterRegistry, GaClientConfig config)
         {
-            var settings = new GAClientSettings(config);
-            var httpClientBuilder = new GAHttpClientBuilder(counterRegistry, settings, config);
+            var settings = new GaClientSettings(config);
+            var httpClientBuilder = new GaHttpClientBuilder(counterRegistry, settings, config);
             var httpClient = httpClientBuilder.Build();
             _config = config;
             _sender = new FormDataRequestSender(httpClient, new HttpRequestBuilderSettings(settings.Endpoint));
         }
 
-        private IEnumerable<(string, string)> BuildSharedBody(string clientID, string hitType, string source, bool shouldClose)
+        private IEnumerable<(string, string)> BuildSharedBody(string clientId,
+            string hitType,
+            string source,
+            bool shouldClose)
         {
             yield return ("v", "1");
-            yield return ("tid", _config.TrackerID);
-            yield return ("cid", clientID);
+            yield return ("tid", _config.TrackerId);
+            yield return ("cid", clientId);
             yield return ("t", hitType);
             yield return ("ds", source);
             yield return ("sc", shouldClose ? "end" : "start");
-            yield break;
         }
 
-        private IEnumerable<(string, string)> BuildBodyForEventRequest(string category, string eventName, string label, int value)
+        private static IEnumerable<(string, string)> BuildBodyForEventRequest(string category,
+            string eventName,
+            string label,
+            int value)
         {
             yield return ("ec", category);
             yield return ("ea", eventName);
             yield return ("ev", value.ToString());
             yield return ("el", label);
-            yield break;
         }
 
-        private IEnumerable<(string, string)> BuildBodyForItemRequest(string transactionID, string itemName, double itemPrice, int itemQuantity, string itemCategory)
+        private static IEnumerable<(string, string)> BuildBodyForItemRequest(string transactionId,
+            string itemName,
+            double itemPrice,
+            int itemQuantity,
+            string itemCategory)
         {
-            yield return ("ti", transactionID);
+            yield return ("ti", transactionId);
             yield return ("in", itemName);
-            yield return ("ip", itemPrice.ToString());
+            yield return ("ip", itemPrice.ToString(CultureInfo.InvariantCulture));
             yield return ("iq", itemQuantity.ToString());
-            yield return ("ic", itemCategory.ToString());
-            yield break;
+            yield return ("ic", itemCategory);
         }
 
-        private IEnumerable<(string, string)> BuildBodyForPageViewRequest(string documentUrl)
+        private static IEnumerable<(string, string)> BuildBodyForPageViewRequest(string documentUrl)
         {
             yield return ("dl", documentUrl);
-            yield break;
         }
 
-        private IEnumerable<(string, string)> BuildBodyForTransactionRequest(string transactionID, string transactionAffiliation, double transactionRevenue, double transactionTax)
+        private static IEnumerable<(string, string)> BuildBodyForTransactionRequest(string transactionId,
+            string transactionAffiliation,
+            double transactionRevenue,
+            double transactionTax)
         {
-            yield return ("ti", transactionID);
+            yield return ("ti", transactionId);
             yield return ("ta", transactionAffiliation);
-            yield return ("tr", transactionRevenue.ToString());
-            yield return ("tt", transactionTax.ToString());
-            yield break;
+            yield return ("tr", transactionRevenue.ToString(CultureInfo.InvariantCulture));
+            yield return ("tt", transactionTax.ToString(CultureInfo.InvariantCulture));
         }
 
-        public void TrackEvent(string clientID, string category, string eventName, string label = "None", int value = 0, string source = "Server", bool shouldClose = false)
+        public void TrackEvent(string clientId,
+            string category,
+            string eventName,
+            string label = "None",
+            int value = 0,
+            string source = "Server",
+            bool shouldClose = false)
         {
-            if (category.IsNullOrWhiteSpace()) throw new ArgumentNullException("category");
-            if (eventName.IsNullOrWhiteSpace()) throw new ArgumentNullException("eventName");
-            if (label.IsNullOrWhiteSpace()) throw new ArgumentNullException("label");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
-            if (value < 0) throw new ArgumentOutOfRangeException("value", "The value cannot be negative");
+            if (category.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(category));
+            if (eventName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(eventName));
+            if (label.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(label));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
+            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), "The value cannot be negative");
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose).Concat(
+            var request = BuildSharedBody(clientId, "event", source, shouldClose).Concat(
                 BuildBodyForEventRequest(
                     category,
                     eventName,
@@ -85,16 +100,23 @@ namespace MFDLabs.Google.Analytics.Client
 
             _sender.SendRequest(HttpMethod.Post, "/collect", request);
         }
-        public Task TrackEventAsync(string clientID, string category, string eventName, string label = "None", int value = 0, string source = "Server", bool shouldClose = false, CancellationToken cancellationToken = default(CancellationToken))
+        public Task TrackEventAsync(string clientId,
+            string category,
+            string eventName,
+            string label = "None",
+            int value = 0,
+            string source = "Server",
+            bool shouldClose = false,
+            CancellationToken cancellationToken = default)
         {
-            if (category.IsNullOrWhiteSpace()) throw new ArgumentNullException("category");
-            if (eventName.IsNullOrWhiteSpace()) throw new ArgumentNullException("eventName");
-            if (label.IsNullOrWhiteSpace()) throw new ArgumentNullException("label");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
-            if (value < 0) throw new ArgumentOutOfRangeException("value", "The value cannot be negative");
-            if (cancellationToken == default(CancellationToken)) cancellationToken = CancellationToken.None;
+            if (category.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(category));
+            if (eventName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(eventName));
+            if (label.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(label));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
+            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), "The value cannot be negative");
+            if (cancellationToken == default) cancellationToken = CancellationToken.None;
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForEventRequest(
                         category,
@@ -106,19 +128,26 @@ namespace MFDLabs.Google.Analytics.Client
 
             return _sender.SendRequestAsync(HttpMethod.Post, "/collect", cancellationToken, request);
         }
-        public void TrackItem(string clientID, string transactionID, string itemName, double itemPrice = 0, int itemQuantity = 1, string itemCategory = "None", string source = "Server", bool shouldClose = false)
+        public void TrackItem(string clientId,
+            string transactionId,
+            string itemName,
+            double itemPrice = 0,
+            int itemQuantity = 1,
+            string itemCategory = "None",
+            string source = "Server",
+            bool shouldClose = false)
         {
-            if (transactionID.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionID");
-            if (itemName.IsNullOrWhiteSpace()) throw new ArgumentNullException("itemName");
-            if (itemPrice < 0) throw new ArgumentOutOfRangeException("itemPrice", "The value cannot be negative");
-            if (itemQuantity < 1) throw new ArgumentOutOfRangeException("itemPrice", "The value cannot be negative or 0");
-            if (itemCategory.IsNullOrWhiteSpace()) throw new ArgumentNullException("itemCategory");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
+            if (transactionId.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionId));
+            if (itemName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(itemName));
+            if (itemPrice < 0) throw new ArgumentOutOfRangeException(nameof(itemPrice), "The value cannot be negative");
+            if (itemQuantity < 1) throw new ArgumentOutOfRangeException(nameof(itemPrice), "The value cannot be negative or 0");
+            if (itemCategory.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(itemCategory));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForItemRequest(
-                        transactionID,
+                        transactionId,
                         itemName,
                         itemPrice,
                         itemQuantity,
@@ -128,20 +157,28 @@ namespace MFDLabs.Google.Analytics.Client
 
             _sender.SendRequest(HttpMethod.Post, "/collect", request);
         }
-        public Task TrackItemAsync(string clientID, string transactionID, string itemName, double itemPrice = 0, int itemQuantity = 1, string itemCategory = "None", string source = "Server", bool shouldClose = false, CancellationToken cancellationToken = default(CancellationToken))
+        public Task TrackItemAsync(string clientId,
+            string transactionId,
+            string itemName,
+            double itemPrice = 0,
+            int itemQuantity = 1,
+            string itemCategory = "None",
+            string source = "Server",
+            bool shouldClose = false,
+            CancellationToken cancellationToken = default)
         {
-            if (transactionID.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionID");
-            if (itemName.IsNullOrWhiteSpace()) throw new ArgumentNullException("itemName");
-            if (itemPrice < 0) throw new ArgumentOutOfRangeException("itemPrice", "The value cannot be negative");
-            if (itemQuantity < 1) throw new ArgumentOutOfRangeException("itemPrice", "The value cannot be negative or 0");
-            if (itemCategory.IsNullOrWhiteSpace()) throw new ArgumentNullException("itemCategory");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
-            if (cancellationToken == default(CancellationToken)) cancellationToken = CancellationToken.None;
+            if (transactionId.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionId));
+            if (itemName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(itemName));
+            if (itemPrice < 0) throw new ArgumentOutOfRangeException(nameof(itemPrice), "The value cannot be negative");
+            if (itemQuantity < 1) throw new ArgumentOutOfRangeException(nameof(itemPrice), "The value cannot be negative or 0");
+            if (itemCategory.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(itemCategory));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
+            if (cancellationToken == default) cancellationToken = CancellationToken.None;
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForItemRequest(
-                        transactionID,
+                        transactionId,
                         itemName,
                         itemPrice,
                         itemQuantity,
@@ -151,12 +188,15 @@ namespace MFDLabs.Google.Analytics.Client
 
             return _sender.SendRequestAsync(HttpMethod.Post, "/collect", cancellationToken, request);
         }
-        public void TrackPageView(string clientID, string documentLocationUrl, string source = "Server", bool shouldClose = false)
+        public void TrackPageView(string clientId,
+            string documentLocationUrl,
+            string source = "Server",
+            bool shouldClose = false)
         {
-            if (documentLocationUrl.IsNullOrWhiteSpace()) throw new ArgumentNullException("documentLocationUrl");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
+            if (documentLocationUrl.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(documentLocationUrl));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForPageViewRequest(
                         documentLocationUrl
@@ -165,13 +205,17 @@ namespace MFDLabs.Google.Analytics.Client
 
             _sender.SendRequest(HttpMethod.Post, "/collect", request);
         }
-        public Task TrackPageViewAsync(string clientID, string documentLocationUrl, string source = "Server", bool shouldClose = false, CancellationToken cancellationToken = default(CancellationToken))
+        public Task TrackPageViewAsync(string clientId,
+            string documentLocationUrl,
+            string source = "Server",
+            bool shouldClose = false,
+            CancellationToken cancellationToken = default)
         {
-            if (documentLocationUrl.IsNullOrWhiteSpace()) throw new ArgumentNullException("documentLocationUrl");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
-            if (cancellationToken == default(CancellationToken)) cancellationToken = CancellationToken.None;
+            if (documentLocationUrl.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(documentLocationUrl));
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
+            if (cancellationToken == default) cancellationToken = CancellationToken.None;
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForPageViewRequest(
                         documentLocationUrl
@@ -180,18 +224,24 @@ namespace MFDLabs.Google.Analytics.Client
 
             return _sender.SendRequestAsync(HttpMethod.Post, "/collect", cancellationToken, request);
         }
-        public void TrackTransaction(string clientID, string transactionID, string transactionAffiliation, double transactionRevenue = 0, double transactionTax = 0, string source = "Server", bool shouldClose = false)
+        public void TrackTransaction(string clientId,
+            string transactionId,
+            string transactionAffiliation,
+            double transactionRevenue = 0,
+            double transactionTax = 0,
+            string source = "Server",
+            bool shouldClose = false)
         {
-            if (transactionID.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionID");
-            if (transactionAffiliation.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionAffiliation");
-            if (transactionRevenue < 0) throw new ArgumentOutOfRangeException("transactionRevenue", "The value cannot be negative");
-            if (transactionTax < 0) throw new ArgumentOutOfRangeException("transactionTax", "The value cannot be negative");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
+            if (transactionId.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionId));
+            if (transactionAffiliation.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionAffiliation));
+            if (transactionRevenue < 0) throw new ArgumentOutOfRangeException(nameof(transactionRevenue), "The value cannot be negative");
+            if (transactionTax < 0) throw new ArgumentOutOfRangeException(nameof(transactionTax), "The value cannot be negative");
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForTransactionRequest(
-                        transactionID,
+                        transactionId,
                         transactionAffiliation,
                         transactionRevenue,
                         transactionTax
@@ -200,19 +250,26 @@ namespace MFDLabs.Google.Analytics.Client
 
             _sender.SendRequest(HttpMethod.Post, "/collect", request);
         }
-        public Task TrackTransactionAsync(string clientID, string transactionID, string transactionAffiliation, double transactionRevenue = 0, double transactionTax = 0, string source = "Server", bool shouldClose = false, CancellationToken cancellationToken = default(CancellationToken))
+        public Task TrackTransactionAsync(string clientId,
+            string transactionId,
+            string transactionAffiliation,
+            double transactionRevenue = 0,
+            double transactionTax = 0,
+            string source = "Server",
+            bool shouldClose = false,
+            CancellationToken cancellationToken = default)
         {
-            if (transactionID.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionID");
-            if (transactionAffiliation.IsNullOrWhiteSpace()) throw new ArgumentNullException("transactionAffiliation");
-            if (transactionRevenue < 0) throw new ArgumentOutOfRangeException("transactionRevenue", "The value cannot be negative");
-            if (transactionTax < 0) throw new ArgumentOutOfRangeException("transactionTax", "The value cannot be negative");
-            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException("source");
-            if (cancellationToken == default(CancellationToken)) cancellationToken = CancellationToken.None;
+            if (transactionId.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionId));
+            if (transactionAffiliation.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(transactionAffiliation));
+            if (transactionRevenue < 0) throw new ArgumentOutOfRangeException(nameof(transactionRevenue), "The value cannot be negative");
+            if (transactionTax < 0) throw new ArgumentOutOfRangeException(nameof(transactionTax), "The value cannot be negative");
+            if (source.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(source));
+            if (cancellationToken == default) cancellationToken = CancellationToken.None;
 
-            var request = BuildSharedBody(clientID, "event", source, shouldClose)
+            var request = BuildSharedBody(clientId, "event", source, shouldClose)
                 .Concat(
                     BuildBodyForTransactionRequest(
-                        transactionID,
+                        transactionId,
                         transactionAffiliation,
                         transactionRevenue,
                         transactionTax
@@ -223,6 +280,6 @@ namespace MFDLabs.Google.Analytics.Client
         }
 
         private readonly FormDataRequestSender _sender;
-        private readonly GAClientConfig _config;
+        private readonly GaClientConfig _config;
     }
 }

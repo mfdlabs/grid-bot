@@ -51,13 +51,12 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
-                {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return HelloWorld();
-                }
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default
+                        .OpenServiceOnEndpointNotFoundException) throw;
+                
+                SystemUtility.OpenGridServerSafe();
+                return HelloWorld();
 
-                throw ex;
             }
         }
 
@@ -69,13 +68,12 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException ex)
             {
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
-                {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await HelloWorldAsync();
-                }
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default
+                        .OpenServiceOnEndpointNotFoundException) throw;
+                
+                SystemUtility.OpenGridServerSafe();
+                return await HelloWorldAsync();
 
-                throw ex;
             }
         }
 
@@ -89,7 +87,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return GetVersion();
                 }
 
@@ -107,7 +105,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await GetVersionAsync();
                 }
 
@@ -125,7 +123,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return GetStatus();
                 }
 
@@ -143,7 +141,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await GetStatusAsync();
                 }
 
@@ -161,7 +159,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return OpenJob(job, script);
                 }
 
@@ -179,7 +177,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await OpenJobAsync(job, script);
                 }
 
@@ -197,7 +195,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return OpenJobEx(job, script);
                 }
 
@@ -215,7 +213,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await OpenJobExAsync(job, script);
                 }
 
@@ -223,123 +221,123 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        public new double RenewLease(string jobID, double expirationInSeconds)
+        public new double RenewLease(string jobId, double expirationInSeconds)
         {
             try
             {
-                return base.RenewLease(jobID, expirationInSeconds);
+                return base.RenewLease(jobId, expirationInSeconds);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return RenewLease(jobID, expirationInSeconds);
+                    SystemUtility.OpenGridServerSafe();
+                    return RenewLease(jobId, expirationInSeconds);
                 }
 
                 throw ex;
             }
         }
 
-        public new async Task<double> RenewLeaseAsync(string jobID, double expirationInSeconds)
+        public new async Task<double> RenewLeaseAsync(string jobId, double expirationInSeconds)
         {
             try
             {
-                return await base.RenewLeaseAsync(jobID, expirationInSeconds);
+                return await base.RenewLeaseAsync(jobId, expirationInSeconds);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await RenewLeaseAsync(jobID, expirationInSeconds);
+                    SystemUtility.OpenGridServerSafe();
+                    return await RenewLeaseAsync(jobId, expirationInSeconds);
                 }
                 throw ex;
             }
         }
 
-        public new LuaValue[] Execute(string jobID, ScriptExecution script)
+        public new LuaValue[] Execute(string jobId, ScriptExecution script)
         {
             try
             {
-                return base.Execute(jobID, script);
+                return base.Execute(jobId, script);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return Execute(jobID, script);
-                }
-
-                throw ex;
-            }
-        }
-
-        public new async Task<ExecuteResponse> ExecuteAsync(string jobID, ScriptExecution script)
-        {
-            try
-            {
-                return await base.ExecuteAsync(jobID, script);
-            }
-            catch (EndpointNotFoundException ex)
-            {
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
-                {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await ExecuteAsync(jobID, script);
-                }
-                throw ex;
-            }
-        }
-
-        public new LuaValue[] ExecuteEx(string jobID, ScriptExecution script)
-        {
-            try
-            {
-                return base.ExecuteEx(jobID, script);
-            }
-            catch (EndpointNotFoundException ex)
-            {
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
-                {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return ExecuteEx(jobID, script);
+                    SystemUtility.OpenGridServerSafe();
+                    return Execute(jobId, script);
                 }
 
                 throw ex;
             }
         }
 
-        public new async Task<LuaValue[]> ExecuteExAsync(string jobID, ScriptExecution script)
+        public new async Task<ExecuteResponse> ExecuteAsync(string jobId, ScriptExecution script)
         {
             try
             {
-                return await base.ExecuteExAsync(jobID, script);
+                return await base.ExecuteAsync(jobId, script);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await ExecuteExAsync(jobID, script);
+                    SystemUtility.OpenGridServerSafe();
+                    return await ExecuteAsync(jobId, script);
                 }
                 throw ex;
             }
         }
 
-        public new void CloseJob(string jobID)
+        public new LuaValue[] ExecuteEx(string jobId, ScriptExecution script)
         {
             try
             {
-                base.CloseJob(jobID);
+                return base.ExecuteEx(jobId, script);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    CloseJob(jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return ExecuteEx(jobId, script);
+                }
+
+                throw ex;
+            }
+        }
+
+        public new async Task<LuaValue[]> ExecuteExAsync(string jobId, ScriptExecution script)
+        {
+            try
+            {
+                return await base.ExecuteExAsync(jobId, script);
+            }
+            catch (EndpointNotFoundException ex)
+            {
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
+                {
+                    SystemUtility.OpenGridServerSafe();
+                    return await ExecuteExAsync(jobId, script);
+                }
+                throw ex;
+            }
+        }
+
+        public new void CloseJob(string jobId)
+        {
+            try
+            {
+                base.CloseJob(jobId);
+            }
+            catch (EndpointNotFoundException ex)
+            {
+                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
+                {
+                    SystemUtility.OpenGridServerSafe();
+                    CloseJob(jobId);
                     return;
                 }
 
@@ -347,18 +345,18 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        public new async Task CloseJobAsync(string jobID)
+        public new async Task CloseJobAsync(string jobId)
         {
             try
             {
-                await base.CloseJobAsync(jobID);
+                await base.CloseJobAsync(jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    await CloseJobAsync(jobID); return;
+                    SystemUtility.OpenGridServerSafe();
+                    await CloseJobAsync(jobId); return;
                 }
                 throw ex;
             }
@@ -374,7 +372,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return BatchJob(job, script);
                 }
 
@@ -392,7 +390,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await BatchJobAsync(job, script);
                 }
                 throw ex;
@@ -409,7 +407,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return BatchJobEx(job, script);
                 }
 
@@ -427,43 +425,43 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await BatchJobExAsync(job, script);
                 }
                 throw ex;
             }
         }
 
-        public new double GetExpiration(string jobID)
+        public new double GetExpiration(string jobId)
         {
             try
             {
-                return base.GetExpiration(jobID);
+                return base.GetExpiration(jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return GetExpiration(jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return GetExpiration(jobId);
                 }
 
                 throw ex;
             }
         }
 
-        public new async Task<double> GetExpirationAsync(string jobID)
+        public new async Task<double> GetExpirationAsync(string jobId)
         {
             try
             {
-                return await base.GetExpirationAsync(jobID);
+                return await base.GetExpirationAsync(jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await GetExpirationAsync(jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return await GetExpirationAsync(jobId);
                 }
                 throw ex;
             }
@@ -479,7 +477,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return GetAllJobs();
                 }
 
@@ -497,7 +495,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await GetAllJobsAsync();
                 }
                 throw ex;
@@ -514,7 +512,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return GetAllJobsEx();
                 }
 
@@ -532,7 +530,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await GetAllJobsExAsync();
                 }
                 throw ex;
@@ -549,7 +547,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return CloseExpiredJobs();
                 }
 
@@ -567,7 +565,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await CloseExpiredJobsAsync();
                 }
                 throw ex;
@@ -584,7 +582,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return CloseAllJobs();
                 }
 
@@ -602,78 +600,78 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
+                    SystemUtility.OpenGridServerSafe();
                     return await CloseAllJobsAsync();
                 }
                 throw ex;
             }
         }
 
-        public new LuaValue[] Diag(int type, string jobID)
+        public new LuaValue[] Diag(int type, string jobId)
         {
             try
             {
-                return base.Diag(type, jobID);
+                return base.Diag(type, jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return Diag(type, jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return Diag(type, jobId);
                 }
 
                 throw ex;
             }
         }
 
-        public new async Task<DiagResponse> DiagAsync(int type, string jobID)
+        public new async Task<DiagResponse> DiagAsync(int type, string jobId)
         {
             try
             {
-                return await base.DiagAsync(type, jobID);
+                return await base.DiagAsync(type, jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await DiagAsync(type, jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return await DiagAsync(type, jobId);
                 }
                 throw ex;
             }
         }
 
-        public new LuaValue[] DiagEx(int type, string jobID)
+        public new LuaValue[] DiagEx(int type, string jobId)
         {
             try
             {
-                return base.DiagEx(type, jobID);
+                return base.DiagEx(type, jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return DiagEx(type, jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return DiagEx(type, jobId);
                 }
 
                 throw ex;
             }
         }
 
-        public new async Task<LuaValue[]> DiagExAsync(int type, string jobID)
+        public new async Task<LuaValue[]> DiagExAsync(int type, string jobId)
         {
             try
             {
-                return await base.DiagExAsync(type, jobID);
+                return await base.DiagExAsync(type, jobId);
             }
             catch (EndpointNotFoundException ex)
             {
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                 {
-                    SystemUtility.Singleton.OpenGridServerSafe();
-                    return await DiagExAsync(type, jobID);
+                    SystemUtility.OpenGridServerSafe();
+                    return await DiagExAsync(type, jobId);
                 }
                 throw ex;
             }

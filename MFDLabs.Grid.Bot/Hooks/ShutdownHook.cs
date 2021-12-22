@@ -5,11 +5,8 @@ namespace MFDLabs.Grid.Bot.Hooks
 {
     internal sealed class ShutdownHook : IConsoleHook
     {
-        public char[] HookKeys => new char[] { '\u0003', '\u001b' };
+        public char[] HookKeys => new[] { '\u0003', '\u001b' };
 
-        public void Callback(char key)
-        {
-            SignalUtility.Singleton.InvokeInteruptSignal();
-        }
+        public void Callback(char key) => SignalUtility.InvokeInteruptSignal();
     }
 }

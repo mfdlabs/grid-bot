@@ -3,5 +3,5 @@
 namespace MFDLabs.Users.Client.Models.WebAPI
 {
     [DataContract]
-    public class ApiEmptyResponseModel { }
+    public abstract class ApiEmptyResponseModel { }
 }

@@ -6,6 +6,7 @@ using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
+using MFDLabs.FileSystem;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
 using MFDLabs.Text;
@@ -18,119 +19,110 @@ namespace MFDLabs.Logging
     public sealed class SystemLogger : SingletonBase<SystemLogger>, ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _localIp = NetworkingGlobal.Singleton.GetLocalIP();
+        private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineId = SystemGlobal.Singleton.GetMachineID();
+        private static readonly string MachineId = SystemGlobal.GetMachineId();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineHost = SystemGlobal.Singleton.GetMachineHost();
+        private static readonly string MachineHost = SystemGlobal.GetMachineHost();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _fileName =
+        private static readonly string FileBasePath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string FileName =
 #if DEBUG
-                        "\\dev_log_" +
-#else
-                        "\\log_" +
+                        "dev_" +
 #endif
-                        $"{DateTimeGlobal.Singleton.GetUtcNowAsISO().MakeFileSafeString()}-{SystemGlobal.Singleton.CurrentProcess.Id:X}.log";
+                        $"{SystemGlobal.AssemblyVersion}_{DateTimeGlobal.GetFileSafeUtcNowAsIso()}_{SystemGlobal.CurrentProcess.Id:X}_last.log";
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private FileSystemHelper.LockedFileStream _lockedFileStream;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly object _logSync = new object();
+        private static readonly object LogSync = new();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static bool _CanLog = true;
+        private static bool _canLog = true;
 
 
         public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
 
-        [DebuggerHidden]
-        public bool LogThreadID { get; set; } = false;
+        [DebuggerHidden] public bool LogThreadId { get; set; } = false;
 
         [DebuggerStepThrough]
-        private string ConstructLoggerMessageForLocalLogCache(string logType, string format, params object[] args)
+        private static string ConstructLoggerMessageForLocalLogCache(string logType, string format, params object[] args)
         {
-            var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
-            var countNCharsToReplace = 4 - threadID.Length;
+            var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+            var countNCharsToReplace = 4 - threadId.Length;
 
-            var internalMessage = string.Format(
-                "[{0}][{1}][{2}][{3}][{4}-{5}][{6}][{7}][{8}][{9}][{10}][{11}][{12}][{13}] {14}\n",
-                DateTimeGlobal.Singleton.GetUtcNowAsISO(),
-                SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
-                threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left),
-                LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"),
-                SystemGlobal.Singleton.CurrentPlatform,
-                SystemGlobal.Singleton.CurrentDeviceArch.ToLower(),
-                SystemGlobal.Singleton.Version,
-                SystemGlobal.Singleton.AssemblyVersion,
+            var internalMessage = 
+                $"[{DateTimeGlobal.GetUtcNowAsIso()}]" +
+                $"[{SystemGlobal.CurrentProcess.Id:x}]" +
+                $"[{threadId.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left)}]" +
+                $"[{LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds:f7}]" +
+                $"[{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}]" +
+                $"[{SystemGlobal.Version}][{SystemGlobal.AssemblyVersion}]" +
 #if DEBUG
-                "Debug",
+                "[Debug]" +
 #else
-                "Release",
+                "[Release]" +
 #endif
-                _localIp,
-                _machineId,
-                _machineHost,
-                global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
-                logType.ToUpper(),
-                format
-            );
+                $"[{LocalIp}]" +
+                $"[{MachineId}]" +
+                $"[{MachineHost}]" +
+                $"[{(global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName)}]" +
+                $"[{logType.ToUpper()}] {format}\n";
 
-            if (args != null && args.Length > 0)
-                return string.Format(internalMessage, args);
-
-            return internalMessage;
+            return args is {Length: > 0} ? string.Format(internalMessage, args) : internalMessage;
         }
 
         [DebuggerStepThrough]
         private void LogLocally(LogLevel level, string logType, string format, params object[] args)
         {
-            if (_CanLog)
-            {
-                if (level <= MaxLogLevel())
-                {
-                    var str = ConstructLoggerMessageForLocalLogCache(logType, format, args);
-                    var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLABS\\Logs";
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            
+            _lockedFileStream ??= new(Path.Combine(FileBasePath, FileName));
+            
+            var str = ConstructLoggerMessageForLocalLogCache(logType, format, args);
 
-                    if (!Directory.Exists(dirName + "\\..\\"))
-                        Directory.CreateDirectory(dirName + "\\..\\");
-                    if (!Directory.Exists(dirName))
-                        Directory.CreateDirectory(dirName);
-                    try { File.AppendAllText(dirName + _fileName, str); } catch { }
-                }
+            try { _lockedFileStream.AppendText(str); }
+            catch
+            {
+                // ignored
             }
         }
 
         [DebuggerStepThrough]
-        public void TryClearLocalLog(bool overrideENV = false, bool wasForGlobalEventLifeTimeClosure = false)
+        public void TryClearLocalLog(bool overrideEnv = false, bool wasForGlobalEventLifeTimeClosure = false)
         {
-            if (_CanLog)
+            if (!_canLog) return;
+            
+            Log("Try clear local logs...");
+
+            if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
             {
-                Log("Try clear local logs...");
-
-                if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
+                if (overrideEnv)
                 {
-                    if (overrideENV)
-                    {
-                        Warning("Overriding global config when clearing logs.");
-                    }
-                    else
-                    {
-                        Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
-                        _CanLog = wasForGlobalEventLifeTimeClosure != true;
-                        return;
-                    }
+                    Warning("Overriding global config when clearing logs.");
                 }
-
-                Log("Clearing LocalLog...");
-
-                var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLabs\\Logs";
-
-                _CanLog = wasForGlobalEventLifeTimeClosure != true;
-
-                if (Directory.Exists(dirName))
+                else
                 {
-                    Directory.Delete(dirName, true);
+                    Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
+                    _canLog = wasForGlobalEventLifeTimeClosure != true;
                     return;
                 }
             }
+
+            Log("Clearing LocalLog...");
+            
+            _lockedFileStream.Dispose();
+            _lockedFileStream = null;
+
+            _canLog = wasForGlobalEventLifeTimeClosure != true;
+
+            if (!Directory.Exists(FileBasePath)) return;
+            Directory.Delete(FileBasePath, true);
         }
 
         [DebuggerStepThrough]
@@ -255,35 +247,35 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format, params object[] args)
         {
-            if (_CanLog)
+            if (_canLog)
             {
                 if (level <= MaxLogLevel())
                 {
                     // A lock is required here to truly make it thread safe.
-                    lock (_logSync)
+                    lock (LogSync)
                     {
-                        var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
-                        var countNCharsToReplace = 4 - threadID.Length;
+                        var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+                        var countNCharsToReplace = 4 - threadId.Length;
 
-                        ConsoleGlobal.Singleton.WriteContentStr(DateTimeGlobal.Singleton.GetUtcNowAsISO());
-                        ConsoleGlobal.Singleton.WriteContentStr(LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"));
-                        ConsoleGlobal.Singleton.WriteContentStr(threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left));
-                        ConsoleGlobal.Singleton.WriteContentStr($"{SystemGlobal.Singleton.CurrentPlatform}-{SystemGlobal.Singleton.CurrentDeviceArch.ToLower()}");
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.Version);
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.AssemblyVersion);
+                        ConsoleGlobal.WriteContentStr(DateTimeGlobal.GetUtcNowAsIso());
+                        ConsoleGlobal.WriteContentStr(LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.CurrentProcess.Id.ToString("x"));
+                        ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left));
+                        ConsoleGlobal.WriteContentStr($"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.Version);
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.AssemblyVersion);
 #if DEBUG
-                        ConsoleGlobal.Singleton.WriteContentStr("Debug");
+                        ConsoleGlobal.WriteContentStr("Debug");
 #else
-                        ConsoleGlobal.Singleton.WriteContentStr("Release");
+                        ConsoleGlobal.WriteContentStr("Release");
 #endif
-                        ConsoleGlobal.Singleton.WriteContentStr(_localIp);
-                        ConsoleGlobal.Singleton.WriteContentStr(_machineId);
-                        ConsoleGlobal.Singleton.WriteContentStr(_machineHost);
-                        ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
-                        ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
-                        var message = args != null && args.Length > 0 ? string.Format($" {format}\n", args) : $" {format}\n";
-                        ConsoleGlobal.Singleton.WriteColoredContent(color, message);
+                        ConsoleGlobal.WriteContentStr(LocalIp);
+                        ConsoleGlobal.WriteContentStr(MachineId);
+                        ConsoleGlobal.WriteContentStr(MachineHost);
+                        ConsoleGlobal.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                        ConsoleGlobal.WriteContentStr(color, logType.ToUpper());
+                        var message = args is {Length: > 0} ? string.Format($" {format}\n", args) : $" {format}\n";
+                        ConsoleGlobal.WriteColoredContent(color, message);
                     }
                 }
             }

@@ -9,8 +9,10 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class OpenGridServer : IStateSpecificCommandHandler
     {
         public string CommandName => "Open Grid Server";
-        public string CommandDescription => $"Attempts to open the grid server via '{MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerDeployerExecutableName}', if the deployer fails it will return info on why it failed.";
-        public string[] CommandAliases => new string[] { "ogsrv", "opengridserver" };
+        public string CommandDescription => $"Attempts to open the grid server via " +
+                                            $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerDeployerExecutableName}', " +
+                                            $"if the deployer fails it will return info on why it failed.";
+        public string[] CommandAliases => new[] { "ogsrv", "opengridserver" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -24,7 +26,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var tto = SystemUtility.Singleton.OpenGridServerSafe().Item1;
+            var tto = SystemUtility.OpenGridServerSafe().Item1;
 
             await message.ReplyAsync($"Successfully opened grid server in '{tto.TotalSeconds}' seconds!");
         }

@@ -11,8 +11,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class EnableCommand : IStateSpecificCommandHandler
     {
         public string CommandName => "Enabled Bot Command";
-        public string CommandDescription => $"Tries to enable a command from the CommandRegistry\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}enable commandName.";
-        public string[] CommandAliases => new string[] { "enable" };
+        public string CommandDescription => $"Tries to enable a command from the CommandRegistry\nLayout:" +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}enable commandName.";
+        public string[] CommandAliases => new[] { "enable" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -28,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            if (!CommandRegistry.Singleton.SetIsEnabled(commandName, true))
+            if (!CommandRegistry.SetIsEnabled(commandName, true))
             {
                 await message.ReplyAsync($"The command by the nameof '{commandName}' was not found.");
                 return;

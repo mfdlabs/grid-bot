@@ -6,16 +6,16 @@ using MFDLabs.Pipeline;
 
 namespace MFDLabs.Http.Client
 {
-    public class HttpClient : IHttpClient, IDisposable
+    public class HttpClient : IHttpClient
     {
         internal CookieContainer CookieContainer { get; }
-        public IExecutionPlan<IHttpRequest, IHttpResponse> HttpExecutionPlan { get; internal set; }
+        public IExecutionPlan<IHttpRequest, IHttpResponse> HttpExecutionPlan { get; }
 
         public HttpClient(CookieContainer cookieContainer = null, IHttpClientSettings httpClientSettings = null, IHttpMessageHandlerBuilder httpMessageHandlerBuilder = null)
         {
-            cookieContainer = cookieContainer ?? new CookieContainer();
-            httpClientSettings = httpClientSettings ?? new DefaultHttpClientSettings();
-            httpMessageHandlerBuilder = httpMessageHandlerBuilder ?? new DefaultHttpMessageHandlerBuilder();
+            cookieContainer ??= new CookieContainer();
+            httpClientSettings ??= new DefaultHttpClientSettings();
+            httpMessageHandlerBuilder ??= new DefaultHttpMessageHandlerBuilder();
             var plan = new ExecutionPlan<IHttpRequest, IHttpResponse>();
             plan.AppendHandler(new SendHttpRequestHandler(cookieContainer, httpClientSettings, httpMessageHandlerBuilder));
             CookieContainer = cookieContainer;
@@ -32,7 +32,7 @@ namespace MFDLabs.Http.Client
             if (request == null) throw new ArgumentNullException(nameof(request));
             return HttpExecutionPlan.ExecuteAsync(request, cancellationToken);
         }
-        public void Dispose()
-        { }
+
+        public void Dispose() => GC.SuppressFinalize(this);
     }
 }

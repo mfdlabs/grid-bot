@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Restart Bot Instance";
         public string CommandDescription => "Restarts the bot instance via invoking a SIGUSR2 event.";
-        public string[] CommandAliases => new string[] { "re", "restart" };
+        public string[] CommandAliases => new[] { "re", "restart" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -20,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             await message.ReplyAsync("restarting bot and event lifetime.");
 
-            SignalUtility.Singleton.InvokeUserSignal2(false);
+            SignalUtility.InvokeUserSignal2();
         }
     }
 }

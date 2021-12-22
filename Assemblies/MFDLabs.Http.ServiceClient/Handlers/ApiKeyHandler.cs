@@ -9,8 +9,8 @@ namespace MFDLabs.Http.ServiceClient
     {
         public ApiKeyHandler(Func<string> apiKeyGetter, Func<bool> apiKeyViaHeaderEnabledGetter)
         {
-            _GetApiKey = apiKeyGetter ?? throw new ArgumentNullException(nameof(apiKeyGetter));
-            _ApiKeyViaHeaderEnabled = apiKeyViaHeaderEnabledGetter ?? throw new ArgumentNullException(nameof(apiKeyViaHeaderEnabledGetter));
+            _getApiKey = apiKeyGetter ?? throw new ArgumentNullException(nameof(apiKeyGetter));
+            _apiKeyViaHeaderEnabled = apiKeyViaHeaderEnabledGetter ?? throw new ArgumentNullException(nameof(apiKeyViaHeaderEnabledGetter));
         }
 
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
@@ -25,24 +25,24 @@ namespace MFDLabs.Http.ServiceClient
         }
         private void AddApiKey(IHttpRequest request)
         {
-            if (_ApiKeyViaHeaderEnabled())
+            if (_apiKeyViaHeaderEnabled())
             {
-                request.Headers.AddOrUpdate(_ApiKeyHeaderName, _GetApiKey());
+                request.Headers.AddOrUpdate(ApiKeyHeaderName, _getApiKey());
                 return;
             }
             request.Url = AppendApiKey(request.Url);
         }
         private Uri AppendApiKey(Uri url)
         {
-            var apiKeyQuery = $"{_ApiKeyQueryParameterName}={_GetApiKey()}";
+            var apiKeyQuery = $"{ApiKeyQueryParameterName}={_getApiKey()}";
             if (url.AbsoluteUri.Contains(apiKeyQuery)) return url;
             if (url.AbsoluteUri.Contains("?")) return new Uri($"{url.AbsoluteUri}&{apiKeyQuery}");
             return new Uri($"{url.AbsoluteUri}?{apiKeyQuery}");
         }
 
-        private const string _ApiKeyQueryParameterName = "apiKey";
-        private const string _ApiKeyHeaderName = "Roblox-Api-Key";
-        private readonly Func<string> _GetApiKey;
-        private readonly Func<bool> _ApiKeyViaHeaderEnabled;
+        private const string ApiKeyQueryParameterName = "apiKey";
+        private const string ApiKeyHeaderName = "Roblox-Api-Key";
+        private readonly Func<string> _getApiKey;
+        private readonly Func<bool> _apiKeyViaHeaderEnabled;
     }
 }

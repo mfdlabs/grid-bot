@@ -16,8 +16,8 @@ namespace MFDLabs.Google.Analytics.Client
     {
         internal FormDataRequestSender(IHttpClient httpClient, IHttpRequestBuilderSettings settings)
         {
-            _client = httpClient ?? throw new ArgumentNullException("httpClient");
-            _builderSettings = settings ?? throw new ArgumentNullException("settings");
+            _client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _builderSettings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
         public void SendRequest(HttpMethod method, string path, IEnumerable<(string, string)> formParameters = null)
@@ -25,6 +25,7 @@ namespace MFDLabs.Google.Analytics.Client
             ValidatePath(path);
 
             var request = new HttpRequest(method, CreateUriBuilder(path).Uri);
+            
             if (formParameters != null)
             {
                 request.Body = new ByteArrayContent(Encoding.UTF8.GetBytes(BuildBody(formParameters)));
@@ -34,61 +35,58 @@ namespace MFDLabs.Google.Analytics.Client
             _client.Send(request);
         }
 
-        public Task SendRequestAsync(HttpMethod method, string path, CancellationToken cancellationToken, IEnumerable<(string, string)> formParameters = null)
+        public async Task<IHttpResponse> SendRequestAsync(HttpMethod method,
+            string path,
+            CancellationToken cancellationToken,
+            IEnumerable<(string, string)> formParameters = null)
         {
             ValidatePath(path);
 
             var request = new HttpRequest(method, CreateUriBuilder(path).Uri);
-            if (formParameters != null)
-            {
-                request.Body = new ByteArrayContent(Encoding.UTF8.GetBytes(BuildBody(formParameters)));
-                request.Headers.ContentType = "*/*";
-            }
+            
+            if (formParameters == null) return await _client.SendAsync(request, cancellationToken);
+            
+            request.Body = new ByteArrayContent(Encoding.UTF8.GetBytes(BuildBody(formParameters)));
+            request.Headers.ContentType = "*/*";
 
-            return _client.SendAsync(request, cancellationToken);
+            return await _client.SendAsync(request, cancellationToken);
         }
 
-        private UriBuilder CreateUriBuilder(string path)
-        {
-            var builder = new UriBuilder(_builderSettings.Endpoint)
+        private UriBuilder CreateUriBuilder(string path) =>
+            new(_builderSettings.Endpoint)
             {
                 Path = path
             };
-            return builder;
-        }
 
         private string BuildBody(IEnumerable<(string, string)> formParameters)
         {
             var builder = new StringBuilder();
             foreach (var (key, value) in formParameters)
             {
-                if (key.IsNullOrWhiteSpace())
-                {
-                    throw new ArgumentException("Query string parameter key cannot be null or whitespace", "queryStringParameters");
-                }
-                builder.Append("&");
+                if (key.IsNullOrWhiteSpace()) 
+                    throw new ArgumentException("Query string parameter key cannot be null or whitespace",
+                        nameof(formParameters));
+                builder.Append('&');
                 if (_builderSettings.EncodeQueryParametersEnabled)
                 {
                     builder.Append(Uri.EscapeDataString(key));
-                    builder.Append("=");
+                    builder.Append('=');
                     builder.Append(Uri.EscapeDataString(value ?? string.Empty));
                 }
                 else
                 {
                     builder.Append(key);
-                    builder.Append("=");
+                    builder.Append('=');
                     builder.Append(value ?? string.Empty);
                 }
             }
             return builder.ToString();
         }
 
-        private void ValidatePath(string path)
+        private static void ValidatePath(string path)
         {
-            if (path.IsNullOrWhiteSpace())
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", "path");
-            }
+            if (path.IsNullOrWhiteSpace()) 
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(path));
         }
 
         private readonly IHttpClient _client;

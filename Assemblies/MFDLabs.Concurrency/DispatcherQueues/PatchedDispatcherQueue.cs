@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Ccr.Core;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -8,8 +9,8 @@ namespace MFDLabs.Concurrency
     /// </summary>
     public class PatchedDispatcherQueue : DispatcherQueue
     {
-        private static FieldInfo _Next = typeof(TaskCommon).GetField("_next", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo _Previous = typeof(TaskCommon).GetField("_previous", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo Next = typeof(TaskCommon).GetField("_next", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo Previous = typeof(TaskCommon).GetField("_previous", BindingFlags.Instance | BindingFlags.NonPublic);
 
         /// <inheritdoc/>
         public PatchedDispatcherQueue(string name, Dispatcher dispatcher)
@@ -20,19 +21,16 @@ namespace MFDLabs.Concurrency
         /// <inheritdoc/>
         public override bool TryDequeue(out ITask task)
         {
-            bool result = base.TryDequeue(out task);
+            var result = base.TryDequeue(out task);
 
-            if (result)
-            {
-                var taskCommon = task as TaskCommon;
-                if (taskCommon != null)
-                {
-                    _Next.SetValue(taskCommon, null);
-                    _Previous.SetValue(taskCommon, null);
-                }
-            }
+            if (!result) return false;
 
-            return result;
+            if (!(task is TaskCommon taskCommon)) return true;
+            
+            Next.SetValue(taskCommon, null);
+            Previous.SetValue(taskCommon, null);
+
+            return true;
         }
     }
 }

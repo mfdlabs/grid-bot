@@ -10,8 +10,10 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class Exit : IStateSpecificCommandHandler
     {
         public string CommandName => "Exit Exclusive";
-        public string CommandDescription => $"If the setting 'KillCommandShouldForce' is enabled, it will invoke the '{typeof(SuicideHook).FullName}' to force a shutdown (No cleanup).";
-        public string[] CommandAliases => new string[] { "911", "panic" };
+        public string CommandDescription => $"If the setting 'KillCommandShouldForce' is enabled, " +
+                                            $"it will invoke the '{typeof(SuicideHook).FullName}' to force " +
+                                            $"a shutdown (No cleanup).";
+        public string[] CommandAliases => new[] { "911", "panic" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -27,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            SignalUtility.Singleton.InvokeInteruptSignal();
+            SignalUtility.InvokeInteruptSignal();
         }
     }
 }

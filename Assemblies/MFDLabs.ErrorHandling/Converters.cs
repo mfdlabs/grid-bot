@@ -6,11 +6,9 @@ namespace MFDLabs
 {
     public class Converters
     {
-        public static List<T> EnumToList<T>()
-        {
-            return Enum.GetValues(typeof(T))
+        public static List<T> EnumToList<T>() 
+            => Enum.GetValues(typeof(T))
                 .Cast<T>()
                 .ToList();
-        }
     }
 }

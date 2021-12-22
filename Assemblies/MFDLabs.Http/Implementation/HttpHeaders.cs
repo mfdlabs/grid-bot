@@ -9,7 +9,7 @@ namespace MFDLabs.Http
 {
     public abstract class HttpHeaders : IHttpHeaders
     {
-        public IReadOnlyList<string> Keys
+        public IEnumerable<string> Keys
             => (from headers in Headers
                 select headers.Key).ToList();
         public string ContentType
@@ -26,14 +26,11 @@ namespace MFDLabs.Http
             }
         }
 
-        public HttpHeaders(System.Net.Http.Headers.HttpHeaders httpHeaders, HttpContentHeaders contentHeaders)
+        public HttpHeaders(System.Net.Http.Headers.HttpHeaders httpHeaders, HttpContentHeaders contentHeaders = null)
         {
-            Headers = httpHeaders ?? throw new ArgumentNullException("httpHeaders");
-            ContentHeaders = (contentHeaders ?? CreateContentHeaders());
+            Headers = httpHeaders ?? throw new ArgumentNullException(nameof(httpHeaders));
+            ContentHeaders = contentHeaders ?? CreateContentHeaders();
         }
-        public HttpHeaders(System.Net.Http.Headers.HttpHeaders httpHeaders)
-            : this(httpHeaders, null)
-        { }
 
         public void Add(string name, string value)
         {
@@ -49,15 +46,14 @@ namespace MFDLabs.Http
         public ICollection<string> Get(string name)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentException("name cannot be null or whitespace.", nameof(name));
-            if (!Keys.Contains(name, StringComparer.OrdinalIgnoreCase)) return new string[0];
-            return Headers.GetValues(name).ToArray();
+            return !Keys.Contains(name, StringComparer.OrdinalIgnoreCase) ? Array.Empty<string>() : Headers.GetValues(name).ToArray();
         }
         public bool Remove(string name)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentException("name cannot be null or whitespace.", nameof(name));
             return Headers.Remove(name);
         }
-        private HttpContentHeaders CreateContentHeaders() => new ByteArrayContent(new byte[0]).Headers;
+        private static HttpContentHeaders CreateContentHeaders() => new ByteArrayContent(Array.Empty<byte>()).Headers;
 
         protected readonly System.Net.Http.Headers.HttpHeaders Headers;
         protected readonly HttpContentHeaders ContentHeaders;

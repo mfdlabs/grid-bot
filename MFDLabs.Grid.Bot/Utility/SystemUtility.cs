@@ -1,28 +1,35 @@
 ﻿using System;
 using System.Diagnostics;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Logging;
 
+// ReSharper disable UnusedTupleComponentInReturnValue
+
 namespace MFDLabs.Grid.Bot.Utility
 {
-    public sealed class SystemUtility : SingletonBase<SystemUtility>
+    public static class SystemUtility
     {
-        private static readonly object _GridLock = new object();
+        private static readonly object GridLock = new object();
 
-        private bool _runningOpenJob = false;
+        private static bool _runningOpenJob;
 
-        public (TimeSpan, int) OpenGridServer(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
+        private static (TimeSpan, int) OpenGridServer(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
         {
             var sw = Stopwatch.StartNew();
             if (onlyWebServer)
                 SystemLogger.Singleton.Log("Try open Web Server");
-            if (onlyGridServer)
-                SystemLogger.Singleton.Log("Try open Grid Server");
-            if (!onlyGridServer && !onlyWebServer)
-                SystemLogger.Singleton.Log("Try open Grid and Web Server");
-            var procId = 0;
+            switch (onlyGridServer)
+            {
+                case true:
+                    SystemLogger.Singleton.Log("Try open Grid Server");
+                    break;
+                case false when !onlyWebServer:
+                    SystemLogger.Singleton.Log("Try open Grid and Web Server");
+                    break;
+            }
+
+            int procId;
             try
             {
                 var psi = new ProcessStartInfo
@@ -31,7 +38,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 };
 
-                if (SystemGlobal.Singleton.ContextIsAdministrator())
+                if (SystemGlobal.ContextIsAdministrator())
                 {
                     psi.Verb = "runas";
                 }
@@ -66,7 +73,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 proc.Start();
                 proc.WaitForExit();
 
-                GridDeployerUtility.Singleton.CheckHResult(proc.ExitCode);
+                GridDeployerUtility.CheckHResult(proc.ExitCode);
 
                 procId = proc.ExitCode;
 
@@ -75,10 +82,6 @@ namespace MFDLabs.Grid.Bot.Utility
                     onlyWebServer ? "Web" : onlyGridServer ? "Grid" : "Web and Grid",
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerDeployerExecutableName
                 );
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -93,17 +96,13 @@ namespace MFDLabs.Grid.Bot.Utility
             return (sw.Elapsed, onlyGridServer ? procId : 0);
         }
 
-        public (TimeSpan, int) OpenGridServerSafe(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
+        public static (TimeSpan, int) OpenGridServerSafe(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
         {
-            if (!_runningOpenJob)
-            {
-                _runningOpenJob = true;
-                lock (_GridLock)
-                {
-                    return OpenGridServer(onlyWebServer, onlyGridServer, gridServerPort);
-                }
-            }
-            return (TimeSpan.Zero, 0);
+            if (_runningOpenJob) return (TimeSpan.Zero, 0);
+            
+            _runningOpenJob = true;
+            
+            lock (GridLock) return OpenGridServer(onlyWebServer, onlyGridServer, gridServerPort);
         }
 
         /// <summary>
@@ -111,31 +110,22 @@ namespace MFDLabs.Grid.Bot.Utility
         /// </summary>
         /// <param name="port">Port</param>
         /// well fuck the tcp port check because it is slower than jakob getting out of the toilet
-        public (TimeSpan, int) OpenGridServerInstance(int port = 0, bool @unsafe = false)
+        public static (TimeSpan, int) OpenGridServerInstance(int port = 0, bool @unsafe = false)
         {
             // this is so fucking slow, please just use win32 native, don't hook fucking netstat
             //if (!ProcessHelper.GetProcessByTcpPortAndName(_GridServerSignature, port == 0 ? 53640 : port, out var process))
-            if (!@unsafe)
-                return OpenGridServerSafe(false, true, port);
-            return OpenGridServer(false, true, port);
+            return !@unsafe ? OpenGridServerSafe(false, true, port) : OpenGridServer(false, true, port);
             //return (TimeSpan.Zero, process);
         }
 
         /// <summary>
         /// Safe open of web server
         /// </summary>
-        public TimeSpan OpenWebServerIfNotOpen()
-        {
-            if (!WebServerIsAvailable())
-            {
-                return OpenGridServerSafe(true).Item1;
-            }
-            return TimeSpan.Zero;
-        }
+        public static TimeSpan OpenWebServerIfNotOpen() => !WebServerIsAvailable() ? OpenGridServerSafe(true).Item1 : TimeSpan.Zero;
 
-        public bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(_GlobalServerJobSignature, out _);
+        public static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _);
 
-        public void KillAllProcessByName(string name)
+        public static void KillAllProcessByName(string name)
         {
             var psi = new ProcessStartInfo
             {
@@ -150,7 +140,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
             }
 
-            if (SystemGlobal.Singleton.ContextIsAdministrator())
+            if (SystemGlobal.ContextIsAdministrator())
             {
                 psi.Verb = "runas";
             }
@@ -164,7 +154,7 @@ namespace MFDLabs.Grid.Bot.Utility
             proc.WaitForExit();
         }
 
-        public void KillProcessByPID(int pid)
+        public static void KillProcessByPid(int pid)
         {
             var psi = new ProcessStartInfo
             {
@@ -179,7 +169,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
             }
 
-            if (SystemGlobal.Singleton.ContextIsAdministrator())
+            if (SystemGlobal.ContextIsAdministrator())
             {
                 psi.Verb = "runas";
             }
@@ -193,7 +183,7 @@ namespace MFDLabs.Grid.Bot.Utility
             proc.WaitForExit();
         }
 
-        public bool KillProcessByPIDSafe(int pid)
+        public static bool KillProcessByPidSafe(int pid)
         {
             if (!ProcessHelper.GetProcessById(pid, out var pr))
             {
@@ -201,19 +191,19 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator() && pr.IsElevated())
+            if (!SystemGlobal.ContextIsAdministrator() && pr.IsElevated())
             {
                 SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", pid);
                 return false;
             }
 
-            KillProcessByPID(pid);
+            KillProcessByPid(pid);
 
             SystemLogger.Singleton.Info("Successfully closed process '{0}'.", pid);
             return true;
         }
 
-        public bool KillAllProcessByNameSafe(string name)
+        public static bool KillAllProcessByNameSafe(string name)
         {
             if (!ProcessHelper.GetProcessByName(name.ToLower().Replace(".exe", ""), out var pr))
             {
@@ -221,7 +211,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator() && pr.IsElevated())
+            if (!SystemGlobal.ContextIsAdministrator() && pr.IsElevated())
             {
                 SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
                 return false;
@@ -236,24 +226,24 @@ namespace MFDLabs.Grid.Bot.Utility
         /// <summary>
         /// "Safe" because it checks if the process exists first.
         /// </summary>
-        public bool KillServerSafe()
+        public static bool KillServerSafe()
         {
             SystemLogger.Singleton.Log("Trying to close Backend server.");
 
-            if (!ProcessHelper.GetProcessByWindowTitle(_GlobalServerJobSignature, out var server))
+            if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server))
             {
                 SystemLogger.Singleton.Warning("Backend server is not running, ignoring...");
                 return false;
             }
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator() && server.IsElevated())
+            if (!SystemGlobal.ContextIsAdministrator() && server.IsElevated())
             {
                 // This is quite useless I think
                 SystemLogger.Singleton.Warning("Backend server is running on a higher context than the current process, ignoring...");
                 return false;
             }
 
-            KillProcessByPIDSafe(server.Id);
+            KillProcessByPidSafe(server.Id);
 
             SystemLogger.Singleton.Info("Successfully closed backend Server.");
             return true;
@@ -262,24 +252,24 @@ namespace MFDLabs.Grid.Bot.Utility
         /// <summary>
         /// "Safe" because it checks if the process exists first.
         /// </summary>
-        public bool KillAllDeployersSafe()
+        public static bool KillAllDeployersSafe()
         {
             SystemLogger.Singleton.Log("Trying to close all open grid deployer instances.");
 
-            if (!ProcessHelper.GetProcessByWindowTitle(_GridDeployerSignature, out var deployer))
+            if (!ProcessHelper.GetProcessByWindowTitle(GridDeployerSignature, out var deployer))
             {
                 SystemLogger.Singleton.Warning("There are no grid deployers running, ignoring...");
                 return false;
             }
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator() && deployer.IsElevated())
+            if (!SystemGlobal.ContextIsAdministrator() && deployer.IsElevated())
             {
                 // This is quite useless I think
                 SystemLogger.Singleton.Warning("The grid deployer we caught is running on a different context than us, ignoring...");
                 return false;
             }
 
-            KillAllProcessByNameSafe(_GridDeployerSignatureExe);
+            KillAllProcessByNameSafe(GridDeployerSignatureExe);
 
             SystemLogger.Singleton.Info("Successfully closed all grid deployer instances.");
             return true;
@@ -288,33 +278,33 @@ namespace MFDLabs.Grid.Bot.Utility
         /// <summary>
         /// "Safe" because it checks if the process exists first.
         /// </summary>
-        public bool KillAllGridServersSafe()
+        public static bool KillAllGridServersSafe()
         {
             SystemLogger.Singleton.Log("Trying to close all open grid server instances.");
 
-            if (!ProcessHelper.GetProcessByName(_GridServerSignature, out var server))
+            if (!ProcessHelper.GetProcessByName(GridServerSignature, out var server))
             {
                 SystemLogger.Singleton.Warning("There are no grid servers running, ignoring...");
                 return false;
             }
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator() && server.IsElevated())
+            if (!SystemGlobal.ContextIsAdministrator() && server.IsElevated())
             {
                 SystemLogger.Singleton.Warning("The grid server we caught is running on a different context than us, ignoring...");
                 return false;
             }
 
-            KillAllProcessByNameSafe(_GridServerSignatureExe);
+            KillAllProcessByNameSafe(GridServerSignatureExe);
 
             SystemLogger.Singleton.Info("Successfully closed all grid server instances.");
 
             return true;
         }
 
-        internal const string _GridServerSignature = "rccservice";
-        internal const string _GridServerSignatureExe = "rccservice.exe";
-        internal const string _GridDeployerSignature = "mfdlabs.grid.deployer";
-        internal const string _GridDeployerSignatureExe = "mfdlabs.grid.deployer.exe";
-        internal const string _GlobalServerJobSignature = "npm run Start-Main-Job";
+        private const string GridServerSignature = "rccservice";
+        private const string GridServerSignatureExe = "rccservice.exe";
+        private const string GridDeployerSignature = "mfdlabs.grid.deployer";
+        private const string GridDeployerSignatureExe = "mfdlabs.grid.deployer.exe";
+        private const string GlobalServerJobSignature = "npm run Start-Main-Job";
     }
 }

@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Get Grid Server Status";
         public string CommandDescription => "Attempts to get the grid server status via SoapUtility.";
-        public string[] CommandAliases => new string[] { "gs", "getstatus" };
+        public string[] CommandAliases => new[] { "gs", "getstatus" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

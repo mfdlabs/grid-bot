@@ -10,8 +10,10 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class BatchOpenGridServers : IStateSpecificCommandHandler
     {
         public string CommandName => "Batch Open Grid Servers";
-        public string CommandDescription => $"Attempts to batch open grid servers\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}batchinstance unsafe?=false count?=1";
-        public string[] CommandAliases => new string[] { "batch", "batchinstance" };
+        public string CommandDescription => $"Attempts to batch open grid servers\nLayout:" +
+                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}batchinstance " +
+                                            $"unsafe?=false count?=1";
+        public string[] CommandAliases => new[] { "batch", "batchinstance" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

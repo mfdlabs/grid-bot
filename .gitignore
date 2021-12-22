@@ -366,5 +366,5 @@ FodyWeavers.xsd
 Deploy/
 
 App.*.config
-App.*.config
 WtfIsThis.cs
+.idea/

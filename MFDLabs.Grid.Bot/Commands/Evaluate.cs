@@ -17,8 +17,10 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class Evaluate : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate CSharp";
-        public string CommandDescription => $"Attempts to evaluate the given C# with Roslyn\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}evaluate ...scriptContents.";
-        public string[] CommandAliases => new string[] { "eval", "evaluate" };
+        public string CommandDescription => "Attempts to evaluate the given C# with Roslyn\nLayout:" +
+                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}evaluate " +
+                                            "...scriptContents.";
+        public string[] CommandAliases => new[] { "eval", "evaluate" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -43,11 +45,9 @@ namespace MFDLabs.Grid.Bot.Commands
 
             scriptContents = scriptContents.EscapeQuotes().GetCodeBlockContents();
 
-            ScriptState<object> result;
-
             using (message.Channel.EnterTypingState())
             {
-
+                ScriptState<object> result;
                 try
                 {
                     // ref the current assembly
@@ -83,7 +83,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         return;
                     }
                     await message.ReplyAsync(
-                        result.ReturnValue == null ? "Executed script with no return!" : $"Executed script with return:",
+                        result.ReturnValue == null ? "Executed script with no return!" : "Executed script with return:",
                         embed: new EmbedBuilder()
                         .WithTitle("Return value")
                         .WithDescription($"```\n{result.ReturnValue}\n```")
@@ -96,17 +96,20 @@ namespace MFDLabs.Grid.Bot.Commands
             }
         }
 
-        private async Task HandleException(SocketMessage message, Exception ex)
+        private static async Task HandleException(SocketMessage message, Exception ex)
         {
-            await message.ReplyAsync($"An exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:");
-
             if (ex.Message.Length > EmbedBuilder.MaxDescriptionLength)
             {
-                await message.ReplyWithFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)), "eval-error.txt");
+                await message.ReplyWithFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)),
+                    "eval-error.txt",
+                    "An exception occurred when trying to execute the given C#, please review this error to see " +
+                    "if your input was malformed:");
                 return;
             }
 
             await message.ReplyAsync(
+                "An exception occurred when trying to execute the given C#, please review this error to see " +
+                "if your input was malformed:",
                 embed: new EmbedBuilder()
                 .WithColor(0xff, 0x00, 0x00)
                 .WithTitle("Execute exception.")

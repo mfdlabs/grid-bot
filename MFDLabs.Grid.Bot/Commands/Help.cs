@@ -11,8 +11,9 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Bot Help";
         public string CommandDescription => "Attempts to return an embed on a State Specific command by name, or all commands within the user's permission scope, " +
-            $"if the command doesn't exist and the setting 'IsAllowedToEchoBackNotFoundCommandException' is enabled it will tell you it doesn't exist\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}help commandName?";
-        public string[] CommandAliases => new string[] { "h", "help" };
+            $"if the command doesn't exist and the setting 'IsAllowedToEchoBackNotFoundCommandException' " +
+            $"is enabled it will tell you it doesn't exist\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}help commandName?";
+        public string[] CommandAliases => new[] { "h", "help" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
@@ -22,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (commandName != default)
             {
-                var embed = CommandRegistry.Singleton.ConstructHelpEmbedForSingleCommand(commandName, message.Author);
+                var embed = CommandRegistry.ConstructHelpEmbedForSingleCommand(commandName, message.Author);
 
                 if (embed == null)
                 {
@@ -37,7 +38,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var allCommandsEmbeds = CommandRegistry.Singleton.ConstructHelpEmbedForAllCommands(message.Author);
+            var allCommandsEmbeds = CommandRegistry.ConstructHelpEmbedForAllCommands(message.Author);
 
             var count = 0;
             foreach (var embed in allCommandsEmbeds) count += embed.Fields.Length;

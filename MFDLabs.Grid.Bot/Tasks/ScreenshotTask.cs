@@ -18,12 +18,12 @@ namespace MFDLabs.Grid.Bot.Tasks
 {
     internal sealed class ScreenshotTask : HoldsSocketMessagePortAsyncExpiringTaskThread<ScreenshotTask>
     {
-        public override string Name => "Screenshot Relay";
-        public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayActivationTimeout;
-        public override int PacketID => 2;
-        public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
+        protected override string Name => "Screenshot Relay";
+        protected override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayActivationTimeout;
+        protected override int PacketId => 2;
+        protected override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
 
-        public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExpiration;
+        protected override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayExpiration;
 
         /* Will execute in a different thread when dispatching response. */
         public override async Task<PluginResult> OnReceive(Packet<SocketMessage> packet)
@@ -34,17 +34,20 @@ namespace MFDLabs.Grid.Bot.Tasks
 
             if (packet.Item != null)
             {
-                if (packet.Item.Content.Contains("-test---test-123-okkkk") && packet.Item.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
+                if (packet.Item.Content.Contains("-test---test-123-okkkk") && packet.Item.Author.IsAdmin()) 
+                    throw new Exception("Test exception for auto handling on task threads.");
 
 
                 using (packet.Item.Channel.EnterTypingState())
                 {
-                    var tte = SystemUtility.Singleton.OpenGridServerSafe().Item1;
+                    var tte = SystemUtility.OpenGridServerSafe().Item1;
 
                     if (tte.TotalSeconds > 1.5)
                     {
                         // Wait for 1.25s so the grid server output can be populated.
-                        TaskHelper.SetTimeout(async () => await DispatchSocketMessage(packet), TimeSpan.FromMilliseconds(1250));
+                        // ReSharper disable once AsyncVoidLambda
+                        TaskHelper.SetTimeout(async () => await DispatchSocketMessage(packet),
+                            TimeSpan.FromMilliseconds(1250));
                     }
                     else
                     {
@@ -55,19 +58,20 @@ namespace MFDLabs.Grid.Bot.Tasks
             }
             else
             {
-                SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
-                return PluginResult.ContinueProcessing;
+                SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...",
+                    packet.Id,
+                    packet.SequenceId);
+                return global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem
+                    ? PluginResult.StopProcessingAndDeallocate
+                    : PluginResult.ContinueProcessing;
             }
 
         }
 
-        private async Task DispatchSocketMessage(IPacket<SocketMessage> packet)
+        private static async Task DispatchSocketMessage(IPacket<SocketMessage> packet)
         {
-            if (!TryExecuteScreenshotRelay())
-            {
+            if (!TryExecuteScreenshotRelay()) 
                 await packet.Item.ReplyAsync("An error occurred when invoking a screenshot relay request.");
-            }
 
             await packet.Item.Channel.SendFileAsync(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayOutputFilename
@@ -79,11 +83,14 @@ namespace MFDLabs.Grid.Bot.Tasks
                 {
                     File.Delete(global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotRelayOutputFilename);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }, TimeSpan.FromSeconds(2));
         }
 
-        private bool TryExecuteScreenshotRelay()
+        private static bool TryExecuteScreenshotRelay()
         {
             var sw = Stopwatch.StartNew();
             SystemLogger.Singleton.Log("Try screenshot Grid Server");
@@ -101,7 +108,7 @@ namespace MFDLabs.Grid.Bot.Tasks
                     psi.WindowStyle = ProcessWindowStyle.Hidden;
                 }
 
-                if (SystemGlobal.Singleton.ContextIsAdministrator())
+                if (SystemGlobal.ContextIsAdministrator())
                 {
                     psi.Verb = "runas";
                 }

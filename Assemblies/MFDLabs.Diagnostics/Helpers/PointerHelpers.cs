@@ -1,16 +1,12 @@
-﻿using MFDLabs.Abstractions;
-
-namespace MFDLabs.Diagnostics
+﻿namespace MFDLabs.Diagnostics
 {
-    public sealed unsafe class PointerHelpers : SingletonBase<PointerHelpers>
+    public static unsafe class PointerHelpers
     {
-        public T* ToPointer<T>(T u)
-            where T : unmanaged
-        {
-            return &u;
-        }
+        public static T* ToPointer<T>(T u)
+            where T : unmanaged =>
+            &u;
 
-        public T FromPointer<T>(T* r)
+        public static T FromPointer<T>(T* r)
             where T : unmanaged
         {
             return *r;

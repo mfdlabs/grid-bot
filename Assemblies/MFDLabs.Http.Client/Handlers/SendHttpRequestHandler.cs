@@ -12,25 +12,23 @@ using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Http.Client
 {
-    public class SendHttpRequestHandler : PipelineHandler<IHttpRequest, IHttpResponse>, IDisposable
+    public sealed class SendHttpRequestHandler : PipelineHandler<IHttpRequest, IHttpResponse>, IDisposable
     {
         public SendHttpRequestHandler(CookieContainer cookieContainer, IHttpClientSettings httpClientSettings, IHttpMessageHandlerBuilder httpMessageHandlerBuilder)
         {
-            _CookieContainer = cookieContainer ?? throw new ArgumentNullException(nameof(cookieContainer));
-            _HttpClientSettings = httpClientSettings ?? throw new ArgumentNullException(nameof(httpClientSettings));
-            _HttpMessageHandlerBuilder = httpMessageHandlerBuilder ?? throw new ArgumentNullException(nameof(httpMessageHandlerBuilder));
-            RefreshHttpClient(null);
+            _cookieContainer = cookieContainer ?? throw new ArgumentNullException(nameof(cookieContainer));
+            _httpClientSettings = httpClientSettings ?? throw new ArgumentNullException(nameof(httpClientSettings));
+            _httpMessageHandlerBuilder = httpMessageHandlerBuilder ?? throw new ArgumentNullException(nameof(httpMessageHandlerBuilder));
+            RefreshHttpClient();
         }
 
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
         {
             try
             {
-                using (var response = (HttpWebResponse)BuildHttpWebRequest(context.Input).GetResponse())
-                {
-                    context.Output = BuildHttpResponse(response);
-                    if (HandleCsrfAndReInvoke(context)) return;
-                }
+                using var response = (HttpWebResponse)BuildHttpWebRequest(context.Input).GetResponse();
+                context.Output = BuildHttpResponse(response);
+                if (HandleCsrfAndReInvoke(context)) return;
             }
             catch (WebException ex)
             {
@@ -50,7 +48,7 @@ namespace MFDLabs.Http.Client
                 cancellationTokenSource.CancelAfter(GetRequestTimeout(context.Input));
                 context.Output = await BuildHttpResponseAsync(
                     await SendAsync(
-                        _HttpClient,
+                        _httpClient,
                         BuildHttpRequestMessage(context.Input),
                         cancellationTokenSource.Token
                     )
@@ -61,22 +59,23 @@ namespace MFDLabs.Http.Client
             catch (TaskCanceledException innerException)
             {
                 if (!cancellationToken.IsCancellationRequested)
-                    throw new HttpException(_OperationTimeoutMessage, new WebException(_OperationTimeoutMessage, innerException, WebExceptionStatus.Timeout, null));
+                    throw new HttpException(OperationTimeoutMessage, new WebException(OperationTimeoutMessage, innerException, WebExceptionStatus.Timeout, null));
                 throw;
             }
-            catch (HttpRequestException requestException) { throw new HttpException(_UnexpectedErrorMessage, requestException); }
+            catch (HttpRequestException requestException) { throw new HttpException(UnexpectedErrorMessage, requestException); }
             await base.InvokeAsync(context, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
         }
-        internal HttpWebRequest BuildHttpWebRequest(IHttpRequest request)
+
+        private HttpWebRequest BuildHttpWebRequest(IHttpRequest request)
         {
             var webRequest = (HttpWebRequest)WebRequest.Create(request.Url);
             webRequest.Method = request.Method.ToString();
-            webRequest.CookieContainer = _CookieContainer;
-            webRequest.UserAgent = _HttpClientSettings.UserAgent;
-            webRequest.AllowAutoRedirect = (_HttpClientSettings.MaxRedirects > 0);
+            webRequest.CookieContainer = _cookieContainer;
+            webRequest.UserAgent = _httpClientSettings.UserAgent;
+            webRequest.AllowAutoRedirect = (_httpClientSettings.MaxRedirects > 0);
             var requestTimeout = GetRequestTimeout(request);
             if (requestTimeout > TimeSpan.Zero) webRequest.Timeout = (int)Math.Ceiling(requestTimeout.TotalMilliseconds);
-            if (webRequest.AllowAutoRedirect) webRequest.MaximumAutomaticRedirections = _HttpClientSettings.MaxRedirects;
+            if (webRequest.AllowAutoRedirect) webRequest.MaximumAutomaticRedirections = _httpClientSettings.MaxRedirects;
 
             foreach (var headerKey in request.Headers.Keys)
                 foreach (var headerValue in request.Headers.Get(headerKey))
@@ -92,13 +91,15 @@ namespace MFDLabs.Http.Client
                 content = request.Body;
             }
             else if (request.Method == HttpMethod.Post || request.Method == HttpMethod.Put || request.Method == HttpMethod.Patch)
-                content = _EmptyContent;
-            if (content != null)
-                using (var stream = webRequest.GetRequestStream())
-                    content.CopyToAsync(stream).Wait();
+                content = EmptyContent;
+
+            if (content == null) return webRequest;
+            using var stream = webRequest.GetRequestStream();
+            content.CopyToAsync(stream).Wait();
             return webRequest;
         }
-        internal HttpRequestMessage BuildHttpRequestMessage(IHttpRequest request)
+
+        private HttpRequestMessage BuildHttpRequestMessage(IHttpRequest request)
         {
             var webRequest = new HttpRequestMessage(new System.Net.Http.HttpMethod(request.Method.ToString().ToUpper()), request.Url);
             if (request.Body != null)
@@ -108,42 +109,43 @@ namespace MFDLabs.Http.Client
                     webRequest.Content.Headers.ContentType = new MediaTypeHeaderValue(request.Headers.ContentType);
             }
             else if (request.Method == HttpMethod.Post || request.Method == HttpMethod.Put || request.Method == HttpMethod.Patch)
-                webRequest.Content = _EmptyContent;
+                webRequest.Content = EmptyContent;
             foreach (var headerKey in request.Headers.Keys) 
                 webRequest.Headers.Add(headerKey, request.Headers.Get(headerKey));
-            if (!request.Headers.Keys.Contains(_UserAgentHeaderName) && !_HttpClientSettings.UserAgent.IsNullOrWhiteSpace()) 
-                webRequest.Headers.Add(_UserAgentHeaderName, _HttpClientSettings.UserAgent);
+            if (!request.Headers.Keys.Contains(UserAgentHeaderName) && !_httpClientSettings.UserAgent.IsNullOrWhiteSpace()) 
+                webRequest.Headers.Add(UserAgentHeaderName, _httpClientSettings.UserAgent);
             return webRequest;
         }
-        internal async Task<IHttpResponse> BuildHttpResponseAsync(HttpResponseMessage responseMessage)
+
+        private async Task<IHttpResponse> BuildHttpResponseAsync(HttpResponseMessage responseMessage)
         {
             var response = new HttpResponse
             {
                 StatusCode = responseMessage.StatusCode,
                 StatusText = responseMessage.ReasonPhrase,
                 Headers = new HttpResponseHeaders(responseMessage),
-                Url = responseMessage.RequestMessage.RequestUri
+                Url = responseMessage.RequestMessage?.RequestUri,
+                Body = await responseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false)
             };
-            response.Body = await responseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return response;
         }
-        internal IHttpResponse BuildHttpResponse(HttpWebResponse httpWebResponse)
+
+        private IHttpResponse BuildHttpResponse(HttpWebResponse httpWebResponse)
         {
-            byte[] body = new byte[0];
+            byte[] body;
             using (var stream = httpWebResponse.GetResponseStream())
-                if (stream != null)
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        stream.CopyTo(memoryStream);
-                        body = memoryStream.ToArray();
-                    }
+                using (var memoryStream = new MemoryStream())
+                {
+                    stream.CopyTo(memoryStream);
+                    body = memoryStream.ToArray();
+                }
 
             var headers = new HttpResponseHeaders();
             foreach (var headerKey in httpWebResponse.Headers.AllKeys)
             {
                 var headerCollection = httpWebResponse.Headers.GetValues(headerKey);
-                if (headerCollection != null)
-                    foreach (var headerValue in headerCollection) headers.Add(headerKey, headerValue);
+                if (headerCollection == null) continue;
+                foreach (var headerValue in headerCollection) headers.Add(headerKey, headerValue);
             }
             headers.ContentType = httpWebResponse.ContentType;
             return new HttpResponse
@@ -156,30 +158,31 @@ namespace MFDLabs.Http.Client
             };
         }
         [ExcludeFromCodeCoverage]
-        internal virtual async Task<HttpResponseMessage> SendAsync(System.Net.Http.HttpClient httpClient, HttpRequestMessage requestMessage, CancellationToken cancellationToken) 
-            => await httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
-        internal void RefreshHttpClient(string changedPropertyName)
+        private static async Task<HttpResponseMessage> SendAsync(System.Net.Http.HttpClient httpClient, HttpRequestMessage requestMessage, CancellationToken cancellationToken) 
+            => await httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+
+        private void RefreshHttpClient()
         {
-            var maxRedirectsReached = _HttpClientSettings.MaxRedirects > 0;
-            _HttpMessageHandlerBuilder.CookieContainer(_CookieContainer).AllowAutoRedirect(maxRedirectsReached);
-            if (maxRedirectsReached) _HttpMessageHandlerBuilder.MaxAutomaticRedirections(_HttpClientSettings.MaxRedirects);
-            var httpClient = new System.Net.Http.HttpClient(_HttpMessageHandlerBuilder.Build())
+            var maxRedirectsReached = _httpClientSettings.MaxRedirects > 0;
+            _httpMessageHandlerBuilder.CookieContainer(_cookieContainer).AllowAutoRedirect(maxRedirectsReached);
+            if (maxRedirectsReached) _httpMessageHandlerBuilder.MaxAutomaticRedirections(_httpClientSettings.MaxRedirects);
+            var httpClient = new System.Net.Http.HttpClient(_httpMessageHandlerBuilder.Build())
             {
-                Timeout = _MaxRequestTimeout
+                Timeout = MaxRequestTimeout
             };
-            _HttpClient = httpClient;
+            _httpClient = httpClient;
         }
         private TimeSpan GetRequestTimeout(IHttpRequest request)
         {
             if (request.Timeout > TimeSpan.Zero)
             {
-                if (request.Timeout > _MaxRequestTimeout) return _MaxRequestTimeout;
+                if (request.Timeout > MaxRequestTimeout) return MaxRequestTimeout;
                 return request.Timeout.Value;
             }
             else
             {
-                if (_HttpClientSettings.RequestTimeout > _MaxRequestTimeout) return _MaxRequestTimeout;
-                return _HttpClientSettings.RequestTimeout;
+                if (_httpClientSettings.RequestTimeout > MaxRequestTimeout) return MaxRequestTimeout;
+                return _httpClientSettings.RequestTimeout;
             }
         }
         private bool HandleCsrfAndReInvoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
@@ -187,11 +190,11 @@ namespace MFDLabs.Http.Client
             if (context.Output.StatusCode == HttpStatusCode.Forbidden)
             {
 
-                var csrfToken = context.Output.Headers.Get(_CsrfTokenHeaderName).FirstOrDefault();
+                var csrfToken = context.Output.Headers.Get(CsrfTokenHeaderName).FirstOrDefault();
 
                 if (csrfToken != null)
                 {
-                    context.Input.Headers.AddOrUpdate(_CsrfTokenHeaderName, csrfToken);
+                    context.Input.Headers.AddOrUpdate(CsrfTokenHeaderName, csrfToken);
                     Invoke(context);
                     return true;
                 }
@@ -202,11 +205,11 @@ namespace MFDLabs.Http.Client
         {
             if (context.Output.StatusCode == HttpStatusCode.Forbidden)
             {
-                var csrfToken = context.Output.Headers.Get(_CsrfTokenHeaderName).FirstOrDefault();
+                var csrfToken = context.Output.Headers.Get(CsrfTokenHeaderName).FirstOrDefault();
 
                 if (csrfToken != null)
                 {
-                    context.Input.Headers.AddOrUpdate(_CsrfTokenHeaderName, csrfToken);
+                    context.Input.Headers.AddOrUpdate(CsrfTokenHeaderName, csrfToken);
                     await InvokeAsync(context, cancellationToken);
                     return true;
                 }
@@ -217,26 +220,25 @@ namespace MFDLabs.Http.Client
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
         [ExcludeFromCodeCoverage]
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (IsDisposed) return;
-            if (disposing) _HttpClient?.Dispose();
-            IsDisposed = true;
+            if (_isDisposed) return;
+            if (disposing) _httpClient?.Dispose();
+            _isDisposed = true;
         }
 
-        private const string _CsrfTokenHeaderName = "X-CSRF-Token";
-        private const string _UserAgentHeaderName = "User-Agent";
-        private const string _UnexpectedErrorMessage = "An unexpected error occurred while processing the Http request. Check inner exception.";
-        private const string _OperationTimeoutMessage = "The operation has timed out";
-        private static readonly ByteArrayContent _EmptyContent = new ByteArrayContent(new byte[0]);
-        private static readonly TimeSpan _MaxRequestTimeout = TimeSpan.FromMinutes(10.0);
-        private readonly CookieContainer _CookieContainer;
-        private readonly IHttpClientSettings _HttpClientSettings;
-        private readonly IHttpMessageHandlerBuilder _HttpMessageHandlerBuilder;
-        private System.Net.Http.HttpClient _HttpClient;
-        internal bool IsDisposed;
+        private const string CsrfTokenHeaderName = "X-CSRF-Token";
+        private const string UserAgentHeaderName = "User-Agent";
+        private const string UnexpectedErrorMessage = "An unexpected error occurred while processing the Http request. Check inner exception.";
+        private const string OperationTimeoutMessage = "The operation has timed out";
+        private static readonly ByteArrayContent EmptyContent = new(Array.Empty<byte>());
+        private static readonly TimeSpan MaxRequestTimeout = TimeSpan.FromMinutes(10);
+        private readonly CookieContainer _cookieContainer;
+        private readonly IHttpClientSettings _httpClientSettings;
+        private readonly IHttpMessageHandlerBuilder _httpMessageHandlerBuilder;
+        private System.Net.Http.HttpClient _httpClient;
+        private bool _isDisposed;
     }
 }

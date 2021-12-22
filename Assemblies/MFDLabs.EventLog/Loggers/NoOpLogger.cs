@@ -5,7 +5,7 @@ namespace MFDLabs.EventLog
     public class NoOpLogger : ILogger
     {
         public Func<LogLevel> MaxLogLevel { get; set; }
-        public bool LogThreadID { get; set; }
+        public bool LogThreadId { get; set; }
         public bool IsDefaultLog
         {
             set
@@ -28,6 +28,6 @@ namespace MFDLabs.EventLog
         public void LifecycleEvent(string format, params object[] args) { }
         public void LifecycleEvent(Func<string> messageGetter) { }
 
-        public static readonly NoOpLogger Instance = new NoOpLogger();
+        public static readonly NoOpLogger Instance = new();
     }
 }

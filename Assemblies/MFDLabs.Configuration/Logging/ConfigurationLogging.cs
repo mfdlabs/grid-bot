@@ -6,17 +6,17 @@ namespace MFDLabs.Configuration.Logging
 	{
 		public static void OverrideDefaultConfigurationLogging(Action<string, object[]> onError, Action<string, object[]> onWarning, Action<string, object[]> onInformation)
 		{
-			_OverrideOnError = onError;
-			_OverrideOnWarning = onWarning;
-			_OverrideOnInformation = onInformation;
+			_overrideOnError = onError;
+			_overrideOnWarning = onWarning;
+			_overrideOnInformation = onInformation;
 		}
-        internal static void Error(string format, params object[] args) => Log(_OverrideOnError, format, args);
-        internal static void Warning(string format, params object[] args) => Log(_OverrideOnWarning, format, args);
-        internal static void Info(string format, params object[] args) => Log(_OverrideOnInformation, format, args);
+        internal static void Error(string format, params object[] args) => Log(_overrideOnError, format, args);
+        internal static void Warning(string format, params object[] args) => Log(_overrideOnWarning, format, args);
+        internal static void Info(string format, params object[] args) => Log(_overrideOnInformation, format, args);
         private static void Log(Action<string, object[]> overrideLogger, string format, params object[] args) => overrideLogger?.Invoke(format, args);
 
-        private static Action<string, object[]> _OverrideOnError;
-		private static Action<string, object[]> _OverrideOnWarning;
-		private static Action<string, object[]> _OverrideOnInformation;
+        private static Action<string, object[]> _overrideOnError;
+		private static Action<string, object[]> _overrideOnWarning;
+		private static Action<string, object[]> _overrideOnInformation;
 	}
 }

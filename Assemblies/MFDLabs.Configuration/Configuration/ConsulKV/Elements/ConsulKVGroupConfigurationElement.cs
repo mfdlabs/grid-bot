@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Configuration;
 
-namespace MFDLabs.Configuration.Elements.ConsulKV
+namespace MFDLabs.Configuration.Elements.ConsulKv
 {
-    public class ConsulKVGroupConfigurationElement : ConfigurationElement
+    public class ConsulKvGroupConfigurationElement : ConfigurationElement
     {
-        static ConsulKVGroupConfigurationElement()
+        static ConsulKvGroupConfigurationElement()
         {
             _updateInterval = new ConfigurationProperty("updateInterval", typeof(TimeSpan), TimeSpan.FromSeconds(1.5), ConfigurationPropertyOptions.None);
             _props.Add(_updateInterval);
@@ -21,41 +21,35 @@ namespace MFDLabs.Configuration.Elements.ConsulKV
 
         public string GroupName
         {
-            get { return (string)base[_groupName]; }
-            set { base[_groupName] = value; }
+            get => (string)base[_groupName];
+            set => base[_groupName] = value;
         }
 
         public TimeSpan UpdateInterval
         {
-            get { return (TimeSpan)base[_updateInterval]; }
-            set { base[_updateInterval] = value; }
+            get => (TimeSpan)base[_updateInterval];
+            set => base[_updateInterval] = value;
         }
 
         public string Address
         {
-            get { return (string)base[_consulAddress]; }
-            set { base[_consulAddress] = value; }
+            get => (string)base[_consulAddress];
+            set => base[_consulAddress] = value;
         }
 
-        public string ACLToken
+        public string AclToken
         {
-            get { return (string)base[_consulAclToken]; }
-            set { base[_consulAclToken] = value; }
+            get => (string)base[_consulAclToken];
+            set => base[_consulAclToken] = value;
         }
 
         public string OverrideFileName
         {
-            get { return (string)base[_overrideFileName]; }
-            set { base[_overrideFileName] = value; }
+            get => (string)base[_overrideFileName];
+            set => base[_overrideFileName] = value;
         }
 
-        protected override ConfigurationPropertyCollection Properties
-        {
-            get
-            {
-                return _props;
-            }
-        }
+        protected override ConfigurationPropertyCollection Properties => _props;
 
         private static readonly ConfigurationPropertyCollection _props = new ConfigurationPropertyCollection();
 

@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Get Grid Server Job Count";
         public string CommandDescription => "Attempts to get the grid server's job count via the SoapUtility.";
-        public string[] CommandAliases => new string[] { "gjc", "getjobcount" };
+        public string[] CommandAliases => new[] { "gjc", "getjobcount" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

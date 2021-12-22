@@ -5,11 +5,8 @@ namespace MFDLabs.Grid.Bot.Hooks
 {
     internal sealed class PartialShutdownHook : IConsoleHook
     {
-        public char[] HookKeys => new char[] { 'e', 'E' };
+        public char[] HookKeys => new[] { 'e', 'E' };
 
-        public void Callback(char key)
-        {
-            SignalUtility.Singleton.InvokeUserSignal1();
-        }
+        public void Callback(char key) => SignalUtility.InvokeUserSignal1();
     }
 }

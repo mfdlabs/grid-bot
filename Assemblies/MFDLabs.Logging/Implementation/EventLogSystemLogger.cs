@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -10,6 +12,7 @@ using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
 using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
+using MFDLabs.FileSystem;
 
 namespace MFDLabs.Logging
 {
@@ -18,128 +21,115 @@ namespace MFDLabs.Logging
     public sealed class EventLogSystemLogger : SingletonBase<EventLogSystemLogger>, ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _localIp = NetworkingGlobal.Singleton.GetLocalIP();
+        private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineId = SystemGlobal.Singleton.GetMachineID();
+        private static readonly string MachineId = SystemGlobal.GetMachineId();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineHost = SystemGlobal.Singleton.GetMachineHost();
+        private static readonly string MachineHost = SystemGlobal.GetMachineHost();
 
-        private readonly string _fileName =
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string FileBasePath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string FileName =
 #if DEBUG
-                        "\\dev_log_" +
-#else
-                        "\\log_" +
+            "dev_" +
 #endif
-                        $"{DateTimeGlobal.Singleton.GetUtcNowAsISO().MakeFileSafeString()}-{SystemGlobal.Singleton.CurrentProcess.Id:X}.log";
+            $"{SystemGlobal.AssemblyVersion}_{DateTimeGlobal.GetFileSafeUtcNowAsIso()}_{SystemGlobal.CurrentProcess.Id:X}_last.log";
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private FileSystemHelper.LockedFileStream _lockedFileStream;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static bool _CanLog = true;
+        private static bool _canLog = true;
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private System.Diagnostics.EventLog _eventLog;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int _eventId = 0;
+        private int _eventId;
 
         [DebuggerHidden]
         [DebuggerStepThrough]
-        public void Initialize(System.Diagnostics.EventLog eventLog)
-        {
-            _eventLog = eventLog;
-        }
+        public void Initialize(System.Diagnostics.EventLog eventLog) => _eventLog = eventLog;
 
         public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
 
         [DebuggerHidden]
-        public bool LogThreadID { get; set; } = false;
+        public bool LogThreadId { get; set; } = false;
 
         [DebuggerStepThrough]
         private string ConstructLoggerMessage(string logType, string format, params object[] args)
         {
-            var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
-            var countNCharsToReplace = 4 - threadID.Length;
+            var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+            var countNCharsToReplace = 4 - threadId.Length;
 
-            var internalMessage = string.Format(
-                "[{0}][{1}][{2}][{3}][{4}-{5}][{6}][{7}][{8}][{9}][{10}][{11}][{12}][{13}] {14}\n",
-                DateTimeGlobal.Singleton.GetUtcNowAsISO(),
-                SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
-                threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left),
-                LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"),
-                SystemGlobal.Singleton.CurrentPlatform,
-                SystemGlobal.Singleton.CurrentDeviceArch.ToLower(),
-                SystemGlobal.Singleton.Version,
-                SystemGlobal.Singleton.AssemblyVersion,
+            var internalMessage = 
+                $"[{DateTimeGlobal.GetUtcNowAsIso()}]" +
+                $"[{SystemGlobal.CurrentProcess.Id:x}]" +
+                $"[{threadId.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left)}]" +
+                $"[{LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds:f7}]" +
+                $"[{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}]" +
+                $"[{SystemGlobal.Version}][{SystemGlobal.AssemblyVersion}]" +
 #if DEBUG
-                "Debug",
+                "[Debug]" +
 #else
-                "Release",
+                "[Release]" +
 #endif
-                _localIp,
-                _machineId,
-                _machineHost,
-                global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
-                logType.ToUpper(),
-                format
-            );
+                $"[{LocalIp}]" +
+                $"[{MachineId}]" +
+                $"[{MachineHost}]" +
+                $"[{(global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName)}]" +
+                $"[{logType.ToUpper()}] {format}\n";
 
-            if (args != null && args.Length > 0)
-                return string.Format(internalMessage, args);
-
-            return internalMessage;
+            return args is {Length: > 0} ? string.Format(internalMessage, args) : internalMessage;
         }
 
         [DebuggerStepThrough]
         private void LogLocally(LogLevel level, string logType, string format, params object[] args)
         {
-            if (_CanLog)
-            {
-                if (level <= MaxLogLevel())
-                {
-                    var str = ConstructLoggerMessage(logType, format, args);
-                    var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLABS\\Logs";
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            
+            _lockedFileStream ??= new(Path.Combine(FileBasePath, FileName));
+            
+            var str = ConstructLoggerMessage(logType, format, args);
 
-                    if (!Directory.Exists(dirName + "\\..\\"))
-                        Directory.CreateDirectory(dirName + "\\..\\");
-                    if (!Directory.Exists(dirName))
-                        Directory.CreateDirectory(dirName);
-                    try { File.AppendAllText(dirName + _fileName, str); } catch { }
-                }
+            try { _lockedFileStream.AppendText(str); }
+            catch
+            {
+                // ignored
             }
         }
 
         [DebuggerStepThrough]
-        public void TryClearLocalLog(bool overrideENV = false, bool wasForGlobalEventLifeTimeClosure = false)
+        public void TryClearLocalLog(bool overrideEnv = false, bool wasForGlobalEventLifeTimeClosure = false)
         {
-            if (_CanLog)
+            if (!_canLog) return;
+            
+            Log("Try clear local logs...");
+
+            if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
             {
-                Log("Try clear local logs...");
-
-                if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
+                if (overrideEnv)
                 {
-                    if (overrideENV)
-                    {
-                        Warning("Overriding global config when clearing logs.");
-                    }
-                    else
-                    {
-                        Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
-                        _CanLog = wasForGlobalEventLifeTimeClosure != true;
-                        return;
-                    }
+                    Warning("Overriding global config when clearing logs.");
                 }
-
-                Log("Clearing LocalLog...");
-
-                var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLabs\\Logs";
-
-                _CanLog = wasForGlobalEventLifeTimeClosure != true;
-
-                if (Directory.Exists(dirName))
+                else
                 {
-                    Directory.Delete(dirName, true);
+                    Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
+                    _canLog = wasForGlobalEventLifeTimeClosure != true;
                     return;
                 }
             }
+
+            Log("Clearing LocalLog...");
+
+            _canLog = wasForGlobalEventLifeTimeClosure != true;
+
+            if (!Directory.Exists(FileBasePath)) return;
+            Directory.Delete(FileBasePath, true);
         }
 
         [DebuggerStepThrough]
@@ -264,49 +254,32 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         private void LogToEventLog(EventLogEntryType entryType, LogLevel level, string logType, string format, params object[] args)
         {
-            if (_eventLog == null) throw new ArgumentNullException("_eventLog");
+            if (_eventLog == null) 
+                throw new ArgumentNullException(nameof(_eventLog));
 
-            if (_CanLog)
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            
+            _eventId++;
+
+            var message = ConstructLoggerMessage(logType, format, args);
+
+            short category = logType switch
             {
-                if (level <= MaxLogLevel())
-                {
-                    _eventId++;
+                "LOG" => 1,
+                "WARNING" => 2,
+                "TRACE" => 3,
+                "DEBUG" => 4,
+                "INFO" => 5,
+                "ERROR" => 6,
+                "VERBOSE" => 7,
+                "LC-EVENT" => 8,
+                _ => 0
+            };
 
-                    var message = ConstructLoggerMessage(logType, format, args);
-
-                    short category = 0;
-
-                    switch (logType)
-                    {
-                        case "LOG":
-                            category = 1;
-                            break;
-                        case "WARNING":
-                            category = 2;
-                            break;
-                        case "TRACE":
-                            category = 3;
-                            break;
-                        case "DEBUG":
-                            category = 4;
-                            break;
-                        case "INFO":
-                            category = 5;
-                            break;
-                        case "ERROR":
-                            category = 6;
-                            break;
-                        case "VERBOSE":
-                            category = 7;
-                            break;
-                        case "LC-EVENT":
-                            category = 8;
-                            break;
-                    }
-
-                    _eventLog.WriteEntry(message, entryType, _eventId, category);
-                }
-            }
+            _eventLog.WriteEntry(message, entryType, _eventId, category);
         }
     }
 }
+
+#endif

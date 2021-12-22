@@ -2,11 +2,13 @@
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
+using MFDLabs.Grid.Bot.Utility;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnMessage
+    internal static class OnMessage
     {
         internal static async Task Invoke(SocketMessage message)
         {
@@ -17,9 +19,9 @@ namespace MFDLabs.Grid.Bot.Events
 
             if (message.Author.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAllChannels)
+            if (!message.GetSetting<bool>("AllowAllChannels"))
             {
-                if (!message.Channel.IsWhitelisted() && !userIsAdmin)
+                if (!message.ChannelIsAllowed() && !userIsAdmin)
                     return;
             }
 
@@ -65,12 +67,12 @@ namespace MFDLabs.Grid.Bot.Events
             }
 
 
-            await CommandRegistry.Singleton.CheckAndRunCommandByAlias(alias, contentArray, message);
+            await CommandRegistry.CheckAndRunCommandByAlias(alias, contentArray, message);
         }
 
         private static string[] GetContentArray(string messageContent)
         {
-            return messageContent.Contains(" ") ? messageContent.Split(' ') : new string[] { messageContent };
+            return messageContent.Contains(" ") ? messageContent.Split(' ') : new[] { messageContent };
         }
 
         private static bool ParsePrefix(ref string message)
@@ -79,10 +81,8 @@ namespace MFDLabs.Grid.Bot.Events
             {
                 return false;
             }
-            else
-            {
-                message = message.Substring(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix.Length);
-            }
+
+            message = message.Substring(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix.Length);
 
             return true;
         }

@@ -21,8 +21,11 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class GetSetting : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Bot Instance Setting";
-        public string CommandDescription => $"Tries to get a setting from the '{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' by name, if it is not found it will return the raw exception message.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getsetting settingName.";
-        public string[] CommandAliases => new string[] { "get", "getsetting" };
+        public string CommandDescription => $"Tries to get a setting from the " +
+                                            $"'{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' " +
+                                            $"by name, if it is not found it will return the raw exception message.\nLayout: " +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getsetting settingName.";
+        public string[] CommandAliases => new[] { "get", "getsetting" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -35,7 +38,8 @@ namespace MFDLabs.Grid.Bot.Commands
             if (settingName.IsNullOrEmpty())
             {
                 SystemLogger.Singleton.Warning("Null Setting name, aborting.");
-                await message.ReplyAsync("The first parameter of the command was null, expected the \"SettingName\" to be not null or not empty.");
+                await message.ReplyAsync("The first parameter of the command was null, expected " +
+                                         "the \"SettingName\" to be not null or not empty.");
                 return;
             }
 
@@ -43,7 +47,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             try
             {
-                setting = global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName];
+                setting = global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName!];
             }
             catch (SettingsPropertyNotFoundException ex)
             {

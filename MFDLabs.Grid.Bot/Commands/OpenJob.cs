@@ -10,8 +10,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class OpenJob : IStateSpecificCommandHandler
     {
         public string CommandName => "Open Grid Server Job";
-        public string CommandDescription => $"Attempts to open a job on the Grid Server via SoapUtility\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}openjob jobID placeID?=1818 universeID?=1.";
-        public string[] CommandAliases => new string[] { "oj", "openjob" };
+        public string CommandDescription => $"Attempts to open a job on the Grid Server via SoapUtility\nLayout:" +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}openjob jobID placeID?=1818 universeID?=1.";
+        public string[] CommandAliases => new[] { "oj", "openjob" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -19,18 +20,22 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var jobID = messageContentArray.ElementAtOrDefault(0);
-            if (!long.TryParse(messageContentArray.ElementAtOrDefault(1), out var placeID)) placeID = 1818;
-            if (!long.TryParse(messageContentArray.ElementAtOrDefault(2), out var universeID)) universeID = 1;
+            var jobId = messageContentArray.ElementAtOrDefault(0);
+            if (!long.TryParse(messageContentArray.ElementAtOrDefault(1), out var placeId)) 
+                placeId = 1818;
+            if (!long.TryParse(messageContentArray.ElementAtOrDefault(2), out var universeId)) 
+                universeId = 1;
 
-            if (jobID == default)
+            if (jobId == default)
             {
-                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} jobID placeID?=1818 universeID?=1`");
+                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: " +
+                                         $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} " +
+                                         $"jobID placeID?=1818 universeID?=1`");
                 return;
             }
 
-            await GridServerCommandUtility.Singleton.LaunchSimpleGameAsync(jobID, placeID, universeID);
-            await message.ReplyAsync($"Successfully opened job '{jobID}' with placeID {placeID} and universeID {universeID}.");
+            await GridServerCommandUtility.LaunchSimpleGameAsync(jobId, placeId, universeId);
+            await message.ReplyAsync($"Successfully opened job '{jobId}' with placeID {placeId} and universeID {universeId}.");
         }
     }
 }

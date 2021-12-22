@@ -5,16 +5,13 @@ using MFDLabs.Abstractions;
 namespace MFDLabs.Logging
 {
     [DebuggerStepThrough]
-    public sealed class ConsoleGlobal : SingletonBase<ConsoleGlobal>
+    public static class ConsoleGlobal
     {
         [DebuggerStepThrough]
-        public void WriteContentStr(string content)
-        {
-            WriteContentStr(ConsoleColor.DarkGray, content);
-        }
+        public static void WriteContentStr(string content) => WriteContentStr(ConsoleColor.DarkGray, content);
 
         [DebuggerStepThrough]
-        public void WriteContentStr(ConsoleColor color, string content)
+        public static void WriteContentStr(ConsoleColor color, string content)
         {
             Console.Write("[");
             WriteColoredContent(color, content);
@@ -22,7 +19,7 @@ namespace MFDLabs.Logging
         }
 
         [DebuggerStepThrough]
-        public void WriteColoredContent(ConsoleColor color, string content)
+        public static void WriteColoredContent(ConsoleColor color, string content)
         {
             Console.ForegroundColor = color;
             Console.Write(content);

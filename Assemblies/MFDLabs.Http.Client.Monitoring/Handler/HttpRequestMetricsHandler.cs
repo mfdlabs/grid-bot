@@ -17,7 +17,7 @@ namespace MFDLabs.Http.Client.Monitoring
             if (clientName.IsNullOrWhiteSpace()) 
                 throw new ArgumentException("Must identify the client like MyServiceClient", nameof(clientName));
 
-            _ClientMonitor = new Lazy<ClientRequestsMonitor>(() => ClientRequestsMonitor.GetOrCreate(counterRegistry, metricsCategoryName, clientName));
+            _clientMonitor = new Lazy<ClientRequestsMonitor>(() => ClientRequestsMonitor.GetOrCreate(counterRegistry, metricsCategoryName, clientName));
         }
 
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
@@ -53,24 +53,24 @@ namespace MFDLabs.Http.Client.Monitoring
         }
         private Stopwatch RequestStarted(IHttpRequest request)
         {
-            _ClientMonitor.Value.AddOutstandingRequest(request.Url.AbsolutePath);
+            _clientMonitor.Value.AddOutstandingRequest(request.Url.AbsolutePath);
             return Stopwatch.StartNew();
         }
         private void RequestFinished(IHttpRequest request, Stopwatch stopwatch)
         {
             stopwatch.Stop();
-            _ClientMonitor.Value.AddResponseTime(request.Url.AbsolutePath, stopwatch);
-            _ClientMonitor.Value.RemoveOutstandingRequest(request.Url.AbsolutePath);
+            _clientMonitor.Value.AddResponseTime(request.Url.AbsolutePath, stopwatch);
+            _clientMonitor.Value.RemoveOutstandingRequest(request.Url.AbsolutePath);
         }
         private void RequestSucceeded(IHttpRequest request)
         {
-            _ClientMonitor.Value.AddRequestSuccess(request.Url.AbsolutePath);
+            _clientMonitor.Value.AddRequestSuccess(request.Url.AbsolutePath);
         }
         private void RequestFailed(IHttpRequest request)
         {
-            _ClientMonitor.Value.AddRequestFailure(request.Url.AbsolutePath);
+            _clientMonitor.Value.AddRequestFailure(request.Url.AbsolutePath);
         }
 
-        private readonly Lazy<ClientRequestsMonitor> _ClientMonitor;
+        private readonly Lazy<ClientRequestsMonitor> _clientMonitor;
     }
 }

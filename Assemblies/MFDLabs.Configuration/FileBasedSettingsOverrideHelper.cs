@@ -6,15 +6,13 @@ using System.Xml.Linq;
 
 namespace MFDLabs.Configuration
 {
-    public class FileBasedSettingsOverrideHelper
+    public static class FileBasedSettingsOverrideHelper
     {
         public static Dictionary<string, object> ReadOverriddenSettingsFromFilePath(string fileName, Action<string, object[]> errorLogger = null)
         {
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                return null;
-            }
-            string contents = null;
+            if (string.IsNullOrWhiteSpace(fileName)) return null;
+            
+            string contents;
             FileStream stream = null;
             StreamReader reader = null;
             try
@@ -25,24 +23,18 @@ namespace MFDLabs.Configuration
             }
             catch (Exception ex)
             {
-                errorLogger?.Invoke(string.Format("Unable to read file :{0} Exception: {1}", fileName, ex), new object[0]);
+                errorLogger?.Invoke($"Unable to read file :{fileName} Exception: {ex}", Array.Empty<object>());
                 return null;
             }
             finally
             {
-                if (reader != null)
-                {
-                    reader.Dispose();
-                }
-                if (stream != null)
-                {
-                    stream.Dispose();
-                }
+                reader?.Dispose();
+                stream?.Dispose();
             }
-            return ReadOverriddenSettingsFromFileContent(contents, errorLogger, null);
+            return ReadOverriddenSettingsFromFileContent(contents, errorLogger);
         }
 
-        public static Dictionary<string, object> ReadOverriddenSettingsFromFileContent(string fileContent, Action<string, object[]> errorLogger = null, Action<string, object[]> informationLogger = null)
+        private static Dictionary<string, object> ReadOverriddenSettingsFromFileContent(string fileContent, Action<string, object[]> errorLogger = null, Action<string, object[]> informationLogger = null)
         {
             if (string.IsNullOrWhiteSpace(fileContent))
             {
@@ -53,41 +45,40 @@ namespace MFDLabs.Configuration
             {
                 foreach (var element in XDocument.Parse(fileContent).Descendants("setting"))
                 {
-                    if ((element.Parent?.Name) != null)
+                    if (element.Parent?.Name == null) continue;
+                    
+                    var key = $"{element.Parent.Name}.{element.Attribute("name")?.Value}";
+                    var value = element.Attribute("serializeAs")?.Value;
+                    if (!string.IsNullOrEmpty(value))
                     {
-                        var key = string.Format("{0}.{1}", element.Parent.Name, element.Attribute("name")?.Value);
-                        var value = element.Attribute("serializeAs")?.Value;
-                        if (!string.IsNullOrEmpty(value))
+                        if (!string.IsNullOrEmpty(element.Descendants("value").First().Value))
                         {
-                            if (!string.IsNullOrEmpty(element.Descendants("value").First().Value))
+                            var valueType = Type.GetType(value);
+                            if (valueType != null)
                             {
-                                var valueType = Type.GetType(value);
-                                if (valueType != null)
-                                {
-                                    var newValue = Convert.ChangeType(element.Descendants("value").First().Value, valueType);
-                                    informationLogger?.Invoke(string.Format("Reading file based setting-Name:{0} with value:{1}", key, newValue), new object[0]);
-                                    overriddenSettings[key] = newValue;
-                                }
-                                else
-                                {
-                                    errorLogger?.Invoke(string.Format("File based override setting:{0} has Invalid type (serializeAs) :{1}", key, value), new object[0]);
-                                }
+                                var newValue = Convert.ChangeType(element.Descendants("value").First().Value, valueType);
+                                informationLogger?.Invoke($"Reading file based setting-Name:{key} with value:{newValue}", Array.Empty<object>());
+                                overriddenSettings[key] = newValue;
                             }
                             else
                             {
-                                errorLogger?.Invoke(string.Format("File based override does not contain a value for setting name:{0}", key), new object[0]);
+                                errorLogger?.Invoke($"File based override setting:{key} has Invalid type (serializeAs) :{value}", Array.Empty<object>());
                             }
                         }
                         else
                         {
-                            errorLogger?.Invoke(string.Format("File based override setting:{0} 'serializeAs' attribute not provided. Skipping", key), new object[0]);
+                            errorLogger?.Invoke($"File based override does not contain a value for setting name:{key}", Array.Empty<object>());
                         }
+                    }
+                    else
+                    {
+                        errorLogger?.Invoke($"File based override setting:{key} 'serializeAs' attribute not provided. Skipping", Array.Empty<object>());
                     }
                 }
             }
             catch (Exception ex)
             {
-                errorLogger?.Invoke(string.Format("There was an exception while reading file-based override settings. FileContents:{0} Exception:{1}", fileContent, ex), new object[0]);
+                errorLogger?.Invoke($"There was an exception while reading file-based override settings. FileContents:{fileContent} Exception:{ex}", Array.Empty<object>());
                 return null;
             }
             return overriddenSettings;

@@ -17,8 +17,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class EvaluateScript : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate Runtime CSharp Script";
-        public string CommandDescription => $"Attempts to evaluate a script with the given name on the current machine\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}evauluatescript scriptName.";
-        public string[] CommandAliases => new string[] { "evals", "evalscript", "evauluatescript" };
+        public string CommandDescription => "Attempts to evaluate a script with the given name on the " +
+                                            $"current machine\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}evauluatescript scriptName.";
+        public string[] CommandAliases => new[] { "evals", "evalscript", "evauluatescript" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -53,7 +54,8 @@ namespace MFDLabs.Grid.Bot.Commands
                 try
                 {
                     // ref the current assembly
-                    result = await CSharpScript.RunAsync($"#load \"{fullScriptName}\"", ScriptOptions.Default.WithReferences(Assembly.GetExecutingAssembly()));
+                    result = await CSharpScript.RunAsync($"#load \"{fullScriptName}\"",
+                        ScriptOptions.Default.WithReferences(Assembly.GetExecutingAssembly()));
                 }
                 catch (CompilationErrorException ex)
                 {
@@ -66,15 +68,19 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                await message.ReplyAsync(result.ReturnValue == null ? "Executed script with no return!" : $"Executed script with return:");
+                
                 if (result.ReturnValue != null)
                 {
                     if (result.ReturnValue.ToString().Length > EmbedBuilder.MaxDescriptionLength)
                     {
-                        await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(result.ReturnValue.ToString())), "eval.txt");
+                        await message.ReplyWithFileAsync(
+                            new MemoryStream(Encoding.UTF8.GetBytes(result.ReturnValue.ToString())),
+                            "eval.txt",
+                            "Executed script with return:");
                         return;
                     }
                     await message.Channel.SendMessageAsync(
+                        "Executed script with return:",
                         embed: new EmbedBuilder()
                         .WithTitle("Return value")
                         .WithDescription($"```\n{result.ReturnValue}\n```")
@@ -84,20 +90,22 @@ namespace MFDLabs.Grid.Bot.Commands
                         .Build()
                     );
                 }
+                await message.ReplyAsync("Executed script with no return!");
             }
         }
 
-        private async Task HandleException(SocketMessage message, Exception ex)
+        private static async Task HandleException(SocketMessage message, Exception ex)
         {
-            await message.ReplyAsync($"an exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:");
-
             if (ex.Message.Length > EmbedBuilder.MaxDescriptionLength)
             {
-                await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)), "eval-error.txt");
+                await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(ex.Message)),
+                    "eval-error.txt",
+                    "an exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:");
                 return;
             }
 
             await message.Channel.SendMessageAsync(
+                "an exception occurred when trying to execute the given C#, please review this error to see if your input was malformed:",
                 embed: new EmbedBuilder()
                 .WithColor(0xff, 0x00, 0x00)
                 .WithTitle("Execute exception.")

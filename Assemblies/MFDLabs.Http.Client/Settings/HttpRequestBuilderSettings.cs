@@ -5,8 +5,8 @@ namespace MFDLabs.Http.Client
 {
     public class HttpRequestBuilderSettings : IHttpRequestBuilderSettings
     {
-        public string Endpoint { get; set; }
-        public bool EncodeQueryParametersEnabled { get; set; } = true;
+        public string Endpoint { get; }
+        public bool EncodeQueryParametersEnabled => true;
 
         public HttpRequestBuilderSettings(string endpoint)
         {

@@ -1,4 +1,5 @@
-﻿namespace MFDLabs.Concurrency
+﻿// ReSharper disable once CheckNamespace
+namespace MFDLabs.Concurrency
 {
     /// <summary>
     /// The result of the <see cref="Base.BasePlugin{TSingleton}.OnReceive(ref Packet)"/> and <see cref="Base.Async.AsyncBasePlugin{TSingleton}.OnReceive(Packet)"/>

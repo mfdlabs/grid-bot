@@ -9,7 +9,7 @@ using PHANDLE = System.IntPtr;
 
 namespace MFDLabs.Diagnostics.NativeWin32
 {
-    public class NativeMethods
+    public static class NativeMethods
     {
         [DllImport("advapi32.dll", SetLastError = true)]
         internal static extern bool OpenProcessToken(HANDLE hProcess, DWORD dwAccess, out PHANDLE phToken);

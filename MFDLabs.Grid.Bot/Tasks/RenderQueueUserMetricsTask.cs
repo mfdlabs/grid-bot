@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Discord;
-using Discord.WebSocket;
 using MFDLabs.Concurrency;
 using MFDLabs.Concurrency.Base;
 using MFDLabs.ErrorHandling.Extensions;
@@ -18,17 +17,24 @@ using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
 
+#if WE_LOVE_EM_SLASH_COMMANDS
+using Discord.WebSocket;
+#endif
+
 namespace MFDLabs.Grid.Bot
 {
     namespace Tasks
     {
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
         internal sealed class RenderQueueSlashCommandUserMetricsTask : ExpiringTaskThread<RenderQueueSlashCommandUserMetricsTask, SocketSlashCommand>
         {
-            public override string Name => "Render Queue V2";
-            public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
-            public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
-            public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
-            public override int PacketID => 6;
+            protected override string Name => "Render Queue V2";
+            protected override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
+            protected override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
+            protected override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
+            protected override int PacketId => 6;
 
             public override PluginResult OnReceive(ref Packet<SocketSlashCommand> packet)
             {
@@ -88,13 +94,15 @@ namespace MFDLabs.Grid.Bot
             private readonly ICollection<(ulong, UserTaskPerformanceMonitor)> _userPerformanceMonitors = new List<(ulong, UserTaskPerformanceMonitor)>();
         }
 
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
         internal sealed class RenderQueueUserMetricsTask : ExpiringTaskThread<RenderQueueUserMetricsTask, SocketTaskRequest>
         {
-            public override string Name => "Render Queue";
-            public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
-            public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
-            public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
-            public override int PacketID => 5;
+            protected override string Name => "Render Queue";
+            protected override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueDelay;
+            protected override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderQueueExpiration;
+            protected override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
+            protected override int PacketId => 5;
 
             public override PluginResult OnReceive(ref Packet<SocketTaskRequest> packet)
             {
@@ -128,7 +136,8 @@ namespace MFDLabs.Grid.Bot
                         }
 
                         message.Reply(
-                            "An error occured with the render execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                            "An error occured with the render execution task and the environment variable " +
+                            "'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
                             embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                         );
                         return PluginResult.ContinueProcessing;
@@ -140,13 +149,14 @@ namespace MFDLabs.Grid.Bot
 
             private UserTaskPerformanceMonitor GetUserPerformanceMonitor(IUser user)
             {
-                var perfmon = (from userPerfmon in _userPerformanceMonitors.OfType<(ulong, UserTaskPerformanceMonitor)>() where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
+                var perfmon = (from userPerfmon in _userPerformanceMonitors
+                    where userPerfmon.Item1 == user.Id
+                    select userPerfmon.Item2).FirstOrDefault();
 
-                if (perfmon == default)
-                {
-                    perfmon = new UserTaskPerformanceMonitor(CounterRegistry, "RenderTask", user);
-                    _userPerformanceMonitors.Add((user.Id, perfmon));
-                }
+                if (perfmon != default) return perfmon;
+                
+                perfmon = new UserTaskPerformanceMonitor(CounterRegistry, "RenderTask", user);
+                _userPerformanceMonitors.Add((user.Id, perfmon));
 
                 return perfmon;
             }
@@ -157,23 +167,25 @@ namespace MFDLabs.Grid.Bot
 
     namespace Plugins
     {
+#if WE_LOVE_EM_SLASH_COMMANDS
+
         // This cannot be an async task thread because it use locks in 2 different places. sorry
         //jakob: have you ever tried to write code that works? ha. never in a million years!!
         internal sealed class RenderExecutionSlashCommandTaskPlugin : BasePlugin<RenderExecutionSlashCommandTaskPlugin, SocketSlashCommand>
         {
-            #region Concurrency
+        #region Concurrency
 
             private readonly object _renderLock = new object();
             private bool _processingItem = false;
             private int _itemCount = 0;
 
-            #endregion Concurrency
+        #endregion Concurrency
 
-            #region Metrics
+        #region Metrics
 
             private readonly RenderTaskPerformanceMonitor _perfmon = new RenderTaskPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
 
-            #endregion Metrics
+        #endregion Metrics
 
             public override PluginResult OnReceive(ref Packet<SocketSlashCommand> packet)
             {
@@ -216,10 +228,9 @@ namespace MFDLabs.Grid.Bot
 
                                 if (userId == -123123 && message.User.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
 
-                                if (UserUtility.Singleton.GetIsUserBanned(userId))
+                                if (UserUtility.GetIsUserBanned(userId))
                                 {
-                                    bool canSkip = false;
-                                    if (userId == -200000 && message.User.IsAdmin()) canSkip = true;
+                                    var canSkip = userId == -200000 && message.User.IsAdmin();
 
                                     if (!canSkip)
                                     {
@@ -238,7 +249,7 @@ namespace MFDLabs.Grid.Bot
                                 );
 
                                 // get a stream and temp filename
-                                var (stream, fileName) = GridServerCommandUtility.Singleton.RenderUser(
+                                var (stream, fileName) = GridServerCommandUtility.RenderUser(
                                     userId,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
@@ -272,12 +283,14 @@ namespace MFDLabs.Grid.Bot
                 }
                 else
                 {
-                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
+                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.Id, packet.SequenceId);
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
                     return PluginResult.ContinueProcessing;
                 }
             }
         }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
 
         // This cannot be an async task thread because it use locks in 2 different places. sorry
         //jakob: have you ever tried to write code that works? ha. never in a million years!!
@@ -285,15 +298,15 @@ namespace MFDLabs.Grid.Bot
         {
             #region Concurrency
 
-            private readonly object _renderLock = new object();
-            private bool _processingItem = false;
-            private int _itemCount = 0;
+            private readonly object _renderLock = new();
+            private bool _processingItem;
+            private int _itemCount;
 
             #endregion Concurrency
 
             #region Metrics
 
-            private readonly RenderTaskPerformanceMonitor _perfmon = new RenderTaskPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
+            private readonly RenderTaskPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
 
             #endregion Metrics
 
@@ -319,7 +332,8 @@ namespace MFDLabs.Grid.Bot
                         {
                             if (_processingItem)
                             {
-                                message.Reply($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
+                                message.Reply($"The render queue is currently trying to process {_itemCount} items," +
+                                              $" please wait for your result to be processed.");
                             }
 
                             lock (_renderLock)
@@ -329,7 +343,7 @@ namespace MFDLabs.Grid.Bot
                                 {
                                     SystemLogger.Singleton.Warning("Someone found executed the one command, please no...");
 
-                                    var (weirdStream, weirdFileName) = GridServerCommandUtility.Singleton.RenderUser(
+                                    var (weirdStream, weirdFileName) = GridServerCommandUtility.RenderUser(
                                         4,
                                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
                                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
@@ -350,23 +364,25 @@ namespace MFDLabs.Grid.Bot
                                     return PluginResult.ContinueProcessing;
                                 }
 
-                                bool isAuthorCheck = false;
+                                var isAuthorCheck = false;
                                 long userId = 0;
 
                                 if (contentArray.Length == 0)
                                 {
                                     isAuthorCheck = true;
-                                    var nullableUserID = message.Author.GetRobloxID();
+                                    var nullableUserId = message.Author.GetRobloxId();
 
-                                    if (!nullableUserID.HasValue)
+                                    if (!nullableUserId.HasValue)
                                     {
                                         _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
+                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null," +
+                                                                       " they were either banned or do not exist.",
+                                            message.Author.ToString());
                                         message.Reply("You have no Roblox account associated with you.");
                                         return PluginResult.ContinueProcessing;
                                     }
 
-                                    userId = nullableUserID.Value;
+                                    userId = nullableUserId.Value;
                                 }
 
 
@@ -381,43 +397,54 @@ namespace MFDLabs.Grid.Bot
                                         {
                                             var user = message.MentionedUsers.ElementAt(0);
                                             // we have mentioned a user.
-                                            var nullableUserID = user.GetRobloxID();
+                                            var nullableUserId = user.GetRobloxId();
 
-                                            if (!nullableUserID.HasValue)
+                                            if (!nullableUserId.HasValue)
                                             {
                                                 _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                                SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
-                                                message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
+                                                SystemLogger.Singleton.Warning("The ID for the discord user '{0}' " +
+                                                                               "was null, they were either banned or do not exist.",
+                                                    user.ToString());
+                                                message.Reply($"The user you mentioned, '{user.Username}', had no " +
+                                                              $"Roblox account associated with them.");
                                                 return PluginResult.ContinueProcessing;
                                             }
 
-                                            userId = nullableUserID.Value;
+                                            userId = nullableUserId.Value;
                                         }
                                         else
                                         {
-                                            SystemLogger.Singleton.Warning("The first parameter of the command was not a valid Int64, trying to get the userID by username lookup.");
+                                            SystemLogger.Singleton.Warning("The first parameter of the command was " +
+                                                                           "not a valid Int64, trying to get the userID " +
+                                                                           "by username lookup.");
                                             username = contentArray.Join(' ').EscapeNewLines().Escape();
                                             if (!username.IsNullOrEmpty())
                                             {
-                                                SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
-                                                var nullableUserID = UserUtility.Singleton.GetUserIDByUsername(username);
+                                                SystemLogger.Singleton.Debug("Trying to get the ID of the user by " +
+                                                                             "this username '{0}'", username);
+                                                var nullableUserId = UserUtility.GetUserIdByUsername(username);
 
-                                                if (!nullableUserID.HasValue)
+                                                if (!nullableUserId.HasValue)
                                                 {
                                                     _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                                    SystemLogger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
+                                                    SystemLogger.Singleton.Warning("The ID for the user '{0}' was " +
+                                                        "null, they were either banned or do not exist.", username);
                                                     message.Reply($"The user by the username of '{username}' was not found.");
                                                     return PluginResult.ContinueProcessing;
                                                 }
 
-                                                SystemLogger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserID.Value);
-                                                userId = nullableUserID.Value;
+                                                SystemLogger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
+                                                userId = nullableUserId.Value;
                                             }
                                             else
                                             {
                                                 _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
-                                                SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
-                                                message.Reply($"Missing required parameter 'userID' or 'userName', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} userID|userName");
+                                                SystemLogger.Singleton.Warning("The user's input username was null " +
+                                                                               "or empty, they clearly do not know how to input text.");
+                                                message.Reply($"Missing required parameter 'userID' or 'userName', " +
+                                                              $"the layout is: " +
+                                                              $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
+                                                              $"userID|userName");
                                                 return PluginResult.ContinueProcessing;
                                             }
                                         }
@@ -427,22 +454,28 @@ namespace MFDLabs.Grid.Bot
                                         if (userId > global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
                                         {
                                             _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                                            SystemLogger.Singleton.Warning("The input user ID of {0} was greater than the environment's maximum user ID size of {1}.", userId, global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize);
-                                            message.Reply($"The userId '{userId}' is too big, expected the userId to be less than or equal to '{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
+                                            SystemLogger.Singleton.Warning("The input user ID of {0} was greater " +
+                                                                           "than the environment's maximum user ID size of {1}.",
+                                                userId,
+                                                global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize);
+                                            message.Reply($"The userId '{userId}' is too big, expected the " +
+                                                          $"userId to be less than or equal to " +
+                                                          $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
                                             return PluginResult.ContinueProcessing;
                                         }
                                     }
 
-                                if (userId == -123123 && message.Author.IsAdmin()) throw new Exception("Test exception for auto handling on task threads.");
+                                if (userId == -123123 && message.Author.IsAdmin()) throw new Exception("Test " +
+                                    "exception for auto handling on task threads.");
 
-                                if (UserUtility.Singleton.GetIsUserBanned(userId))
+                                if (UserUtility.GetIsUserBanned(userId))
                                 {
-                                    bool canSkip = false;
-                                    if (userId == -200000 && message.Author.IsAdmin()) canSkip = true;
+                                    bool canSkip = userId == -200000 && message.Author.IsAdmin();
 
                                     if (!canSkip)
                                     {
-                                        SystemLogger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
+                                        SystemLogger.Singleton.Warning("The input user ID of {0} was linked to a " +
+                                                                       "banned user account.", userId);
                                         var user = userId == default ? username : userId.ToString();
                                         message.Reply($"The user '{user}' is banned or does not exist.");
                                         return PluginResult.ContinueProcessing;
@@ -450,7 +483,8 @@ namespace MFDLabs.Grid.Bot
                                 }
 
                                 SystemLogger.Singleton.Info(
-                                    "Trying to render the character for the user '{0}' with the place '{1}', and the dimensions of {2}x{3}",
+                                    "Trying to render the character for the user '{0}' with the place '{1}', " +
+                                    "and the dimensions of {2}x{3}",
                                     userId,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
@@ -458,7 +492,7 @@ namespace MFDLabs.Grid.Bot
                                 );
 
                                 // get a stream and temp filename
-                                var (stream, fileName) = GridServerCommandUtility.Singleton.RenderUser(
+                                var (stream, fileName) = GridServerCommandUtility.RenderUser(
                                     userId,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
                                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
@@ -487,14 +521,16 @@ namespace MFDLabs.Grid.Bot
                         _itemCount--;
                         _processingItem = false;
                         sw.Stop();
-                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.",
+                            sw.Elapsed.TotalSeconds.ToString("f7"));
                     }
                 }
                 else
                 {
-                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
-                    return PluginResult.ContinueProcessing;
+                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.Id, packet.SequenceId);
+                    return global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem
+                        ? PluginResult.StopProcessingAndDeallocate
+                        : PluginResult.ContinueProcessing;
                 }
             }
         }

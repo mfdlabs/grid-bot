@@ -1,39 +1,19 @@
 ﻿using System;
-using MFDLabs.Http.Client;
 using MFDLabs.Http.ServiceClient;
-using MFDLabs.Sentinels.CircuitBreakerPolicy;
 
 namespace MFDLabs.Google.Analytics.Client
 {
-    internal sealed class GAClientSettings : IServiceClientSettings, IHttpClientSettings, IDefaultCircuitBreakerPolicyConfig
+    internal sealed class GaClientSettings : IServiceClientSettings
     {
-        public string ClientName
-        {
-            get
-            {
-                return "GAClient";
-            }
-        }
-
-        public string UserAgent
-        {
-            get
-            {
-                return "MFDLabs.Http.Client GAHttpClient";
-            }
-        }
-
+        public string ClientName => "GAClient";
+        public string UserAgent => "MFDLabs.Http.Client GAHttpClient";
         public string Endpoint { get; }
-
         public int MaxRedirects { get; }
-
         public int FailuresAllowedBeforeTrip { get; }
-
         public TimeSpan RetryInterval { get; }
-
         public TimeSpan RequestTimeout { get; }
 
-        public GAClientSettings(GAClientConfig config)
+        public GaClientSettings(GaClientConfig config)
         {
             Endpoint = config.Url;
             MaxRedirects = config.MaxRedirects;

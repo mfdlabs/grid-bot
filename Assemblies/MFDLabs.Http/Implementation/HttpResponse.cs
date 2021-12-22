@@ -14,7 +14,7 @@ namespace MFDLabs.Http
             get
             {
                 var statusCode = (int)StatusCode;
-                return statusCode >= _MinimumSuccessfulStatusCode && statusCode <= _MaximumSuccessfulStatusCode;
+                return statusCode is >= MinimumSuccessfulStatusCode and <= MaximumSuccessfulStatusCode;
             }
         }
         public Uri Url { get; set; }
@@ -23,14 +23,14 @@ namespace MFDLabs.Http
 
         public string GetStringBody(Encoding encoding = null)
         {
-            if (encoding == null) encoding = Encoding.UTF8;
+            encoding ??= Encoding.UTF8;
             return encoding.GetString(Body);
         }
         public T GetJsonBody<T>()
             where T : class 
-            => JsonConvert.DeserializeObject<T>(GetStringBody(null));
+            => JsonConvert.DeserializeObject<T>(GetStringBody());
 
-        private const int _MinimumSuccessfulStatusCode = 200;
-        private const int _MaximumSuccessfulStatusCode = 299;
+        private const int MinimumSuccessfulStatusCode = 200;
+        private const int MaximumSuccessfulStatusCode = 299;
     }
 }

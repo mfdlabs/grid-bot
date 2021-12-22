@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Headers;
 
 namespace MFDLabs.Http
@@ -16,6 +17,6 @@ namespace MFDLabs.Http
         { }
 
         private static HttpRequestMessage BuildEmptyHttpRequestMessage() 
-            => new HttpRequestMessage { Content = new ByteArrayContent(new byte[0]) };
+            => new() { Content = new ByteArrayContent(Array.Empty<byte>()) };
     }
 }

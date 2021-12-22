@@ -13,65 +13,59 @@ namespace MFDLabs.Configuration.Elements.Vault
             _props.Add(_groupName);
             _vaultAddress = new ConfigurationProperty("address", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
             _props.Add(_vaultAddress);
-            _vaultRoleID = new ConfigurationProperty("roleId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
-            _props.Add(_vaultRoleID);
-            _vaultSecretID = new ConfigurationProperty("secretId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
-            _props.Add(_vaultSecretID);
+            _vaultRoleId = new ConfigurationProperty("roleId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _props.Add(_vaultRoleId);
+            _vaultSecretId = new ConfigurationProperty("secretId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _props.Add(_vaultSecretId);
             _overrideFileName = new ConfigurationProperty("overrideFileName", typeof(string), null, ConfigurationPropertyOptions.None);
             _props.Add(_overrideFileName);
         }
 
         public string GroupName
         {
-            get { return (string)base[_groupName]; }
-            set { base[_groupName] = value; }
+            get => (string)base[_groupName];
+            set => base[_groupName] = value;
         }
 
         public TimeSpan UpdateInterval
         {
-            get { return (TimeSpan)base[_updateInterval]; }
-            set { base[_updateInterval] = value; }
+            get => (TimeSpan)base[_updateInterval];
+            set => base[_updateInterval] = value;
         }
 
         public string Address
         {
-            get { return (string)base[_vaultAddress]; }
-            set { base[_vaultAddress] = value; }
+            get => (string)base[_vaultAddress];
+            set => base[_vaultAddress] = value;
         }
 
-        public string RoleID
+        public string RoleId
         {
-            get { return (string)base[_vaultRoleID]; }
-            set { base[_vaultRoleID] = value; }
+            get => (string)base[_vaultRoleId];
+            set => base[_vaultRoleId] = value;
         }
 
-        public string SecretID
+        public string SecretId
         {
-            get { return (string)base[_vaultSecretID]; }
-            set { base[_vaultSecretID] = value; }
+            get => (string)base[_vaultSecretId];
+            set => base[_vaultSecretId] = value;
         }
 
         public string OverrideFileName
         {
-            get { return (string)base[_overrideFileName]; }
-            set { base[_overrideFileName] = value; }
+            get => (string)base[_overrideFileName];
+            set => base[_overrideFileName] = value;
         }
 
-        protected override ConfigurationPropertyCollection Properties
-        {
-            get
-            {
-                return _props;
-            }
-        }
+        protected override ConfigurationPropertyCollection Properties => _props;
 
         private static readonly ConfigurationPropertyCollection _props = new ConfigurationPropertyCollection();
 
         private static readonly ConfigurationProperty _updateInterval;
         private static readonly ConfigurationProperty _groupName;
         private static readonly ConfigurationProperty _vaultAddress;
-        private static readonly ConfigurationProperty _vaultRoleID;
-        private static readonly ConfigurationProperty _vaultSecretID;
+        private static readonly ConfigurationProperty _vaultRoleId;
+        private static readonly ConfigurationProperty _vaultSecretId;
         private static readonly ConfigurationProperty _overrideFileName;
     }
 }

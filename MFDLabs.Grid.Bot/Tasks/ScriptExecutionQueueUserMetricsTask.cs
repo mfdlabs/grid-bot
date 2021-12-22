@@ -35,11 +35,11 @@ namespace MFDLabs.Grid.Bot
     {
         internal sealed class ScriptExecutionQueueUserMetricsTask : ExpiringTaskThread<ScriptExecutionQueueUserMetricsTask, SocketTaskRequest>
         {
-            public override string Name => "Script Execution Queue";
-            public override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionQueueDelay;
-            public override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionQueueExpiration;
-            public override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
-            public override int PacketID => 17;
+            protected override string Name => "Script Execution Queue";
+            protected override TimeSpan ProcessActivationInterval => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionQueueDelay;
+            protected override TimeSpan Expiration => global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionQueueExpiration;
+            protected override ICounterRegistry CounterRegistry => PerfmonCounterRegistryProvider.Registry;
+            protected override int PacketId => 17;
 
             public override PluginResult OnReceive(ref Packet<SocketTaskRequest> packet)
             {
@@ -63,27 +63,27 @@ namespace MFDLabs.Grid.Bot
                     {
                         SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
 
-                        if (fault.Message == "Cannot invoke BatchJob while another job is running")
+                        switch (fault.Message)
                         {
-                            message.Reply("You are sending requests too fast, please slow down!");
-                            return PluginResult.ContinueProcessing;
+                            case "Cannot invoke BatchJob while another job is running":
+                                message.Reply("You are sending requests too fast, please slow down!");
+                                return PluginResult.ContinueProcessing;
+                            case "BatchJob Timeout":
+                                message.Reply("The job timed out, please try again later.");
+                                return PluginResult.ContinueProcessing;
                         }
-
-                        if (fault.Message == "BatchJob Timeout")
-                        {
-                            message.Reply("The job timed out, please try again later.");
-                            return PluginResult.ContinueProcessing;
-                        }
-
-                        message.Reply("An exception occurred on the grid server, please review this error to see if your input was malformed:");
 
                         if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
                         {
-                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt");
+                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                                "fault.txt",
+                                "An exception occurred on the grid server, please review this error to see if your input was malformed:");
                             return PluginResult.ContinueProcessing;
                         }
 
                         message.Reply(
+                            "An exception occurred on the grid server, please review this error to see if " +
+                            "your input was malformed:",
                             embed: new EmbedBuilder()
                             .WithColor(0xff, 0x00, 0x00)
                             .WithTitle("GridServer exception.")
@@ -109,7 +109,8 @@ namespace MFDLabs.Grid.Bot
                         }
 
                         message.Reply(
-                            "An error occured with the script execution task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
+                            "An error occured with the script execution task and the environment variable" +
+                            "'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:",
                             embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
                         );
                         return PluginResult.ContinueProcessing;
@@ -121,7 +122,9 @@ namespace MFDLabs.Grid.Bot
 
             private UserTaskPerformanceMonitor GetUserPerformanceMonitor(IUser user)
             {
-                var perfmon = (from userPerfmon in _userPerformanceMonitors where userPerfmon.Item1 == user.Id select userPerfmon.Item2).FirstOrDefault();
+                var perfmon = (from userPerfmon in _userPerformanceMonitors
+                    where userPerfmon.Item1 == user.Id
+                    select userPerfmon.Item2).FirstOrDefault();
 
                 if (perfmon == default)
                 {
@@ -145,18 +148,17 @@ namespace MFDLabs.Grid.Bot
 
             #region Concurrency
 
-            private readonly object _execLock = new object();
-            private bool _processingItem = false;
-            private int _itemCount = 0;
+            private readonly object _execLock = new();
+            private bool _processingItem;
+            private int _itemCount;
 
             #endregion Concurrency
 
             #region Metrics
 
-            private readonly ScriptExecutionTaskPerformanceMonitor _perfmon = new ScriptExecutionTaskPerformanceMonitor(PerfmonCounterRegistryProvider.Registry);
+            private readonly ScriptExecutionTaskPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
 
             #endregion Metrics
-
 
             public override PluginResult OnReceive(ref Packet<SocketTaskRequest> packet)
             {
@@ -180,7 +182,8 @@ namespace MFDLabs.Grid.Bot
 
                             if (_processingItem)
                             {
-                                message.Reply($"The script execution queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
+                                message.Reply($"The script execution queue is currently trying to process " +
+                                              $"{_itemCount} items, please wait for your result to be processed.");
                             }
 
                             lock (_execLock)
@@ -224,11 +227,12 @@ namespace MFDLabs.Grid.Bot
                                 script = script.EscapeQuotes();
                                 script = script.GetCodeBlockContents();
 
-                                if (LuaUtility.Singleton.CheckIfScriptContainsDisallowedText(script, out string keyword) && !userIsAdmin)
+                                if (LuaUtility.CheckIfScriptContainsDisallowedText(script, out var keyword) && !userIsAdmin)
                                 {
                                     _perfmon.TotalItemsProcessedThatFailed.Increment();
                                     _perfmon.TotalItemsProcessedThatHadBlacklistedKeywords.Increment();
-                                    message.Reply($"The script you sent contains keywords that are not permitted, please review your script and change the blacklisted keyword: {keyword}");
+                                    message.Reply($"The script you sent contains keywords that are not permitted, " +
+                                                  $"please review your script and change the blacklisted keyword: {keyword}");
                                     return PluginResult.ContinueProcessing;
                                 }
 
@@ -236,19 +240,20 @@ namespace MFDLabs.Grid.Bot
                                 {
                                     _perfmon.TotalItemsProcessedThatFailed.Increment();
                                     _perfmon.TotalItemsProcessedThatHadUnicode.Increment();
-                                    message.Reply("Sorry, but unicode in messages is not supported as of now, please remove any unicode characters from your script.");
+                                    message.Reply("Sorry, but unicode in messages is not supported as of now, " +
+                                                  "please remove any unicode characters from your script.");
                                     return PluginResult.ContinueProcessing;
                                 }
 
-                                bool isAdminScript = global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
+                                var isAdminScript = global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
 
-                                var scriptID = NetworkingGlobal.Singleton.GenerateUUIDV4();
-                                var filesafeScriptID = scriptID.Replace("-", "");
-                                var scriptName = GridServerCommandUtility.Singleton.GetGridServerScriptPath(filesafeScriptID);
+                                var scriptId = NetworkingGlobal.GenerateUuidv4();
+                                var filesafeScriptId = scriptId.Replace("-", "");
+                                var scriptName = GridServerCommandUtility.GetGridServerScriptPath(filesafeScriptId);
 
                                 // isAdmin allows a bypass of disabled methods and virtualized globals
-                                var (command, settings) = JsonScriptingUtility.Singleton.GetSharedGameServerExecutionScript(
-                                    filesafeScriptID,
+                                var (command, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
+                                    filesafeScriptId,
                                     ("isAdmin", isAdminScript)
                                 );
 
@@ -257,28 +262,31 @@ namespace MFDLabs.Grid.Bot
                                 try
                                 {
                                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
-                                        script = $"{LuaUtility.Singleton.SafeLuaMode}{script}";
+                                        script = $"{LuaUtility.SafeLuaMode}{script}";
 
                                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
-                                        script = $"game:GetService(\"ContentProvider\"):SetBaseUrl(\"{MFDLabs.Grid.Bot.Properties.Settings.Default.BaseURL}\");{script}";
+                                        script = $"game:GetService(\"ContentProvider\"):SetBaseUrl" +
+                                                 $"(\"{MFDLabs.Grid.Bot.Properties.Settings.Default.BaseURL}\");{script}";
 
                                     File.WriteAllText(scriptName, script, Encoding.ASCII);
 
                                     var scriptEx = Lua.NewScript(
-                                        NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                                        NetworkingGlobal.GenerateUuidv4(),
                                         command
                                     );
 
                                     // bump to 20 seconds so it doesn't batch job timeout on first execution
-                                    var job = new Job() { id = scriptID, expirationInSeconds = userIsAdmin ? 20000 : 20 };
-                                    var result = LuaUtility.Singleton.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
+                                    var job = new Job() { id = scriptId, expirationInSeconds = userIsAdmin ? 20000 : 20 };
+                                    var result = LuaUtility.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
 
                                     if (!result.IsNullOrEmpty())
                                     {
                                         if (result.Length > MaxResultLength)
                                         {
                                             _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
-                                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)), "execute-result.txt");
+                                            message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)),
+                                                "execute-result.txt",
+                                                "Executed script with return:");
                                             return PluginResult.ContinueProcessing;
                                         }
                                         message.Reply(
@@ -300,20 +308,30 @@ namespace MFDLabs.Grid.Bot
                                 catch (IOException)
                                 {
                                     _perfmon.TotalItemsProcessedThatFailed.Increment();
-                                    message.Reply("There was an IO error when writing the script to the system, please try again later.");
+                                    message.Reply("There was an IO error when writing the script to the system, " +
+                                                  "please try again later.");
                                 }
                                 finally
                                 {
                                     try
                                     {
-                                        SystemLogger.Singleton.LifecycleEvent("Trying delete the script '{0}' at path '{1}'", scriptID, scriptName);
+                                        SystemLogger.Singleton.LifecycleEvent(
+                                            "Trying delete the script '{0}' at path '{1}'",
+                                            scriptId,
+                                            scriptName);
                                         File.Delete(scriptName);
-                                        SystemLogger.Singleton.LifecycleEvent("Successfully deleted the script '{0}' at path '{1}'!", scriptID, scriptName);
+                                        SystemLogger.Singleton.LifecycleEvent(
+                                            "Successfully deleted the script '{0}' at path '{1}'!",
+                                            scriptId,
+                                            scriptName);
                                     }
                                     catch (Exception ex)
                                     {
                                         _perfmon.TotalItemsProcessedThatFailed.Increment();
-                                        SystemLogger.Singleton.Warning("Failed to delete the user script '{0}' because '{1}'", scriptName, ex?.Message);
+                                        SystemLogger.Singleton.Warning(
+                                            "Failed to delete the user script '{0}' because '{1}'",
+                                            scriptName,
+                                            ex.Message);
                                     }
                                 }
                             }
@@ -326,14 +344,18 @@ namespace MFDLabs.Grid.Bot
                         _itemCount--;
                         _processingItem = false;
                         sw.Stop();
-                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.",
+                            sw.Elapsed.TotalSeconds.ToString("f7"));
                     }
                 }
                 else
                 {
-                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...", packet.ID, packet.SequenceID);
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem) return PluginResult.StopProcessingAndDeallocate;
-                    return PluginResult.ContinueProcessing;
+                    SystemLogger.Singleton.Warning("Task packet {0} at the sequence {1} had a null item, ignoring...",
+                        packet.Id,
+                        packet.SequenceId);
+                    return global::MFDLabs.Grid.Bot.Properties.Settings.Default.StopProcessingOnNullPacketItem
+                        ? PluginResult.StopProcessingAndDeallocate
+                        : PluginResult.ContinueProcessing;
                 }
             }
         }

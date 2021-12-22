@@ -4,27 +4,22 @@ namespace MFDLabs.ErrorHandling
 {
     public class ExceptionDetail
     {
-        private readonly Exception _Exception;
+        private readonly Exception _exception;
 
-        public ExceptionDetail(Exception ex)
-        {
-            _Exception = ex;
-        }
+        public ExceptionDetail(Exception ex) => _exception = ex;
 
-        public override string ToString()
-        {
-            return string.Format(
-                _DefaultErrorFormat,
-                _Exception.GetType().FullName,
-                _Exception.Message != null ? _Exception.Message.ToString() : "",
-                _Exception.InnerException != null ? _Exception.InnerException.ToString() : "",
-                _Exception.StackTrace != null ? _Exception.StackTrace.ToString() : "",
-                _Exception.Source != null ? _Exception.Source.ToString() : "",
-                _Exception.TargetSite != null ? _Exception.TargetSite.ToString() : "",
-                _Exception.Data != null ? _Exception.Data.ToString() : ""
+        public override string ToString() =>
+            string.Format(
+                DefaultErrorFormat,
+                _exception.GetType().FullName,
+                _exception.Message ?? "",
+                _exception.InnerException != null ? _exception.InnerException.ToString() : "",
+                _exception.StackTrace ?? "",
+                _exception.Source ?? "",
+                _exception.TargetSite != null ? _exception.TargetSite.ToString() : "",
+                _exception.Data
             );
-        }
 
-        private const string _DefaultErrorFormat = "\r\nError Type: {0}\r\nError Detail: {1}\r\nInner Exception: {2}\r\nException Stack Trace: \r\n{3}\r\nException Source: {4}\r\nException TargetSite: {5}\r\nException Data: {6}";
+        private const string DefaultErrorFormat = "\r\nError Type: {0}\r\nError Detail: {1}\r\nInner Exception: {2}\r\nException Stack Trace: \r\n{3}\r\nException Source: {4}\r\nException TargetSite: {5}\r\nException Data: {6}";
     }
 }

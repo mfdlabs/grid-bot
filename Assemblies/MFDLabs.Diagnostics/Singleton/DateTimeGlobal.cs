@@ -1,23 +1,29 @@
 ﻿using System;
 using System.Diagnostics;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Diagnostics
 {
     [DebuggerStepThrough]
-    public sealed class DateTimeGlobal : SingletonBase<DateTimeGlobal>
+    public static class DateTimeGlobal
     {
         [DebuggerStepThrough]
-        public string GetNowAsISO()
+        public static string GetNowAsIso()
         {
             return DateTime.Now.ToIso();
         }
 
         [DebuggerStepThrough]
-        public string GetUtcNowAsISO()
+        public static string GetUtcNowAsIso()
         {
             return DateTime.UtcNow.ToIso();
+        }
+
+        [DebuggerStepThrough]
+        public static string GetFileSafeUtcNowAsIso()
+        {
+            return DateTime.Now.ToIso().MakeFileSafeString().Replace("-", "");
         }
     }
 }

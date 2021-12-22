@@ -219,6 +219,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backtrace", "Dependencies\B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Interactions", "Dependencies\Discord.Net.Interactions\Discord.Net.Interactions.csproj", "{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.FileSystem", "Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj", "{798A29EB-0998-4D5D-BF0D-A485A75D7349}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Discord.Configuration", "Assemblies\MFDLabs.Discord.Configuration\MFDLabs.Discord.Configuration.csproj", "{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -793,6 +797,30 @@ Global
 		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
 		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseNoDeploy|Any CPU.ActiveCfg = Release|Any CPU
 		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22}.ReleaseNoDeploy|Any CPU.Build.0 = Release|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.Release|Any CPU.Build.0 = Release|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.ReleaseGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.ReleaseGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.ReleaseNoDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349}.ReleaseNoDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.ReleaseGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.ReleaseGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.ReleaseNoDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015}.ReleaseNoDeploy|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -876,6 +904,8 @@ Global
 		{741A9414-75AA-4C76-B291-941E7A048F2C} = {C606B0D0-A00D-4147-939C-EC93AE76C870}
 		{F9C3F667-D954-4563-9E46-30AAC9FC07DD} = {741A9414-75AA-4C76-B291-941E7A048F2C}
 		{9DC67BD9-28AA-4870-8A36-7DD4E1CABC22} = {BB11CCBE-C170-4BCE-8296-578C2E807FDC}
+		{798A29EB-0998-4D5D-BF0D-A485A75D7349} = {BE89E4AB-853B-4786-99CB-1EDF47E52D60}
+		{BCCF14DA-DF86-4BFC-AFAA-0ECF1E722015} = {E36F9354-C3E1-4826-800D-4AB3E224DB7F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}

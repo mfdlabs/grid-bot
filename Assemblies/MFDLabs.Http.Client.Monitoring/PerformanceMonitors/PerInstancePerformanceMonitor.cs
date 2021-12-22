@@ -8,10 +8,10 @@ namespace MFDLabs.Http.Client.Monitoring
         public PerInstancePerformanceMonitor(ICounterRegistry registry, string categoryName, string instanceName)
         {
             if (registry == null) throw new ArgumentNullException(nameof(registry));
-            AverageResponseTime = registry.GetAverageValueCounter(categoryName, _AverageResponseTimeCounterName, instanceName);
-            FailuresPerSecond = registry.GetRateOfCountsPerSecondCounter(categoryName, _FailuresPerSecondCounterName, instanceName);
-            RequestsOutstanding = registry.GetRawValueCounter(categoryName, _RequestsOutstandingCounterName, instanceName);
-            SuccessesPerSecond = registry.GetRateOfCountsPerSecondCounter(categoryName, _SuccessesPerSecondCounterName, instanceName);
+            AverageResponseTime = registry.GetAverageValueCounter(categoryName, AverageResponseTimeCounterName, instanceName);
+            FailuresPerSecond = registry.GetRateOfCountsPerSecondCounter(categoryName, FailuresPerSecondCounterName, instanceName);
+            RequestsOutstanding = registry.GetRawValueCounter(categoryName, RequestsOutstandingCounterName, instanceName);
+            SuccessesPerSecond = registry.GetRateOfCountsPerSecondCounter(categoryName, SuccessesPerSecondCounterName, instanceName);
         }
 
         public IAverageValueCounter AverageResponseTime { get; }
@@ -19,9 +19,9 @@ namespace MFDLabs.Http.Client.Monitoring
         public IRawValueCounter RequestsOutstanding { get; }
         public IRateOfCountsPerSecondCounter SuccessesPerSecond { get; }
 
-        private const string _AverageResponseTimeCounterName = "Avg Response Time";
-        private const string _FailuresPerSecondCounterName = "Failures/s";
-        private const string _RequestsOutstandingCounterName = "Requests Outstanding";
-        private const string _SuccessesPerSecondCounterName = "Requests/s";
+        private const string AverageResponseTimeCounterName = "Avg Response Time";
+        private const string FailuresPerSecondCounterName = "Failures/s";
+        private const string RequestsOutstandingCounterName = "Requests Outstanding";
+        private const string SuccessesPerSecondCounterName = "Requests/s";
     }
 }

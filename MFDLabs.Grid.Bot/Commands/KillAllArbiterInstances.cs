@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Kill All Arbiter Instances";
         public string CommandDescription => "Attempts to kill all the arbiter instances, if none are running, it says that.";
-        public string[] CommandAliases => new string[] { "kaai", "killallarbiterinstances" };
+        public string[] CommandAliases => new[] { "kaai", "killallarbiterinstances" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -25,10 +25,12 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            if (!bool.TryParse(messageContentArray.ElementAtOrDefault(0), out bool @unsafe))
+            if (!bool.TryParse(messageContentArray.ElementAtOrDefault(0), out var @unsafe))
                 @unsafe = false;
 
-            var totalItemsKilled = @unsafe ? GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe() : GridServerArbiter.Singleton.KillAllOpenInstances();
+            var totalItemsKilled = @unsafe
+                ? GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe()
+                : GridServerArbiter.Singleton.KillAllOpenInstances();
 
             if (totalItemsKilled == 0)
             {

@@ -2,6 +2,7 @@
 using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -59,20 +60,20 @@ namespace MFDLabs.Concurrency
 
         internal TaskThreadMonitor(ICounterRegistry registry, string threadName)
         {
-            if (registry == null) throw new ArgumentNullException("registry");
+            if (registry == null) throw new ArgumentNullException(nameof(registry));
             if (threadName.IsNullOrEmpty()) throw new ArgumentNullException(threadName);
 
-            CountOfItemsProcessed = registry.GetRawValueCounter(_Category, "CountOfItemsProcessed", threadName);
-            RateOfItemsPerSecondProcessed = registry.GetRateOfCountsPerSecondCounter(_Category, "RateOfItemsPerSecondProcessed", threadName);
-            AverageRateOfItems = registry.GetAverageValueCounter(_Category, "AverageRateOfItems", threadName);
-            CountOfItemsProcessedThatSucceed = registry.GetRawValueCounter(_Category, "CountOfItemsProcessedThatSucceed", threadName);
-            RateOfItemsPerSecondProcessedThatSucceed = registry.GetRateOfCountsPerSecondCounter(_Category, "RateOfItemsPerSecondProcessedThatSucceed", threadName);
-            AverageRateOfItemsThatSucceed = registry.GetAverageValueCounter(_Category, "AverageRateOfItemsThatSucceed", threadName);
-            CountOfItemsProcessedThatFail = registry.GetRawValueCounter(_Category, "CountOfItemsProcessedThatFail", threadName);
-            RateOfItemsPerSecondProcessedThatFail = registry.GetRateOfCountsPerSecondCounter(_Category, "RateOfItemsPerSecondProcessedThatFail", threadName);
-            AverageRateOfItemsThatFail = registry.GetAverageValueCounter(_Category, "AverageRateOfItemsThatFail", threadName);
+            CountOfItemsProcessed = registry.GetRawValueCounter(Category, "CountOfItemsProcessed", threadName);
+            RateOfItemsPerSecondProcessed = registry.GetRateOfCountsPerSecondCounter(Category, "RateOfItemsPerSecondProcessed", threadName);
+            AverageRateOfItems = registry.GetAverageValueCounter(Category, "AverageRateOfItems", threadName);
+            CountOfItemsProcessedThatSucceed = registry.GetRawValueCounter(Category, "CountOfItemsProcessedThatSucceed", threadName);
+            RateOfItemsPerSecondProcessedThatSucceed = registry.GetRateOfCountsPerSecondCounter(Category, "RateOfItemsPerSecondProcessedThatSucceed", threadName);
+            AverageRateOfItemsThatSucceed = registry.GetAverageValueCounter(Category, "AverageRateOfItemsThatSucceed", threadName);
+            CountOfItemsProcessedThatFail = registry.GetRawValueCounter(Category, "CountOfItemsProcessedThatFail", threadName);
+            RateOfItemsPerSecondProcessedThatFail = registry.GetRateOfCountsPerSecondCounter(Category, "RateOfItemsPerSecondProcessedThatFail", threadName);
+            AverageRateOfItemsThatFail = registry.GetAverageValueCounter(Category, "AverageRateOfItemsThatFail", threadName);
         }
 
-        private const string _Category = "MFDLabs.Concurrency.TaskThread.PerfmonCountersV4";
+        private const string Category = "MFDLabs.Concurrency.TaskThread.PerfmonCountersV4";
     }
 }

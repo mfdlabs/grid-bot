@@ -17,11 +17,11 @@ namespace MFDLabs.Http.ServiceClient
         }
         private bool IsOperationError(IHttpResponse httpResponse) 
             => httpResponse != null &&
-            httpResponse.StatusCode == _ServiceFailureStatusCode &&
+            httpResponse.StatusCode == ServiceFailureStatusCode &&
             httpResponse.Headers.ContentType != null &&
-            httpResponse.Headers.ContentType.StartsWith(_JsonContentType);
+            httpResponse.Headers.ContentType.StartsWith(JsonContentType);
 
-        private const HttpStatusCode _ServiceFailureStatusCode = HttpStatusCode.Conflict;
-        private const string _JsonContentType = "application/json";
+        private const HttpStatusCode ServiceFailureStatusCode = HttpStatusCode.Conflict;
+        private const string JsonContentType = "application/json";
     }
 }

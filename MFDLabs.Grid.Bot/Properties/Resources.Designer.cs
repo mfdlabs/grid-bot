@@ -61,7 +61,34 @@ namespace MFDLabs.Grid.Bot.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to local a=...local b=a[&apos;isAdmin&apos;]if not b then warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)local setfenv=setfenv;local getfenv=getfenv;local setmetatable=setmetatable;local getmetatable=getmetatable;local type=type;local select=select;local tostring=tostring;local newproxy=newproxy;local print=print;local next=next;local c={}c.__metatable=&quot;This debug metatable is locked.&quot;local d=nil;local e={}function c:__index(f)if f:lower()==&quot;getservice&quot;then return function(...)local g={...}local h=g [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Crash Handler failed to upload the contents of the crash..
+        /// </summary>
+        internal static string CrashHandler_Upload_Failure {
+            get {
+                return ResourceManager.GetString("CrashHandler_Upload_Failure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crash handler successfuly uploaded dump!.
+        /// </summary>
+        internal static string CrashHandler_Upload_Success {
+            get {
+                return ResourceManager.GetString("CrashHandler_Upload_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Crash Handler running....
+        /// </summary>
+        internal static string CrashHandler_UploadRunning {
+            get {
+                return ResourceManager.GetString("CrashHandler_UploadRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to local a=...local b=a[&apos;isAdmin&apos;]if not b then warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)local setfenv=setfenv;local getfenv=getfenv;local setmetatable=setmetatable;local getmetatable=getmetatable;local type=type;local select=select;local tostring=tostring;local newproxy=newproxy;local next=next;local c={}c.__metatable=&quot;This debug metatable is locked.&quot;local d=nil;function c:__index(e)e=e:gsub(&quot;[^%w%s_]+&quot;,&quot;&quot;)if e:lower()==&quot;getservice&quot;then return function(...)local f={...}local g=game: [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string LuaVM {
             get {
@@ -76,19 +103,81 @@ namespace MFDLabs.Grid.Bot.Properties {
         ///Description: Disables specific things in the datamodel, by virualizing the fenv
         ///Modifications:
         ///	21/11/2021 01:16 =&gt; Removed the game to script check because it was returning nil (we aren&apos;t running under a script so it&apos;s nil)
-        ///--]]
-        ///
+        ///--]] 
         ///local args = ...
         ///local isAdmin = args[&apos;isAdmin&apos;] -- might be able to be hacked, but we&apos;ll see
         ///
         ///if (not isAdmin) then
-        ///	warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)	
+        ///    warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)
         ///
-        ///	local setfen [rest of string was truncated]&quot;;.
+        ///    local se [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string LuaVM_formatted {
             get {
                 return ResourceManager.GetString("LuaVM_formatted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [URGENT]: {0}.
+        /// </summary>
+        internal static string Program_Main_BadConfiguration {
+            get {
+                return ResourceManager.GetString("Program_Main_BadConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [URGENT]: Unhandled global exception occurred: {0}.
+        /// </summary>
+        internal static string Program_Main_GlobalException {
+            get {
+                return ResourceManager.GetString("Program_Main_GlobalException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error loading a type or dependency, please review the following error: {0}.
+        /// </summary>
+        internal static string Program_Main_UnhandledException {
+            get {
+                return ResourceManager.GetString("Program_Main_UnhandledException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0:X}] &apos;{1}&apos; @ &apos;{2}&apos; [{3}@{4} ({5})].
+        /// </summary>
+        internal static string Runner_Invoke_Title {
+            get {
+                return ResourceManager.GetString("Runner_Invoke_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Got SIGINT. Will start shutdown procedure within 1 second..
+        /// </summary>
+        internal static string SignalUtility_InvokeInteruptSignal {
+            get {
+                return ResourceManager.GetString("SignalUtility_InvokeInteruptSignal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Got SIGUSR1. Will exit app without closing child processes (only if single instanced) with 1 second..
+        /// </summary>
+        internal static string SignalUtility_InvokeUserSignal1 {
+            get {
+                return ResourceManager.GetString("SignalUtility_InvokeUserSignal1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Got SIGUSR2. Will close all child processes, and clear LocalLog within 1 second..
+        /// </summary>
+        internal static string SignalUtility_InvokeUserSignal2 {
+            get {
+                return ResourceManager.GetString("SignalUtility_InvokeUserSignal2", resourceCulture);
             }
         }
     }

@@ -4,17 +4,14 @@ namespace MFDLabs.Drawing.Models
 {
     public struct BaseRectangle
     {
-        public BaseRectangle(BaseRectangle Rectangle)
-        {
-            this = new BaseRectangle(Rectangle.Left, Rectangle.Top, Rectangle.Right, Rectangle.Bottom);
-        }
+        private BaseRectangle(BaseRectangle rectangle) => this = new BaseRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
 
-        public BaseRectangle(int Left, int Top, int Right, int Bottom)
+        private BaseRectangle(int left, int top, int right, int bottom)
         {
-            _Left = Left;
-            _Top = Top;
-            _Right = Right;
-            _Bottom = Bottom;
+            _Left = left;
+            _Top = top;
+            _Right = right;
+            _Bottom = bottom;
         }
 
         public int X

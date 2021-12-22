@@ -18,8 +18,10 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class SendMessageInGuildChannel : IStateSpecificCommandHandler
     {
         public string CommandName => "Send Message In Guild Channel";
-        public string CommandDescription => $"Sends a message to a guild channel\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}message guildId channelId ...message&attachments.";
-        public string[] CommandAliases => new string[] { "msg", "message" };
+        public string CommandDescription => $"Sends a message to a guild channel\nLayout:" +
+                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}message " +
+                                            $"guildId channelId ...message&attachments.";
+        public string[] CommandAliases => new[] { "msg", "message" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -64,14 +66,14 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
             }
 
-            int i = 0;
+            var i = 0;
             foreach (var attachment in message.Attachments)
             {
                 fileContents[i] = new MemoryStream(attachment.GetRawAttachmentBuffer());
                 i++;
             }
 
-            var guild = BotGlobal.Singleton.Client.GetGuild(guildId);
+            var guild = BotGlobal.Client.GetGuild(guildId);
             if (guild == null)
             {
                 await message.ReplyAsync($"Unknown guild '{guildId}'.");
@@ -91,7 +93,7 @@ namespace MFDLabs.Grid.Bot.Commands
             if (fileContents.Length != 0)
             {
                 var attachments = message.Attachments.ToArray();
-                for (int j = 0; j < fileContents.Length; j++)
+                for (var j = 0; j < fileContents.Length; j++)
                 {
                     var stream = fileContents[j];
                     await channel.SendFileAsync(stream, attachments[j].Filename, "");

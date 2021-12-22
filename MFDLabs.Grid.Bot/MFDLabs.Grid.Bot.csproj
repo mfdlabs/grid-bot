@@ -7,6 +7,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A854E7F4-873B-413F-98CF-AB4D4D682D17}</ProjectGuid>
     <OutputType>Exe</OutputType>
+    <LangVersion>10</LangVersion>
     <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
     <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -40,7 +41,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>
     </DocumentationFile>
@@ -53,7 +54,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>0</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>
     </DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -73,10 +74,9 @@
     <Optimize>true</Optimize>
     <WarningLevel>0</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -85,9 +85,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseGridDeploy|AnyCPU'">
     <OutputPath>bin\Release\</OutputPath>
@@ -95,10 +94,9 @@
     <Optimize>true</Optimize>
     <WarningLevel>0</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
@@ -109,9 +107,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=3.11.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -221,6 +218,7 @@
     <Compile Include="Extensions\IUserExtensions.cs" />
     <Compile Include="Extensions\SocketCommandBaseExtensions.cs" />
     <Compile Include="Extensions\SocketGuildExtensions.cs" />
+    <Compile Include="Guards\CommandCircuitBreakerWrapper.cs" />
     <Compile Include="Hooks\ClearConsoleHook.cs" />
     <Compile Include="Hooks\CommandRegistryMetricsReportHook.cs" />
     <Compile Include="Hooks\SuicideHook.cs" />
@@ -248,6 +246,7 @@
     <None Include="Lua\LuaVM.formatted.lua" />
     <None Include="Lua\LuaVM.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
+    <Compile Include="Properties\SettingsProvider.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="SlashCommands\Test.cs" />
     <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
@@ -329,6 +328,10 @@
       <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
       <Name>MFDLabs.Diagnostics</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Discord.Configuration\MFDLabs.Discord.Configuration.csproj">
+      <Project>{bccf14da-df86-4bfc-afaa-0ecf1e722015}</Project>
+      <Name>MFDLabs.Discord.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj">
       <Project>{af81a713-e6ae-4ad1-877e-e292f7c53f9e}</Project>
       <Name>MFDLabs.Discord.RbxUsers.Client</Name>
@@ -372,6 +375,10 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj">
       <Project>{c85a3daf-e246-432b-b363-7478c6d6541f}</Project>
       <Name>MFDLabs.Reflection</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj">
+      <Project>{b396d961-6ea1-4bb9-ac74-880f832cd37e}</Project>
+      <Name>MFDLabs.Sentinels</Name>
     </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj">
       <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>

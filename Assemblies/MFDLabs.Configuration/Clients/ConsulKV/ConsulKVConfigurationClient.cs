@@ -7,18 +7,16 @@ using MFDLabs.Configuration.Logging;
 using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.ConsulClient;
 
-namespace MFDLabs.Configuration.Clients.ConsulKV
+namespace MFDLabs.Configuration.Clients.ConsulKv
 {
-    public class ConsulKVConfigurationClient : IDisposable
+    public class ConsulKvConfigurationClient : IDisposable
     {
-        public ConsulKVConfigurationClient(string address, string token)
-        {
-            _client = new ConsulClient(new ConsulClientConfiguration() { Address = new Uri(address), Token = token });
-        }
+        public ConsulKvConfigurationClient(string address, string token) 
+            => _client = new ConsulClient(new ConsulClientConfiguration { Address = new Uri(address), Token = token });
 
-        public IReadOnlyCollection<T> FetchWithRetries<T>(Func<string, IReadOnlyCollection<T>> getterFunc, string groupName, int maxAttempts)
+        public static IReadOnlyCollection<T> FetchWithRetries<T>(Func<string, IReadOnlyCollection<T>> getterFunc, string groupName, int maxAttempts)
         {
-            for (int i = 0; i < maxAttempts; i++)
+            for (var i = 0; i < maxAttempts; i++)
             {
                 try
                 {
@@ -30,7 +28,7 @@ namespace MFDLabs.Configuration.Clients.ConsulKV
                     Thread.Sleep(i * global::MFDLabs.Configuration.Properties.Settings.Default.ConsulKVConfigurationFetcherBackoffBaseMilliseconds);
                 }
             }
-            return new T[0];
+            return Array.Empty<T>();
         }
 
         public IReadOnlyCollection<ISetting> GetAllSettings(string groupName)
@@ -48,9 +46,9 @@ namespace MFDLabs.Configuration.Clients.ConsulKV
                     data = formatter.Deserialize(stream);
                 }
 
-                if (!(data is Setting)) continue; // TODO: Something here?
+                if (!(data is Setting setting)) continue; // TODO: Something here?
 
-                settings.Add(data as Setting);
+                settings.Add(setting);
             }
             return settings;
         }
@@ -70,9 +68,9 @@ namespace MFDLabs.Configuration.Clients.ConsulKV
                     data = formatter.Deserialize(stream);
                 }
 
-                if (!(data is ConnectionString)) continue; // TODO: Something here?
+                if (!(data is ConnectionString connectionString)) continue; // TODO: Something here?
 
-                connectionStrings.Add(data as ConnectionString);
+                connectionStrings.Add(connectionString);
             }
             return connectionStrings;
         }
@@ -96,6 +94,7 @@ namespace MFDLabs.Configuration.Clients.ConsulKV
 
         void IDisposable.Dispose()
         {
+            GC.SuppressFinalize(this);
             _client?.Dispose();
         }
 

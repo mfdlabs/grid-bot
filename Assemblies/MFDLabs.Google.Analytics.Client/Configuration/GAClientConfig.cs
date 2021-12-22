@@ -2,24 +2,24 @@
 
 namespace MFDLabs.Google.Analytics.Client
 {
-    public class GAClientConfig
+    public class GaClientConfig
     {
         public string Url { get; }
-
-        public string TrackerID { get; }
-
+        public string TrackerId { get; }
         public int MaxRedirects { get; }
-
         public TimeSpan RequestTimeout { get; }
-
         public int CircuitBreakerFailuresAllowedBeforeTrip { get; }
-
         public TimeSpan CircuitBreakerRetryInterval { get; }
 
-        public GAClientConfig(string url, string trackerID, int maxRedirects, TimeSpan requestTimeout, int circuitBreakerFailuresAllowedBeforeTrip, TimeSpan circuitBreakerRetryInterval)
+        public GaClientConfig(string url,
+            string trackerId,
+            int maxRedirects,
+            TimeSpan requestTimeout,
+            int circuitBreakerFailuresAllowedBeforeTrip,
+            TimeSpan circuitBreakerRetryInterval)
         {
             Url = url;
-            TrackerID = trackerID;
+            TrackerId = trackerId;
             MaxRedirects = maxRedirects;
             RequestTimeout = requestTimeout;
             CircuitBreakerFailuresAllowedBeforeTrip = circuitBreakerFailuresAllowedBeforeTrip;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
@@ -11,9 +10,12 @@ using MFDLabs.Logging;
 using MFDLabs.Networking;
 using Microsoft.Win32;
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBeMadeStatic.Global
+
 namespace MFDLabs.Grid.Bot.Utility
 {
-    public sealed class GridServerCommandUtility : SingletonBase<GridServerCommandUtility>
+    public static class GridServerCommandUtility
     {
         public enum ScriptType
         {
@@ -28,23 +30,26 @@ namespace MFDLabs.Grid.Bot.Utility
             ServerCoreScript,
             StarterCharacterScript,
             StarterPlayerScript,
-            StarterPlayerScript_NewStructure,
+            StarterPlayerScriptNewStructure,
             StarterPlayerScriptCommon,
             HiddenCommon,
             Hidden,
             HiddenModule
         }
 
-        public object GetGridServerPath(bool throwIfNoGridServer = true)
+        private static object GetGridServerPath(bool throwIfNoGridServer = true)
         {
             var value = Registry.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName, global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName, null);
-            if (value == null) if (throwIfNoGridServer) throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.Singleton.GetMachineID()}', please contact the datacenter administrator to sort this out.");
-            return value;
+            if (value != null) return value;
+            if (throwIfNoGridServer) 
+                throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.GetMachineId()}', " +
+                                               $"please contact the datacenter administrator to sort this out.");
+            return default;
         }
 
-        public string GetGridServerScriptPath(string scriptName, ScriptType scriptType = ScriptType.InternalScript, bool throwIfNoGridServer = true, bool test = false)
+        public static string GetGridServerScriptPath(string scriptName, ScriptType scriptType = ScriptType.InternalScript, bool throwIfNoGridServer = true, bool test = false)
         {
-            string prefix = GetGridServerPrefixByScriptType(scriptType, throwIfNoGridServer);
+            var prefix = GetGridServerPrefixByScriptType(scriptType, throwIfNoGridServer);
 
             scriptName = scriptName.Replace("..", "");
             var fullPath = $"{prefix}{scriptName}.lua";
@@ -54,7 +59,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return fullPath;
         }
 
-        public string GetGridServerPrefixByScriptType(ScriptType scriptType, bool throwIfNoGridServer = true)
+        private static string GetGridServerPrefixByScriptType(ScriptType scriptType, bool throwIfNoGridServer = true)
         {
             var prefix = (string)GetGridServerPath(throwIfNoGridServer);
             switch (scriptType)
@@ -92,7 +97,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 case ScriptType.StarterPlayerScript:
                     prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts\\";
                     break;
-                case ScriptType.StarterPlayerScript_NewStructure:
+                case ScriptType.StarterPlayerScriptNewStructure:
                     prefix += "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts_NewStructure\\";
                     break;
                 case ScriptType.StarterPlayerScriptCommon:
@@ -107,12 +112,14 @@ namespace MFDLabs.Grid.Bot.Utility
                 case ScriptType.HiddenModule:
                     prefix += "Content\\hidden\\rcc\\modules\\";
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, null);
             }
 
             return prefix;
         }
 
-        private IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
+        private static IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {
             yield return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAssetFetchUrl; // baseUrl
             yield return url; // characterAppearanceUrl
@@ -125,13 +132,12 @@ namespace MFDLabs.Grid.Bot.Utility
             yield return 100; // maxHatZoom
             yield return 0; // cameraOffsetX
             yield return 0; // cameraOffsetY
-            yield break;
         }
 
         //TODO: return tuple of filename, contents b64 encoded and contents b64 decoded?
-        public (Stream, string) RenderUser(long userId, long placeId, int sizeX, int sizeY)
+        public static (Stream, string) RenderUser(long userId, long placeId, int sizeX, int sizeY)
         {
-            var url = GetAvatarFetchURL(userId, placeId);
+            var url = GetAvatarFetchUrl(userId, placeId);
 
             SystemLogger.Singleton.Warning("Trying to render user '{0}' in place '{1}' with the dimensions of {2}x{3} with the url '{4}'", userId, placeId, sizeX, sizeY, url);
 
@@ -147,7 +153,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 thumbType = new Random().Next(0, 10) < 6 ? ThumbnailCommandType.Avatar_R15_Action : ThumbnailCommandType.Closeup;
             }
 
-            var (renderScript, settings) = JsonScriptingUtility.Singleton.GetThumbnailScript(thumbType, GetThumbnailArgs(url, sizeX, sizeY).ToArray());
+            var (renderScript, settings) = JsonScriptingUtility.GetThumbnailScript(thumbType, GetThumbnailArgs(url, sizeX, sizeY).ToArray());
 
             try
             {
@@ -155,11 +161,11 @@ namespace MFDLabs.Grid.Bot.Utility
                     "Render Queue",
                     new Job()
                     {
-                        id = NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                        id = NetworkingGlobal.GenerateUuidv4(),
                         expirationInSeconds = global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderJobTimeoutInSeconds
                     },
                     Lua.NewScript(
-                        NetworkingGlobal.Singleton.GenerateUUIDV4(),
+                        NetworkingGlobal.GenerateUuidv4(),
                         renderScript
                     )
                 );
@@ -186,48 +192,56 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        private static string GetAvatarFetchURL(long userId, long placeId)
+        private static string GetAvatarFetchUrl(long userId, long placeId)
         {
-            if (userId == -200000) throw new Exception("Test exception for handlers to hit.");
-            return string.Format(
-                "https://{0}{1}?userId={2}&placeId={3}",
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderTaskAvatarFetchHost,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAvatarFetchUriPart,
-                userId,
-                placeId
-            );
+            if (userId == -200000) 
+                throw new Exception("Test exception for handlers to hit.");
+            return $"https://{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderTaskAvatarFetchHost)}" +
+                   $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAvatarFetchUriPart)}?userId={userId}&placeId={placeId}";
         }
 
-        public LuaValue[] LaunchSimpleGame(string jobID, long placeID, long universeID)
+        public static LuaValue[] LaunchSimpleGame(string jobId, long placeId, long universeId)
         {
             return GridServerArbiter.Singleton.OpenJobEx(
                 "Game Server Queue",
-                new Job() { id = jobID, expirationInSeconds = 20000 },
+                new Job() { id = jobId, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {
                     name = "Execute Script",
-                    script = JsonScriptingUtility.Singleton.GetSharedGameServerScript(jobID, placeID, universeID).Item1
+                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
                 }
             );
         }
 
-        public Task<LuaValue[]> LaunchSimpleGameAsync(string jobID, long placeID, long universeID)
+        public static Task<LuaValue[]> LaunchSimpleGameAsync(string jobId, long placeId, long universeId)
         {
             return GridServerArbiter.Singleton.OpenJobExAsync(
                 "Game Server Queue",
-                new Job() { id = jobID, expirationInSeconds = 20000 },
+                new Job() { id = jobId, expirationInSeconds = 20000 },
                 new ScriptExecution()
                 {
                     name = "Execute Script",
-                    script = JsonScriptingUtility.Singleton.GetSharedGameServerScript(jobID, placeID, universeID).Item1
+                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
                 }
             );
         }
 
-        private string GetFileName(long userID, long placeID, ThumbnailSettings settings)
+        private static string GetFileName(long userId, long placeId, ThumbnailSettings settings)
         {
             var args = settings.Arguments;
-            return $"{NetworkingGlobal.Singleton.GenerateUUIDV4()}_{userID}_{placeID}_{settings.Type}_{args[2]}_{args[3]}_{args[4]}_{args[5]}_{args[6]}_{args[7]}_{args[8]}_{args[9]}_{MFDLabs.Grid.Bot.Properties.Settings.Default.RenderResultFileName}";
+            return $"{NetworkingGlobal.GenerateUuidv4()}_" +
+                   $"{userId}_" +
+                   $"{placeId}_" +
+                   $"{settings.Type}_" +
+                   $"{args[2]}_" +
+                   $"{args[3]}_" +
+                   $"{args[4]}_" +
+                   $"{args[5]}_" +
+                   $"{args[6]}_" +
+                   $"{args[7]}_" +
+                   $"{args[8]}_" +
+                   $"{args[9]}_" +
+                   $"{MFDLabs.Grid.Bot.Properties.Settings.Default.RenderResultFileName}";
         }
     }
 }

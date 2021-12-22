@@ -1,59 +1,28 @@
 ﻿using System.Configuration;
 
-namespace MFDLabs.Configuration.Elements.ConsulKV
+namespace MFDLabs.Configuration.Elements.ConsulKv
 {
-    public class ConsulKVGroupConfigurationElements : ConfigurationElementCollection
+    public class ConsulKvGroupConfigurationElements : ConfigurationElementCollection
     {
         public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.BasicMap;
-
         protected override string ElementName => "consulKvConfigurationGroup";
+        protected override ConfigurationPropertyCollection Properties => new ConfigurationPropertyCollection();
 
-        protected override ConfigurationPropertyCollection Properties
+        public ConsulKvGroupConfigurationElement this[int idx]
         {
-            get
-            {
-                return new ConfigurationPropertyCollection();
-            }
-        }
-
-        public ConsulKVGroupConfigurationElement this[int idx]
-        {
-            get { return (ConsulKVGroupConfigurationElement)BaseGet(idx); }
+            get => (ConsulKvGroupConfigurationElement)BaseGet(idx);
             set
             {
                 if (BaseGet(idx) != null) BaseRemoveAt(idx);
                 BaseAdd(idx, value);
             }
         }
+        public new ConsulKvGroupConfigurationElement this[string name] => (ConsulKvGroupConfigurationElement)BaseGet(name);
 
-        new public ConsulKVGroupConfigurationElement this[string name]
-        {
-            get { return (ConsulKVGroupConfigurationElement)BaseGet(name); }
-        }
-
-        public void Add(ConsulKVGroupConfigurationElement item)
-        {
-            BaseAdd(item);
-        }
-
-        public void Remove(ConsulKVGroupConfigurationElement item)
-        {
-            BaseRemove(item);
-        }
-
-        public void RemoveAt(int index)
-        {
-            BaseRemoveAt(index);
-        }
-
-        protected override ConfigurationElement CreateNewElement()
-        {
-            return new ConsulKVGroupConfigurationElement();
-        }
-
-        protected override object GetElementKey(ConfigurationElement element)
-        {
-            return (element as ConsulKVGroupConfigurationElement).GroupName;
-        }
+        public void Add(ConsulKvGroupConfigurationElement item) => BaseAdd(item);
+        public void Remove(ConsulKvGroupConfigurationElement item) => BaseRemove(item);
+        public void RemoveAt(int index) => BaseRemoveAt(index);
+        protected override ConfigurationElement CreateNewElement() => new ConsulKvGroupConfigurationElement();
+        protected override object GetElementKey(ConfigurationElement element) => (element as ConsulKvGroupConfigurationElement)?.GroupName;
     }
 }

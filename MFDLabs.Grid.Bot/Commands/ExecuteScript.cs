@@ -10,14 +10,17 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class ExecuteScript : IStateSpecificCommandHandler
     {
         public string CommandName => "Execute Grid Server Lua Script";
-        public string CommandDescription => $"Attempts to execute the given script contents on a grid server instance\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}execute ...script.";
-        public string[] CommandAliases => new string[] { "x", "ex", "execute" };
+        public string CommandDescription => $"Attempts to execute the given script contents on a grid " +
+                                            $"server instance\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}execute ...script.";
+        public string[] CommandAliases => new[] { "x", "ex", "execute" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
         public Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.", typeof(SocketTaskRequest).FullName, typeof(ScriptExecutionQueueUserMetricsTask).FullName);
+            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.",
+                typeof(SocketTaskRequest).FullName,
+                typeof(ScriptExecutionQueueUserMetricsTask).FullName);
 
             ScriptExecutionQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest()
             {

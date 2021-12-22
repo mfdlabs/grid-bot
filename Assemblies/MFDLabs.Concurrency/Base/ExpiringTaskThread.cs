@@ -16,15 +16,10 @@ namespace MFDLabs.Concurrency.Base
     {
         #region Overloaded Members
 
-        /// <inheritdoc/>
-        public static new TSingleton Singleton
-        {
-            get
-            {
-                if (_singleton == null) _singleton = new TSingleton();
-                return _singleton;
-            }
-        }
+        /// <summary>
+        /// A singleton of this class
+        /// </summary>
+        public new static TSingleton Singleton => _singleton ?? (_singleton = new TSingleton());
 
         #endregion Overloaded Members
 
@@ -33,7 +28,7 @@ namespace MFDLabs.Concurrency.Base
         /// <summary>
         /// The timeout to be implemented when this <see cref="ExpiringTaskThread{TSingleton, TItem}"/> to expire.
         /// </summary>
-        public abstract TimeSpan Expiration { get; }
+        protected abstract TimeSpan Expiration { get; }
 
         #endregion Members
 
@@ -63,36 +58,36 @@ namespace MFDLabs.Concurrency.Base
                                     Port,
                                     (item) =>
                                     {
-                                        _sequenceID++;
-                                        _monitor.CountOfItemsProcessed.Increment();
-                                        _monitor.RateOfItemsPerSecondProcessed.Increment();
-                                        _monitor.AverageRateOfItems.Sample(1.0 / _sequenceID);
+                                        _sequenceId++;
+                                        Monitor.CountOfItemsProcessed.Increment();
+                                        Monitor.RateOfItemsPerSecondProcessed.Increment();
+                                        Monitor.AverageRateOfItems.Sample(1.0 / _sequenceId);
                                         _isProcessingItem = true;
                                         lock (_resultLock)
                                         {
                                             try
                                             {
-                                                var packet = new Packet<TItem>(item, PacketID, _sequenceID, _monitor);
+                                                var packet = new Packet<TItem>(item, PacketId, _sequenceId, Monitor);
                                                 _lastResult = OnReceive(ref packet);
                                                 if (packet.Status == PacketProcessingStatus.Failure)
                                                 {
-                                                    _monitor.CountOfItemsProcessedThatFail.Increment();
-                                                    _monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                                    _monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceID);
+                                                    Monitor.CountOfItemsProcessedThatFail.Increment();
+                                                    Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                                                    Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
                                                 }
                                                 else
                                                 {
-                                                    _monitor.CountOfItemsProcessedThatSucceed.Increment();
-                                                    _monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
-                                                    _monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceID);
+                                                    Monitor.CountOfItemsProcessedThatSucceed.Increment();
+                                                    Monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
+                                                    Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
                                                 }
                                                 packet.Dispose();
                                             }
                                             catch (Exception ex)
                                             {
-                                                _monitor.CountOfItemsProcessedThatFail.Increment();
-                                                _monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                                _monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceID);
+                                                Monitor.CountOfItemsProcessedThatFail.Increment();
+                                                Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                                                Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
 
 #if DEBUG
                                                 SystemLogger.Singleton.Error(ex);
@@ -123,7 +118,7 @@ namespace MFDLabs.Concurrency.Base
             }
         }
 
-        private static void DetermineIfDeletionNeeded()
+        private void DetermineIfDeletionNeeded()
         {
 #if DEBUG
             SystemLogger.Singleton.LifecycleEvent("Determining if task thread '{0}' has expired.", _singleton == null ? "Expired Task Thread" : _singleton.Name);
@@ -142,7 +137,7 @@ namespace MFDLabs.Concurrency.Base
 #if DEBUG
             SystemLogger.Singleton.Verbose("Task thread '{0}' has not expired.", _singleton == null ? "Expired Task Thread" : _singleton.Name);
 #endif
-            _singleton._reloadTimer.Change(_singleton.Expiration, _singleton.Expiration);
+            _singleton?._reloadTimer.Change(_singleton.Expiration, _singleton.Expiration);
         }
 
         #region IDisposable Members
@@ -157,9 +152,9 @@ namespace MFDLabs.Concurrency.Base
 
         #region Concurrency
 
-        private static readonly object _lock = new object();
+        private readonly object _lock = new object();
         private readonly object _resultLock = new object();
-        private bool _isProcessingItem = false;
+        private bool _isProcessingItem;
 
         #endregion Concurrency
 
@@ -173,7 +168,7 @@ namespace MFDLabs.Concurrency.Base
         #region Other Items
 
         private PluginResult _lastResult;
-        private int _sequenceID = 0;
+        private int _sequenceId;
         private static TSingleton _singleton;
 
         #endregion Other Items

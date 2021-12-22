@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.ComputeCloud
@@ -14,12 +15,12 @@ namespace MFDLabs.Grid.ComputeCloud
                 script = script,
                 arguments = args ?? NewArgs(new object[] { })
             };
-        public static string ToString(LuaValue[] result)
+        public static string ToString(IEnumerable<LuaValue> result)
         {
             string data = null;
             foreach (var luaValue in result)
             {
-                string value = luaValue.value;
+                var value = luaValue.value;
                 if (luaValue.table != null) 
                     value = "[" + ToString(luaValue.table) + "]";
                 if (data.IsNullOrEmpty())
@@ -32,31 +33,40 @@ namespace MFDLabs.Grid.ComputeCloud
         public static void SetArg(LuaValue[] args, int index, object value)
         {
             var luaValue = new LuaValue();
-            if (value is int || value is float || value is double || value is long || value is decimal || value is short || value is ushort || value is uint || value is ulong)
+            switch (value)
             {
-                luaValue.type = LuaType.LUA_TNUMBER;
-                luaValue.value = value.ToString();
-            }
-            else if (value is string || value is Guid)
-            {
-                luaValue.type = LuaType.LUA_TSTRING;
-                luaValue.value = value.ToString();
-            }
-            else if (value is bool boolean)
-            {
-                luaValue.type = LuaType.LUA_TBOOLEAN;
-                luaValue.value = boolean ? "true" : "false";
-            }
-            else if (value == null)
-            {
-                luaValue.type = LuaType.LUA_TNIL;
-                luaValue.value = string.Empty;
-            }
-            else
-            {
-                if (!(value is LuaValue[])) throw new ArgumentException($"Unsupported Lua argument type {value.GetType()}, value = '{value}'");
-                luaValue.type = LuaType.LUA_TTABLE;
-                luaValue.table = value as LuaValue[];
+                case int _:
+                case float _:
+                case double _:
+                case long _:
+                case decimal _:
+                case short _:
+                case ushort _:
+                case uint _:
+                case ulong _:
+                    luaValue.type = LuaType.LUA_TNUMBER;
+                    luaValue.value = value.ToString();
+                    break;
+                case string _:
+                case Guid _:
+                    luaValue.type = LuaType.LUA_TSTRING;
+                    luaValue.value = value.ToString();
+                    break;
+                case bool boolean:
+                    luaValue.type = LuaType.LUA_TBOOLEAN;
+                    luaValue.value = boolean ? "true" : "false";
+                    break;
+                case null:
+                    luaValue.type = LuaType.LUA_TNIL;
+                    luaValue.value = string.Empty;
+                    break;
+                default:
+                {
+                    if (!(value is LuaValue[] values)) throw new ArgumentException($"Unsupported Lua argument type {value.GetType()}, value = '{value}'");
+                    luaValue.type = LuaType.LUA_TTABLE;
+                    luaValue.table = values;
+                    break;
+                }
             }
             args[index] = luaValue;
         }
@@ -72,6 +82,7 @@ namespace MFDLabs.Grid.ComputeCloud
                     return luaValue.value;
                 case LuaType.LUA_TTABLE:
                     return GetValues(luaValue.table);
+                case LuaType.LUA_TNIL:
                 default:
                     return null;
             }
@@ -85,7 +96,7 @@ namespace MFDLabs.Grid.ComputeCloud
         public static object[] GetValues(LuaValue[] args)
         {
             var values = new object[args.Length];
-            for (int i = 0; i < args.Length; i++) values[i] = ConvertLua(args[i]);
+            for (var i = 0; i < args.Length; i++) values[i] = ConvertLua(args[i]);
             return values;
         }
 

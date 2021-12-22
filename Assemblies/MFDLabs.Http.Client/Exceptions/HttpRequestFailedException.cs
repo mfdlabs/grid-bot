@@ -12,7 +12,7 @@ namespace MFDLabs.Http.Client
 
         public HttpRequestFailedException(IHttpResponse response, string message = null) 
             : base(message ?? BuildExceptionMessage(response)) 
-            => Response = response ?? throw new ArgumentNullException("response");
+            => Response = response ?? throw new ArgumentNullException(nameof(response));
         public HttpRequestFailedException(Exception innerException, IHttpRequest request) 
             : base(BuildExceptionMessage(request), innerException)
         { }
@@ -20,12 +20,10 @@ namespace MFDLabs.Http.Client
         protected static string BuildExceptionMessage(IHttpResponse response)
         {
             var message = $"An error has occurred with your request.\n\tStatus code: {response?.StatusCode} ({response?.StatusText})";
-            if (response != null)
-            {
-                message = $"{message}\n\tUrl: {GetUrlForDisplay(response.Url)}";
-                var machineIdHeader = response.Headers.Get(_RobloxMachineIdHeaderName);
-                if (machineIdHeader.Any()) message = $"{message}\n\tResponse Machine Id: {string.Join(", ", machineIdHeader)}";
-            }
+            if (response == null) return message;
+            message = $"{message}\n\tUrl: {GetUrlForDisplay(response.Url)}";
+            var machineIdHeader = response.Headers.Get(RobloxMachineIdHeaderName);
+            if (machineIdHeader.Any()) message = $"{message}\n\tResponse Machine Id: {string.Join(", ", machineIdHeader)}";
             return message;
         }
         protected static string BuildExceptionMessage(IHttpRequest request)
@@ -38,14 +36,17 @@ namespace MFDLabs.Http.Client
         {
             var sanitizedUri = url?.ToString();
             if (sanitizedUri.IsNullOrWhiteSpace()) return null;
-            if (_SensitiveQueryParameterNames.Any(sanitizedUri.ToLower().Contains))
-                foreach (var regex in _SensitiveQueryParameterRegexes) sanitizedUri = regex.Value.Replace(sanitizedUri, _ReplacementQueryValue);
-            return sanitizedUri;
+            if (!SensitiveQueryParameterNames.Any(sanitizedUri!.ToLower().Contains)) return sanitizedUri;
+            return (from regex in SensitiveQueryParameterRegexes
+                select regex.Value.Replace(sanitizedUri, ReplacementQueryValue)).First();
         }
 
-        private const string _ReplacementQueryValue = "$1=********";
-        private const string _RobloxMachineIdHeaderName = "Roblox-Machine-Id";
-        private static readonly string[] _SensitiveQueryParameterNames = new[] { "apikey", "accesskey", "password" };
-        private static readonly IDictionary<string, Regex> _SensitiveQueryParameterRegexes = _SensitiveQueryParameterNames.ToDictionary((q) => q, (q) => new Regex($"({q})=[^&]+", RegexOptions.IgnoreCase));
+        private const string ReplacementQueryValue = "$1=********";
+        private const string RobloxMachineIdHeaderName = "Roblox-Machine-Id";
+        private static readonly string[] SensitiveQueryParameterNames = new[] { "apikey", "accesskey", "password" };
+        private static readonly IDictionary<string, Regex> SensitiveQueryParameterRegexes =
+            SensitiveQueryParameterNames.ToDictionary(q => q,
+                q => new Regex($"({q})=[^&]+",
+                    RegexOptions.IgnoreCase));
     }
 }

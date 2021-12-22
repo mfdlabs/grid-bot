@@ -1,4 +1,5 @@
-﻿namespace MFDLabs.Concurrency
+﻿// ReSharper disable once CheckNamespace
+namespace MFDLabs.Concurrency
 {
     /// <summary>
     /// The status for a <see cref="Packet"/> when recording metrics via <see cref="TaskThreadMonitor"/>

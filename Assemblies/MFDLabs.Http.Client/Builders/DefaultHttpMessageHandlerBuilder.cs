@@ -5,30 +5,30 @@ namespace MFDLabs.Http.Client
 {
     internal class DefaultHttpMessageHandlerBuilder : IHttpMessageHandlerBuilder
     {
-        public DefaultHttpMessageHandlerBuilder() => _Handler = new HttpClientHandler();
+        public DefaultHttpMessageHandlerBuilder() => _handler = new HttpClientHandler();
 
         public IHttpMessageHandlerBuilder CookieContainer(CookieContainer cookieContainer)
         {
-            _Handler.CookieContainer = cookieContainer;
+            _handler.CookieContainer = cookieContainer;
             return this;
         }
         public IHttpMessageHandlerBuilder AllowAutoRedirect(bool allowAutoRedirect)
         {
-            _Handler.AllowAutoRedirect = allowAutoRedirect;
+            _handler.AllowAutoRedirect = allowAutoRedirect;
             return this;
         }
         public IHttpMessageHandlerBuilder MaxAutomaticRedirections(int maxAutomaticRedirections)
         {
-            _Handler.MaxAutomaticRedirections = maxAutomaticRedirections;
+            _handler.MaxAutomaticRedirections = maxAutomaticRedirections;
             return this;
         }
         public HttpMessageHandler Build()
         {
-            var handlerRef = _Handler;
-            _Handler = new HttpClientHandler();
+            var handlerRef = _handler;
+            _handler = new HttpClientHandler();
             return handlerRef;
         }
 
-        private HttpClientHandler _Handler;
+        private HttpClientHandler _handler;
     }
 }

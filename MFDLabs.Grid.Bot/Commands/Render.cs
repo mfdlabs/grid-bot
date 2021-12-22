@@ -11,8 +11,11 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class Render : IStateSpecificCommandHandler
     {
         public string CommandName => "Render User";
-        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID for the author and render them.\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render robloxUserID?|discordUserMention?|...userName?";
-        public string[] CommandAliases => new string[] { "r", "render", "sexually-weird-render" };
+        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID " +
+                                            $"for the author and render them.\nLayout: " +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render " +
+                                            $"robloxUserID?|discordUserMention?|...userName?";
+        public string[] CommandAliases => new[] { "r", "render", "sexually-weird-render" };
         public bool Internal => !global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderingEnabled;
         public bool IsEnabled { get; set; } = true;
 
@@ -23,7 +26,9 @@ namespace MFDLabs.Grid.Bot.Commands
                 if (!await message.RejectIfNotAdminAsync()) return;
             }
 
-            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.", typeof(SocketTaskRequest).FullName, typeof(RenderQueueUserMetricsTask).FullName);
+            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.",
+                typeof(SocketTaskRequest).FullName,
+                typeof(RenderQueueUserMetricsTask).FullName);
 
             RenderQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest()
             {

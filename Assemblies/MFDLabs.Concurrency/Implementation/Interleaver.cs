@@ -1,38 +1,43 @@
 ﻿using System;
 using Microsoft.Ccr.Core;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Simple interleave wrapper
+    /// </summary>
     public class Interleaver
     {
-        readonly Port<Action> exclusive = new Port<Action>();
-        readonly Port<Action> concurrent = new Port<Action>();
+        private readonly Port<Action> _exclusive = new Port<Action>();
+        private readonly Port<Action> _concurrent = new Port<Action>();
 
-        /// <inheritdoc/>
-        public void DoExclusive(Action action)
-        {
-            exclusive.Post(action);
-        }
+        /// <summary>
+        /// DoExclusive
+        /// </summary>
+        /// <param name="action"></param>
+        public void DoExclusive(Action action) => _exclusive.Post(action);
 
-        /// <inheritdoc/>
-        public void DoConcurrent(Action action)
-        {
-            concurrent.Post(action);
-        }
+        /// <summary>
+        /// DoConcurrent
+        /// </summary>
+        /// <param name="action"></param>
+        public void DoConcurrent(Action action) => _concurrent.Post(action);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Construct new interleaver
+        /// </summary>
         public Interleaver()
         {
             ConcurrencyService.Singleton.Activate(Arbiter.Interleave(
                 new TeardownReceiverGroup(),
                 new ExclusiveReceiverGroup(
-                    Arbiter.Receive(true, exclusive, action => action())
-                    ),
+                    Arbiter.Receive(true, _exclusive, action => action())
+                ),
                 new ConcurrentReceiverGroup(
-                    Arbiter.Receive(true, concurrent, action => action())
-                    )
-                ));
+                    Arbiter.Receive(true, _concurrent, action => action())
+                )
+            ));
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿namespace System
+﻿// ReSharper disable once CheckNamespace
+namespace System
 {
-    internal class ConsoleExtended
+    internal static class ConsoleExtended
     {
         public static void WriteTitle(string message, params object[] args)
         {

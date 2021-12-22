@@ -2,29 +2,21 @@
 
 namespace MFDLabs.Diagnostics
 {
-    public class DevicePlatformHelper
+    public static class DevicePlatformHelper
     {
         public static string CurrentDevicePlatform()
         {
-            switch (Environment.OSVersion.Platform)
+            return Environment.OSVersion.Platform switch
             {
-                case PlatformID.Win32NT:
-                    return "win32nt";
-                case PlatformID.Win32S:
-                    return "win32s";
-                case PlatformID.Win32Windows:
-                    return "win32l";
-                case PlatformID.WinCE:
-                    return "wince";
-                case PlatformID.Xbox:
-                    return "durango";
-                case PlatformID.Unix:
-                    return "unix";
-                case PlatformID.MacOSX:
-                    return "macosx";
-                default:
-                    return "unknown";
-            }
+                PlatformID.Win32NT => "win32nt",
+                PlatformID.Win32S => "win32s",
+                PlatformID.Win32Windows => "win32l",
+                PlatformID.WinCE => "wince",
+                PlatformID.Xbox => "durango",
+                PlatformID.Unix => "unix",
+                PlatformID.MacOSX => "macosx",
+                _ => "unknown"
+            };
         }
     }
 }

@@ -4,8 +4,9 @@ using MFDLabs.Analytics.Google;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnBotGlobalAddedToGuild
+    internal static class OnBotGlobalAddedToGuild
     {
-        public static Task Invoke(SocketGuild guild) => GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("BotGlobal", "Added to guild", $"{guild.Name}@{guild.Id}");
+        public static Task Invoke(SocketGuild guild) 
+            => GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("BotGlobal", "Added to guild", $"{guild.Name}@{guild.Id}");
     }
 }

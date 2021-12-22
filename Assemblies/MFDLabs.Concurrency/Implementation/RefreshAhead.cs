@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Ccr.Core;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -9,33 +10,28 @@ namespace MFDLabs.Concurrency
     /// </summary>
     public class RefreshAhead<T> : IDisposable
     {
-        private DateTime _LastRefresh = DateTime.MinValue;
-        private readonly Timer _RefreshTimer = null;
-        private T _Value = default(T);
+        private DateTime _lastRefresh = DateTime.MinValue;
+        private readonly Timer _refreshTimer;
+        private T _value;
 
         /// <summary>
         /// The last time the class refreshed
         /// </summary>
-        public TimeSpan IntervalSinceRefresh
-        {
-            get { return DateTime.Now.Subtract(_LastRefresh); }
-        }
+        public TimeSpan IntervalSinceRefresh => DateTime.Now.Subtract(_lastRefresh);
+
         /// <summary>
         /// The raw value.
         /// </summary>
-        public T Value
-        {
-            get { return _Value; }
-        }
+        public T Value => _value;
 
         private RefreshAhead(T initialValue, TimeSpan refreshInterval, Func<T> refreshDelegate)
         {
-            int refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
+            var refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
 
-            _Value = initialValue;
-            _LastRefresh = DateTime.Now;
+            _value = initialValue;
+            _lastRefresh = DateTime.Now;
 
-            _RefreshTimer = new Timer(
+            _refreshTimer = new Timer(
                 (stateInfo) => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
@@ -44,12 +40,12 @@ namespace MFDLabs.Concurrency
         }
         private RefreshAhead(T initialValue, TimeSpan refreshInterval, Action<PortSet<T, Exception>> refreshDelegate)
         {
-            int refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
+            var refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
 
-            _Value = initialValue;
-            _LastRefresh = DateTime.Now;
+            _value = initialValue;
+            _lastRefresh = DateTime.Now;
 
-            _RefreshTimer = new Timer(
+            _refreshTimer = new Timer(
                 (stateInfo) => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
@@ -64,9 +60,9 @@ namespace MFDLabs.Concurrency
         /// <param name="refreshDelegate"></param>
         public RefreshAhead(TimeSpan refreshInterval, Func<T> refreshDelegate)
         {
-            int refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
+            var refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
 
-            _RefreshTimer = new Timer(
+            _refreshTimer = new Timer(
                 (stateInfo) => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
@@ -78,8 +74,8 @@ namespace MFDLabs.Concurrency
         {
             try
             {
-                _Value = refreshDelegate();
-                _LastRefresh = DateTime.Now;
+                _value = refreshDelegate();
+                _lastRefresh = DateTime.Now;
             }
             catch (ThreadAbortException)
             {
@@ -98,10 +94,10 @@ namespace MFDLabs.Concurrency
                 refreshDelegate(valueResult);
                 ConcurrencyService.Singleton.Choice(
                     valueResult,
-                    (value) =>
+                    value =>
                     {
-                        _Value = value;
-                        _LastRefresh = DateTime.Now;
+                        _value = value;
+                        _lastRefresh = DateTime.Now;
                     }
                 );
             }
@@ -123,7 +119,7 @@ namespace MFDLabs.Concurrency
         /// <returns></returns>
         public static RefreshAhead<T> ConstructAndPopulate(TimeSpan refreshInterval, Func<T> refreshDelegate)
         {
-            T value = refreshDelegate();
+            var value = refreshDelegate();
             var refreshAhead = new RefreshAhead<T>(value, refreshInterval, refreshDelegate);
             return refreshAhead;
         }
@@ -137,14 +133,14 @@ namespace MFDLabs.Concurrency
         {
             var valueResult = new PortSet<T, Exception>();
             refreshDelegate(valueResult);
-            ConcurrencyService.Singleton.Choice<T, Exception>(
+            ConcurrencyService.Singleton.Choice(
                 valueResult,
                 (value) =>
                 {
                     var refreshAhead = new RefreshAhead<T>(value, refreshInterval, refreshDelegate);
                     result.Post(refreshAhead);
                 },
-                (ex) => result.Post(ex)
+                result.Post
             );
         }
 
@@ -152,8 +148,8 @@ namespace MFDLabs.Concurrency
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (_RefreshTimer != null)
-                _RefreshTimer.Dispose();
+            if (_refreshTimer != null)
+                _refreshTimer.Dispose();
         }
 
         #endregion

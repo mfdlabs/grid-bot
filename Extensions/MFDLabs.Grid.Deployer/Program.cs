@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using MFDLabs.Diagnostics;
@@ -9,26 +10,26 @@ using Microsoft.Win32;
 
 namespace MFDLabs.Grid.Deployer
 {
-    class Program
+    internal static class Program
     {
         public static void Main(string[] args)
         {
             OpenGridServer(args);
         }
 
-        private static void OpenGridServer(string[] args)
+        private static void OpenGridServer(IReadOnlyList<string> args)
         {
-            bool onlyWebServer = false;
-            bool onlyGridServer = false;
-            int port = 0;
-            if (args.Length > 0)
+            var onlyWebServer = false;
+            var onlyGridServer = false;
+            var port = 0;
+            if (args.Count > 0)
             {
                 var option = args[0].Substring(1).ToLower();
                 if (option == "onlyweb") onlyWebServer = true;
                 if (option == "onlygrid")
                 {
                     onlyGridServer = true;
-                    if (args.Length > 1) 
+                    if (args.Count > 1) 
                         if (!int.TryParse(args[1].Trim().ToLowerInvariant(), out port))
                         {
                             ConsoleExtended.WriteTitle("The port argument was specified but wasn't a valid int32");
@@ -87,11 +88,7 @@ namespace MFDLabs.Grid.Deployer
                 {
                     ConsoleExtended.WriteTitle("Grid server was not running, try to launch.");
 
-                    var gridServerCommand = string.Format(
-                        "{0}{1}",
-                        gridServicePath,
-                        global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableName
-                    );
+                    var gridServerCommand = $"{gridServicePath}{(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.GridServerExecutableName)}";
 
                     ConsoleExtended.WriteTitle("Got grid server command '{0}'.", gridServerCommand);
 
@@ -102,7 +99,7 @@ namespace MFDLabs.Grid.Deployer
                         WindowStyle = ProcessWindowStyle.Maximized
                     };
 
-                    if (SystemGlobal.Singleton.ContextIsAdministrator())
+                    if (SystemGlobal.ContextIsAdministrator())
                     {
                         psi.Verb = "runas";
                     }
@@ -124,11 +121,11 @@ namespace MFDLabs.Grid.Deployer
 
         private static void LaunchWebServer()
         {
-            attempt++;
+            _attempt++;
 
-            ConsoleExtended.WriteTitle("Trying to contact web server at attempt No. {0}", attempt);
+            ConsoleExtended.WriteTitle("Trying to contact web server at attempt No. {0}", _attempt);
 
-            if (attempt > global::MFDLabs.Grid.Deployer.Properties.Settings.Default.MaxAttemptsToLaunchWebServer)
+            if (_attempt > global::MFDLabs.Grid.Deployer.Properties.Settings.Default.MaxAttemptsToLaunchWebServer)
             {
                 ConsoleExtended.WriteTitle("Max attempts exceeded when trying to launch the web server.");
                 Environment.Exit(-3);
@@ -153,11 +150,11 @@ namespace MFDLabs.Grid.Deployer
                     return;
                 }
 
-                ConsoleExtended.WriteTitle("Successfully launched web server at {0} attempts.", attempt);
+                ConsoleExtended.WriteTitle("Successfully launched web server at {0} attempts.", _attempt);
                 return;
             }
 
-            if (!LaunchingWebServer) OpenWebServer();
+            if (!_launchingWebServer) OpenWebServer();
 
             LaunchWebServer();
         }
@@ -166,19 +163,17 @@ namespace MFDLabs.Grid.Deployer
         {
             ConsoleExtended.WriteTitle("Launching web server with System.Diagnostics.Process{{CMD.EXE}}");
 
-            LaunchingWebServer = true;
+            _launchingWebServer = true;
 
             var psi = new ProcessStartInfo
             {
                 FileName = "CMD.exe",
-                Arguments = string.Format(
-                    "/C \"cd {0} && {1}\"",
-                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath,
-                    global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspaceCommand
-                ),
+                Arguments =
+                    $"/C \"cd {(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath)} && " +
+                    $"{(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspaceCommand)}\"",
             };
 
-            if (SystemGlobal.Singleton.ContextIsAdministrator())
+            if (SystemGlobal.ContextIsAdministrator())
             {
                 psi.Verb = "runas";
             }
@@ -191,8 +186,8 @@ namespace MFDLabs.Grid.Deployer
             proc.Start();
         }
 
-        static int attempt = 0;
+        private static int _attempt;
 
-        private static bool LaunchingWebServer = false;
+        private static bool _launchingWebServer;
     }
 }

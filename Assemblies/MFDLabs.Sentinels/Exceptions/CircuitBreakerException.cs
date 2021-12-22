@@ -9,7 +9,7 @@ namespace MFDLabs.Sentinels
             get
             {
                 var now = DateTime.UtcNow;
-                return $"CircuitBreaker Error: {_CircuitBreakerName} has been tripped for {now.Subtract(_CircuitBreakerTripped ?? now).TotalSeconds} seconds.";
+                return $"CircuitBreaker Error: {_circuitBreakerName} has been tripped for {now.Subtract(_circuitBreakerTripped ?? now).TotalSeconds} seconds.";
             }
         }
 
@@ -18,11 +18,11 @@ namespace MFDLabs.Sentinels
         { }
         public CircuitBreakerException(string circuitBreakerName, DateTime? circuitBreakerTripped)
         {
-            _CircuitBreakerName = circuitBreakerName;
-            _CircuitBreakerTripped = circuitBreakerTripped;
+            _circuitBreakerName = circuitBreakerName;
+            _circuitBreakerTripped = circuitBreakerTripped;
         }
 
-        private readonly string _CircuitBreakerName;
-        private readonly DateTime? _CircuitBreakerTripped;
+        private readonly string _circuitBreakerName;
+        private readonly DateTime? _circuitBreakerTripped;
     }
 }

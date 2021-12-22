@@ -3,7 +3,7 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnConnected
+    internal static class OnConnected
     {
         internal static Task Invoke()
         {

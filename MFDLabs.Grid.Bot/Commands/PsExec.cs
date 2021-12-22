@@ -15,8 +15,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class PsExec : IStateSpecificCommandHandler
     {
         public string CommandName => "Execute PowerShell";
-        public string CommandDescription => $"Attempts to evaluate the given Powershell\nLayout: {(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}psexec ...command.";
-        public string[] CommandAliases => new string[] { "ps", "psexec" };
+        public string CommandDescription => $"Attempts to evaluate the given Powershell\nLayout:" +
+                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}psexec ...command.";
+        public string[] CommandAliases => new[] { "ps", "psexec" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -63,8 +64,8 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                var returnValue = result.StandardOutput.ReadToEnd();
-                var errorValue = result.StandardError.ReadToEnd();
+                var returnValue = await result.StandardOutput.ReadToEndAsync();
+                var errorValue = await result.StandardError.ReadToEndAsync();
 
                 if (!errorValue.IsNullOrEmpty())
                 {
@@ -72,15 +73,19 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                await message.ReplyAsync(returnValue.IsNullOrEmpty() ? "Executed script with no return!" : $"Executed script with return:");
+                await message.ReplyAsync(returnValue.IsNullOrEmpty()
+                    ? "Executed script with no return!"
+                    : $"Executed script with return:");
                 if (!returnValue.IsNullOrEmpty())
                 {
                     if (returnValue.Length > EmbedBuilder.MaxDescriptionLength)
                     {
-                        await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(returnValue)), "psexec.txt");
+                        await message.ReplyWithFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(returnValue)),
+                            "psexec.txt", "Executed script with return:");
                         return;
                     }
-                    await message.Channel.SendMessageAsync(
+                    await message.ReplyAsync(
+                        "Executed script with return:",
                         embed: new EmbedBuilder()
                         .WithTitle("Return value")
                         .WithDescription($"```\n{returnValue}\n```")
@@ -90,12 +95,14 @@ namespace MFDLabs.Grid.Bot.Commands
                         .Build()
                     );
                 }
+                await message.ReplyAsync("Executed script with no return!");
             }
         }
 
-        private async Task HandleException(SocketMessage message, Exception ex)
+        private static async Task HandleException(SocketMessage message, Exception ex)
         {
-            await message.ReplyAsync($"an exception occurred when trying to execute the given PowerShell, please review this error to see if your input was malformed:");
+            await message.ReplyAsync("an exception occurred when trying to execute the given PowerShell, please " +
+                                     "review this error to see if your input was malformed:");
 
             if (ex.Message.Length > EmbedBuilder.MaxDescriptionLength)
             {

@@ -4,7 +4,7 @@ using MFDLabs.Drawing.Models;
 
 namespace MFDLabs.Drawing.NativeWin32
 {
-    internal class NativeMethods
+    internal static class NativeMethods
     {
         [DllImport("user32.dll")]
         internal static extern bool GetWindowRect(IntPtr hWnd, out BaseRectangle lpRect);

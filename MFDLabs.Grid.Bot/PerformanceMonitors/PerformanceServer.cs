@@ -13,7 +13,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
             (ex) =>
             {
-                if (!(ex is HttpListenerException httpEx && httpEx.ErrorCode == 0x3E3))
+                if (ex is not HttpListenerException {ErrorCode: 0x3E3})
                 {
 #if DEBUG
                     SystemLogger.Singleton.Error(ex);
@@ -28,7 +28,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         {
             SystemLogger.Singleton.LifecycleEvent("Launching performance monitor server...");
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator())
+            if (!SystemGlobal.ContextIsAdministrator())
             {
                 SystemLogger.Singleton.Warning("Not launching performance monitor service due to context accessibility issues.");
                 return;
@@ -42,7 +42,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         {
             SystemLogger.Singleton.LifecycleEvent("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
 
-            if (!SystemGlobal.Singleton.ContextIsAdministrator())
+            if (!SystemGlobal.ContextIsAdministrator())
             {
                 SystemLogger.Singleton.Warning("Not stopping performance monitor service due to context accessibility issues.");
                 return;
@@ -54,6 +54,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             }
             catch
             {
+                // ignored
             }
 
             SystemLogger.Singleton.Warning("Stopped performance monitor server on port {0}.", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);

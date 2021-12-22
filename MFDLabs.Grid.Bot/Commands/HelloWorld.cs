@@ -10,13 +10,11 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Grid Server Hello World";
         public string CommandDescription => "Trys to invoke a HelloWorld SOAP request to a Grid Server instance via SoapUtility.";
-        public string[] CommandAliases => new string[] { "hw", "helloworld" };
+        public string[] CommandAliases => new[] { "hw", "helloworld" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
-        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
-        {
-            await message.ReplyAsync(await GridServerArbiter.Singleton.HelloWorldAsync());
-        }
+        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand) 
+            => await message.ReplyAsync(await GridServerArbiter.Singleton.HelloWorldAsync());
     }
 }

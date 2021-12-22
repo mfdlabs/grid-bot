@@ -6,7 +6,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     internal sealed class RenderTaskPerformanceMonitor
     {
-        private const string _Category = "MFDLabs.Grid.Tasks.RenderTask";
+        private const string Category = "MFDLabs.Grid.Tasks.RenderTask";
 
         internal IRawValueCounter TotalItemsProcessed { get; }
 
@@ -20,15 +20,18 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
         internal RenderTaskPerformanceMonitor(ICounterRegistry counterRegistry)
         {
-            if (counterRegistry == null) throw new ArgumentNullException("counterRegistry");
+            if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
 
-            var instance = $"{SystemGlobal.Singleton.GetMachineID()} ({SystemGlobal.Singleton.GetMachineHost()})";
+            var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
 
-            TotalItemsProcessed = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessed", instance);
-            TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatFailed", instance);
-            TotalItemsProcessedThatHadInvalidUserIDs = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadInvalidUserIDs", instance);
-            TotalItemsProcessedThatHadNullOrEmptyUsernames = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadNullOrEmptyUsernames", instance);
-            TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount", instance);
+            TotalItemsProcessed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessed", instance);
+            TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
+            TotalItemsProcessedThatHadInvalidUserIDs = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadInvalidUserIDs", instance);
+            TotalItemsProcessedThatHadNullOrEmptyUsernames = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadNullOrEmptyUsernames", instance);
+            TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount = counterRegistry.GetRawValueCounter(
+                Category,
+                "TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount",
+                instance);
         }
     }
 }

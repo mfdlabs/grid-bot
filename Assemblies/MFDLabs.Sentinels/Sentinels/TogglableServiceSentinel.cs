@@ -12,20 +12,16 @@ namespace MFDLabs.Sentinels
 
         public void StopSentinel()
         {
-            if (IsRunning)
-            {
-                _MonitorTimer.Change(-1, -1);
-                IsRunning = false;
-            }
+            if (!IsRunning) return;
+            MonitorTimer.Change(-1, -1);
+            IsRunning = false;
         }
         public void StartSentinel()
         {
-            if (!IsRunning)
-            {
-                var monitorInterval = _MonitorIntervalGetter();
-                _MonitorTimer.Change(monitorInterval, monitorInterval);
-                IsRunning = true;
-            }
+            if (IsRunning) return;
+            var monitorInterval = MonitorIntervalGetter();
+            MonitorTimer.Change(monitorInterval, monitorInterval);
+            IsRunning = true;
         }
     }
 }

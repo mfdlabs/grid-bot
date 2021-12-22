@@ -14,7 +14,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -26,8 +25,11 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class GetAllSettingsOfAssembly : IStateSpecificCommandHandler
     {
         public string CommandName => "Get All Remote Settings";
-        public string CommandDescription => "Attempts to list all remote settings for a different assembly, if the command was invoked in a public channel (a channel that is an instance of SocketGuildChannel) and the setting 'AllowLogSettingsInPublicChannels' is disabled, it will throw.";
-        public string[] CommandAliases => new string[] { "getalla", "getallassemblysettings" };
+        public string CommandDescription => "Attempts to list all remote settings for a different assembly, " +
+                                            "if the command was invoked in a public channel (a channel that is an " +
+                                            "instance of SocketGuildChannel) and the setting 'AllowLogSettingsInPublicChannels' " +
+                                            "is disabled, it will throw.";
+        public string[] CommandAliases => new[] { "getalla", "getallassemblysettings" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -47,7 +49,8 @@ namespace MFDLabs.Grid.Bot.Commands
             if (assemblyName.IsNullOrEmpty())
             {
                 SystemLogger.Singleton.Warning("Null assembly name, aborting.");
-                await message.ReplyAsync("The first parameter of the command was null, expected the \"AssemblyName\" to be not null or not empty.");
+                await message.ReplyAsync("The first parameter of the command was null, expected the " +
+                                         "\"AssemblyName\" to be not null or not empty.");
                 return;
             }
 
@@ -56,7 +59,8 @@ namespace MFDLabs.Grid.Bot.Commands
             if (settingsGroupName.IsNullOrEmpty())
             {
                 SystemLogger.Singleton.Warning("Null setting group name, aborting.");
-                await message.ReplyAsync("The second parameter of the command was null, expected the \"SettingsGroupName\" to be not null or not empty.");
+                await message.ReplyAsync("The second parameter of the command was null, expected the " +
+                                         "\"SettingsGroupName\" to be not null or not empty.");
                 return;
             }
 
@@ -69,20 +73,31 @@ namespace MFDLabs.Grid.Bot.Commands
             catch (FileNotFoundException)
             {
                 SystemLogger.Singleton.Warning("Could not find the assembly '{0}', aborting.", assemblyName);
-                await message.ReplyAsync($"Could not find the assembly by the name of '{assemblyName}'. Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
+                await message.ReplyAsync($"Could not find the assembly by the name of '{assemblyName}'." +
+                                         $"Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
                 return;
             }
             catch (TypeLoadException)
             {
-                SystemLogger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.", settingsGroupName, assemblyName);
-                await message.ReplyAsync($"Could not find the type by the name of '{settingsGroupName}' in the assembly '{assemblyName}'. Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
+                SystemLogger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.",
+                    settingsGroupName,
+                    assemblyName);
+                await message.ReplyAsync($"Could not find the type by the name of '{settingsGroupName}' in " +
+                                         $"the assembly '{assemblyName}'. Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
                 return;
             }
 
             if (remoteSettings.BaseType != typeof(ApplicationSettingsBase))
             {
-                SystemLogger.Singleton.Warning("The type '{0}' in the assembly '{1}' did not extend the type '{2}', aborting.", remoteSettings.FullName, remoteSettings.Assembly.FullName, typeof(ApplicationSettingsBase).FullName);
-                await message.ReplyAsync($"The type '{remoteSettings.FullName}' in the assembly '{remoteSettings.Assembly.GetName().Name}' did not extend the type '{typeof(ApplicationSettingsBase).FullName}'. Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
+                SystemLogger.Singleton.Warning(
+                    "The type '{0}' in the assembly '{1}' did not extend the type '{2}', aborting.",
+                    remoteSettings.FullName,
+                    remoteSettings.Assembly.FullName,
+                    typeof(ApplicationSettingsBase).FullName);
+                await message.ReplyAsync($"The type '{remoteSettings.FullName}' in the assembly" +
+                                         $"'{remoteSettings.Assembly.GetName().Name}' did not extend the type" +
+                                         $"'{typeof(ApplicationSettingsBase).FullName}'. Please check to make" +
+                                         $"sure you spelled it correctly! (CaSe-SeNsItIvE)");
                 return;
             }
 
@@ -90,8 +105,13 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingsInstance == null)
             {
-                SystemLogger.Singleton.Warning("The property 'Default' on the type '{0}' in the assembly '{1}' was null, aborting.", remoteSettings.FullName, remoteSettings.Assembly.FullName);
-                await message.ReplyAsync($"The property 'Default' on the type '{remoteSettings.FullName}' in the assembly '{remoteSettings.Assembly.GetName().Name}' was null. This is an issue with an unitialized settings group, please try again later.");
+                SystemLogger.Singleton.Warning("The property 'Default' on the type '{0}' in the assembly '{1}'" +
+                                               "was null, aborting.",
+                    remoteSettings.FullName,
+                    remoteSettings.Assembly.FullName);
+                await message.ReplyAsync($"The property 'Default' on the type '{remoteSettings.FullName}' in" +
+                                         $"the assembly '{remoteSettings.Assembly.GetName().Name}' was null." +
+                                         $"This is an issue with an unitialized settings group, please try again later.");
                 return;
             }
 

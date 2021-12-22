@@ -9,16 +9,15 @@ namespace MFDLabs.Analytics.Google
 {
     public sealed class GoogleAnalyticsManager : SingletonBase<GoogleAnalyticsManager>
     {
+        private ICounterRegistry Registry { get; } = new CounterRegistry();
 
-        public ICounterRegistry Registry { get; } = new CounterRegistry();
-
-        public void Initialize(string trackerID)
+        public void Initialize(string trackerId)
         {
-            _sharedGAClient = new GAClient(
+            _sharedGaClient = new GaClient(
                 Registry,
-                new GAClientConfig(
+                new GaClientConfig(
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GoogleAnalyticsURL,
-                    trackerID,
+                    trackerId,
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientMaxRedirects,
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientRequestTimeout,
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientCircuitBreakerFailuresAllowedBeforeTrip,
@@ -27,32 +26,29 @@ namespace MFDLabs.Analytics.Google
             );
         }
 
-        public void TrackEvent(string clientID, string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
+        public void TrackEvent(string clientId, string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
         {
             // Throw here?
-            if (_sharedGAClient == null) return;
-
-            _sharedGAClient.TrackEvent(clientID, $"{SystemGlobal.Singleton.GetMachineID()} {category}", action, label, value);
+            _sharedGaClient?.TrackEvent(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value);
         }
 
         public void TrackNetworkEvent(string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
         {
-            TrackEvent(NetworkingGlobal.Singleton.LocalIP, category, action, label, value);
+            TrackEvent(NetworkingGlobal.LocalIp, category, action, label, value);
         }
 
         public Task TrackNetworkEventAsync(string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
         {
-            return TrackEventAsync(NetworkingGlobal.Singleton.LocalIP, category, action, label, value);
+            return TrackEventAsync(NetworkingGlobal.LocalIp, category, action, label, value);
         }
 
-        public async Task TrackEventAsync(string clientID, string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
+        public async Task TrackEventAsync(string clientId, string category = "Server", string action = "ServerAction", string label = "None", int value = 1)
         {
-            // Throw here?
-            if (_sharedGAClient == null) return;
+            if (_sharedGaClient == null) return;
 
-            await _sharedGAClient.TrackEventAsync(clientID, $"{SystemGlobal.Singleton.GetMachineID()} {category}", action, label, value);
+            await _sharedGaClient.TrackEventAsync(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value);
         }
 
-        private IGAClient _sharedGAClient;
+        private IGaClient _sharedGaClient;
     }
 }

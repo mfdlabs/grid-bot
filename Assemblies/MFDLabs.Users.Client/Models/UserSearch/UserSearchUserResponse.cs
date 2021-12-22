@@ -15,7 +15,7 @@ namespace MFDLabs.Users.Client.Models.UserSearch
 
         [DataMember(Name = "id", IsRequired = false)]
         [JsonProperty("id", Required = Required.Default, NullValueHandling = NullValueHandling.Ignore)]
-        public long? ID { get; set; }
+        public long? Id { get; set; }
 
         [DataMember(Name = "name", IsRequired = false)]
         [JsonProperty("name", Required = Required.Default, NullValueHandling = NullValueHandling.Ignore)]

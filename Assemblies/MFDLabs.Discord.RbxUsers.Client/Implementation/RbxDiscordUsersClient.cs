@@ -13,32 +13,32 @@ namespace MFDLabs.Discord.RbxUsers.Client
     {
         public RbxDiscordUsersClient(ICounterRegistry counterRegistry, RbxDiscordUsersClientConfig config)
         {
-            var CountersHttpClientSettings = new RbxDiscordUsersClientSettings(config);
-            var httpClientBuilder = new RbxDiscordUsersHttpClientBuilder(counterRegistry, CountersHttpClientSettings, config);
-            var httpRequestBuilder = new HttpRequestBuilder(CountersHttpClientSettings.Endpoint);
-            var httpClient = httpClientBuilder.Build();
-            _RequestSender = new HttpRequestSender(httpClient, httpRequestBuilder);
+            var httpClientSettings = new RbxDiscordUsersClientSettings(config);
+            _requestSender = new HttpRequestSender(new RbxDiscordUsersHttpClientBuilder(counterRegistry,
+                    httpClientSettings,
+                    config).Build(),
+                new HttpRequestBuilder(httpClientSettings.Endpoint));
         }
         
-        private readonly IHttpRequestSender _RequestSender;
+        private readonly IHttpRequestSender _requestSender;
 
-        public RobloxUserResponse ResolveRobloxUserByID(ulong discordID)
+        public RobloxUserResponse ResolveRobloxUserById(ulong discordId)
         {
-            if (discordID == default) throw new ArgumentNullException("discordID");
-            if (_cachedUsers.TryGetValue(discordID, out var userResponse)) return userResponse;
-            userResponse = _RequestSender.SendRequest<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}");
-            _cachedUsers.TryAdd(discordID, userResponse);
+            if (discordId == default) throw new ArgumentNullException(nameof(discordId));
+            if (_cachedUsers.TryGetValue(discordId, out var userResponse)) return userResponse;
+            userResponse = _requestSender.SendRequest<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordId}");
+            _cachedUsers.TryAdd(discordId, userResponse);
             return userResponse;
         }
-        public async Task<RobloxUserResponse> ResolveRobloxUserByIDAsync(ulong discordID, CancellationToken cancellationToken)
+        public async Task<RobloxUserResponse> ResolveRobloxUserByIdAsync(ulong discordId, CancellationToken cancellationToken)
         {
-            if (discordID == default) throw new ArgumentNullException("discordID");
-            if (_cachedUsers.TryGetValue(discordID, out var userResponse)) return userResponse;
-            userResponse = await _RequestSender.SendRequestAsync<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordID}", cancellationToken);
-            _cachedUsers.TryAdd(discordID, userResponse);
+            if (discordId == default) throw new ArgumentNullException(nameof(discordId));
+            if (_cachedUsers.TryGetValue(discordId, out var userResponse)) return userResponse;
+            userResponse = await _requestSender.SendRequestAsync<RobloxUserResponse>(HttpMethod.Get, $"/api/user/{discordId}", cancellationToken);
+            _cachedUsers.TryAdd(discordId, userResponse);
             return userResponse;
         }
 
-        private readonly ConcurrentDictionary<ulong, RobloxUserResponse> _cachedUsers = new ConcurrentDictionary<ulong, RobloxUserResponse>();
+        private readonly ConcurrentDictionary<ulong, RobloxUserResponse> _cachedUsers = new();
     }
 }

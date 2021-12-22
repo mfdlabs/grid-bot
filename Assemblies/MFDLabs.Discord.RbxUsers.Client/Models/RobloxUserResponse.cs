@@ -18,7 +18,7 @@ namespace MFDLabs.Discord.RbxUsers.Client.Models
 
         [DataMember(Name = "robloxId", IsRequired = false)]
         [JsonProperty("robloxId", Required = Required.Default, NullValueHandling = NullValueHandling.Ignore)]
-        public long ID { get; set; }
+        public long Id { get; set; }
 
         [DataMember(Name = "errorCode", IsRequired = false)]
         [JsonProperty("errorCode", Required = Required.Default, NullValueHandling = NullValueHandling.Ignore)]

@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using MFDLabs.Abstractions;
 using MFDLabs.Discord.RbxUsers.Client;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Http.Client;
@@ -13,9 +12,9 @@ using MFDLabs.Users.Client.Models.Users;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
-    public sealed class UserUtility : SingletonBase<UserUtility>
+    public static class UserUtility
     {
-        private readonly IUsersClient _SharedUsersClient = new UsersClient(
+        private static readonly IUsersClient SharedUsersClient = new UsersClient(
             PerfmonCounterRegistryProvider.Registry,
             new UsersClientConfig(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRemoteURL,
@@ -26,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Utility
             )
         );
 
-        private readonly IRbxDiscordUsersClient _SharedDiscordUsersClient = new RbxDiscordUsersClient(
+        private static readonly IRbxDiscordUsersClient SharedDiscordUsersClient = new RbxDiscordUsersClient(
             PerfmonCounterRegistryProvider.Registry,
             new RbxDiscordUsersClientConfig(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRemoteURL,
@@ -37,28 +36,22 @@ namespace MFDLabs.Grid.Bot.Utility
             )
         );
 
-        public async Task<long?> GetRobloxIDByIUserAsync(IUser user)
+        public static async Task<long?> GetRobloxIdByIUserAsync(IUser user)
         {
             try
             {
-                var result = await _SharedDiscordUsersClient.ResolveRobloxUserByIDAsync(user.Id, CancellationToken.None);
+                var result = await SharedDiscordUsersClient.ResolveRobloxUserByIdAsync(user.Id, CancellationToken.None);
                 if (result.Username == null) return null;
-                return result.ID;
+                return result.Id;
             }
             catch (HttpRequestFailedException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound) { return null; }
         }
 
-        public long? GetRobloxIDByIUser(IUser user)
-        {
-            return GetRobloxIDByIUserAsync(user).GetAwaiter().GetResult();
-        }
+        public static long? GetRobloxIdByIUser(IUser user) => GetRobloxIdByIUserAsync(user).GetAwaiter().GetResult();
 
-        public bool GetIsUserBanned(long id)
-        {
-            return GetIsUserBannedAsync(id).GetAwaiter().GetResult();
-        }
+        public static bool GetIsUserBanned(long id) => GetIsUserBannedAsync(id).GetAwaiter().GetResult();
 
-        public async Task<bool> GetIsUserBannedAsync(long id)
+        public static async Task<bool> GetIsUserBannedAsync(long id)
         {
             try
             {
@@ -67,18 +60,14 @@ namespace MFDLabs.Grid.Bot.Utility
                     ExcludeBannedUsers = !global::MFDLabs.Grid.Bot.Properties.Settings.Default.UserUtilityShouldResolveBannedUsers,
                     UserIds = new List<long> { id }
                 };
-                var response = await _SharedUsersClient.MultiGetUsersByIdsAsync(request);
-                if (response.Data.Count == 0) return true;
-                return false;
+                var response = await SharedUsersClient.MultiGetUsersByIdsAsync(request);
+                return response.Data.Count == 0;
             } catch { return false; }
         }
 
-        public long? GetUserIDByUsername(string username)
-        {
-            return GetUserIDByUsernameAsync(username).GetAwaiter().GetResult();
-        }
+        public static long? GetUserIdByUsername(string username) => GetUserIdByUsernameAsync(username).GetAwaiter().GetResult();
 
-        public async Task<long?> GetUserIDByUsernameAsync(string username)
+        public static async Task<long?> GetUserIdByUsernameAsync(string username)
         {
             var request = new MultiGetByUsernameRequest
             {
@@ -86,11 +75,9 @@ namespace MFDLabs.Grid.Bot.Utility
                 Usernames = new List<string> { username }
             };
 
-            var response = await _SharedUsersClient.MultiGetUsersByUsernamesAsync(request);
+            var response = await SharedUsersClient.MultiGetUsersByUsernamesAsync(request);
 
-            if (response.Data.Count == 0) return null;
-
-            return response.Data.First().ID;
+            return response.Data.Count == 0 ? null : response.Data.First().Id;
         }
     }
 }

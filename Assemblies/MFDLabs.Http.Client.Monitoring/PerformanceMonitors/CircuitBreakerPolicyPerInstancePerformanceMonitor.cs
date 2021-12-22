@@ -5,14 +5,14 @@ namespace MFDLabs.Http.Client.Monitoring
 {
     internal sealed class CircuitBreakerPolicyPerInstancePerformanceMonitor : ICircuitBreakerPolicyPerformanceMonitor
     {
-        private IRateOfCountsPerSecondCounter RequestsTrippedByCircuitBreakerPerSecond { get; set; }
-        private IRateOfCountsPerSecondCounter RequestsThatTripCircuitBreakerPerSecond { get; set; }
+        private IRateOfCountsPerSecondCounter RequestsTrippedByCircuitBreakerPerSecond { get; }
+        private IRateOfCountsPerSecondCounter RequestsThatTripCircuitBreakerPerSecond { get; }
 
         public CircuitBreakerPolicyPerInstancePerformanceMonitor(ICounterRegistry counterRegistry, string categoryName, string instanceName)
         {
-            _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
-            RequestsTrippedByCircuitBreakerPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(categoryName, "RequestsTrippedByCircuitBreakerPerSecond", instanceName);
-            RequestsThatTripCircuitBreakerPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(categoryName, "RequestsThatTripCircuitBreakerPerSecond", instanceName);
+            var counterRegistry1 = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
+            RequestsTrippedByCircuitBreakerPerSecond = counterRegistry1.GetRateOfCountsPerSecondCounter(categoryName, "RequestsTrippedByCircuitBreakerPerSecond", instanceName);
+            RequestsThatTripCircuitBreakerPerSecond = counterRegistry1.GetRateOfCountsPerSecondCounter(categoryName, "RequestsThatTripCircuitBreakerPerSecond", instanceName);
         }
 
         public void IncrementRequestsThatTripCircuitBreakerPerSecond()
@@ -23,7 +23,5 @@ namespace MFDLabs.Http.Client.Monitoring
         {
             RequestsTrippedByCircuitBreakerPerSecond.Increment();
         }
-
-        private readonly ICounterRegistry _CounterRegistry;
     }
 }

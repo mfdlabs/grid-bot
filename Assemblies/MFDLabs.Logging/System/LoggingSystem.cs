@@ -1,36 +1,28 @@
 ﻿using System.Diagnostics;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 
 namespace MFDLabs.Logging.Diagnostics
 {
-    public sealed class LoggingSystem : SingletonBase<LoggingSystem>
+    public static class LoggingSystem
     {
-        private readonly Stopwatch _globalWatch;
+        public static Stopwatch GlobalLifetimeWatch { get; } = Stopwatch.StartNew();
 
-        public Stopwatch GlobalLifetimeWatch => _globalWatch;
-
-        public LoggingSystem()
+        public static void EndLifetimeWatch()
         {
-            _globalWatch = Stopwatch.StartNew();
+            SystemLogger.Singleton.LifecycleEvent("Ending event lifetime at {0} seconds into event life cycle...", GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("#"));
+            GlobalLifetimeWatch?.Stop();
+            GlobalLifetimeWatch?.Reset();
         }
 
-        public void EndLifetimeWatch()
+        private static void StartLifetimeWatch()
         {
-            SystemLogger.Singleton.LifecycleEvent("Ending event lifetime at {0} seconds into event life cycle...", _globalWatch.Elapsed.TotalSeconds.ToString("#"));
-            _globalWatch?.Stop();
-            _globalWatch?.Reset();
+            SystemLogger.Singleton.LifecycleEvent("Starting event lifetime at '{0}'...", DateTimeGlobal.GetNowAsIso());
+            GlobalLifetimeWatch.Start();
         }
 
-        public void StartLifetimeWatch()
+        public static void RestartLifetimeWatch()
         {
-            SystemLogger.Singleton.LifecycleEvent("Starting event lifetime at '{0}'...", DateTimeGlobal.Singleton.GetNowAsISO());
-            _globalWatch.Start();
-        }
-
-        public void RestartLifetimeWatch()
-        {
-            SystemLogger.Singleton.LifecycleEvent("Restarting event lifetime at {0} seconds into event life cycle...", _globalWatch.Elapsed.TotalSeconds.ToString("#"));
+            SystemLogger.Singleton.LifecycleEvent("Restarting event lifetime at {0} seconds into event life cycle...", GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("#"));
             EndLifetimeWatch();
             StartLifetimeWatch();
         }

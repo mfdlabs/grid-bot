@@ -1,23 +1,27 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using MFDLabs.ErrorHandling;
 using Microsoft.Ccr.Core;
+// ReSharper disable AccessToDisposedClosure
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// A simple service class that extends the <see cref="CcrServiceBase"/>
+    /// </summary>
     public class ConcurrencyService : CcrServiceBase, IDisposable
     {
-        private readonly DispatcherMonitor _Monitor;
+        private readonly DispatcherMonitor _monitor;
 
-        /// <inheritdoc/>
-        public new DispatcherQueue TaskQueue
-        {
-            get { return base.TaskQueue; }
-        }
+        /// <summary>
+        /// Exposes the base TaskQueue
+        /// </summary>
+        private new DispatcherQueue TaskQueue => base.TaskQueue;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Exposes a singleton
+        /// </summary>
         public static readonly ConcurrencyService Singleton = new ConcurrencyService(false);
 
         private ConcurrencyService(bool monitor)
@@ -34,7 +38,7 @@ namespace MFDLabs.Concurrency
               )
         {
             if (monitor)
-                _Monitor = new DispatcherMonitor(TaskQueue.Dispatcher);
+                _monitor = new DispatcherMonitor(TaskQueue.Dispatcher);
 
             var performanceMonitor = new Thread(MonitorPerformance)
             {
@@ -50,7 +54,7 @@ namespace MFDLabs.Concurrency
             {
                 try
                 {
-                    var performanceCategory = "MFDLabs ConcurrencyService"; // TODO: Make this into a setting :)
+                    const string performanceCategory = "MFDLabs ConcurrencyService"; // TODO: Make this into a setting :)
 
                     if (!PerformanceCounterCategory.Exists(performanceCategory))
                     {
@@ -98,7 +102,12 @@ namespace MFDLabs.Concurrency
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Blocks the current thread until the given task finishes
+        /// </summary>
+        /// <param name="task">A task to block</param>
+        /// <param name="timeout">A timeout</param>
+        /// <returns>Boolean</returns>
         public bool BlockUntilCompletion(ITask task, TimeSpan timeout)
         {
             // TODO: Pool these handles for better performance.
@@ -117,7 +126,12 @@ namespace MFDLabs.Concurrency
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Performs a Choice operation
+        /// </summary>
+        /// <param name="successHandler">The success result</param>
+        /// <param name="failureHandler">The failure result</param>
+        /// <returns></returns>
         public SuccessFailurePort Choice(Action<SuccessResult> successHandler, Action<Exception> failureHandler)
         {
             var result = new SuccessFailurePort();
@@ -125,7 +139,14 @@ namespace MFDLabs.Concurrency
             return result;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Performs generic Choice operation
+        /// </summary>
+        /// <param name="handler0">The success handler</param>
+        /// <param name="handler1">The failure handler</param>
+        /// <typeparam name="T0">SuccessResult</typeparam>
+        /// <typeparam name="T1">FailureResult</typeparam>
+        /// <returns></returns>
         public PortSet<T0, T1> Choice<T0, T1>(Action<T0> handler0, Action<T1> handler1)
         {
             var result = new PortSet<T0, T1>();
@@ -133,7 +154,14 @@ namespace MFDLabs.Concurrency
             return result;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Performs a generic choice with result
+        /// </summary>
+        /// <param name="resultPortSet">The result</param>
+        /// <param name="handler0">The success handler</param>
+        /// <param name="handler1">The failure handler</param>
+        /// <typeparam name="T0">SuccessResult</typeparam>
+        /// <typeparam name="T1">FailureResult</typeparam>
         public void Choice<T0, T1>(PortSet<T0, T1> resultPortSet, Action<T0> handler0, Action<T1> handler1)
         {
             var choice = Arbiter.Choice(
@@ -164,7 +192,12 @@ namespace MFDLabs.Concurrency
             Singleton.Activate(choice);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Perfoms a generic choice with only success T
+        /// </summary>
+        /// <param name="resultPortSet">The result</param>
+        /// <param name="successHandler">On success hit.</param>
+        /// <typeparam name="T">SuccessResult</typeparam>
         public void Choice<T>(PortSet<T, Exception> resultPortSet, Action<T> successHandler)
         {
             Choice(
@@ -174,7 +207,11 @@ namespace MFDLabs.Concurrency
             );
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Delay for the given timespan and then execute the Handler
+        /// </summary>
+        /// <param name="timeSpan">Time to delay</param>
+        /// <param name="handler">Handler to hit</param>
         public void Delay(TimeSpan timeSpan, Handler handler)
         {
             var timeoutPort = TimeoutPort(timeSpan);
@@ -182,7 +219,11 @@ namespace MFDLabs.Concurrency
             Activate(receiver);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Delay an iterator task
+        /// </summary>
+        /// <param name="timeSpan">Time to delay</param>
+        /// <param name="handler">Handler to hit</param>
         public void DelayInterator(TimeSpan timeSpan, IteratorHandler handler)
         {
             var timeoutPort = TimeoutPort(timeSpan);
@@ -190,7 +231,11 @@ namespace MFDLabs.Concurrency
             Activate(receiver);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Executes an iterator until it completes
+        /// </summary>
+        /// <param name="handler">The handler</param>
+        /// <returns></returns>
         public ITask ExecuteToCompletion(IteratorHandler handler)
         {
             // The bool ensures that causalties are propagated
@@ -203,7 +248,11 @@ namespace MFDLabs.Concurrency
             );
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Nest an iterator handler
+        /// </summary>
+        /// <param name="handler">The handler</param>
+        /// <returns></returns>
         public ITask NestIterator(IteratorHandler handler)
         {
             return Arbiter.ExecuteToCompletion(
@@ -212,7 +261,13 @@ namespace MFDLabs.Concurrency
             );
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Init a receive on a new Port
+        /// </summary>
+        /// <param name="persist">Persist receives</param>
+        /// <param name="handler">On Receive</param>
+        /// <typeparam name="T">SuccessResult</typeparam>
+        /// <returns></returns>
         public Port<T> Receive<T>(bool persist, Action<T> handler)
         {
             var result = new Port<T>();
@@ -220,7 +275,13 @@ namespace MFDLabs.Concurrency
             return result;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Generic receive on a result port
+        /// </summary>
+        /// <param name="persist">Persist receives</param>
+        /// <param name="result">Result port</param>
+        /// <param name="handler">On Receive</param>
+        /// <typeparam name="T">SuccessResult</typeparam>
         public void Receive<T>(bool persist, Port<T> result, Action<T> handler)
         {
             var receiver = Arbiter.Receive(
@@ -259,34 +320,63 @@ namespace MFDLabs.Concurrency
             TaskQueue.Enqueue(iterativeTask);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawn an iterator for the given handler
+        /// </summary>
+        /// <param name="t0">SuccessResult</param>
+        /// <param name="handler">OnIterator</param>
+        /// <typeparam name="T0">SuccessResult</typeparam>
         public new void SpawnIterator<T0>(T0 t0, IteratorHandler<T0> handler)
         {
             var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0));
             TaskQueue.Enqueue(iterativeTask);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawn an iterator for the given handler
+        /// </summary>
+        /// <param name="t0">SuccessResult</param>
+        /// <param name="t1">FailureResult</param>
+        /// <param name="handler">OnIterator</param>
+        /// <typeparam name="T0">SuccessResult</typeparam>
+        /// <typeparam name="T1">FailureResult</typeparam>
         public new void SpawnIterator<T0, T1>(T0 t0, T1 t1, IteratorHandler<T0, T1> handler)
         {
             var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0, t1));
             TaskQueue.Enqueue(iterativeTask);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Spawn an iterator for the given handler
+        /// </summary>
+        /// <param name="t0">SuccessResult</param>
+        /// <param name="t1">FailureResult</param>
+        /// <param name="t2"></param>
+        /// <param name="handler">OnIterator</param>
+        /// <typeparam name="T0">SuccessResult</typeparam>
+        /// <typeparam name="T1">FailureResult</typeparam>
+        /// <typeparam name="T2"></typeparam>
         public new void SpawnIterator<T0, T1, T2>(T0 t0, T1 t1, T2 t2, IteratorHandler<T0, T1, T2> handler)
         {
             var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0, t1, t2));
             TaskQueue.Enqueue(iterativeTask);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Exposes base TimeoutPort
+        /// </summary>
+        /// <param name="ts"></param>
+        /// <returns></returns>
         public new Port<DateTime> TimeoutPort(TimeSpan ts)
         {
             return base.TimeoutPort(ts);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Wait for receive
+        /// </summary>
+        /// <param name="ts"></param>
+        /// <returns></returns>
         public ITask Wait(TimeSpan ts)
         {
             return base.TimeoutPort(ts).Receive();
@@ -298,8 +388,8 @@ namespace MFDLabs.Concurrency
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (_Monitor != null)
-                _Monitor.Dispose();
+            if (_monitor != null)
+                _monitor.Dispose();
 
             TaskQueue.Dispose();
 

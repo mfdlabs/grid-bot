@@ -1,11 +1,10 @@
 ﻿using System;
-using MFDLabs.Abstractions;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
-    internal sealed class GridDeployerUtility : SingletonBase<GridDeployerUtility>
+    internal static class GridDeployerUtility
     {
-        public enum GridDeployerExitCodes
+        private enum GridDeployerExitCodes
         {
             BadPort = -1,
             NoWebServerFound = -2,
@@ -14,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Utility
             WebServerUpButBadHealthCheck = -5
         }
 
-        public void CheckHResult(int hResult)
+        public static void CheckHResult(int hResult)
         {
             if (hResult > 1) return;
 

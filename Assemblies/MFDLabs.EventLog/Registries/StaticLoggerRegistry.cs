@@ -8,16 +8,16 @@ namespace MFDLabs.EventLog
         {
             get
             {
-                if (_Instance == null) throw new UninitializedLoggerException();
-                return _Instance;
+                if (_instance == null) throw new UninitializedLoggerException();
+                return _instance;
             }
-            private set => _Instance = value;
+            private set => _instance = value;
         }
-        public static bool HasLogger => _Instance != null;
+        public static bool HasLogger => _instance != null;
 
         public static void SetLogger(ILogger logger) 
             => Instance = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        private static ILogger _Instance;
+        private static ILogger _instance;
     }
 }

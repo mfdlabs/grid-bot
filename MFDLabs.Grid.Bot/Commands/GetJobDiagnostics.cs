@@ -10,8 +10,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class GetJobDiagnostics : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Grid Server Job Diagnostics";
-        public string CommandDescription => $"Attempts to call a DiagEx SOAP action via the SoapUtility\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}jobdiagnostics jobID type?=1.";
-        public string[] CommandAliases => new string[] { "jd", "jobdiag", "jobdiagnostics" };
+        public string CommandDescription => $"Attempts to call a DiagEx SOAP action via the SoapUtility\nLayout:" +
+                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}jobdiagnostics jobID type?=1.";
+        public string[] CommandAliases => new[] { "jd", "jobdiag", "jobdiagnostics" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -19,16 +20,17 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var jobID = messageContentArray.ElementAtOrDefault(0);
+            var jobId = messageContentArray.ElementAtOrDefault(0);
             if (!int.TryParse(messageContentArray.ElementAtOrDefault(1), out int type)) type = 1;
 
-            if (jobID == default)
+            if (jobId == default)
             {
-                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} jobID type?=1");
+                await message.ReplyAsync($"Missing required parameter 'jobId', the layout is: " +
+                                         $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} jobID type?=1");
                 return;
             }
 
-            await message.ReplyAsync(LuaUtility.Singleton.ParseLuaValues(await GridServerArbiter.Singleton.DiagExAsync(type, jobID)));
+            await message.ReplyAsync(LuaUtility.ParseLuaValues(await GridServerArbiter.Singleton.DiagExAsync(type, jobId)));
         }
     }
 }

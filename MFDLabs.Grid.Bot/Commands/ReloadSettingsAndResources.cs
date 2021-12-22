@@ -9,8 +9,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class ReloadSettingsAndResources : IStateSpecificCommandHandler
     {
         public string CommandName => "Reload Bot Instance Settings and Resources";
-        public string CommandDescription => "Attempts to reload the settings from the current application domain's configuration file.";
-        public string[] CommandAliases => new string[] { "reload", "reloadsettings" };
+        public string CommandDescription => "Attempts to reload the settings from the current application" +
+                                            "domain's configuration file.";
+        public string[] CommandAliases => new[] { "reload", "reloadsettings" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -19,7 +20,8 @@ namespace MFDLabs.Grid.Bot.Commands
             if (!await message.RejectIfNotAdminAsync()) return;
 
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.Reload();
-            await message.ReplyAsync($"Successfully reloaded all settings from {Assembly.GetExecutingAssembly().GetName().Name}.exe.config");
+            await message.ReplyAsync($"Successfully reloaded all settings " +
+                                     $"from {Assembly.GetExecutingAssembly().GetName().Name}.exe.config");
         }
     }
 }

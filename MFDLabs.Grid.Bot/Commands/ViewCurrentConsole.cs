@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "View Current Bot Instance Console";
         public string CommandDescription => "Attempts to take a screenshot of the bot's console output.";
-        public string[] CommandAliases => new string[] { "vcc", "viewcurrentconsole" };
+        public string[] CommandAliases => new[] { "vcc", "viewcurrentconsole" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
@@ -27,11 +27,12 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (currentMainwindowHandle == IntPtr.Zero)
             {
-                await message.ReplyAsync($"The running app has no window, therefore nothing to screenshot. Please find the machine '{SystemGlobal.Singleton.GetMachineID()}' to get the console output.");
+                await message.ReplyAsync($"The running app has no window, therefore nothing to screenshot. " +
+                                         $"Please find the machine '{SystemGlobal.GetMachineId()}' to get the console output.");
                 return;
             }
 
-            var bitmap = BitmapExtensions.GetBitmapForWindowByWindowHandle(currentMainwindowHandle);
+            var bitmap = currentMainwindowHandle.GetBitmapForWindowByWindowHandle();
             bitmap.Save("ServerShot.png");
 
             await message.Channel.SendFileAsync("ServerShot.png");

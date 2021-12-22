@@ -6,7 +6,7 @@ namespace MFDLabs.Grid.Bot.Hooks
 {
     internal sealed class ListThreadsHook : IConsoleHook
     {
-        public char[] HookKeys => new char[] { 'l', 'L' };
+        public char[] HookKeys => new[] { 'l', 'L' };
 
         public void Callback(char key)
         {
@@ -14,10 +14,7 @@ namespace MFDLabs.Grid.Bot.Hooks
 
             SystemLogger.Singleton.Log("Total thread count: {0}", threads.Count);
 
-            foreach (ProcessThread thread in threads)
-            {
-                SystemLogger.Singleton.Log("Thread ID: {0}", thread.Id);
-            }
+            foreach (ProcessThread thread in threads) SystemLogger.Singleton.Log("Thread ID: {0}", thread.Id);
         }
     }
 }

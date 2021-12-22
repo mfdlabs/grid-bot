@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
@@ -19,17 +20,17 @@ namespace MFDLabs.Concurrency.Base
         /// <summary>
         /// The name of this <see cref="BaseTask{TSingleton, TItem}"/> and the <see cref="TaskThreadMonitor"/> when monitoring performance.
         /// </summary>
-        public abstract string Name { get; }
+        protected abstract string Name { get; }
 
         /// <summary>
         /// The <see cref="ICounterRegistry"/> to be used by the task with the <see cref="TaskThreadMonitor"/>.
         /// </summary>
-        public abstract ICounterRegistry CounterRegistry { get; }
+        protected abstract ICounterRegistry CounterRegistry { get; }
 
         /// <summary>
-        /// The <see cref="IPacket.ID"/> to be set when creating new <see cref="Packet{TItem}"/>s
+        /// The <see cref="IPacket.Id"/> to be set when creating new <see cref="Packet{TItem}"/>s
         /// </summary>
-        public abstract int PacketID { get; }
+        protected abstract int PacketId { get; }
 
         /// <summary>
         /// The <see cref="Port{T}"/> to be used when receiving via <see cref="Arbiter.Receive{T}(bool, Port{T}, Handler{T})"/>.
@@ -41,14 +42,15 @@ namespace MFDLabs.Concurrency.Base
         /// A boolean that determines if the current task is allowed to receive new members.
         /// Set to false when the last <see cref="PluginResult"/> is <see cref="PluginResult.StopProcessingAndDeallocate"/>.
         /// </summary>
-        public bool CanReceive { get; protected set; } = true;
+        protected bool CanReceive { get; set; } = true;
 
         #endregion Members
 
         /// <inheritdoc/>
-        public BaseTask()
+        [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
+        protected BaseTask()
         {
-            _monitor = new TaskThreadMonitor(CounterRegistry, Name);
+            Monitor = new TaskThreadMonitor(CounterRegistry, Name);
         }
 
         /// <summary>
@@ -57,63 +59,62 @@ namespace MFDLabs.Concurrency.Base
         /// <returns>Returns the last <see cref="PluginResult"/>.</returns>
         public PluginResult Activate()
         {
-            if (CanReceive)
+            if (!CanReceive) return _lastResult;
+            
+            lock (_lock)
             {
-                lock (_lock)
-                {
-                    ConcurrencyService.Singleton.Activate(
-                        Arbiter.Receive(
-                            false,
-                            Port,
-                            (item) =>
+                ConcurrencyService.Singleton.Activate(
+                    Arbiter.Receive(
+                        false,
+                        Port,
+                        (item) =>
+                        {
+                            _sequenceId++;
+                            Monitor.CountOfItemsProcessed.Increment();
+                            Monitor.RateOfItemsPerSecondProcessed.Increment();
+                            Monitor.AverageRateOfItems.Sample(1.0 / _sequenceId);
+                            lock (_resultLock)
                             {
-                                _sequenceID++;
-                                _monitor.CountOfItemsProcessed.Increment();
-                                _monitor.RateOfItemsPerSecondProcessed.Increment();
-                                _monitor.AverageRateOfItems.Sample(1.0 / _sequenceID);
-                                lock (_resultLock)
+                                try
                                 {
-                                    try
+                                    var packet = new Packet<TItem>(item, PacketId, _sequenceId, Monitor);
+                                    _lastResult = OnReceive(ref packet);
+                                    if (packet.Status == PacketProcessingStatus.Failure)
                                     {
-                                        var packet = new Packet<TItem>(item, PacketID, _sequenceID, _monitor);
-                                        _lastResult = OnReceive(ref packet);
-                                        if (packet.Status == PacketProcessingStatus.Failure)
-                                        {
-                                            _monitor.CountOfItemsProcessedThatFail.Increment();
-                                            _monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                            _monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceID);
-                                        }
-                                        else
-                                        {
-                                            _monitor.CountOfItemsProcessedThatSucceed.Increment();
-                                            _monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
-                                            _monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceID);
-                                        }
-                                        packet.Dispose();
+                                        Monitor.CountOfItemsProcessedThatFail.Increment();
+                                        Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                                        Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        _monitor.CountOfItemsProcessedThatFail.Increment();
-                                        _monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                        _monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceID);
+                                        Monitor.CountOfItemsProcessedThatSucceed.Increment();
+                                        Monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
+                                        Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
+                                    }
+                                    packet.Dispose();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Monitor.CountOfItemsProcessedThatFail.Increment();
+                                    Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                                    Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
 
 #if DEBUG
-                                        SystemLogger.Singleton.Error(ex);
+                                    SystemLogger.Singleton.Error(ex);
 #else
                                         SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
 #endif
-                                    }
                                 }
                             }
-                        )
-                    );
-                }
-                lock (_resultLock)
-                    if (_lastResult == PluginResult.StopProcessingAndDeallocate)
-                    {
-                        Deallocate();
-                    }
+                        }
+                    )
+                );
             }
+            lock (_resultLock)
+                if (_lastResult == PluginResult.StopProcessingAndDeallocate)
+                {
+                    Deallocate();
+                }
             return _lastResult;
         }
 
@@ -131,10 +132,12 @@ namespace MFDLabs.Concurrency.Base
 
         #region Other Items
 
-        private int _sequenceID = 0;
+        private int _sequenceId;
         private PluginResult _lastResult;
-        /// <inheritdoc/>
-        protected readonly TaskThreadMonitor _monitor;
+        /// <summary>
+        /// Monitor
+        /// </summary>
+        protected readonly TaskThreadMonitor Monitor;
 
         #endregion
     }

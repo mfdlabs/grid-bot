@@ -1,27 +1,40 @@
 ﻿using System;
 using System.Diagnostics;
 
+// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     namespace Unsafe
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Unsafe packet
+        /// </summary>
         public unsafe struct Packet
         {
-            /// <inheritdoc />
-            public int id { get; set; }
+            /// <summary>
+            /// Packet ID
+            /// </summary>
+            public int Id { get; set; }
 
-            /// <inheritdoc />
-            public int sequence_id { get; set; }
+            /// <summary>
+            /// Packet Sequence ID
+            /// </summary>
+            public int SequenceId { get; set; }
 
-            /// <inheritdoc />
-            public byte* data { get; set; }
+            /// <summary>
+            /// Raw packet Data
+            /// </summary>
+            public byte* Data { get; set; }
 
-            /// <inheritdoc />
-            public DateTime created { get; set; }
+            /// <summary>
+            /// When created
+            /// </summary>
+            public DateTime Created { get; set; }
 
-            /// <inheritdoc />
-            public PacketProcessingStatus status { get; set; }
+            /// <summary>
+            /// Execution status
+            /// </summary>
+            public PacketProcessingStatus Status { get; set; }
         }
     }
 
@@ -31,14 +44,14 @@ namespace MFDLabs.Concurrency
     public interface IPacket
     {
         /// <summary>
-        /// The <see cref="ID"/> of the <see cref="IPacket"/> when receiving.
+        /// The <see cref="Id"/> of the <see cref="IPacket"/> when receiving.
         /// </summary>
-        int ID { get; }
+        int Id { get; }
 
         /// <summary>
-        /// The <see cref="SequenceID"/> of the <see cref="IPacket"/> when creating.
+        /// The <see cref="SequenceId"/> of the <see cref="IPacket"/> when creating.
         /// </summary>
-        int SequenceID { get; }
+        int SequenceId { get; }
 
         /// <summary>
         /// The <see cref="DateTime"/> for when the <see cref="IPacket"/> was created.
@@ -59,7 +72,7 @@ namespace MFDLabs.Concurrency
     /// <summary>
     /// The <see cref="IPacket{TItem}"/> to be used with factories with an item.
     /// </summary>
-    public interface IPacket<TItem> : IPacket, IDisposable
+    public interface IPacket<out TItem> : IPacket, IDisposable
         where TItem : class
     {
         /// <summary>
@@ -71,40 +84,28 @@ namespace MFDLabs.Concurrency
     /// <summary>
     /// The <see cref="IPacket"/> implementation.
     /// </summary>
-    [DebuggerDisplay("ID = {ID}, SequenceID = {SequenceID}, Created = {Created}, Status = {Status}")]
+    [DebuggerDisplay("ID = {Id}, SequenceID = {SequenceId}, Created = {Created}, Status = {Status}")]
     public class Packet : IPacket, IDisposable
     {
         /// <inheritdoc/>
-        public int ID
-        {
-            get => _id;
-        }
+        public int Id => _id;
 
         /// <inheritdoc/>
-        public int SequenceID
-        {
-            get => _sequenceid;
-        }
+        public int SequenceId => _sequenceid;
 
         /// <inheritdoc/>
-        public DateTime Created
-        {
-            get => _createdUtc;
-        }
+        public DateTime Created => _createdUtc;
 
         /// <inheritdoc/>
-        public TaskThreadMonitor PerformanceMonitor
-        {
-            get => _perfmon?.Value;
-        }
+        public TaskThreadMonitor PerformanceMonitor => _perfmon?.Value;
 
         /// <inheritdoc/>
         public PacketProcessingStatus Status { get; set; } = PacketProcessingStatus.Success;
 
-        internal Packet(int id, int sequenceID, TaskThreadMonitor perfmon)
+        internal Packet(int id, int sequenceId, TaskThreadMonitor perfmon)
         {
             _perfmon = new Lazy<TaskThreadMonitor>(() => perfmon, true);
-            _sequenceid = sequenceID;
+            _sequenceid = sequenceId;
             _createdUtc = DateTime.UtcNow;
             _id = id;
         }
@@ -128,17 +129,14 @@ namespace MFDLabs.Concurrency
     /// The <see cref="IPacket{TItem}"/> implementation.
     /// </summary>
     /// <typeparam name="TItem">The item of the packet.</typeparam>
-    public sealed class Packet<TItem> : Packet, IPacket<TItem>, IPacket, IDisposable
+    public sealed class Packet<TItem> : Packet, IPacket<TItem>
         where TItem : class
     {
         /// <inheritdoc/>
-        public TItem Item
-        {
-            get => _item?.Value;
-        }
+        public TItem Item => _item?.Value;
 
-        internal Packet(TItem item, int id, int sequenceID, TaskThreadMonitor perfmon)
-            : base(id, sequenceID, perfmon)
+        internal Packet(TItem item, int id, int sequenceId, TaskThreadMonitor perfmon)
+            : base(id, sequenceId, perfmon)
         {
             _item = new Lazy<TItem>(() => item, true);
         }

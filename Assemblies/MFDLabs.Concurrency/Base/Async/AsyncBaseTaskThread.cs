@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
@@ -19,16 +20,14 @@ namespace MFDLabs.Concurrency.Base.Async
         /// <summary>
         /// A timeout for each activation of the <see cref="AsyncBaseTask{TSingleton, TItem}.Port"/>.
         /// </summary>
-        public virtual TimeSpan ProcessActivationInterval { get; } = TimeSpan.FromSeconds(1.5);
+        protected virtual TimeSpan ProcessActivationInterval { get; } = TimeSpan.FromSeconds(1.5);
 
         #endregion Members
 
         /// <summary>
         /// </summary>
-        protected AsyncBaseTaskThread()
-        {
-            Initialize();
-        }
+        [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
+        protected AsyncBaseTaskThread() => Initialize();
 
         /// <summary>
         /// Initialize the task thread.
@@ -82,7 +81,7 @@ namespace MFDLabs.Concurrency.Base.Async
         #region Concurrency
 
         private readonly object _initLock = new object();
-        private bool _initialized = false;
+        private bool _initialized;
 
         #endregion
     }

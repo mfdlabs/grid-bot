@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace MFDLabs.ErrorHandling.Extensions
 {
@@ -7,13 +6,12 @@ namespace MFDLabs.ErrorHandling.Extensions
     {
         public static string ToDescription<T>(this T self)
         {
-            FieldInfo fi = self.GetType().GetField(self.ToString());
+            var fi = self.GetType().GetField(self.ToString());
 
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
+            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);
 
-            if (attributes != null && attributes.Length > 0) return attributes[0].Description;
-            else return self.ToString();
+            return attributes.Length > 0 ? attributes[0].Description : self.ToString();
         }
     }
 }

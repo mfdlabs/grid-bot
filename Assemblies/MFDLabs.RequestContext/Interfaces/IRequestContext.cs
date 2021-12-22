@@ -4,37 +4,21 @@ namespace MFDLabs.RequestContext
 {
     public interface IRequestContext
     {
-        long? AuthenticatedUserID { get; }
-
-        long? AccountID { get; }
-
-        string RequestIPAddress { get; }
-
+        long? AuthenticatedUserId { get; }
+        long? AccountId { get; }
+        string RequestIpAddress { get; }
         string UserAgent { get; }
-
         AgeBracket? AgeBracket { get; }
-
         string RequestCountryCode { get; }
-
         string AccountCountryCode { get; }
-
         string PlatformType { get; }
-
         string EnvironmentAbbreviation { get; }
-
         ICollection<Policy> ApplicablePolicies { get; }
-
         string TencentOpenId { get; }
-
         string TencentAccessToken { get; }
-
-        long? BrowserTrackerID { get; }
-
-        string this[string key]
-        {
-            get;
-        }
-
-        ICollection<KeyValuePair<string, string>> ToKeyValuePairs();
+        long? BrowserTrackerId { get; }
+        string this[string key] { get; }
+        
+        IEnumerable<KeyValuePair<string, string>> ToKeyValuePairs();
     }
 }

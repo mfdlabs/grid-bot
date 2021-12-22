@@ -1,11 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
+
+using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Registries;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnSlashCommand
+    internal static class OnSlashCommand
     {
         internal static async Task Invoke(SocketSlashCommand command)
         {
@@ -34,7 +36,9 @@ namespace MFDLabs.Grid.Bot.Events
                 }
             }
 
-            await CommandRegistry.Singleton.CheckAndRunSlashCommand(command);
+            await CommandRegistry.CheckAndRunSlashCommand(command);
         }
     }
 }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS

@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Close All Grid Server Jobs";
         public string CommandDescription => "Attempts to close all of the grid server jobs via the SoapUtility.";
-        public string[] CommandAliases => new string[] { "caj", "closealljobs" };
+        public string[] CommandAliases => new[] { "caj", "closealljobs" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

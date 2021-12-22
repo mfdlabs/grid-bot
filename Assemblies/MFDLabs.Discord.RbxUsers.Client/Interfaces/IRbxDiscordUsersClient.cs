@@ -6,7 +6,7 @@ namespace MFDLabs.Discord.RbxUsers.Client
 {
     public interface IRbxDiscordUsersClient
     {
-        RobloxUserResponse ResolveRobloxUserByID(ulong discordID);
-        Task<RobloxUserResponse> ResolveRobloxUserByIDAsync(ulong discordID, CancellationToken cancellationToken);
+        RobloxUserResponse ResolveRobloxUserById(ulong discordId);
+        Task<RobloxUserResponse> ResolveRobloxUserByIdAsync(ulong discordId, CancellationToken cancellationToken);
     }
 }

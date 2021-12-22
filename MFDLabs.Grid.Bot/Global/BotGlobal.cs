@@ -1,39 +1,32 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Abstractions;
 using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Global
 {
-    public sealed class BotGlobal : SingletonBase<BotGlobal>
+    public static class BotGlobal
     {
+        public static DiscordSocketClient Client { get; private set; }
 
-        private DiscordSocketClient _client;
+        internal static void Initialize(DiscordSocketClient client) => Client = client;
 
-        public DiscordSocketClient Client { get { return _client; } }
-
-        internal void Initialize(DiscordSocketClient client)
+        internal static async Task SingletonLaunch()
         {
-            _client = client;
+            await Client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken).ConfigureAwait(false);
+            await Client.StartAsync().ConfigureAwait(false);
         }
 
-        internal async Task SingletonLaunch()
-        {
-            await _client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken).ConfigureAwait(false);
-            await _client.StartAsync().ConfigureAwait(false);
-        }
-
-        internal async Task TryLogout()
+        internal static async Task TryLogout()
         {
             SystemLogger.Singleton.Log("Attempting to logout bot user...");
 
-            if (_client != null)
+            if (Client != null)
             {
                 try
                 {
                     //await _client.LogoutAsync().ConfigureAwait(false);
-                    await _client.StopAsync().ConfigureAwait(false);
+                    await Client.StopAsync().ConfigureAwait(false);
                     SystemLogger.Singleton.Info("Bot successfully logged out and stopped!");
                 }
                 catch

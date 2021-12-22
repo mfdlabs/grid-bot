@@ -1,14 +1,14 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using MFDLabs.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace MFDLabs.Text
 {
-    public sealed class TextGlobal : SingletonBase<TextGlobal>
+    public sealed class TextGlobal
     {
         public enum StringDirection
         {
@@ -16,7 +16,7 @@ namespace MFDLabs.Text
             Right
         }
 
-        public string FillString(string s, char c, int n, StringDirection d)
+        public static string FillString(string s, char c, int n, StringDirection d)
         {
             switch (d)
             {
@@ -26,11 +26,13 @@ namespace MFDLabs.Text
                 case StringDirection.Right:
                     s += new string(c, n);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(d), d, null);
             }
             return s;
         }
 
-        public string EscapeString(string s)
+        public static string EscapeString(string s)
         {
             if (s == null) return null;
             var b = new StringBuilder();
@@ -50,47 +52,40 @@ namespace MFDLabs.Text
             return b.ToString();
         }
 
-        public bool StringContainsUnicode(string s)
-        {
-            return s.Any(c => c > 255);
-        }
+        public static bool StringContainsUnicode(string s) => s.Any(c => c > 255);
 
-        public string UnescapeString(string v)
+        public static string UnescapeString(string v)
         {
             if (v == null) return null;
             return Regex.Replace(
                 v,
                 @"\\u(?<Value>[a-zA-Z0-9]{4})",
-                m =>
-                {
-                    return ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString();
-                }
-            );
+                m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString());
         }
 
-        public string SerializeJsonWithEnumConverter(object d)
+        public static string SerializeJsonWithEnumConverter(object d)
         {
             return JsonConvert.SerializeObject(
                 d,
                 Formatting.None,
-                _SharedSettings
+                SharedSettings
             );
         }
 
-        public string PrettyPrintJson(string j)
+        public static string PrettyPrintJson(string j)
         {
             var parsedJson = JsonConvert.DeserializeObject(
                 j,
-                _SharedSettings
+                SharedSettings
             );
             return JsonConvert.SerializeObject(
                 parsedJson,
                 Formatting.Indented,
-                _SharedSettings
+                SharedSettings
             );
         }
 
-        private static readonly JsonSerializerSettings _SharedSettings = new JsonSerializerSettings()
+        private static readonly JsonSerializerSettings SharedSettings = new()
         {
             Converters = new JsonConverter[]
             {

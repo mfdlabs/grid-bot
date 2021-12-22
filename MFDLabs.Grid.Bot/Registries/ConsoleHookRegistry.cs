@@ -9,29 +9,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using MFDLabs.Abstractions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
 
 namespace MFDLabs.Grid.Bot.Registries
 {
-    public sealed class ConsoleHookRegistry : SingletonBase<ConsoleHookRegistry>
+    public static class ConsoleHookRegistry
     {
 
-        private bool wasRegistered = false;
+        private static bool _wasRegistered;
 
-        private readonly object _registrationLock = new object();
+        private static readonly object RegistrationLock = new();
 
-        private readonly ICollection<IConsoleHook> _consoleHooks = new List<IConsoleHook>();
+        private static readonly ICollection<IConsoleHook> ConsoleHooks = new List<IConsoleHook>();
 
-        private string GetHookNamespace()
-        {
-            return $"{typeof(Program).Namespace}.Hooks";
-        }
+        private static string GetHookNamespace() => $"{typeof(Program).Namespace}.Hooks";
 
         /* TODO: Use reflection to shorten the code in here! */
-        public void Register()
+        public static void Register()
         {
             RegisterInternal();
 
@@ -46,24 +42,23 @@ namespace MFDLabs.Grid.Bot.Registries
             thread.Start();
         }
 
-        private IConsoleHook GetConsoleHook(char key)
-        {
-            return (from consoleHook in _consoleHooks.OfType<IConsoleHook>() where consoleHook.HookKeys.Contains<char>(key) select consoleHook).FirstOrDefault<IConsoleHook>();
-        }
+        private static IConsoleHook GetConsoleHook(char key) =>
+            (from consoleHook in ConsoleHooks
+                where consoleHook.HookKeys.Contains(key)
+                select consoleHook).FirstOrDefault();
 
-        private void RegisterInternal()
+        private static void RegisterInternal()
         {
-            if (!wasRegistered)
+            if (_wasRegistered) return;
+            
+            lock (RegistrationLock)
             {
-                lock (_registrationLock)
-                {
-                    ParseAndInsertIntoConsoleHookRegistry();
-                    wasRegistered = true;
-                }
+                ParseAndInsertIntoConsoleHookRegistry();
+                _wasRegistered = true;
             }
         }
 
-        private void ParseAndInsertIntoConsoleHookRegistry()
+        private static void ParseAndInsertIntoConsoleHookRegistry()
         {
             SystemLogger.Singleton.LifecycleEvent("Begin attempt to register console hooks via Reflection.");
 
@@ -102,7 +97,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                 continue;
                             }
 
-                            _consoleHooks.Add(trueConsoleHook);
+                            ConsoleHooks.Add(trueConsoleHook);
                         }
                     }
                 }
@@ -117,16 +112,16 @@ namespace MFDLabs.Grid.Bot.Registries
             }
         }
 
-        private void HookThread()
+        private static void HookThread()
         {
             while (true)
             {
-                char key = Console.ReadKey(true).KeyChar;
+                var key = Console.ReadKey(true).KeyChar;
 
                 var consoleHook = GetConsoleHook(key);
 
                 if (consoleHook != default)
-                    ThreadPool.QueueUserWorkItem((s) =>
+                    ThreadPool.QueueUserWorkItem(_ =>
                     {
                         try
                         {

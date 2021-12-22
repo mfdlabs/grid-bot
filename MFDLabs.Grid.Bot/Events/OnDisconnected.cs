@@ -7,7 +7,7 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
-    internal sealed class OnDisconnected
+    internal static class OnDisconnected
     {
         internal static Task Invoke(Exception ex)
         {

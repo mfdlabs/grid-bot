@@ -48,6 +48,8 @@ namespace MFDLabs.Grid.Bot.Interfaces
         Task Invoke(string[] messageContentArray, SocketMessage message, string originalAlias);
     }
 
+#if WE_LOVE_EM_SLASH_COMMANDS
+
     /// <summary>
     /// Refers to a class that all commands must implement so that the <see cref="CommandRegistry"/> can parse and insert them into the <see cref="CommandRegistry"/>'s command handler state.
     /// </summary>
@@ -97,4 +99,6 @@ namespace MFDLabs.Grid.Bot.Interfaces
         /// <returns>Returns as <see cref="Task"/> that can be awaited on.</returns>
         Task Invoke(SocketSlashCommand command);
     }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
 }

@@ -6,7 +6,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     internal sealed class ScriptExecutionTaskPerformanceMonitor
     {
-        private const string _Category = "MFDLabs.Grid.Tasks.ScriptExecutionTask.PerfmonV2";
+        private const string Category = "MFDLabs.Grid.Tasks.ScriptExecutionTask.PerfmonV2";
 
         internal IRawValueCounter TotalItemsProcessed { get; }
 
@@ -28,19 +28,19 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
         internal ScriptExecutionTaskPerformanceMonitor(ICounterRegistry counterRegistry)
         {
-            if (counterRegistry == null) throw new ArgumentNullException("counterRegistry");
+            if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
 
-            var instance = $"{SystemGlobal.Singleton.GetMachineID()} ({SystemGlobal.Singleton.GetMachineHost()})";
+            var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
 
-            TotalItemsProcessed = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessed", instance);
-            TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatFailed", instance);
-            TotalItemsProcessedThatHadEmptyScripts = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadEmptyScripts", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment", instance);
-            TotalItemsProcessedThatHadAnInvalidScriptFile = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadAnInvalidScriptFile", instance);
-            TotalItemsProcessedThatHadBlacklistedKeywords = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadBlacklistedKeywords", instance);
-            TotalItemsProcessedThatHadUnicode = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadUnicode", instance);
-            TotalItemsProcessedThatHadAFileResult = counterRegistry.GetRawValueCounter(_Category, "TotalItemsProcessedThatHadAFileResult", instance);
+            TotalItemsProcessed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessed", instance);
+            TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
+            TotalItemsProcessedThatHadEmptyScripts = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScripts", instance);
+            TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment", instance);
+            TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment", instance);
+            TotalItemsProcessedThatHadAnInvalidScriptFile = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadAnInvalidScriptFile", instance);
+            TotalItemsProcessedThatHadBlacklistedKeywords = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadBlacklistedKeywords", instance);
+            TotalItemsProcessedThatHadUnicode = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadUnicode", instance);
+            TotalItemsProcessedThatHadAFileResult = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadAFileResult", instance);
         }
     }
 }

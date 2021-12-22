@@ -9,44 +9,46 @@ namespace MFDLabs.Sentinels
 
         public ServiceSentinel(Func<bool> healthChecker, Func<TimeSpan> monitorIntervalGetter, bool isHealthy = true)
         {
-            _HealthChecker = healthChecker;
-            _MonitorIntervalGetter = monitorIntervalGetter;
+            _healthChecker = healthChecker;
+            MonitorIntervalGetter = monitorIntervalGetter;
             IsHealthy = isHealthy;
-            _MonitorTimer = new Timer(OnTimerCallback);
+            MonitorTimer = new Timer(OnTimerCallback);
             var monitorInterval = monitorIntervalGetter();
-            _MonitorTimer.Change(monitorInterval, monitorInterval);
+            MonitorTimer.Change(monitorInterval, monitorInterval);
         }
 
         private void OnTimerCallback(object state)
         {
-            if (_IsDisposed) return;
+            if (_isDisposed) return;
             var currentTimerState = (Timer)state;
             try
             {
                 currentTimerState.Change(-1, -1);
-                IsHealthy = _HealthChecker();
+                IsHealthy = _healthChecker();
             }
             catch (Exception) { IsHealthy = false; }
             finally
             {
                 try
                 {
-                    var monitorInterval = _MonitorIntervalGetter();
+                    var monitorInterval = MonitorIntervalGetter();
                     currentTimerState.Change(monitorInterval, monitorInterval);
                 }
                 catch
-                { }
+                {
+                    // ignored
+                }
             }
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (_IsDisposed) return;
+            if (_isDisposed) return;
             if (disposing)
             {
-                _MonitorTimer.CheckAndDispose();
-                _MonitorTimer = null;
+                MonitorTimer.CheckAndDispose();
+                MonitorTimer = null;
             }
-            _IsDisposed = true;
+            _isDisposed = true;
         }
         public void Dispose()
         {
@@ -54,9 +56,9 @@ namespace MFDLabs.Sentinels
             GC.SuppressFinalize(this);
         }
 
-        private readonly Func<bool> _HealthChecker;
-        private bool _IsDisposed;
-        protected readonly Func<TimeSpan> _MonitorIntervalGetter;
-        protected Timer _MonitorTimer;
+        private readonly Func<bool> _healthChecker;
+        private bool _isDisposed;
+        protected readonly Func<TimeSpan> MonitorIntervalGetter;
+        protected Timer MonitorTimer;
     }
 }

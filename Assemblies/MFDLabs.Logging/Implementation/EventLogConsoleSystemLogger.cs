@@ -8,6 +8,7 @@ using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Networking;
+using MFDLabs.FileSystem;
 using MFDLabs.Text;
 using MFDLabs.Text.Extensions;
 
@@ -18,137 +19,130 @@ namespace MFDLabs.Logging
     public sealed class EventLogConsoleSystemLogger : SingletonBase<SystemLogger>, ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _localIp = NetworkingGlobal.Singleton.GetLocalIP();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineId = SystemGlobal.Singleton.GetMachineID();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _machineHost = SystemGlobal.Singleton.GetMachineHost();
+        private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string _fileName =
+        private static readonly string MachineId = SystemGlobal.GetMachineId();
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string MachineHost = SystemGlobal.GetMachineHost();
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string FileBasePath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly string FileName =
 #if DEBUG
-                        "\\dev_log_" +
-#else
-                        "\\log_" +
+            "dev_" +
 #endif
-                        $"{DateTimeGlobal.Singleton.GetUtcNowAsISO().MakeFileSafeString()}-{SystemGlobal.Singleton.CurrentProcess.Id:X}.log";
+            $"{SystemGlobal.AssemblyVersion}_{DateTimeGlobal.GetFileSafeUtcNowAsIso()}_{SystemGlobal.CurrentProcess.Id:X}_last.log";
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private FileSystemHelper.LockedFileStream _lockedFileStream;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly object _logSync = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static bool _CanLog = true;
+        private static readonly object LogSync = new object();
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static bool _canLog = true;
+
+#if NETFRAMEWORK
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private System.Diagnostics.EventLog _eventLog;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int _eventId = 0;
+        private int _eventId;
 
         [DebuggerHidden]
         [DebuggerStepThrough]
-        public void Initialize(System.Diagnostics.EventLog eventLog)
-        {
-            _eventLog = eventLog;
-        }
-
-
-        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough]get; [DebuggerStepThrough]set; } = () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
-
-        [DebuggerHidden]
-        public bool LogThreadID { get; set; } = false;
-
-        [DebuggerStepThrough]
-        private string ConstructLoggerMessage(string logType, string format, params object[] args)
-        {
-            var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
-            var countNCharsToReplace = 4 - threadID.Length;
-
-            var internalMessage = string.Format(
-                "[{0}][{1}][{2}][{3}][{4}-{5}][{6}][{7}][{8}][{9}][{10}][{11}][{12}][{13}] {14}\n",
-                DateTimeGlobal.Singleton.GetUtcNowAsISO(),
-                SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"),
-                threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left),
-                LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"),
-                SystemGlobal.Singleton.CurrentPlatform,
-                SystemGlobal.Singleton.CurrentDeviceArch.ToLower(),
-                SystemGlobal.Singleton.Version,
-                SystemGlobal.Singleton.AssemblyVersion,
-#if DEBUG
-                "Debug",
-#else
-                "Release",
+        public void Initialize(System.Diagnostics.EventLog eventLog) => _eventLog = eventLog;
 #endif
-                _localIp,
-                _machineId,
-                _machineHost,
-                global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName,
-                logType.ToUpper(),
-                format
-            );
 
-            if (args != null && args.Length > 0)
-                return string.Format(internalMessage, args);
+        public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } =
+            () => global::MFDLabs.Logging.Properties.Settings.Default.MaxLogLevel;
 
-            return internalMessage;
+        [DebuggerHidden] public bool LogThreadId { get; set; } = false;
+
+        [DebuggerStepThrough]
+        private static string ConstructLoggerMessage(string logType, string format, params object[] args)
+        {
+            var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+            var countNCharsToReplace = 4 - threadId.Length;
+
+            var internalMessage =
+                $"[{DateTimeGlobal.GetUtcNowAsIso()}]" +
+                $"[{SystemGlobal.CurrentProcess.Id:x}]" +
+                $"[{threadId.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left)}]" +
+                $"[{LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds:f7}]" +
+                $"[{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}]" +
+                $"[{SystemGlobal.Version}][{SystemGlobal.AssemblyVersion}]" +
+#if DEBUG
+                "[Debug]" +
+#else
+                "[Release]" +
+#endif
+                $"[{LocalIp}]" +
+                $"[{MachineId}]" +
+                $"[{MachineHost}]" +
+                $"[{(global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName)}]" +
+                $"[{logType.ToUpper()}] {format}\n";
+
+            return args is {Length: > 0} ? string.Format(internalMessage, args) : internalMessage;
         }
 
         [DebuggerStepThrough]
         private void LogLocally(LogLevel level, string logType, string format, params object[] args)
         {
-            if (_CanLog)
-            {
-                if (level <= MaxLogLevel())
-                {
-                    var str = ConstructLoggerMessage(logType, format, args);
-                    var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLABS\\Logs";
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            
+            _lockedFileStream ??= new(Path.Combine(FileBasePath, FileName));
+            
+            var str = ConstructLoggerMessage(logType, format, args);
 
-                    if (!Directory.Exists(dirName + "\\..\\"))
-                        Directory.CreateDirectory(dirName + "\\..\\");
-                    if (!Directory.Exists(dirName))
-                        Directory.CreateDirectory(dirName);
-                    try { File.AppendAllText(dirName + _fileName, str); } catch { }
-                }
+            try { _lockedFileStream.AppendText(str); }
+            catch
+            {
+                // ignored
             }
         }
 
         [DebuggerStepThrough]
-        public void TryClearLocalLog(bool overrideENV = false, bool wasForGlobalEventLifeTimeClosure = false)
+        public void TryClearLocalLog(bool overrideEnv = false, bool wasForGlobalEventLifeTimeClosure = false)
         {
-            if (_CanLog)
+            if (!_canLog) return;
+
+            Log("Try clear local logs...");
+
+            if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
             {
-                Log("Try clear local logs...");
-
-                if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
+                if (overrideEnv)
                 {
-                    if (overrideENV)
-                    {
-                        Warning("Overriding global config when clearing logs.");
-                    }
-                    else
-                    {
-                        Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
-                        _CanLog = wasForGlobalEventLifeTimeClosure != true;
-                        return;
-                    }
+                    Warning("Overriding global config when clearing logs.");
                 }
-
-                Log("Clearing LocalLog...");
-
-                var dirName = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\MFDLabs\\Logs";
-
-                _CanLog = wasForGlobalEventLifeTimeClosure != true;
-
-                if (Directory.Exists(dirName))
+                else
                 {
-                    Directory.Delete(dirName, true);
+                    Warning("The local log is set to persist. Please change Setting \"PersistLocalLogs\" to change this.");
+                    _canLog = wasForGlobalEventLifeTimeClosure != true;
                     return;
                 }
             }
+
+            Log("Clearing LocalLog...");
+
+            _canLog = wasForGlobalEventLifeTimeClosure != true;
+
+            if (!Directory.Exists(FileBasePath)) return;
+
+            Directory.Delete(FileBasePath, true);
         }
 
         [DebuggerStepThrough]
         public void Log(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
+#endif
             LogColorString(ConsoleColor.White, LogLevel.None, "LOG", format, args);
             LogLocally(LogLevel.None, "LOG", format, args);
         }
@@ -156,7 +150,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Log(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
+#endif
             LogColorString(ConsoleColor.White, LogLevel.None, "LOG", messageGetter());
             LogLocally(LogLevel.None, "LOG", messageGetter());
         }
@@ -164,7 +160,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Warning(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", format, args);
+#endif
             LogColorString(ConsoleColor.Yellow, LogLevel.Warning, "Warn", format, args);
             LogLocally(LogLevel.Warning, "WARNING", format, args);
         }
@@ -172,7 +170,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Warning(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", messageGetter());
+#endif
             LogColorString(ConsoleColor.Yellow, LogLevel.Warning, "Warn", messageGetter());
             LogLocally(LogLevel.Warning, "WARNING", messageGetter());
         }
@@ -180,7 +180,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Trace(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", format, args);
+#endif
             LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", format, args);
             LogLocally(LogLevel.Error, "TRACE", format, args);
         }
@@ -188,7 +190,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Trace(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", messageGetter());
+#endif
             LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", messageGetter());
             LogLocally(LogLevel.Error, "TRACE", messageGetter());
         }
@@ -196,7 +200,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Debug(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
+#endif
             LogColorString(ConsoleColor.Magenta, LogLevel.Verbose, "DEBUG", format, args);
             LogLocally(LogLevel.Verbose, "DEBUG", format, args);
         }
@@ -204,7 +210,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Debug(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
+#endif
             LogColorString(ConsoleColor.Magenta, LogLevel.Verbose, "DEBUG", messageGetter());
             LogLocally(LogLevel.Verbose, "DEBUG", messageGetter());
         }
@@ -212,7 +220,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Info(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
+#endif
             LogColorString(ConsoleColor.Blue, LogLevel.Information, "INFO", format, args);
             LogLocally(LogLevel.Information, "INFO", format, args);
         }
@@ -220,7 +230,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Info(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
+#endif
             LogColorString(ConsoleColor.Blue, LogLevel.Information, "INFO", messageGetter());
             LogLocally(LogLevel.Information, "INFO", messageGetter());
         }
@@ -228,7 +240,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Error(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
+#endif
             LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", format, args);
             LogLocally(LogLevel.Error, "ERROR", format, args);
         }
@@ -236,7 +250,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Error(Exception ex)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
+#endif
             LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", ex.ToDetailedString());
             LogLocally(LogLevel.Error, "ERROR", ex.ToDetailedString());
         }
@@ -244,7 +260,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Error(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
+#endif
             LogColorString(ConsoleColor.Red, LogLevel.Error, "ERROR", messageGetter());
             LogLocally(LogLevel.Error, "ERROR", messageGetter());
         }
@@ -252,7 +270,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Verbose(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
+#endif
             LogColorString(ConsoleColor.Cyan, LogLevel.Verbose, "VERBOSE", format, args);
             LogLocally(LogLevel.Verbose, "VERBOSE", format, args);
         }
@@ -260,7 +280,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Verbose(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
+#endif
             LogColorString(ConsoleColor.Cyan, LogLevel.Verbose, "VERBOSE", messageGetter());
             LogLocally(LogLevel.Verbose, "VERBOSE", messageGetter());
         }
@@ -268,7 +290,9 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void LifecycleEvent(string format, params object[] args)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
+#endif
             LogColorString(ConsoleColor.Green, LogLevel.None, "LC-EVENT", format, args);
             LogLocally(LogLevel.None, "LC-EVENT", format, args);
         }
@@ -276,94 +300,87 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void LifecycleEvent(Func<string> messageGetter)
         {
+#if NETFRAMEWORK
             LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
+#endif
             LogColorString(ConsoleColor.Green, LogLevel.None, "LC-EVENT", messageGetter());
             LogLocally(LogLevel.None, "LC-EVENT", messageGetter());
         }
 
         [DebuggerStepThrough]
-        private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format, params object[] args)
+        private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format,
+            params object[] args)
         {
-            if (_CanLog)
+            if (_canLog)
             {
                 if (level <= MaxLogLevel())
                 {
                     // A lock is required here to truly make it thread safe.
-                    lock (_logSync)
+                    lock (LogSync)
                     {
-                        var threadID = Thread.CurrentThread.ManagedThreadId.ToString("x");
-                        var countNCharsToReplace = 4 - threadID.Length;
+                        var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+                        var countNCharsToReplace = 4 - threadId.Length;
 
-                        ConsoleGlobal.Singleton.WriteContentStr(DateTimeGlobal.Singleton.GetUtcNowAsISO());
-                        ConsoleGlobal.Singleton.WriteContentStr(LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.CurrentProcess.Id.ToString("x"));
-                        ConsoleGlobal.Singleton.WriteContentStr(threadID.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left));
-                        ConsoleGlobal.Singleton.WriteContentStr($"{SystemGlobal.Singleton.CurrentPlatform}-{SystemGlobal.Singleton.CurrentDeviceArch.ToLower()}");
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.Version);
-                        ConsoleGlobal.Singleton.WriteContentStr(SystemGlobal.Singleton.AssemblyVersion);
+                        ConsoleGlobal.WriteContentStr(DateTimeGlobal.GetUtcNowAsIso());
+                        ConsoleGlobal.WriteContentStr(
+                            LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.CurrentProcess.Id.ToString("x"));
+                        ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace,
+                            TextGlobal.StringDirection.Left));
+                        ConsoleGlobal.WriteContentStr(
+                            $"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.Version);
+                        ConsoleGlobal.WriteContentStr(SystemGlobal.AssemblyVersion);
 #if DEBUG
-                        ConsoleGlobal.Singleton.WriteContentStr("Debug");
+                        ConsoleGlobal.WriteContentStr("Debug");
 #else
-                        ConsoleGlobal.Singleton.WriteContentStr("Release");
+                        ConsoleGlobal.WriteContentStr("Release");
 #endif
-                        ConsoleGlobal.Singleton.WriteContentStr(_localIp);
-                        ConsoleGlobal.Singleton.WriteContentStr(_machineId);
-                        ConsoleGlobal.Singleton.WriteContentStr(_machineHost);
-                        ConsoleGlobal.Singleton.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
-                        ConsoleGlobal.Singleton.WriteContentStr(color, logType.ToUpper());
-                        var message = args != null && args.Length > 0 ? string.Format($" {format}\n", args) : $" {format}\n";
-                        ConsoleGlobal.Singleton.WriteColoredContent(color, message);
+                        ConsoleGlobal.WriteContentStr(LocalIp);
+                        ConsoleGlobal.WriteContentStr(MachineId);
+                        ConsoleGlobal.WriteContentStr(MachineHost);
+                        ConsoleGlobal.WriteContentStr(ConsoleColor.White,
+                            global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                        ConsoleGlobal.WriteContentStr(color, logType.ToUpper());
+                        var message = args is {Length: > 0}
+                            ? string.Format($" {format}\n", args)
+                            : $" {format}\n";
+                        ConsoleGlobal.WriteColoredContent(color, message);
                     }
                 }
             }
         }
 
+#if NETFRAMEWORK
         [DebuggerStepThrough]
         private void LogToEventLog(EventLogEntryType entryType, LogLevel level, string logType, string format, params object[] args)
         {
+
+            
             if (_eventLog == null) return;
 
-            if (_CanLog)
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            _eventId++;
+
+            var message = ConstructLoggerMessage(logType, format, args);
+
+            short category = logType switch
             {
-                if (level <= MaxLogLevel())
-                {
-                    _eventId++;
+                "LOG" => 1,
+                "WARNING" => 2,
+                "TRACE" => 3,
+                "DEBUG" => 4,
+                "INFO" => 5,
+                "ERROR" => 6,
+                "VERBOSE" => 7,
+                "LC-EVENT" => 8,
+                _ => 0
+            };
 
-                    var message = ConstructLoggerMessage(logType, format, args);
-
-                    short category = 0;
-
-                    switch (logType)
-                    {
-                        case "LOG":
-                            category = 1;
-                            break;
-                        case "WARNING":
-                            category = 2;
-                            break;
-                        case "TRACE":
-                            category = 3;
-                            break;
-                        case "DEBUG":
-                            category = 4;
-                            break;
-                        case "INFO":
-                            category = 5;
-                            break;
-                        case "ERROR":
-                            category = 6;
-                            break;
-                        case "VERBOSE":
-                            category = 7;
-                            break;
-                        case "LC-EVENT":
-                            category = 8;
-                            break;
-                    }
-
-                    _eventLog.WriteEntry(message, entryType, _eventId, category);
-                }
-            }
+            _eventLog.WriteEntry(message, entryType, _eventId, category);
+            
         }
+#endif
     }
 }

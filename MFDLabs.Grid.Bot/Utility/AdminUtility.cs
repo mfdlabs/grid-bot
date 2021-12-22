@@ -3,88 +3,59 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Abstractions;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
-    public sealed class AdminUtility : SingletonBase<AdminUtility>
+    public static class AdminUtility
     {
-        public IReadOnlyCollection<string> AllowedChannelIDs
+        private static IEnumerable<string> AllowedChannelIDs =>
+            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',')
+                where !id.IsNullOrEmpty()
+                select id).ToArray();
+
+        private static IEnumerable<string> AdministratorUserIDs =>
+            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',')
+                where !id.IsNullOrEmpty()
+                select id).ToArray();
+
+        private static IEnumerable<string> HigherPrivilagedUserIDs =>
+            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',')
+                where !id.IsNullOrEmpty()
+                select id).ToArray();
+
+        public static bool UserIsOwner(IUser user) => UserIsOwner(user.Id);
+
+        public static bool UserIsOwner(ulong id) => id == global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID;
+
+        public static bool UserIsAdmin(IUser user) => UserIsAdmin(user.Id);
+
+        public static bool UserIsAdmin(ulong id) => UserIsAdmin(id.ToString());
+
+        public static bool UserIsAdmin(string id) => UserIsOwner(ulong.Parse(id)) || AdministratorUserIDs.Contains(id);
+
+        public static bool UserIsPrivilaged(IUser user) => UserIsPrivilaged(user.Id);
+
+        public static bool UserIsPrivilaged(ulong id) => UserIsPrivilaged(id.ToString());
+
+        public static bool UserIsPrivilaged(string id) => UserIsAdmin(id) || HigherPrivilagedUserIDs.Contains(id);
+
+        public static bool ChannelIsAllowed(IChannel channel) => ChannelIsAllowed(channel.Id);
+
+        public static bool ChannelIsAllowed(ulong id) => ChannelIsAllowed(id.ToString());
+
+        public static bool ChannelIsAllowed(string id) => AllowedChannelIDs.Contains(id);
+
+        public static bool ChannelIsAllowed(this SocketMessage message)
         {
-            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
+            var allowedChannelIds = message.GetSetting<string>("AllowedChannels").Split(',');
+            return allowedChannelIds.Contains(message.Channel.Id.ToString());
         }
 
-        public IReadOnlyCollection<string> AdministratorUserIDs
-        {
-            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
-        }
-
-        public IReadOnlyCollection<string> HigherPrivilagedUserIDs
-        {
-            get { return (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',') where !id.IsNullOrEmpty() select id).ToArray(); }
-        }
-
-        public bool UserIsOwner(IUser user)
-        {
-            return UserIsOwner(user.Id);
-        }
-
-        public bool UserIsOwner(ulong id)
-        {
-            return id == global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID;
-        }
-
-        public bool UserIsAdmin(IUser user)
-        {
-            return UserIsAdmin(user.Id);
-        }
-
-        public bool UserIsAdmin(ulong id)
-        {
-            return UserIsAdmin(id.ToString());
-        }
-
-        public bool UserIsAdmin(string id)
-        {
-            if (UserIsOwner(ulong.Parse(id))) return true;
-            return AdministratorUserIDs.Contains(id);
-        }
-
-        public bool UserIsPrivilaged(IUser user)
-        {
-            return UserIsPrivilaged(user.Id);
-        }
-
-        public bool UserIsPrivilaged(ulong id)
-        {
-            return UserIsPrivilaged(id.ToString());
-        }
-
-        public bool UserIsPrivilaged(string id)
-        {
-            if (UserIsAdmin(id)) return true;
-            return HigherPrivilagedUserIDs.Contains(id);
-        }
-
-        public bool ChannelIsAllowed(IChannel channel)
-        {
-            return ChannelIsAllowed(channel.Id);
-        }
-
-        public bool ChannelIsAllowed(ulong id)
-        {
-            return ChannelIsAllowed(id.ToString());
-        }
-
-        public bool ChannelIsAllowed(string id)
-        {
-            return AllowedChannelIDs.Contains(id);
-        }
-
-        public async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
+        public static async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
         {
             var isPrivilaged = UserIsPrivilaged(message.Author);
 
@@ -99,7 +70,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return true;
         }
 
-        public async Task<bool> RejectIfNotAdminAsync(SocketMessage message)
+        public static async Task<bool> RejectIfNotAdminAsync(SocketMessage message)
         {
             if (!UserIsAdmin(message.Author))
             {
@@ -111,7 +82,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return true;
         }
 
-        public async Task<bool> RejectIfNotOwnerAsync(SocketMessage message)
+        public static async Task<bool> RejectIfNotOwnerAsync(SocketMessage message)
         {
             if (!UserIsOwner(message.Author))
             {

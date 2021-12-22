@@ -1,14 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Collections.Generic;
 using MFDLabs.Text.Extensions;
 
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 
 #if NETFRAMEWORK
-using System;
-using System.IO;
 using System.ComponentModel;
-using System.Collections.Generic;
 using System.Security.Principal;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Diagnostics.NativeWin32;
@@ -18,7 +16,7 @@ using PHANDLE = System.IntPtr;
 
 namespace MFDLabs.Diagnostics
 {
-    public class ProcessHelper
+    public static class ProcessHelper
     {
         public static bool GetProcessById(int pid, out Process pr)
         {
@@ -134,7 +132,7 @@ namespace MFDLabs.Diagnostics
         {
             var processesByName = Process.GetProcessesByName(processName);
 
-            if (processesByName.Length <= LastProcessID - 1)
+            if (processesByName.Length <= _lastProcessId - 1)
             {
                 return HWND.Zero;
             }
@@ -148,26 +146,22 @@ namespace MFDLabs.Diagnostics
 
             if (mainWindowHandle32 > 0)
             {
-                LastProcessID = 0;
+                _lastProcessId = 0;
                 return mainWindowHandle;
             }
 
-            LastProcessID++;
+            _lastProcessId++;
             return GetWindowHandle(processName);
         }
 
-        private static void GetMainWindowHandleForProcess(Process[] processesByName, out HANDLE mainWindowHandle, out int mainWindowHandle32)
+        private static void GetMainWindowHandleForProcess(IReadOnlyList<Process> processesByName, out HANDLE mainWindowHandle, out int mainWindowHandle32)
         {
-            Process process;
-
-            if (LastProcessID > processesByName.Length - 1)
-                process = processesByName[processesByName.Length - 1];
-            else process = processesByName[LastProcessID];
+            var process = _lastProcessId > processesByName.Count - 1 ? processesByName[processesByName.Count - 1] : processesByName[_lastProcessId];
 
             mainWindowHandle = process.MainWindowHandle;
             mainWindowHandle32 = mainWindowHandle.ToInt32();
         }
 
-        public static int LastProcessID = 0;
+        private static int _lastProcessId;
     }
 }

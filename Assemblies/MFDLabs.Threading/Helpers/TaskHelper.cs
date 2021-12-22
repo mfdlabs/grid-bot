@@ -6,7 +6,7 @@ namespace MFDLabs.Threading
 {
     [DebuggerStepThrough]
     [DebuggerDisplay("Task Helper Global")]
-    public sealed class TaskHelper
+    public static class TaskHelper
     {
         public static void SetTimeout(Action action, TimeSpan time)
         {

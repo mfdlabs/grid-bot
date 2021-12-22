@@ -14,6 +14,6 @@ namespace MFDLabs.Abstractions
         /// The <see cref="TSingleton"/> parameter should have at least one public empty constructor.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public static readonly TSingleton Singleton = new TSingleton();
+        public static readonly TSingleton Singleton = new();
     }
 }

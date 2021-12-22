@@ -7,25 +7,17 @@ namespace MFDLabs.Configuration.Sections.Vault
     {
         static VaultProviderConfigurationSection()
         {
-            _groups = new ConfigurationProperty("vaultConfigurationGroups", typeof(VaultGroupConfigurationElements), null, ConfigurationPropertyOptions.IsRequired);
+            _groups = new ConfigurationProperty("vaultConfigurationGroups",
+                typeof(VaultGroupConfigurationElements),
+                null,
+                ConfigurationPropertyOptions.IsRequired);
             _props.Add(_groups);
         }
 
-        public VaultGroupConfigurationElements Groups
-        {
-            get { return (VaultGroupConfigurationElements)base[_groups]; }
-        }
-
-        protected override ConfigurationPropertyCollection Properties
-        {
-            get
-            {
-                return _props;
-            }
-        }
+        public VaultGroupConfigurationElements Groups => (VaultGroupConfigurationElements)base[_groups];
+        protected override ConfigurationPropertyCollection Properties => _props;
 
         private static readonly ConfigurationPropertyCollection _props = new ConfigurationPropertyCollection();
-
         private static readonly ConfigurationProperty _groups;
     }
 }

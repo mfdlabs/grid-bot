@@ -1,14 +1,11 @@
 ﻿using System.Runtime.InteropServices;
-using MFDLabs.Abstractions;
 
 namespace MFDLabs.Diagnostics
 {
-    public sealed class Marshaler : SingletonBase<Marshaler>
+    public static class Marshaler
     {
-        public int SizeOf<T>()
-            where T : struct
-        {
-            return Marshal.SizeOf(default(T));
-        }
+        public static int SizeOf<T>()
+            where T : struct =>
+            Marshal.SizeOf(default(T));
     }
 }

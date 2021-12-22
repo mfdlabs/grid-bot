@@ -9,16 +9,16 @@ namespace MFDLabs.Http.Client
     public class CircuitBreakerHandler : PipelineHandler<IHttpRequest, IHttpResponse>, IDisposable
     {
         public CircuitBreakerHandler(IHttpClientCircuitBreakerProvider httpClientCircuitBreakerProvider) 
-            => _HttpClientCircuitBreakerProvider = httpClientCircuitBreakerProvider ?? throw new ArgumentNullException("httpClientCircuitBreakerProvider");
+            => _httpClientCircuitBreakerProvider = httpClientCircuitBreakerProvider ?? throw new ArgumentNullException(nameof(httpClientCircuitBreakerProvider));
         public CircuitBreakerHandler(ICircuitBreakerPolicy<IExecutionContext<IHttpRequest, IHttpResponse>> circuitBreakerPolicy)
         {
             if (circuitBreakerPolicy == null) throw new ArgumentNullException(nameof(circuitBreakerPolicy));
-            _HttpClientCircuitBreakerProvider = new StaticHttpClientCircuitBreakerProvider(circuitBreakerPolicy);
+            _httpClientCircuitBreakerProvider = new StaticHttpClientCircuitBreakerProvider(circuitBreakerPolicy);
         }
 
         public override void Invoke(IExecutionContext<IHttpRequest, IHttpResponse> context)
         {
-            var policy = _HttpClientCircuitBreakerProvider.GetCircuitBreakerPolicy(context.Input);
+            var policy = _httpClientCircuitBreakerProvider.GetCircuitBreakerPolicy(context.Input);
             policy.ThrowIfTripped(context);
             try
             {
@@ -33,12 +33,12 @@ namespace MFDLabs.Http.Client
         }
         public override async Task InvokeAsync(IExecutionContext<IHttpRequest, IHttpResponse> context, CancellationToken cancellationToken)
         {
-            var policy = _HttpClientCircuitBreakerProvider.GetCircuitBreakerPolicy(context.Input);
+            var policy = _httpClientCircuitBreakerProvider.GetCircuitBreakerPolicy(context.Input);
             policy.ThrowIfTripped(context);
             try
             {
                 await base.InvokeAsync(context, cancellationToken);
-                policy.NotifyRequestFinished(context, null);
+                policy.NotifyRequestFinished(context);
             }
             catch (Exception exception)
             {
@@ -48,12 +48,13 @@ namespace MFDLabs.Http.Client
         }
         public void Dispose()
         {
-            if (_Disposed) return;
-            _HttpClientCircuitBreakerProvider.Dispose();
-            _Disposed = true;
+            if (_disposed) return;
+            GC.SuppressFinalize(this);
+            _httpClientCircuitBreakerProvider.Dispose();
+            _disposed = true;
         }
 
-        private readonly IHttpClientCircuitBreakerProvider _HttpClientCircuitBreakerProvider;
-        private bool _Disposed;
+        private readonly IHttpClientCircuitBreakerProvider _httpClientCircuitBreakerProvider;
+        private bool _disposed;
     }
 }

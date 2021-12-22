@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Get All Grid Server Jobs";
         public string CommandDescription => "Attempts to list all the grid server jobs as a JSON string.";
-        public string[] CommandAliases => new string[] { "gaj", "getalljobs" };
+        public string[] CommandAliases => new[] { "gaj", "getalljobs" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 

@@ -11,7 +11,7 @@ namespace MFDLabs.EventLog
         public Func<LogLevel> MaxLogLevel { get; set; }
         public bool LogMethodName { get; set; }
         public bool LogClassAndMethodName { get; set; }
-        public bool LogThreadID { get; set; }
+        public bool LogThreadId { get; set; }
         public Func<string> EscalationSearchString { get; set; }
         public Func<LogLevel> EscalationLogLevel { get; set; }
         public bool IsDefaultLog
@@ -22,23 +22,22 @@ namespace MFDLabs.EventLog
             }
         }
 
-        protected virtual string GetPrefix(LogLevel logLevel)
+        protected string GetPrefix()
         {
             var builder = new StringBuilder();
-            if (LogThreadID)
+            if (LogThreadId)
             {
                 var thisThread = Thread.CurrentThread;
-                string arg = thisThread.Name ?? thisThread.ManagedThreadId.ToString();
+                var arg = thisThread.Name ?? thisThread.ManagedThreadId.ToString();
                 builder.AppendFormat("[{0}] ", arg);
             }
-            if (LogMethodName || LogClassAndMethodName)
-            {
-                var method = new StackFrame(3, true).GetMethod();
-                var fullyQualifiedMethodName = "";
-                if (LogClassAndMethodName) 
-                    fullyQualifiedMethodName = (method != null && method.DeclaringType != null) ? (method.DeclaringType.Name + ".") : "";
-                builder.AppendFormat("[{0}{1}] ", fullyQualifiedMethodName, method?.Name ?? "<Unknown method>");
-            }
+
+            if (!LogMethodName && !LogClassAndMethodName) return builder.ToString();
+            var method = new StackFrame(3, true).GetMethod();
+            var fullyQualifiedMethodName = "";
+            if (LogClassAndMethodName) 
+                fullyQualifiedMethodName = (method != null && method.DeclaringType != null) ? (method.DeclaringType.Name + ".") : "";
+            builder.AppendFormat("[{0}{1}] ", fullyQualifiedMethodName, method?.Name ?? "<Unknown method>");
             return builder.ToString();
         }
         protected abstract void Log(LogLevel logLevel, string format, params object[] args);
@@ -55,7 +54,8 @@ namespace MFDLabs.EventLog
         public void Verbose(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Verbose, messageGetter);
         public void LifecycleEvent(string format, params object[] args) => Log(LogLevel.Information, format, args);
         public void LifecycleEvent(Func<string> messageGetter) => Log(LogLevel.Information, messageGetter(), null);
-        internal void LogIfNeeded(LogLevel level, string message, object[] args = null)
+
+        private void LogIfNeeded(LogLevel level, string message, object[] args = null)
         {
             if (level == LogLevel.Error)
             {
@@ -64,11 +64,12 @@ namespace MFDLabs.EventLog
             }
             var maxLogLevel = MaxLogLevel();
             var search = EscalationSearchString?.Invoke();
-            if (EscalationLogLevel != null && EscalationLogLevel() < level && !search.IsNullOrEmpty() && message.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
+            if (EscalationLogLevel != null && EscalationLogLevel() < level && !search.IsNullOrEmpty() && message.IndexOf(search ?? string.Empty, StringComparison.OrdinalIgnoreCase) >= 0)
                 level = (maxLogLevel < EscalationLogLevel()) ? maxLogLevel : EscalationLogLevel();
             if (maxLogLevel >= level) LogWithDiagnosticsIfNecessary(level, message, args);
         }
-        internal void LogIfNeededLazy(LogLevel level, Func<string> messageGetter)
+
+        private void LogIfNeededLazy(LogLevel level, Func<string> messageGetter)
         {
             if (level == LogLevel.Error)
             {
@@ -76,12 +77,12 @@ namespace MFDLabs.EventLog
                 return;
             }
             var maxLogLevel = MaxLogLevel();
-            string search = EscalationSearchString?.Invoke();
+            var search = EscalationSearchString?.Invoke();
             string message = null;
             if (EscalationLogLevel != null && EscalationLogLevel() < level && !search.IsNullOrEmpty())
             {
                 message = messageGetter();
-                if (message.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
+                if (message.IndexOf(search ?? string.Empty, StringComparison.OrdinalIgnoreCase) >= 0)
                     level = (maxLogLevel < EscalationLogLevel()) ? maxLogLevel : EscalationLogLevel();
             }
             if (maxLogLevel >= level)
@@ -91,6 +92,11 @@ namespace MFDLabs.EventLog
             }
         }
         private void LogWithDiagnosticsIfNecessary(LogLevel level, string message, params object[] args) => Log(level, message, args);
-        public static void LogSafely(Action logLineAction) { try { logLineAction(); } catch { } }
+        public static void LogSafely(Action logLineAction) { try { logLineAction(); }
+            catch
+            {
+                // ignored
+            }
+        }
     }
 }

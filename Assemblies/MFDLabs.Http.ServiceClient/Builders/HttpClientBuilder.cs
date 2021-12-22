@@ -43,7 +43,7 @@ namespace MFDLabs.Http.ServiceClient
                 => new CircuitBreakerPolicyMetricsEventHandler(counterRegistry)
                 .RegisterEvents(
                     policy,
-                    _CircuitBreakerPerformanceMetricsCategory,
+                    CircuitBreakerPerformanceMetricsCategory,
                     serviceClientSettings.ClientName
                 );
             AddHandlerAfter<RequestFailureThrowsHandler>(new CircuitBreakerHandler(circuitBreakerProvider));
@@ -56,6 +56,6 @@ namespace MFDLabs.Http.ServiceClient
             return GetClientCircuitBreakerType();
         }
 
-        private const string _CircuitBreakerPerformanceMetricsCategory = "MFDLabs.GuardedApiClientV2";
+        private const string CircuitBreakerPerformanceMetricsCategory = "MFDLabs.GuardedApiClientV2";
     }
 }

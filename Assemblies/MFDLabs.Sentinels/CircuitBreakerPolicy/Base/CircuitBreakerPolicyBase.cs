@@ -2,10 +2,10 @@
 
 namespace MFDLabs.Sentinels.CircuitBreakerPolicy
 {
-    public abstract class CircuitBreakerPolicyBase<TExecutionContext> : ICircuitBreakerPolicy<TExecutionContext>, IDisposable
+    public abstract class CircuitBreakerPolicyBase<TExecutionContext> : ICircuitBreakerPolicy<TExecutionContext>
     {
         protected CircuitBreakerPolicyBase(ITripReasonAuthority<TExecutionContext> tripReasonAuthority) 
-            => _TripReasonAuthority = tripReasonAuthority ?? throw new ArgumentNullException("tripReasonAuthority");
+            => _tripReasonAuthority = tripReasonAuthority ?? throw new ArgumentNullException(nameof(tripReasonAuthority));
 
         public event Action RequestIntendingToOpenCircuitBreaker;
         public event Action CircuitBreakerTerminatingRequest;
@@ -14,7 +14,7 @@ namespace MFDLabs.Sentinels.CircuitBreakerPolicy
         {
             try
             {
-                if (_TripReasonAuthority.IsReasonForTrip(executionContext, exception))
+                if (_tripReasonAuthority.IsReasonForTrip(executionContext, exception))
                 {
                     RequestIntendingToOpenCircuitBreaker?.Invoke();
                     TryToTripCircuitBreaker(executionContext);
@@ -26,7 +26,7 @@ namespace MFDLabs.Sentinels.CircuitBreakerPolicy
         }
         public void ThrowIfTripped(TExecutionContext executionContext)
         {
-            if (!IsCircuitBreakerOpened(executionContext, out CircuitBreakerException ex)) return;
+            if (!IsCircuitBreakerOpened(executionContext, out var ex)) return;
             CircuitBreakerTerminatingRequest?.Invoke();
             throw ex;
         }
@@ -41,12 +41,12 @@ namespace MFDLabs.Sentinels.CircuitBreakerPolicy
         protected abstract void OnNotified(TExecutionContext executionContext);
         protected virtual void Dispose(bool disposing)
         {
-            if (_Disposed) return;
-            if (disposing && _TripReasonAuthority is IDisposable authority) authority.Dispose();
-            _Disposed = true;
+            if (_disposed) return;
+            if (disposing && _tripReasonAuthority is IDisposable authority) authority.Dispose();
+            _disposed = true;
         }
 
-        private readonly ITripReasonAuthority<TExecutionContext> _TripReasonAuthority;
-        private bool _Disposed;
+        private readonly ITripReasonAuthority<TExecutionContext> _tripReasonAuthority;
+        private bool _disposed;
     }
 }

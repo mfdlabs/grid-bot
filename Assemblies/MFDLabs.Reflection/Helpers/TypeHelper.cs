@@ -4,14 +4,12 @@ using System.Reflection;
 
 namespace MFDLabs.Reflection
 {
-    public class TypeHelper
+    public static class TypeHelper
     {
-        public static Type[] GetTypesInNamespace(Assembly assembly, string @namespace)
-        {
-            return assembly.GetTypes()
-                      .Where(t => String.Equals(t.Namespace, @namespace, StringComparison.Ordinal))
-                      .ToArray();
-        }
+        public static Type[] GetTypesInNamespace(Assembly assembly, string @namespace) =>
+            assembly.GetTypes()
+                .Where(t => string.Equals(t.Namespace, @namespace, StringComparison.Ordinal))
+                .ToArray();
 
         public static void CopyValues<T>(T target, T source)
         {
@@ -27,26 +25,29 @@ namespace MFDLabs.Reflection
             }
         }
 
-        public static bool IsNumericType(Type o)
-        {
-            switch (Type.GetTypeCode(o))
+        public static bool IsNumericType(Type o) =>
+            Type.GetTypeCode(o) switch
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                case TypeCode.Single:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+                TypeCode.Byte => true,
+                TypeCode.SByte => true,
+                TypeCode.UInt16 => true,
+                TypeCode.UInt32 => true,
+                TypeCode.UInt64 => true,
+                TypeCode.Int16 => true,
+                TypeCode.Int32 => true,
+                TypeCode.Int64 => true,
+                TypeCode.Decimal => true,
+                TypeCode.Double => true,
+                TypeCode.Single => true,
+                TypeCode.Empty => false,
+                TypeCode.Object => false,
+                TypeCode.DBNull => false,
+                TypeCode.Boolean => false,
+                TypeCode.Char => false,
+                TypeCode.DateTime => false,
+                TypeCode.String => false,
+                _ => false
+            };
 
         public static bool IsPrimitive(Type type)
         {

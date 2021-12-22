@@ -14,14 +14,14 @@ namespace MFDLabs.Http.Client.Monitoring
             if (globalCategoryName.IsNullOrWhiteSpace()) throw new ArgumentException("Must be something like MFDLabs.Http.ServiceClient", nameof(globalCategoryName));
             if (clientName.IsNullOrWhiteSpace()) throw new ArgumentException("Must identify the client like MyServiceClient", nameof(clientName));
 
-            _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
-            _ClientName = clientName;
-            _GlobalCategoryName = globalCategoryName;
-            _Category = $"{globalCategoryName}.{clientName}";
+            _counterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
+            _clientName = clientName;
+            _globalCategoryName = globalCategoryName;
+            _category = $"{globalCategoryName}.{clientName}";
             InitializeCounters();
         }
 
-        private PerInstancePerformanceMonitor TotalActionMonitor => GetOrCreateAction(_TotalInstanceName);
+        private PerInstancePerformanceMonitor TotalActionMonitor => GetOrCreateAction(TotalInstanceName);
 
         public static ClientRequestsMonitor GetOrCreate(ICounterRegistry counterRegistry, string metricsCategoryName, string clientName)
         {
@@ -29,33 +29,33 @@ namespace MFDLabs.Http.Client.Monitoring
             if (metricsCategoryName.IsNullOrWhiteSpace()) 
                 throw new ArgumentException("Metrics category should be a dot separated namespace", nameof(metricsCategoryName));
             if (clientName.IsNullOrWhiteSpace()) throw new ArgumentException("Client name should be single word without spaces", nameof(clientName));
-            return _ClientMonitors.GetOrAdd(clientName, (counter) => new ClientRequestsMonitor(counterRegistry, metricsCategoryName, clientName));
+            return ClientMonitors.GetOrAdd(clientName, _ => new ClientRequestsMonitor(counterRegistry, metricsCategoryName, clientName));
         }
         public void AddRequestFailure(string actionPath)
         {
             TotalActionMonitor.FailuresPerSecond.Increment();
             GetOrCreateAction(actionPath).FailuresPerSecond.Increment();
-            _FailuresPerSecond.Increment();
+            _failuresPerSecond.Increment();
         }
         public void AddRequestSuccess(string actionPath)
         {
             TotalActionMonitor.SuccessesPerSecond.Increment();
             GetOrCreateAction(actionPath).SuccessesPerSecond.Increment();
-            _SuccessesPerSecond.Increment();
+            _successesPerSecond.Increment();
         }
         public void AddResponseTime(string actionPath, Stopwatch duration)
         {
             double totalMilliseconds = duration.Elapsed.TotalMilliseconds;
             TotalActionMonitor.AverageResponseTime.Sample(totalMilliseconds);
             GetOrCreateAction(actionPath).AverageResponseTime.Sample(totalMilliseconds);
-            _AverageResponseTime.Sample(duration.ElapsedMilliseconds);
-            _PercentileResponseTime.Sample(duration.ElapsedMilliseconds);
+            _averageResponseTime.Sample(duration.ElapsedMilliseconds);
+            _percentileResponseTime.Sample(duration.ElapsedMilliseconds);
         }
         public void AddOutstandingRequest(string actionPath)
         {
             TotalActionMonitor.RequestsOutstanding.Increment();
             GetOrCreateAction(actionPath).RequestsOutstanding.Increment();
-            GetApplicationRequestRequestCountDictionary()?.AddOrUpdate(actionPath, 1, (path, count) => count + 1);
+            GetApplicationRequestRequestCountDictionary()?.AddOrUpdate(actionPath, 1, (_, count) => count + 1);
         }
         public void RemoveOutstandingRequest(string actionPath)
         {
@@ -64,46 +64,46 @@ namespace MFDLabs.Http.Client.Monitoring
         }
         private void InitializeCounters()
         {
-            GetOrCreateAction(_TotalInstanceName);
-            _FailuresPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(_GlobalCategoryName, _FailuresPerSecondCounterName, _ClientName);
-            _SuccessesPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(_GlobalCategoryName, _SuccessesPerSecondCounterName, _ClientName);
-            _AverageResponseTime = _CounterRegistry.GetAverageValueCounter(_GlobalCategoryName, _AverageResponseTimeCounterName, _ClientName);
-            _PercentileResponseTime = _CounterRegistry.GetPercentileCounter(_GlobalCategoryName, "ResponseTime.Percentile.{0}", _Percentiles, _ClientName);
+            GetOrCreateAction(TotalInstanceName);
+            _failuresPerSecond = _counterRegistry.GetRateOfCountsPerSecondCounter(_globalCategoryName, FailuresPerSecondCounterName, _clientName);
+            _successesPerSecond = _counterRegistry.GetRateOfCountsPerSecondCounter(_globalCategoryName, SuccessesPerSecondCounterName, _clientName);
+            _averageResponseTime = _counterRegistry.GetAverageValueCounter(_globalCategoryName, AverageResponseTimeCounterName, _clientName);
+            _percentileResponseTime = _counterRegistry.GetPercentileCounter(_globalCategoryName, "ResponseTime.Percentile.{0}", Percentiles, _clientName);
         }
         private PerInstancePerformanceMonitor GetOrCreateAction(string actionName) 
-            => _ActionMonitors.GetOrAdd(
+            => _actionMonitors.GetOrAdd(
                 actionName.IsNullOrEmpty() ? "(root)" : actionName,
-                (result) => new PerInstancePerformanceMonitor(_CounterRegistry, _Category, actionName)
+                _ => new PerInstancePerformanceMonitor(_counterRegistry, _category, actionName)
             );
         public static ConcurrentDictionary<string, ConcurrentDictionary<string, int>> GetApplicationRequestRequestCountDictionaries()
         {
             var requestCache = RequestCacheDictionaryGetter?.Invoke();
             if (requestCache == null) return null;
-            if (requestCache.Contains(_PerApplicationRequestRequestsCounterDictionaryKey)) 
-                return requestCache[_PerApplicationRequestRequestsCounterDictionaryKey] as ConcurrentDictionary<string, ConcurrentDictionary<string, int>>;
+            if (requestCache.Contains(PerApplicationRequestRequestsCounterDictionaryKey)) 
+                return requestCache[PerApplicationRequestRequestsCounterDictionaryKey] as ConcurrentDictionary<string, ConcurrentDictionary<string, int>>;
             var perAppRequestCounterCache = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
-            requestCache[_PerApplicationRequestRequestsCounterDictionaryKey] = perAppRequestCounterCache;
+            requestCache[PerApplicationRequestRequestsCounterDictionaryKey] = perAppRequestCounterCache;
             return perAppRequestCounterCache;
         }
         private ConcurrentDictionary<string, int> GetApplicationRequestRequestCountDictionary() 
-            => GetApplicationRequestRequestCountDictionaries()?.GetOrAdd(_ClientName, (clientName) => new ConcurrentDictionary<string, int>());
+            => GetApplicationRequestRequestCountDictionaries()?.GetOrAdd(_clientName, _ => new ConcurrentDictionary<string, int>());
 
-        private const string _FailuresPerSecondCounterName = "Failures/s";
-        private const string _SuccessesPerSecondCounterName = "Requests/s";
-        private const string _AverageResponseTimeCounterName = "Average Response Time";
-        private const string _TotalInstanceName = "_Total";
-        private const string _PerApplicationRequestRequestsCounterDictionaryKey = "ClientRequestsMonitor:ApplicationRequest_TotalRequests";
-        private static readonly byte[] _Percentiles = new byte[] { 25, 50, 75, 95, 99 };
-        private static readonly ConcurrentDictionary<string, ClientRequestsMonitor> _ClientMonitors = new ConcurrentDictionary<string, ClientRequestsMonitor>();
-        private readonly ICounterRegistry _CounterRegistry;
-        private readonly ConcurrentDictionary<string, PerInstancePerformanceMonitor> _ActionMonitors = new ConcurrentDictionary<string, PerInstancePerformanceMonitor>();
-        public static Func<IDictionary> RequestCacheDictionaryGetter = null;
-        private readonly string _GlobalCategoryName;
-        private readonly string _Category;
-        private readonly string _ClientName;
-        private IAverageValueCounter _AverageResponseTime;
-        private IRateOfCountsPerSecondCounter _FailuresPerSecond;
-        private IPercentileCounter _PercentileResponseTime;
-        private IRateOfCountsPerSecondCounter _SuccessesPerSecond;
+        private const string FailuresPerSecondCounterName = "Failures/s";
+        private const string SuccessesPerSecondCounterName = "Requests/s";
+        private const string AverageResponseTimeCounterName = "Average Response Time";
+        private const string TotalInstanceName = "_Total";
+        private const string PerApplicationRequestRequestsCounterDictionaryKey = "ClientRequestsMonitor:ApplicationRequest_TotalRequests";
+        private static readonly byte[] Percentiles = new byte[] { 25, 50, 75, 95, 99 };
+        private static readonly ConcurrentDictionary<string, ClientRequestsMonitor> ClientMonitors = new();
+        private readonly ICounterRegistry _counterRegistry;
+        private readonly ConcurrentDictionary<string, PerInstancePerformanceMonitor> _actionMonitors = new();
+        private static readonly Func<IDictionary> RequestCacheDictionaryGetter = null;
+        private readonly string _globalCategoryName;
+        private readonly string _category;
+        private readonly string _clientName;
+        private IAverageValueCounter _averageResponseTime;
+        private IRateOfCountsPerSecondCounter _failuresPerSecond;
+        private IPercentileCounter _percentileResponseTime;
+        private IRateOfCountsPerSecondCounter _successesPerSecond;
     }
 }
