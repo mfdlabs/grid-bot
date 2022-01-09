@@ -1,114 +1,67 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
+﻿using System;
+using Microsoft.Ccr.Core.Arbiters;
 using Microsoft.Ccr.Core.Properties;
-using System;
 
 namespace Microsoft.Ccr.Core
 {
     public class JoinSinglePortReceiver : JoinReceiverTask
     {
         internal JoinSinglePortReceiver()
+        {}
+        public JoinSinglePortReceiver(bool persist, ITask task, IPortReceive port, int count) 
+            : base(task)
         {
-        }
-
-        public JoinSinglePortReceiver(bool persist, ITask task, IPortReceive port, int count) : base(task)
-        {
-            if (persist)
-            {
-                this._state = ReceiverTaskState.Persistent;
-            }
-            if (count <= 0)
-            {
-                throw new ArgumentException(Resource.JoinSinglePortReceiverAtLeastOneItemMessage, "count");
-            }
-            this._port = port;
-            this._count = count;
+            if (persist) _state = ReceiverTaskState.Persistent;
+            if (count <= 0) 
+                throw new ArgumentException(Resource.JoinSinglePortReceiverAtLeastOneItemMessage, nameof(count));
+            _port = port;
+            _count = count;
         }
 
         public override void Cleanup()
         {
             base.Cleanup();
-            this._port.UnregisterReceiver(this);
+            _port.UnregisterReceiver(this);
         }
-
         public override void Cleanup(ITask taskToCleanup)
         {
-            if (taskToCleanup == null)
-            {
-                throw new ArgumentNullException("taskToCleanup");
-            }
-            for (int i = 0; i < this._count; i++)
-            {
-                ((IPortArbiterAccess)this._port).PostElement(taskToCleanup[i]);
-            }
+            if (taskToCleanup == null) throw new ArgumentNullException(nameof(taskToCleanup));
+            for (var i = 0; i < _count; i++) ((IPortArbiterAccess)_port).PostElement(taskToCleanup[i]);
         }
-
-        protected override void Register()
-        {
-            this._port.RegisterReceiver(this);
-        }
-
+        protected override void Register() => _port.RegisterReceiver(this);
         protected override bool ShouldCommit()
         {
-            if (this._state != ReceiverTaskState.CleanedUp)
-            {
-                if (this._arbiter != null && this._arbiter.ArbiterState != ArbiterTaskState.Active)
-                {
-                    return false;
-                }
-                if (this._port.ItemCount >= this._count)
-                {
-                    return true;
-                }
-            }
-            return false;
+            if (_state == ReceiverTaskState.CleanedUp) return false;
+            if (_arbiter != null && _arbiter.ArbiterState != ArbiterTaskState.Active) return false;
+            return _port.ItemCount >= _count;
         }
-
         public override bool Evaluate(IPortElement messageNode, ref ITask deferredTask)
         {
             deferredTask = null;
-            if (this.ShouldCommit())
-            {
-                deferredTask = new Task(new Handler(this.Commit));
-            }
+            if (ShouldCommit()) deferredTask = new Task(Commit);
             return false;
         }
-
         public override void Consume(IPortElement item)
         {
-            if (this.ShouldCommit())
-            {
-                base.TaskQueue.Enqueue(new Task(new Handler(this.Commit)));
-            }
+            if (ShouldCommit()) TaskQueue.Enqueue(new Task(Commit));
         }
-
         protected override void Commit()
         {
-            ITask task = base.UserTask.PartialClone();
-            IPortElement[] array = ((IPortArbiterAccess)this._port).TestForMultipleElements(this._count);
-            if (array != null)
-            {
-                for (int i = 0; i < this._count; i++)
-                {
-                    task[i] = array[i];
-                }
-                base.Arbitrate(task, array, true);
-            }
+            var task = UserTask.PartialClone();
+            var els = ((IPortArbiterAccess)_port).TestForMultipleElements(_count);
+            if (els == null) return;
+            for (var i = 0; i < _count; i++) task[i] = els[i];
+            Arbitrate(task, els, true);
         }
-
         protected override void UnrollPartialCommit(IPortElement[] items)
         {
-            IPortArbiterAccess portArbiterAccess = (IPortArbiterAccess)this._port;
-            for (int i = 0; i < this._count; i++)
-            {
-                if (items[i] != null)
-                {
+            var portArbiterAccess = (IPortArbiterAccess)_port;
+            for (var i = 0; i < _count; i++)
+                if (items[i] != null) 
                     portArbiterAccess.PostElement(items[i]);
-                }
-            }
         }
 
-        private IPortReceive _port;
-
-        private int _count;
+        private readonly IPortReceive _port;
+        private readonly int _count;
     }
 }

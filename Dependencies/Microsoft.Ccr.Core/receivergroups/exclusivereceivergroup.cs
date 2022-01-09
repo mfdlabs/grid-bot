@@ -4,11 +4,7 @@ namespace Microsoft.Ccr.Core
 {
     public class ExclusiveReceiverGroup
     {
-        public ExclusiveReceiverGroup(params ReceiverTask[] branches)
-        {
-            this._branches = branches;
-        }
-
-        internal ReceiverTask[] _branches;
+        public ExclusiveReceiverGroup(params ReceiverTask[] branches) => Branches = branches;
+        internal readonly ReceiverTask[] Branches;
     }
 }

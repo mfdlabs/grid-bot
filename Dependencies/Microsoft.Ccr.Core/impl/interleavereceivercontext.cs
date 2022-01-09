@@ -1,17 +1,13 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.Ccr.Core.Arbiters;
 
 namespace Microsoft.Ccr.Core
 {
     internal class InterleaveReceiverContext
     {
-        public InterleaveReceiverContext(InterleaveReceivers receiverGroup)
-        {
-            this.ReceiverGroup = receiverGroup;
-        }
+        public InterleaveReceiverContext(InterleaveReceivers receiverGroup) => ReceiverGroup = receiverGroup;
 
-        public InterleaveReceivers ReceiverGroup;
-
-        public Queue<Tuple<ITask, ReceiverTask>> PendingItems = new Queue<Tuple<ITask, ReceiverTask>>();
+        public readonly InterleaveReceivers ReceiverGroup;
+        public readonly Queue<Tuple<ITask, ReceiverTask>> PendingItems = new();
     }
 }

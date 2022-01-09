@@ -1,319 +1,150 @@
-﻿using Microsoft.Ccr.Core.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Xml.Serialization;
+using Microsoft.Ccr.Core.Properties;
 
 namespace Microsoft.Ccr.Core
 {
     public class DispatcherQueue : IDisposable
     {
-        public bool IsDisposed
-        {
-            get
-            {
-                return _isDisposed;
-            }
-            set
-            {
-                _isDisposed = value;
-            }
-        }
-
-        public bool IsSuspended
-        {
-            get
-            {
-                return _isSuspended;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return _name;
-            }
-            set
-            {
-                _name = value;
-            }
-        }
-
+        public bool IsDisposed { get; set; }
+        public bool IsSuspended { get; private set; }
+        public string Name { get; set; }
         public bool IsUsingThreadPool
         {
-            get
-            {
-                return _dispatcher == null;
-            }
+            get => _dispatcher == null;
             set
             {
                 if (_dispatcher != null && !value)
-                {
                     throw new InvalidOperationException();
-                }
             }
         }
-
         [XmlIgnore]
-        public Dispatcher Dispatcher
-        {
-            get
-            {
-                return _dispatcher;
-            }
-        }
-
+        public Dispatcher Dispatcher => _dispatcher;
         public int Count
         {
-            get
-            {
-                return _taskQueue.Count;
-            }
-            set
-            {
-            }
+            get => _taskQueue.Count;
+            set { }
         }
-
         public long ScheduledTaskCount
         {
-            get
-            {
-                return _scheduledTaskCount;
-            }
-            set
-            {
-            }
+            get => _scheduledTaskCount;
+            set { }
         }
-
         public TaskExecutionPolicy Policy
         {
-            get
-            {
-                return _policy;
-            }
+            get => _policy;
             set
             {
                 _policy = value;
-                if (value != TaskExecutionPolicy.Unconstrained && _watch == null)
-                {
+                if (value != TaskExecutionPolicy.Unconstrained && _watch == null) 
                     _watch = Stopwatch.StartNew();
-                }
             }
         }
-
-        public int MaximumQueueDepth
-        {
-            get
-            {
-                return _maximumQueueDepth;
-            }
-            set
-            {
-                _maximumQueueDepth = value;
-            }
-        }
-
-        public double CurrentSchedulingRate
-        {
-            get
-            {
-                return _currentSchedulingRate;
-            }
-            set
-            {
-                _currentSchedulingRate = value;
-            }
-        }
-
-        public double MaximumSchedulingRate
-        {
-            get
-            {
-                return _maximumSchedulingRate;
-            }
-            set
-            {
-                _maximumSchedulingRate = value;
-            }
-        }
-
-        public double Timescale
-        {
-            get
-            {
-                return _timescale;
-            }
-            set
-            {
-                _timescale = value;
-            }
-        }
-
+        public int MaximumQueueDepth { get; set; }
+        public double CurrentSchedulingRate { get; set; }
+        public double MaximumSchedulingRate { get; set; }
+        public double Timescale { get; set; } = 1.0;
         [XmlIgnore]
-        public Port<ITask> ExecutionPolicyNotificationPort
-        {
-            get
-            {
-                return _policyNotificationPort;
-            }
-            set
-            {
-                _policyNotificationPort = value;
-            }
-        }
-
+        public Port<ITask> ExecutionPolicyNotificationPort { get; set; }
         [XmlIgnore]
-        public TimeSpan ThrottlingSleepInterval
+        public TimeSpan ThrottlingSleepInterval { get; set; } = TimeSpan.FromMilliseconds(10.0);
+
+        public DispatcherQueue() => Name = "Unnamed queue using CLR Threadpool";
+        public DispatcherQueue(string name) => Name = name;
+        public DispatcherQueue(string name, Dispatcher dispatcher) 
+            : this(name, dispatcher, TaskExecutionPolicy.Unconstrained, 0, 1.0)
+        {}
+        public DispatcherQueue(string name, Dispatcher dispatcher, TaskExecutionPolicy policy, int maximumQueueDepth) 
+            : this(name, dispatcher, policy, maximumQueueDepth, 0.0)
+        {}
+        public DispatcherQueue(string name, Dispatcher dispatcher, TaskExecutionPolicy policy, double schedulingRate) 
+            : this(name, dispatcher, policy, 0, schedulingRate)
+        {}
+        private DispatcherQueue(string name,
+            Dispatcher dispatcher,
+            TaskExecutionPolicy policy,
+            int maximumQueueDepth,
+            double schedulingRate)
         {
-            get
+            switch (policy)
             {
-                return _throttlingSleepInterval;
+                case TaskExecutionPolicy.ConstrainQueueDepthDiscardTasks
+                    or TaskExecutionPolicy.ConstrainQueueDepthThrottleExecution when maximumQueueDepth <= 0:
+                    throw new ArgumentOutOfRangeException(nameof(maximumQueueDepth));
+                case TaskExecutionPolicy.ConstrainSchedulingRateDiscardTasks
+                    or TaskExecutionPolicy.ConstrainSchedulingRateThrottleExecution when schedulingRate <= 0.0:
+                    throw new ArgumentOutOfRangeException(nameof(schedulingRate));
             }
-            set
-            {
-                _throttlingSleepInterval = value;
-            }
-        }
 
-        public DispatcherQueue()
-        {
-            _name = "Unnamed queue using CLR Threadpool";
-        }
-
-        public DispatcherQueue(string name)
-        {
-            _name = name;
-        }
-
-        public DispatcherQueue(string name, Dispatcher dispatcher) : this(name, dispatcher, TaskExecutionPolicy.Unconstrained, 0, 1.0)
-        {
-        }
-
-        public DispatcherQueue(string name, Dispatcher dispatcher, TaskExecutionPolicy policy, int maximumQueueDepth) : this(name, dispatcher, policy, maximumQueueDepth, 0.0)
-        {
-        }
-
-        public DispatcherQueue(string name, Dispatcher dispatcher, TaskExecutionPolicy policy, double schedulingRate) : this(name, dispatcher, policy, 0, schedulingRate)
-        {
-        }
-
-        private DispatcherQueue(string name, Dispatcher dispatcher, TaskExecutionPolicy policy, int maximumQueueDepth, double schedulingRate)
-        {
-            if ((policy == TaskExecutionPolicy.ConstrainQueueDepthDiscardTasks || policy == TaskExecutionPolicy.ConstrainQueueDepthThrottleExecution) && maximumQueueDepth <= 0)
-            {
-                throw new ArgumentOutOfRangeException("maximumQueueDepth");
-            }
-            if ((policy == TaskExecutionPolicy.ConstrainSchedulingRateDiscardTasks || policy == TaskExecutionPolicy.ConstrainSchedulingRateThrottleExecution) && schedulingRate <= 0.0)
-            {
-                throw new ArgumentOutOfRangeException("schedulingRate");
-            }
-            _dispatcher = dispatcher ?? throw new ArgumentNullException("dispatcher");
-            _name = name;
+            _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+            Name = name;
             _policy = policy;
-            _maximumQueueDepth = maximumQueueDepth;
-            _maximumSchedulingRate = schedulingRate;
+            MaximumQueueDepth = maximumQueueDepth;
+            MaximumSchedulingRate = schedulingRate;
             dispatcher.AddQueue(name, this);
-            if (policy != TaskExecutionPolicy.Unconstrained)
-            {
-                _watch = Stopwatch.StartNew();
-            }
+            if (policy != TaskExecutionPolicy.Unconstrained) _watch = Stopwatch.StartNew();
         }
 
         public virtual void EnqueueTimer(TimeSpan timeSpan, Port<DateTime> timerPort)
         {
-            CausalityThreadContext causalityContext = Dispatcher.CloneCausalitiesFromCurrentThread();
-            timeSpan = TimeSpan.FromSeconds(timeSpan.TotalSeconds * _timescale);
-            DateTime dateTime = DateTime.UtcNow + timeSpan;
-            TimerContext item = new TimerContext(timerPort, causalityContext, dateTime);
-            bool flag = false;
+            var ctx = Dispatcher.CloneCausalitiesFromCurrentThread();
+            timeSpan = TimeSpan.FromSeconds(timeSpan.TotalSeconds * Timescale);
+            var dt = DateTime.UtcNow + timeSpan;
+            var tCtx = new TimerContext(timerPort, ctx, dt);
+            var enQ = false;
             lock (_timerTable)
             {
-                if (dateTime < _nextTimerExpiration)
+                if (dt < _nextTimerExpiration)
                 {
-                    _nextTimerExpiration = dateTime;
-                    flag = true;
+                    _nextTimerExpiration = dt;
+                    enQ = true;
                 }
-                if (_timerTable.ContainsKey(dateTime.Ticks))
-                {
-                    _timerTable[dateTime.Ticks].Add(item);
-                }
+                if (_timerTable.ContainsKey(dt.Ticks)) _timerTable[dt.Ticks].Add(tCtx);
                 else
                 {
-                    List<TimerContext> list = new List<TimerContext>(1)
-                    {
-                        item
-                    };
-                    _timerTable[dateTime.Ticks] = list;
+                    var ctxL = new List<TimerContext>(1) { tCtx };
+                    _timerTable[dt.Ticks] = ctxL;
                 }
             }
-            if (flag)
-            {
-                Enqueue(new Task(delegate ()
-                {
-                }));
-            }
+            if (enQ) Enqueue(new Task(() => {}));
         }
-
         internal bool CheckTimerExpirations()
         {
-            if (_timerTable.Count == 0 || _isDisposed || _isSuspended)
-            {
-                return false;
-            }
-            if (DateTime.UtcNow < _nextTimerExpiration)
-            {
-                return true;
-            }
-            List<TimerContext> list = null;
-            for (; ; )
+            if (_timerTable.Count == 0 || IsDisposed || IsSuspended) return false;
+            if (DateTime.UtcNow < _nextTimerExpiration) return true;
+            List<TimerContext> ctxList = null;
+            while (true)
             {
                 LOOP_JMP_BACK:
                 lock (_timerTable)
                 {
-                    foreach (List<TimerContext> list2 in _timerTable.Values)
+                    foreach (var timerCtxTable in _timerTable.Values)
                     {
-                        if (list2[0].Expiration <= DateTime.UtcNow)
-                        {
-                            if (list == null)
-                            {
-                                list = new List<TimerContext>();
-                            }
-                            list.AddRange(list2);
-                            _timerTable.Remove(list2[0].Expiration.Ticks);
-                            goto LOOP_JMP_BACK;
-                        }
+                        if (timerCtxTable[0].Expiration > DateTime.UtcNow) continue;
+                        ctxList ??= new List<TimerContext>();
+                        ctxList.AddRange(timerCtxTable);
+                        _timerTable.Remove(timerCtxTable[0].Expiration.Ticks);
+                        goto LOOP_JMP_BACK;
                     }
-                    if (_timerTable.Count == 0)
-                    {
+                    if (_timerTable.Count == 0) 
                         _nextTimerExpiration = DateTime.UtcNow.AddDays(1.0);
-                    }
                     else
                     {
-                        using (IEnumerator<List<TimerContext>> enumerator2 = _timerTable.Values.GetEnumerator())
-                        {
-                            if (enumerator2.MoveNext())
-                            {
-                                List<TimerContext> list3 = enumerator2.Current;
-                                _nextTimerExpiration = list3[0].Expiration;
-                            }
-                        }
+                        using var en = _timerTable.Values.GetEnumerator();
+                        if (en.MoveNext()) _nextTimerExpiration = en.Current[0].Expiration;
                     }
                 }
                 break;
             }
-            if (list != null)
-            {
-                foreach (TimerContext tc in list)
-                {
-                    SignalTimer(tc);
-                }
-            }
+
+            if (ctxList == null) return true;
+            foreach (var tc in ctxList) SignalTimer(tc);
             return true;
         }
-
-        private void SignalTimer(TimerContext tc)
+        private static void SignalTimer(TimerContext tc)
         {
             try
             {
@@ -326,339 +157,238 @@ namespace Microsoft.Ccr.Core
                 Dispatcher.LogError("DispatcherQueue:TimerHandler", exception);
             }
         }
-
-        internal void TaskListAddLast(TaskCommon Item)
+        internal void TaskListAddLast(TaskCommon item)
         {
             if (_taskCommonListHead == null)
             {
-                _taskCommonListHead = Item;
-                Item._next = Item;
-                Item._previous = Item;
+                _taskCommonListHead = item;
+                item._next = item;
+                item._previous = item;
             }
             else
             {
-                _taskCommonListHead._previous._next = Item;
-                Item._previous = _taskCommonListHead._previous;
-                Item._next = _taskCommonListHead;
-                _taskCommonListHead._previous = Item;
+                _taskCommonListHead._previous._next = item;
+                item._previous = _taskCommonListHead._previous;
+                item._next = _taskCommonListHead;
+                _taskCommonListHead._previous = item;
             }
             _taskCommonCount++;
         }
-
         internal TaskCommon TaskListRemoveFirst()
         {
-            if (_taskCommonListHead == null)
-            {
-                return null;
-            }
+            if (_taskCommonListHead == null) return null;
             if (_taskCommonListHead._next == _taskCommonListHead)
             {
-                TaskCommon taskCommonListHead = _taskCommonListHead;
+                var l1 = _taskCommonListHead;
                 _taskCommonListHead = null;
                 _taskCommonCount--;
-                return taskCommonListHead;
+                return l1;
             }
-            TaskCommon taskCommonListHead2 = _taskCommonListHead;
+            var l2 = _taskCommonListHead;
             _taskCommonListHead = _taskCommonListHead._next;
-            _taskCommonListHead._previous = taskCommonListHead2._previous;
+            _taskCommonListHead._previous = l2._previous;
             _taskCommonListHead._previous._next = _taskCommonListHead;
             _taskCommonCount--;
-            return taskCommonListHead2;
+            return l2;
         }
-
         public virtual bool Enqueue(ITask task)
         {
-            bool flag = true;
-            bool flag2 = false;
-            if (task == null)
-            {
-                throw new ArgumentNullException("task");
-            }
+            var overflowed = true;
+            var underflowed = false;
+            if (task == null) throw new ArgumentNullException(nameof(task));
             task.TaskQueue = this;
             if (_dispatcher == null)
             {
-                _scheduledTaskCount += 1L;
-                ThreadPool.QueueUserWorkItem(new WaitCallback(TaskExecutionWorker.ExecuteInCurrentThreadContext), task);
-                return flag;
+                _scheduledTaskCount += 1;
+                ThreadPool.QueueUserWorkItem(TaskExecutionWorker.ExecuteInCurrentThreadContext, task);
+                return true;
             }
             lock (_taskQueue)
             {
-                if (_isDisposed)
+                if (IsDisposed)
                 {
-                    if ((_dispatcher.Options & DispatcherOptions.SuppressDisposeExceptions) == DispatcherOptions.None)
-                    {
-                        throw new ObjectDisposedException(typeof(DispatcherQueue).Name + ":" + Name);
-                    }
+                    if ((_dispatcher.Options & DispatcherOptions.SuppressDisposeExceptions) == DispatcherOptions.None) 
+                        throw new ObjectDisposedException(nameof(DispatcherQueue) + ":" + Name);
                     return false;
                 }
-                else
-                {
-                    switch (_policy)
-                    {
-                        case TaskExecutionPolicy.Unconstrained:
-                            {
-                                if (task is TaskCommon taskCommon)
-                                {
-                                    TaskListAddLast(taskCommon);
-                                }
-                                else
-                                {
-                                    _taskQueue.Enqueue(task);
-                                }
-                                break;
-                            }
-                        case TaskExecutionPolicy.ConstrainQueueDepthDiscardTasks:
-                            RecalculateSchedulingRate();
-                            if (_taskQueue.Count >= _maximumQueueDepth)
-                            {
-                                Dispatcher.LogInfo("Enqueue: Discarding oldest task because queue depth limit reached");
-                                TryDequeue(out ITask task2);
-                                flag = false;
-                            }
-                            _taskQueue.Enqueue(task);
-                            break;
-                        case TaskExecutionPolicy.ConstrainQueueDepthThrottleExecution:
-                            RecalculateSchedulingRate();
-                            if (_taskQueue.Count >= _maximumQueueDepth)
-                            {
-                                Dispatcher.LogInfo("Enqueue: Forcing thread sleep because queue depth limit reached");
-                                while (_taskQueue.Count >= _maximumQueueDepth)
-                                {
-                                    Sleep();
-                                }
-                                flag2 = true;
-                            }
-                            _taskQueue.Enqueue(task);
-                            break;
-                        case TaskExecutionPolicy.ConstrainSchedulingRateDiscardTasks:
-                            RecalculateSchedulingRate();
-                            if (_currentSchedulingRate >= _maximumSchedulingRate)
-                            {
-                                Dispatcher.LogInfo("Enqueue: Discarding task because task scheduling rate exceeded");
-                                TryDequeue(out ITask task3);
-                                flag = false;
-                            }
-                            _scheduledItems += 1.0;
-                            _taskQueue.Enqueue(task);
-                            break;
-                        case TaskExecutionPolicy.ConstrainSchedulingRateThrottleExecution:
-                            RecalculateSchedulingRate();
-                            if (_currentSchedulingRate >= _maximumSchedulingRate)
-                            {
-                                Dispatcher.LogInfo("Enqueue: Forcing thread sleep because task scheduling rate exceeded");
-                                while (_currentSchedulingRate > _maximumSchedulingRate)
-                                {
-                                    Sleep();
-                                    RecalculateSchedulingRate();
-                                }
-                                flag2 = true;
-                            }
-                            _scheduledItems += 1.0;
-                            _taskQueue.Enqueue(task);
-                            break;
-                    }
-                    _scheduledTaskCount += 1L;
-                    _dispatcher.Signal();
-                }
-            }
-            if (!flag || flag2)
-            {
-                TaskExecutionPolicyEngaged(task, flag2);
-            }
-            return flag;
-        }
 
+                switch (_policy)
+                {
+                    case TaskExecutionPolicy.Unconstrained:
+                    {
+                        if (task is TaskCommon taskCommon) 
+                            TaskListAddLast(taskCommon);
+                        else 
+                            _taskQueue.Enqueue(task);
+                        break;
+                    }
+                    case TaskExecutionPolicy.ConstrainQueueDepthDiscardTasks:
+                        RecalculateSchedulingRate();
+                        if (_taskQueue.Count >= MaximumQueueDepth)
+                        {
+                            Dispatcher.LogInfo("Enqueue: Discarding oldest task because queue depth limit reached");
+                            TryDequeue(out _);
+                            overflowed = false;
+                        }
+                        _taskQueue.Enqueue(task);
+                        break;
+                    case TaskExecutionPolicy.ConstrainQueueDepthThrottleExecution:
+                        RecalculateSchedulingRate();
+                        if (_taskQueue.Count >= MaximumQueueDepth)
+                        {
+                            Dispatcher.LogInfo("Enqueue: Forcing thread sleep because queue depth limit reached");
+                            while (_taskQueue.Count >= MaximumQueueDepth) 
+                                Sleep();
+                            underflowed = true;
+                        }
+                        _taskQueue.Enqueue(task);
+                        break;
+                    case TaskExecutionPolicy.ConstrainSchedulingRateDiscardTasks:
+                        RecalculateSchedulingRate();
+                        if (CurrentSchedulingRate >= MaximumSchedulingRate)
+                        {
+                            Dispatcher.LogInfo("Enqueue: Discarding task because task scheduling rate exceeded");
+                            TryDequeue(out _);
+                            overflowed = false;
+                        }
+                        _scheduledItems += 1;
+                        _taskQueue.Enqueue(task);
+                        break;
+                    case TaskExecutionPolicy.ConstrainSchedulingRateThrottleExecution:
+                        RecalculateSchedulingRate();
+                        if (CurrentSchedulingRate >= MaximumSchedulingRate)
+                        {
+                            Dispatcher.LogInfo("Enqueue: Forcing thread sleep because task scheduling rate exceeded");
+                            while (CurrentSchedulingRate > MaximumSchedulingRate)
+                            {
+                                Sleep();
+                                RecalculateSchedulingRate();
+                            }
+                            underflowed = true;
+                        }
+                        _scheduledItems += 1;
+                        _taskQueue.Enqueue(task);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                _scheduledTaskCount += 1;
+                _dispatcher.Signal();
+            }
+            if (!overflowed || underflowed) 
+                TaskExecutionPolicyEngaged(task, underflowed);
+            return overflowed;
+        }
         private void Sleep()
         {
             Monitor.Exit(_taskQueue);
-            Thread.Sleep(_throttlingSleepInterval);
+            Thread.Sleep(ThrottlingSleepInterval);
             Monitor.Enter(_taskQueue);
         }
-
         private void TaskExecutionPolicyEngaged(ITask task, bool throttlingEnabled)
         {
-            if (!throttlingEnabled)
-            {
-                Interlocked.Decrement(ref _dispatcher._pendingTaskCount);
-            }
-            Port<ITask> policyNotificationPort = _policyNotificationPort;
-            if (policyNotificationPort != null)
-            {
-                policyNotificationPort.Post(throttlingEnabled ? null : task);
-            }
+            if (!throttlingEnabled) Interlocked.Decrement(ref _dispatcher._pendingTaskCount);
+            var policyNotificationPort = ExecutionPolicyNotificationPort;
+            policyNotificationPort?.Post(throttlingEnabled ? null : task);
         }
-
         public virtual void Suspend()
         {
             lock (_taskQueue)
             {
-                if (!_isSuspended)
-                {
-                    if (_dispatcher != null)
-                    {
-                        _dispatcher.QueueSuspendNotification();
-                    }
-                    _isSuspended = true;
-                }
+                if (IsSuspended) return;
+                _dispatcher?.QueueSuspendNotification();
+                IsSuspended = true;
             }
         }
-
         public virtual void Resume()
         {
             lock (_taskQueue)
             {
-                if (!_isSuspended)
-                {
-                    return;
-                }
-                if (_dispatcher != null)
-                {
-                    _dispatcher.QueueResumeNotification();
-                }
-                _isSuspended = false;
-            }
-            Enqueue(new Task(delegate ()
-            {
-            }));
-        }
+                if (!IsSuspended) return;
 
+                _dispatcher?.QueueResumeNotification();
+                IsSuspended = false;
+            }
+            Enqueue(new Task(() => {}));
+        }
         public virtual bool TryDequeue(out ITask task)
         {
-            if (_dispatcher == null)
-            {
+            if (_dispatcher == null) 
                 throw new InvalidOperationException(Resource.DispatcherPortTestNotValidInThreadpoolMode);
-            }
             lock (_taskQueue)
             {
-                if (_isDisposed)
+                if (IsDisposed)
                 {
                     task = null;
-                    if ((_dispatcher.Options & DispatcherOptions.SuppressDisposeExceptions) == DispatcherOptions.None)
-                    {
-                        throw new ObjectDisposedException(typeof(DispatcherQueue).Name + ":" + Name);
-                    }
+                    if ((_dispatcher.Options & DispatcherOptions.SuppressDisposeExceptions) == DispatcherOptions.None) 
+                        throw new ObjectDisposedException(nameof(DispatcherQueue) + ":" + Name);
                     return false;
                 }
+
+                if (IsSuspended)
+                {
+                    task = null;
+                    return false;
+                }
+                if (_taskCommonCount > 0) 
+                    task = TaskListRemoveFirst();
                 else
                 {
-                    if (_isSuspended)
+                    task = null;
+                    if (_taskQueue.Count <= 0)
                     {
                         task = null;
                         return false;
                     }
-                    if (_taskCommonCount > 0)
-                    {
-                        task = TaskListRemoveFirst();
-                    }
-                    else
-                    {
-                        task = null;
-                        if (_taskQueue.Count <= 0)
-                        {
-                            task = null;
-                            return false;
-                        }
-                        task = _taskQueue.Dequeue();
-                    }
+                    task = _taskQueue.Dequeue();
                 }
             }
             Interlocked.Decrement(ref _dispatcher._pendingTaskCount);
             return true;
         }
-
-        private void RecalculateSchedulingRate()
-        {
-            _currentSchedulingRate = _scheduledItems / _watch.Elapsed.TotalSeconds;
-        }
-
+        private void RecalculateSchedulingRate() => CurrentSchedulingRate = _scheduledItems / _watch.Elapsed.TotalSeconds;
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (!disposing) return;
+            IsDisposed = true;
+            if (_dispatcher == null)
             {
-                _isDisposed = true;
-                if (_dispatcher == null)
-                {
-                    return;
-                }
-                if (_dispatcher.RemoveQueue(_name))
-                {
-                    lock (_taskQueue)
-                    {
-                        _dispatcher.AdjustPendingCount(-(_taskQueue.Count + _taskCommonCount));
-                    }
-                }
+                return;
             }
-        }
 
-        public Port<Exception> UnhandledExceptionPort
-        {
-            get
+            if (!_dispatcher.RemoveQueue(Name)) return;
+            lock (_taskQueue)
             {
-                return _unhandledPort;
-            }
-            set
-            {
-                _unhandledPort = value;
+                _dispatcher.AdjustPendingCount(-(_taskQueue.Count + _taskCommonCount));
             }
         }
+        
+        public Port<Exception> UnhandledExceptionPort { get; set; }
 
         public event UnhandledExceptionEventHandler UnhandledException;
 
         internal bool RaiseUnhandledException(Exception exception)
         {
-            if (_unhandledPort != null)
-            {
-                _unhandledPort.Post(exception);
-            }
+            UnhandledExceptionPort?.Post(exception);
             UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(exception, false));
-            return _unhandledPort != null || UnhandledException != null;
+            return UnhandledExceptionPort != null || UnhandledException != null;
         }
 
-        private string _name;
-
-        private readonly Queue<ITask> _taskQueue = new Queue<ITask>();
-
+        private readonly Queue<ITask> _taskQueue = new();
         private TaskCommon _taskCommonListHead;
-
-        private bool _isDisposed;
-
-        private bool _isSuspended;
-
-        internal Dispatcher _dispatcher;
-
+        internal readonly Dispatcher _dispatcher;
         private long _scheduledTaskCount;
-
         private TaskExecutionPolicy _policy;
-
         private Stopwatch _watch;
-
-        private int _maximumQueueDepth;
-
-        private double _currentSchedulingRate;
-
         private double _scheduledItems;
-
-        private double _maximumSchedulingRate;
-
-        private double _timescale = 1.0;
-
-        private Port<ITask> _policyNotificationPort;
-
-        private TimeSpan _throttlingSleepInterval = TimeSpan.FromMilliseconds(10.0);
-
-        private readonly SortedList<long, List<TimerContext>> _timerTable = new SortedList<long, List<TimerContext>>();
-
-        private DateTime _nextTimerExpiration = DateTime.UtcNow + TimeSpan.FromDays(1.0);
-
+        private readonly SortedList<long, List<TimerContext>> _timerTable = new();
+        private DateTime _nextTimerExpiration = DateTime.UtcNow + TimeSpan.FromDays(1);
         private int _taskCommonCount;
-
-        private Port<Exception> _unhandledPort;
 
         private class TimerContext
         {
@@ -669,10 +399,8 @@ namespace Microsoft.Ccr.Core
                 Expiration = expiration;
             }
 
-            public Port<DateTime> TimerPort;
-
-            public CausalityThreadContext CausalityContext;
-
+            public readonly Port<DateTime> TimerPort;
+            public readonly CausalityThreadContext CausalityContext;
             public DateTime Expiration;
         }
     }

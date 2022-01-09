@@ -195,9 +195,9 @@ namespace Microsoft.Ccr.Core
             }
             if (iteratorContext != null)
             {
-                if (iteratorContext._causalities != null)
+                if (iteratorContext.Causalities != null)
                 {
-                    Dispatcher.SetCurrentThreadCausalities(iteratorContext._causalities);
+                    Dispatcher.SetCurrentThreadCausalities(iteratorContext.Causalities);
                 }
                 MoveIterator(ref currentTask, iteratorContext, ref arbiterCleanupHandler);
                 if (currentTask != null)
@@ -228,10 +228,10 @@ namespace Microsoft.Ccr.Core
                 bool flag = false;
                 try
                 {
-                    flag = !iteratorContext._iterator.MoveNext();
+                    flag = !iteratorContext.Iterator.MoveNext();
                     if (!flag)
                     {
-                        currentTask = iteratorContext._iterator.Current;
+                        currentTask = iteratorContext.Iterator.Current;
                         currentTask.ArbiterCleanupHandler = finalizer;
                         finalizer = null;
                     }
@@ -250,14 +250,14 @@ namespace Microsoft.Ccr.Core
                 }
                 catch (Exception)
                 {
-                    iteratorContext._iterator.Dispose();
+                    iteratorContext.Iterator.Dispose();
                     throw;
                 }
                 finally
                 {
                     if (flag)
                     {
-                        iteratorContext._iterator.Dispose();
+                        iteratorContext.Iterator.Dispose();
                     }
                 }
             }
@@ -280,9 +280,9 @@ namespace Microsoft.Ccr.Core
             if (currentTask.LinkedIterator != null)
             {
                 IteratorContext iteratorContext = (IteratorContext)currentTask.LinkedIterator;
-                if (iteratorContext._causalities != null)
+                if (iteratorContext.Causalities != null)
                 {
-                    Dispatcher.SetCurrentThreadCausalities(iteratorContext._causalities);
+                    Dispatcher.SetCurrentThreadCausalities(iteratorContext.Causalities);
                 }
             }
             else

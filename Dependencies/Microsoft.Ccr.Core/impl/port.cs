@@ -10,10 +10,7 @@ namespace Microsoft.Ccr.Core
     {
         public PortMode Mode
         {
-            get
-            {
-                return _mode;
-            }
+            get => _mode;
             set
             {
                 _mode = value;

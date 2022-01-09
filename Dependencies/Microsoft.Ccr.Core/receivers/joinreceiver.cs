@@ -1,8 +1,9 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
-using Microsoft.Ccr.Core.Properties;
-using System;
+﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Text;
+using Microsoft.Ccr.Core.Arbiters;
+using Microsoft.Ccr.Core.Properties;
 
 namespace Microsoft.Ccr.Core
 {
@@ -10,157 +11,108 @@ namespace Microsoft.Ccr.Core
     {
         public override string ToString()
         {
-            StringBuilder stringBuilder = new StringBuilder();
-            foreach (Receiver receiver in this._ports)
-            {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "[{0}({1})] ", new object[]
-                {
-                    receiver._port.GetType().ToString(),
-                    receiver._port.ItemCount.ToString(CultureInfo.InvariantCulture)
-                });
-            }
-            return string.Format(CultureInfo.InvariantCulture, "\t{0}({1}) waiting on ports {2} with {3} nested under \n    {4}", new object[]
-            {
-                base.GetType().Name,
-                this._state,
-                stringBuilder.ToString(),
-                (base.UserTask == null) ? "no continuation" : ("method " + base.UserTask.ToString()),
-                (this._arbiter == null) ? "none" : this._arbiter.ToString()
-            });
+            var builder = new StringBuilder();
+            foreach (var port in _ports)
+                builder.AppendFormat(
+                    CultureInfo.InvariantCulture, 
+                    "[{0}({1})] ", 
+                    port._port.GetType().ToString(),
+                    port._port.ItemCount.ToString(CultureInfo.InvariantCulture)
+                );
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "\t{0}({1}) waiting on ports {2} with {3} nested under \n    {4}",
+                GetType().Name,
+                _state,
+                builder.ToString(),
+                UserTask == null ? "no continuation" : "method " + UserTask,
+                _arbiter == null ? "none" : _arbiter.ToString()
+            );
         }
 
         internal JoinReceiver()
-        {
-        }
-
+        {}
         public JoinReceiver(bool persist, ITask task, params IPortReceive[] ports) : base(task)
         {
-            if (ports == null)
+            if (ports == null) throw new ArgumentNullException(nameof(ports));
+            if (persist) _state = ReceiverTaskState.Persistent;
+            if (ports == null || ports.Length == 0) 
+                throw new ArgumentOutOfRangeException(nameof(ports), Resource.JoinsMustHaveOnePortMinimumException);
+            _ports = new Receiver[ports.Length];
+            var hashCodes = new int[ports.Length];
+            var idx = 0;
+            foreach (var portReceive in ports)
             {
-                throw new ArgumentNullException("ports");
+                var hashCode = portReceive.GetHashCode();
+                var receiver = new Receiver(portReceive);
+                _ports[idx] = receiver;
+                hashCodes[idx] = hashCode;
+                receiver.ArbiterContext = idx;
+                idx++;
             }
-            if (persist)
-            {
-                this._state = ReceiverTaskState.Persistent;
-            }
-            if (ports == null || ports.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException("aP", Resource.JoinsMustHaveOnePortMinimumException);
-            }
-            this._ports = new Receiver[ports.Length];
-            int[] array = new int[ports.Length];
-            int num = 0;
-            foreach (IPortReceive portReceive in ports)
-            {
-                int hashCode = portReceive.GetHashCode();
-                Receiver receiver = new Receiver(portReceive);
-                this._ports[num] = receiver;
-                array[num] = hashCode;
-                receiver.ArbiterContext = num;
-                num++;
-            }
-            Array.Sort<int, Receiver>(array, this._ports);
+            Array.Sort(hashCodes, _ports);
         }
 
         public override void Cleanup()
         {
             base.Cleanup();
-            foreach (Receiver receiver in this._ports)
-            {
+            foreach (var receiver in _ports) 
                 receiver.Cleanup();
-            }
         }
-
         public override void Cleanup(ITask taskToCleanup)
         {
-            if (taskToCleanup == null)
-            {
-                throw new ArgumentNullException("taskToCleanup");
-            }
-            for (int i = 0; i < this._ports.Length; i++)
-            {
-                Receiver receiver = this._ports[i];
+            if (taskToCleanup == null) throw new ArgumentNullException(nameof(taskToCleanup));
+            foreach (var receiver in _ports) 
                 ((IPortArbiterAccess)receiver._port).PostElement(taskToCleanup[(int)receiver.ArbiterContext]);
-            }
         }
-
         protected override void Register()
         {
-            foreach (Receiver receiver in this._ports)
+            foreach (var port in _ports)
             {
-                if (this._state == ReceiverTaskState.Persistent)
-                {
-                    receiver._state = ReceiverTaskState.Persistent;
-                }
-                receiver.Arbiter = this;
+                if (_state == ReceiverTaskState.Persistent) port._state = ReceiverTaskState.Persistent;
+                port.Arbiter = this;
             }
         }
-
         public override bool Evaluate(IPortElement messageNode, ref ITask deferredTask)
         {
             deferredTask = null;
             return false;
         }
-
         public override void Consume(IPortElement item)
-        {
-        }
-
+        {}
         protected override bool ShouldCommit()
         {
-            if (this._state == ReceiverTaskState.CleanedUp)
-            {
-                return false;
-            }
-            if (this._arbiter == null || this._arbiter.ArbiterState == ArbiterTaskState.Active)
-            {
-                foreach (Receiver receiver in this._ports)
-                {
-                    if (receiver._port.ItemCount == 0)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
+            if (_state == ReceiverTaskState.CleanedUp) return false;
+            if (_arbiter != null && _arbiter.ArbiterState != ArbiterTaskState.Active) return false;
+            return _ports.All(receiver => receiver._port.ItemCount != 0);
         }
-
         protected override void Commit()
         {
-            if (!this.ShouldCommit())
+            if (!ShouldCommit()) return;
+            var task = UserTask.PartialClone();
+            var els = new IPortElement[_ports.Length];
+            var allTaken = true;
+            for (var i = 0; i < _ports.Length; i++)
             {
-                return;
-            }
-            ITask task = base.UserTask.PartialClone();
-            IPortElement[] array = new IPortElement[this._ports.Length];
-            bool allTaken = true;
-            for (int i = 0; i < this._ports.Length; i++)
-            {
-                Receiver receiver = this._ports[i];
-                IPortElement portElement = ((IPortArbiterAccess)receiver._port).TestForElement();
-                if (portElement == null)
+                var p = _ports[i];
+                var el = ((IPortArbiterAccess)p._port).TestForElement();
+                if (el == null)
                 {
                     allTaken = false;
                     break;
                 }
-                array[i] = portElement;
-                task[(int)receiver.ArbiterContext] = portElement;
+                els[i] = el;
+                task[(int)p.ArbiterContext] = el;
             }
-            base.Arbitrate(task, array, allTaken);
+            Arbitrate(task, els, allTaken);
         }
-
         protected override void UnrollPartialCommit(IPortElement[] items)
         {
-            for (int i = 0; i < this._ports.Length; i++)
-            {
-                if (items[i] != null)
-                {
+            for (var i = 0; i < _ports.Length; i++)
+                if (items[i] != null) 
                     ((IPortArbiterAccess)items[i].Owner).PostElement(items[i]);
-                }
-            }
         }
 
-        private Receiver[] _ports;
+        private readonly Receiver[] _ports;
     }
 }

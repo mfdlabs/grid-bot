@@ -1,108 +1,70 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
-using System.Threading;
+﻿using System.Threading;
+using Microsoft.Ccr.Core.Arbiters;
 
 namespace Microsoft.Ccr.Core
 {
-    public abstract class JoinReceiverTask : ReceiverTask, IArbiterTask, ITask
+    public abstract class JoinReceiverTask : ReceiverTask, IArbiterTask
     {
         internal JoinReceiverTask()
-        {
-        }
-
-        internal JoinReceiverTask(ITask UserTask) : base(UserTask)
-        {
-        }
+        {}
+        internal JoinReceiverTask(ITask userTask) : base(userTask)
+        {}
 
         public override IArbiterTask Arbiter
         {
-            get
-            {
-                return base.Arbiter;
-            }
+            get => base.Arbiter;
             set
             {
                 base.Arbiter = value;
-                if (base.TaskQueue == null)
-                {
-                    base.TaskQueue = base.Arbiter.TaskQueue;
-                }
-                this.Commit();
-                if (this._state == ReceiverTaskState.CleanedUp)
-                {
-                    return;
-                }
-                this.Register();
+                TaskQueue ??= base.Arbiter.TaskQueue;
+                Commit();
+                if (_state == ReceiverTaskState.CleanedUp) return;
+                Register();
             }
         }
-
         public ArbiterTaskState ArbiterState
         {
             get
             {
-                if (this._arbiter != null)
-                {
-                    return this._arbiter.ArbiterState;
-                }
-                if (base.State == ReceiverTaskState.CleanedUp)
-                {
-                    return ArbiterTaskState.Done;
-                }
-                return ArbiterTaskState.Active;
+                if (_arbiter != null) return _arbiter.ArbiterState;
+                return State == ReceiverTaskState.CleanedUp ? ArbiterTaskState.Done : ArbiterTaskState.Active;
             }
         }
 
         protected abstract void Register();
-
         public abstract override void Cleanup(ITask taskToCleanup);
-
         protected abstract bool ShouldCommit();
-
         public bool Evaluate(ReceiverTask receiver, ref ITask deferredTask)
         {
             deferredTask = null;
-            if (this.ShouldCommit())
-            {
-                deferredTask = new Task(new Handler(this.Commit));
-            }
+            if (ShouldCommit()) deferredTask = new Task(Commit);
             return false;
         }
-
         protected abstract void Commit();
-
         protected void Arbitrate(ITask winner, IPortElement[] items, bool allTaken)
         {
             if (allTaken)
             {
-                if (this._state == ReceiverTaskState.Onetime && this._arbiter == null)
+                if (_state == ReceiverTaskState.Onetime && _arbiter == null)
                 {
-                    int num = Interlocked.Increment(ref this._commitAttempt);
-                    if (num > 1)
-                    {
-                        return;
-                    }
+                    var attempt = Interlocked.Increment(ref _commitAttempt);
+                    if (attempt > 1) return;
                 }
-                ITask task = winner;
-                if (this._arbiter == null || this._arbiter.Evaluate(this, ref task))
+                var task = winner;
+                if (_arbiter == null || _arbiter.Evaluate(this, ref task))
                 {
-                    if (this._arbiter == null && task != null)
+                    if (_arbiter == null && task != null)
                     {
-                        task.LinkedIterator = base.LinkedIterator;
-                        task.ArbiterCleanupHandler = base.ArbiterCleanupHandler;
+                        task.LinkedIterator = LinkedIterator;
+                        task.ArbiterCleanupHandler = ArbiterCleanupHandler;
                     }
-                    if (task != null)
-                    {
-                        base.TaskQueue.Enqueue(task);
-                    }
-                    if (this._state == ReceiverTaskState.Onetime)
-                    {
-                        this.Cleanup();
-                    }
+                    if (task != null) TaskQueue.Enqueue(task);
+                    if (_state == ReceiverTaskState.Onetime) Cleanup();
                     return;
                 }
             }
-            base.TaskQueue.Enqueue(new Task<IPortElement[]>(items, new Handler<IPortElement[]>(this.UnrollPartialCommit)));
+            TaskQueue.Enqueue(new Task<IPortElement[]>(items, UnrollPartialCommit));
         }
-
         protected abstract void UnrollPartialCommit(IPortElement[] items);
 
         private int _commitAttempt;

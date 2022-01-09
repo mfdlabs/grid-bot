@@ -4,11 +4,8 @@ namespace Microsoft.Ccr.Core
 {
     public class InterleaveReceiverGroup
     {
-        public InterleaveReceiverGroup(params ReceiverTask[] branches)
-        {
-            this._branches = branches;
-        }
+        public InterleaveReceiverGroup(params ReceiverTask[] branches) => Branches = branches;
 
-        internal ReceiverTask[] _branches;
+        internal readonly ReceiverTask[] Branches;
     }
 }

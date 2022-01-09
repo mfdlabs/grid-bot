@@ -162,4 +162,7 @@
   <data name="TeardownBranchesCannotBePersisted" xml:space="preserve">
     <value>"Receiver tasks in teardown group can not be persisted"</value>
   </data>
+  <data name="ParamOutOfRange" xml:space="preserve">
+    <value>parameter out of range</value>
+  </data>
 </root>

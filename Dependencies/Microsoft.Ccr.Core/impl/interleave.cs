@@ -1,498 +1,320 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
+using Microsoft.Ccr.Core.Arbiters;
 
 namespace Microsoft.Ccr.Core
 {
-    public class Interleave : IArbiterTask, ITask
+    public class Interleave : IArbiterTask
     {
         public int PendingExclusiveCount
         {
             get
             {
                 int result;
-                lock (this._mutexBranches)
-                {
-                    result = this.CountAllPendingItems(this._mutexBranches);
-                }
+                lock (_mutexBranches) result = CountAllPendingItems(_mutexBranches);
                 return result;
             }
         }
-
         public int PendingConcurrentCount
         {
             get
             {
                 int result;
-                lock (this._mutexBranches)
-                {
-                    result = this.CountAllPendingItems(this._concurrentBranches);
-                }
+                lock (_mutexBranches) result = CountAllPendingItems(_concurrentBranches);
                 return result;
             }
         }
 
-        private int CountAllPendingItems(List<ReceiverTask> receivers)
-        {
-            int num = 0;
-            foreach (ReceiverTask receiverTask in receivers)
-            {
-                InterleaveReceiverContext interleaveReceiverContext = receiverTask.ArbiterContext as InterleaveReceiverContext;
-                num += interleaveReceiverContext.PendingItems.Count;
-            }
-            return num;
-        }
-
+        private static int CountAllPendingItems(IEnumerable<ReceiverTask> receivers) =>
+            receivers.Select(receiverTask => receiverTask.ArbiterContext as InterleaveReceiverContext)
+                .Select(interleaveReceiverContext => interleaveReceiverContext!.PendingItems.Count)
+                .Sum();
         public override string ToString()
         {
-            string text = null;
-            if (this._mutexActive == 0 && this._concurrentActive == 0)
+            var s = _mutexActive switch
             {
-                text = "Idle";
-            }
-            else if (this._mutexActive == -1 && this._concurrentActive > 0)
-            {
-                text = "Concurrent Active with Exclusive pending";
-            }
-            else if (this._mutexActive == 1 && this._concurrentActive > 0)
-            {
-                text = "Exclusive active with Concurrent Active";
-            }
-            else if (this._mutexActive == 1 && this._concurrentActive == 0)
-            {
-                text = "Exclusive active";
-            }
-            return string.Format(CultureInfo.InvariantCulture, "\t{0}({1}) guarding {2} Exclusive and {3} Concurrent branches", new object[]
-            {
-                base.GetType().Name,
-                text,
-                this._mutexBranches.Count,
-                this._concurrentBranches.Count
-            });
+                0 when _concurrentActive == 0 => "Idle",
+                -1 when _concurrentActive > 0 => "Concurrent Active with Exclusive pending",
+                1 when _concurrentActive > 0 => "Exclusive active with Concurrent Active",
+                1 when _concurrentActive == 0 => "Exclusive active",
+                _ => null
+            };
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "\t{0}({1}) guarding {2} Exclusive and {3} Concurrent branches", 
+                GetType().Name, 
+                s,
+                _mutexBranches.Count, 
+                _concurrentBranches.Count
+            );
         }
 
         public Interleave()
-        {
-        }
-
+        {}
         public Interleave(TeardownReceiverGroup teardown, ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent)
         {
-            foreach (ReceiverTask receiverTask in teardown._branches)
-            {
-                receiverTask.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Teardown);
-            }
-            foreach (ReceiverTask receiverTask2 in mutex.Branches)
-            {
-                receiverTask2.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Exclusive);
-            }
-            foreach (ReceiverTask receiverTask3 in concurrent.Branches)
-            {
-                receiverTask3.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Concurrent);
-            }
-            this._mutexBranches = new List<ReceiverTask>(teardown._branches);
-            foreach (ReceiverTask item in mutex.Branches)
-            {
-                this._mutexBranches.Add(item);
-            }
-            this._concurrentBranches = new List<ReceiverTask>(concurrent.Branches);
+            foreach (var task in teardown.Branches) 
+                task.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Teardown);
+            foreach (var task in mutex.Branches) 
+                task.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Exclusive);
+            foreach (var task in concurrent.Branches) 
+                task.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Concurrent);
+            _mutexBranches = new List<ReceiverTask>(teardown.Branches);
+            foreach (var task in mutex.Branches) _mutexBranches.Add(task);
+            _concurrentBranches = new List<ReceiverTask>(concurrent.Branches);
         }
+        public Interleave(ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent) 
+            : this(new TeardownReceiverGroup(Array.Empty<ReceiverTask>()), mutex, concurrent)
+        {}
 
-        public Interleave(ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent) : this(new TeardownReceiverGroup(new ReceiverTask[0]), mutex, concurrent)
-        {
-        }
-
-        public ITask PartialClone()
-        {
-            throw new NotSupportedException();
-        }
-
-        public Handler ArbiterCleanupHandler
-        {
-            get
-            {
-                return this._ArbiterCleanupHandler;
-            }
-            set
-            {
-                this._ArbiterCleanupHandler = value;
-            }
-        }
-
+        public ITask PartialClone() => throw new NotSupportedException();
+        
+        public Handler ArbiterCleanupHandler { get; set; }
         public object LinkedIterator
         {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotSupportedException();
-            }
+            get => null;
+            set => throw new NotSupportedException();
         }
-
-        public ArbiterTaskState ArbiterState
-        {
-            get
-            {
-                return this._state;
-            }
-        }
-
-        public DispatcherQueue TaskQueue
-        {
-            get
-            {
-                return this._dispatcherQueue;
-            }
-            set
-            {
-                this._dispatcherQueue = value;
-            }
-        }
-
+        public ArbiterTaskState ArbiterState { get; private set; }
+        public DispatcherQueue TaskQueue { get; set; }
         public IPortElement this[int index]
         {
-            get
-            {
-                throw new NotSupportedException();
-            }
-            set
-            {
-                throw new NotSupportedException();
-            }
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
         }
-
-        public int PortElementCount
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int PortElementCount => 0;
 
         public IEnumerator<ITask> Execute()
         {
-            this._state = ArbiterTaskState.Active;
-            this.Register();
+            ArbiterState = ArbiterTaskState.Active;
+            Register();
             return null;
         }
-
         private void Register()
         {
-            lock (this._mutexBranches)
+            lock (_mutexBranches)
             {
-                foreach (ReceiverTask receiverTask in this._mutexBranches)
-                {
-                    receiverTask.Arbiter = this;
-                }
-                foreach (ReceiverTask receiverTask2 in this._concurrentBranches)
-                {
-                    receiverTask2.Arbiter = this;
-                }
+                foreach (var task in _mutexBranches) task.Arbiter = this;
+                foreach (var task in _concurrentBranches) task.Arbiter = this;
             }
         }
-
         public void CombineWith(Interleave child)
         {
-            if (this._state == ArbiterTaskState.Done)
-            {
+            if (ArbiterState == ArbiterTaskState.Done) 
                 throw new InvalidOperationException("Parent Interleave context is no longer active");
-            }
-            List<ReceiverTask> list = null;
-            List<ReceiverTask> list2 = null;
+            List<ReceiverTask> mutexBranches;
+            List<ReceiverTask> concurrentBranches;
             lock (child._mutexBranches)
             {
-                list = new List<ReceiverTask>(child._mutexBranches);
+                mutexBranches = new List<ReceiverTask>(child._mutexBranches);
                 child._mutexBranches = null;
-                list2 = new List<ReceiverTask>(child._concurrentBranches);
+                concurrentBranches = new List<ReceiverTask>(child._concurrentBranches);
                 child._concurrentBranches = null;
             }
-            lock (this._mutexBranches)
+            lock (_mutexBranches)
             {
-                foreach (ReceiverTask receiverTask in list)
+                foreach (var task in mutexBranches)
                 {
-                    this._mutexBranches.Add(receiverTask);
-                    receiverTask.Arbiter = this;
+                    _mutexBranches.Add(task);
+                    task.Arbiter = this;
                 }
-                foreach (ReceiverTask receiverTask2 in list2)
+                foreach (var task in concurrentBranches)
                 {
-                    this._concurrentBranches.Add(receiverTask2);
-                    if (receiverTask2.State == ReceiverTaskState.Onetime)
-                    {
+                    _concurrentBranches.Add(task);
+                    if (task.State == ReceiverTaskState.Onetime)
                         throw new InvalidOperationException("Concurrent Receivers must be Reissue");
-                    }
-                    receiverTask2.Arbiter = this;
+                    task.Arbiter = this;
                 }
             }
         }
-
-        private void CleanupPending(List<ReceiverTask> receivers)
+        private static void CleanupPending(IEnumerable<ReceiverTask> receivers)
         {
-            foreach (ReceiverTask receiverTask in receivers)
+            foreach (var ctx in receivers.Select(receiverTask => receiverTask.ArbiterContext as InterleaveReceiverContext))
             {
-                InterleaveReceiverContext interleaveReceiverContext = receiverTask.ArbiterContext as InterleaveReceiverContext;
-                foreach (Tuple<ITask, ReceiverTask> tuple in interleaveReceiverContext.PendingItems)
-                {
-                    tuple.Item1.Cleanup(tuple.Item0);
-                }
-                interleaveReceiverContext.PendingItems.Clear();
+                foreach (var t in ctx?.PendingItems!) 
+                    t.Item1.Cleanup(t.Item0);
+                ctx?.PendingItems.Clear();
             }
         }
-
         public void Cleanup(ITask winner)
         {
-            foreach (ReceiverTask receiverTask in this._concurrentBranches)
+            foreach (var task in _concurrentBranches) task.Cleanup();
+            foreach (var task in _mutexBranches) task.Cleanup();
+            lock (_mutexBranches)
             {
-                receiverTask.Cleanup();
+                CleanupPending(_concurrentBranches);
+                CleanupPending(_mutexBranches);
             }
-            foreach (ReceiverTask receiverTask2 in this._mutexBranches)
-            {
-                receiverTask2.Cleanup();
-            }
-            lock (this._mutexBranches)
-            {
-                this.CleanupPending(this._concurrentBranches);
-                this.CleanupPending(this._mutexBranches);
-            }
-            this._dispatcherQueue.Enqueue(winner);
+            TaskQueue.Enqueue(winner);
         }
-
         public bool Evaluate(ReceiverTask receiver, ref ITask deferredTask)
         {
-            if (this._state == ArbiterTaskState.Done)
+            if (ArbiterState == ArbiterTaskState.Done)
             {
                 deferredTask = null;
                 return false;
             }
-            lock (this._mutexBranches)
+            lock (_mutexBranches)
             {
-                if (((InterleaveReceiverContext)receiver.ArbiterContext).ReceiverGroup == InterleaveReceivers.Teardown && receiver.State == ReceiverTaskState.Onetime)
+                if (((InterleaveReceiverContext) receiver.ArbiterContext).ReceiverGroup ==
+                    InterleaveReceivers.Teardown &&
+                    receiver.State == ReceiverTaskState.Onetime)
                 {
-                    this._state = ArbiterTaskState.Done;
-                    object obj = Interlocked.CompareExchange(ref this._final, deferredTask, null);
-                    if (obj != null)
+                    ArbiterState = ArbiterTaskState.Done;
+                    var task = Interlocked.CompareExchange(ref _final, deferredTask, null);
+                    if (task != null)
                     {
                         deferredTask = null;
                         return false;
                     }
                 }
-                bool flag = ((InterleaveReceiverContext)receiver.ArbiterContext).ReceiverGroup != InterleaveReceivers.Concurrent;
-                bool flag2 = this.Arbitrate(flag);
-                if (flag)
+                var exclusive = ((InterleaveReceiverContext) receiver.ArbiterContext).ReceiverGroup !=
+                                    InterleaveReceivers.Concurrent;
+                var arbitrateResult = Arbitrate(exclusive);
+                if (exclusive)
                 {
-                    if (flag2)
+                    if (arbitrateResult)
                     {
-                        if (this._final == deferredTask)
+                        if (_final == deferredTask)
                         {
-                            this._final = null;
-                            deferredTask = new Task<ITask>(deferredTask, new Handler<ITask>(this.Cleanup));
+                            _final = null;
+                            deferredTask = new Task<ITask>(deferredTask, Cleanup);
                         }
-                        else
-                        {
-                            deferredTask.ArbiterCleanupHandler = new Handler(this.ExclusiveFinalizer);
-                        }
+                        else 
+                            deferredTask.ArbiterCleanupHandler = ExclusiveFinalizer;
                     }
                     else
                     {
-                        if (deferredTask != this._final)
-                        {
-                            ((InterleaveReceiverContext)receiver.ArbiterContext).PendingItems.Enqueue(new Tuple<ITask, ReceiverTask>(deferredTask, receiver));
-                        }
+                        if (deferredTask != _final)
+                            ((InterleaveReceiverContext) receiver.ArbiterContext).PendingItems.Enqueue(
+                                new Tuple<ITask, ReceiverTask>(deferredTask,
+                                    receiver));
                         deferredTask = null;
                     }
-                    if (deferredTask != null)
-                    {
-                        receiver.TaskQueue.Enqueue(deferredTask);
-                        deferredTask = null;
-                    }
+
+                    if (deferredTask == null) return true;
+                    receiver.TaskQueue.Enqueue(deferredTask);
+                    deferredTask = null;
                 }
-                else if (flag2)
-                {
-                    deferredTask.ArbiterCleanupHandler = new Handler(this.ConcurrentFinalizer);
-                }
+                else if (arbitrateResult) 
+                    deferredTask.ArbiterCleanupHandler = ConcurrentFinalizer;
                 else
                 {
-                    ((InterleaveReceiverContext)receiver.ArbiterContext).PendingItems.Enqueue(new Tuple<ITask, ReceiverTask>(deferredTask, receiver));
+                    ((InterleaveReceiverContext) receiver.ArbiterContext).PendingItems.Enqueue(
+                        new Tuple<ITask, ReceiverTask>(deferredTask,
+                            receiver));
                     deferredTask = null;
                 }
             }
             return true;
         }
-
-        private bool Arbitrate(bool IsExclusive)
+        private bool Arbitrate(bool isExclusive)
         {
-            if (IsExclusive)
+            if (isExclusive)
             {
-                if (this._mutexActive == 0)
+                switch (_mutexActive)
                 {
-                    if (this._concurrentActive > 0)
-                    {
-                        this._mutexActive = -1;
+                    case 0 when _concurrentActive > 0:
+                        _mutexActive = -1;
                         return false;
-                    }
-                    this._mutexActive = 1;
-                    return true;
-                }
-                else if (this._mutexActive == -1 && this._concurrentActive == 0)
-                {
-                    this._mutexActive = 1;
-                    return true;
+                    case 0:
+                        _mutexActive = 1;
+                        return true;
+                    case -1 when _concurrentActive == 0:
+                        _mutexActive = 1;
+                        return true;
                 }
             }
-            else if (this._mutexActive == 0)
+            else if (_mutexActive == 0)
             {
-                this._concurrentActive++;
+                _concurrentActive++;
                 return true;
             }
             return false;
         }
-
-        private void ExclusiveFinalizer()
-        {
-            this.ProcessAllPending(true);
-        }
-
-        private void ConcurrentFinalizer()
-        {
-            this.ProcessAllPending(false);
-        }
-
+        private void ExclusiveFinalizer() => ProcessAllPending(true);
+        private void ConcurrentFinalizer() => ProcessAllPending(false);
         private void ProcessAllPending(bool exclusiveJustFinished)
         {
             ITask task = null;
-            lock (this._mutexBranches)
+            lock (_mutexBranches)
             {
-                if (this._state == ArbiterTaskState.Done)
+                if (ArbiterState == ArbiterTaskState.Done)
                 {
-                    if (this._final == null)
-                    {
-                        return;
-                    }
-                    task = (ITask)this._final;
+                    if (_final == null) return;
+                    task = (ITask)_final;
                 }
             }
-            ITask task2 = null;
-            lock (this._mutexBranches)
+            ITask pTask = null;
+            lock (_mutexBranches)
             {
-                if (exclusiveJustFinished)
-                {
-                    this._mutexActive = 0;
-                }
-                else
-                {
-                    this._concurrentActive--;
-                }
-                if (task == null)
-                {
-                    task2 = this.ProcessPending(true, this._mutexBranches);
-                }
+                if (exclusiveJustFinished) 
+                    _mutexActive = 0;
+                else 
+                    _concurrentActive--;
+                if (task == null) pTask = ProcessPending(true, _mutexBranches);
             }
-            if (task2 == null)
+            if (pTask == null)
             {
-                for (; ; )
+                while (true)
                 {
-                    lock (this._mutexBranches)
-                    {
-                        task2 = this.ProcessPending(false, this._concurrentBranches);
-                    }
-                    if (task2 == null)
-                    {
-                        break;
-                    }
-                    task2.ArbiterCleanupHandler = new Handler(this.ConcurrentFinalizer);
-                    this._dispatcherQueue.Enqueue(task2);
+                    lock (_mutexBranches) pTask = ProcessPending(false, _concurrentBranches);
+                    if (pTask == null) break;
+                    pTask.ArbiterCleanupHandler = ConcurrentFinalizer;
+                    TaskQueue.Enqueue(pTask);
                 }
-                if (task != null)
-                {
-                    lock (this._mutexBranches)
-                    {
-                        if (this._concurrentActive == 0 && this._mutexActive <= 0)
-                        {
-                            this._final = null;
-                        }
-                    }
-                    if (this._final == null && task != null)
-                    {
-                        this._dispatcherQueue.Enqueue(new Task<ITask>(task, new Handler<ITask>(this.Cleanup)));
-                    }
-                }
+
+                if (task == null) return;
+                lock (_mutexBranches)
+                    if (_concurrentActive == 0 && _mutexActive <= 0) 
+                        _final = null;
+                if (_final == null) TaskQueue.Enqueue(new Task<ITask>(task, Cleanup));
                 return;
             }
-            task2.ArbiterCleanupHandler = new Handler(this.ExclusiveFinalizer);
-            this._dispatcherQueue.Enqueue(task2);
+            pTask.ArbiterCleanupHandler = ExclusiveFinalizer;
+            TaskQueue.Enqueue(pTask);
         }
-
-        private ITask ProcessPending(bool IsExclusive, List<ReceiverTask> receivers)
+        private ITask ProcessPending(bool isExclusive, List<ReceiverTask> receivers)
         {
-            int num = IsExclusive ? this._mutexBranches.Count : this._concurrentBranches.Count;
-            if (num == 0)
+            var taskCount = isExclusive ? _mutexBranches.Count : _concurrentBranches.Count;
+            if (taskCount == 0) return null;
+            var tCount = taskCount;
+            while (--tCount >= 0)
             {
-                return null;
-            }
-            int num2 = num;
-            while (--num2 >= 0)
-            {
-                int num3 = IsExclusive ? this._nextMutexQueueIndex++ : this._nextConcurrentQueueIndex++;
-                num3 %= num;
-                Queue<Tuple<ITask, ReceiverTask>> pendingItems = ((InterleaveReceiverContext)receivers[num3].ArbiterContext).PendingItems;
-                if (pendingItems.Count > 0 && this.Arbitrate(IsExclusive))
-                {
-                    Tuple<ITask, ReceiverTask> tuple = pendingItems.Dequeue();
-                    return tuple.Item0;
-                }
+                var idx = isExclusive ? _nextMutexQueueIndex++ : _nextConcurrentQueueIndex++;
+                idx %= taskCount;
+                var pendingItems = ((InterleaveReceiverContext)receivers[idx].ArbiterContext).PendingItems;
+                if (pendingItems.Count <= 0 || !Arbitrate(isExclusive)) continue;
+                return pendingItems.Dequeue().Item0;
             }
             return null;
         }
-
         public ITask TryDequeuePendingTask(InterleaveReceivers receiverMask)
         {
-            lock (this._mutexBranches)
+            lock (_mutexBranches)
             {
-                if ((receiverMask & InterleaveReceivers.Exclusive) > (InterleaveReceivers)0)
-                {
-                    return Interleave.DequeuePendingItem(this._mutexBranches);
-                }
-                if ((receiverMask & InterleaveReceivers.Concurrent) > (InterleaveReceivers)0)
-                {
-                    return Interleave.DequeuePendingItem(this._concurrentBranches);
-                }
+                if ((receiverMask & InterleaveReceivers.Exclusive) > 0) return DequeuePendingItem(_mutexBranches);
+                if ((receiverMask & InterleaveReceivers.Concurrent) > 0) return DequeuePendingItem(_concurrentBranches);
             }
             return null;
         }
-
-        private static ITask DequeuePendingItem(List<ReceiverTask> receivers)
-        {
-            foreach (ReceiverTask receiverTask in receivers)
-            {
-                Queue<Tuple<ITask, ReceiverTask>> pendingItems = ((InterleaveReceiverContext)receiverTask.ArbiterContext).PendingItems;
-                if (pendingItems.Count > 0)
-                {
-                    return pendingItems.Dequeue().Item0;
-                }
-            }
-            return null;
-        }
-
-        private ArbiterTaskState _state;
+        private static ITask DequeuePendingItem(IEnumerable<ReceiverTask> receivers) =>
+            (from receiverTask in receivers
+                select ((InterleaveReceiverContext) receiverTask.ArbiterContext).PendingItems
+                into pendingItems
+                where pendingItems.Count > 0
+                select pendingItems.Dequeue()
+                    .Item0).FirstOrDefault();
 
         private List<ReceiverTask> _mutexBranches;
-
         private List<ReceiverTask> _concurrentBranches;
-
         private object _final;
-
         private int _mutexActive;
-
         private int _concurrentActive;
-
-        private Handler _ArbiterCleanupHandler;
-
-        private DispatcherQueue _dispatcherQueue;
-
         private int _nextMutexQueueIndex;
-
         private int _nextConcurrentQueueIndex;
     }
 }

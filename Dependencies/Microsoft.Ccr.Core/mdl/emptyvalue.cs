@@ -2,6 +2,6 @@
 {
     public class EmptyValue
     {
-        public static readonly EmptyValue SharedInstance = new EmptyValue();
+        public static readonly EmptyValue SharedInstance = new();
     }
 }

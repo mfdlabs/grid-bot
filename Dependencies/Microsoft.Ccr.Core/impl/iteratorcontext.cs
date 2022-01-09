@@ -6,12 +6,11 @@ namespace Microsoft.Ccr.Core
     {
         public IteratorContext(IEnumerator<ITask> iterator, CausalityThreadContext causalities)
         {
-            this._iterator = iterator;
-            this._causalities = causalities;
+            Iterator = iterator;
+            Causalities = causalities;
         }
 
-        internal IEnumerator<ITask> _iterator;
-
-        internal CausalityThreadContext _causalities;
+        internal readonly IEnumerator<ITask> Iterator;
+        internal readonly CausalityThreadContext Causalities;
     }
 }
