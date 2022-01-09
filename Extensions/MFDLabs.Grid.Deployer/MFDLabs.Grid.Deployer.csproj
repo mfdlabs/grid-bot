@@ -123,6 +123,14 @@
       <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
       <Name>MFDLabs.Diagnostics</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.EventLog\MFDLabs.EventLog.csproj">
+      <Project>{3fca88db-360c-4fd9-ab58-9e84433f8943}</Project>
+      <Name>MFDLabs.EventLog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj">
+      <Project>{091c5862-cc55-434a-80eb-f3e030b15dfe}</Project>
+      <Name>MFDLabs.Logging</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

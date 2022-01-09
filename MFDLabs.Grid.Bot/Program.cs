@@ -4,7 +4,8 @@
     {
         private static string GetBadConfigurationError()
             => $"Could not locate the application configuration at the files '{System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' " +
-            $"or '{System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "app.config")}' with your distribution, please install the app correctly and try again.";
+            $"or '{System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "app.config")}' with your " +
+            "distribution, please install the app correctly and try again.";
 
         public static void Main()
         {
@@ -26,7 +27,9 @@
                 if (e.ExceptionObject is System.IO.FileNotFoundException or System.TypeLoadException)
                 {
                     System.Console.ForegroundColor = System.ConsoleColor.Yellow;
-                    System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.Program_Main_UnhandledException, (e.ExceptionObject as System.Exception)?.Message);
+                    System.Console.WriteLine(
+                        global::MFDLabs.Grid.Bot.Properties.Resources.Program_Main_UnhandledException,
+                        (e.ExceptionObject as System.Exception)?.Message);
                     System.Console.ResetColor();
                     System.Environment.Exit(1);
                     return;
@@ -41,6 +44,9 @@
                 System.Console.ResetColor();
 
                 MFDLabs.Grid.Bot.CrashHandler.Upload(e.ExceptionObject as System.Exception);
+                
+                if (e.ExceptionObject is System.InvalidOperationException) 
+                    MFDLabs.Grid.Bot.Utility.SignalUtility.InvokeInteruptSignal(false);
             };
 
             MFDLabs.Grid.Bot.Runner.Invoke();

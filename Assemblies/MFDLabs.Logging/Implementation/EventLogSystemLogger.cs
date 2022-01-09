@@ -125,6 +125,9 @@ namespace MFDLabs.Logging
             }
 
             Log("Clearing LocalLog...");
+            
+            _lockedFileStream.Dispose();
+            _lockedFileStream = null;
 
             _canLog = wasForGlobalEventLifeTimeClosure != true;
 
@@ -264,7 +267,14 @@ namespace MFDLabs.Logging
 
             var message = ConstructLoggerMessage(logType, format, args);
 
-            short category = logType switch
+            var category = GetEventCategory(logType);
+
+            _eventLog.WriteEntry(message, entryType, _eventId, category);
+        }
+
+        private static short GetEventCategory(string logType)
+        {
+            return logType switch
             {
                 "LOG" => 1,
                 "WARNING" => 2,
@@ -276,8 +286,6 @@ namespace MFDLabs.Logging
                 "LC-EVENT" => 8,
                 _ => 0
             };
-
-            _eventLog.WriteEntry(message, entryType, _eventId, category);
         }
     }
 }

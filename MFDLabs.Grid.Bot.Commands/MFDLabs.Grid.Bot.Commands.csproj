@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <Deterministic>False</Deterministic>
+        <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+        <LangVersion>9</LangVersion>
+        <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <WarningLevel>0</WarningLevel>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+        <ProjectReference Include="..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj"/>
+        <ProjectReference Include="..\Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj"/>
+        <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Grid.Bot.Diagnostics\MFDLabs.Grid.Bot.Diagnostics.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Grid.Bot.Extensions\MFDLabs.Grid.Bot.Extensions.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Grid.Bot.Global\MFDLabs.Grid.Bot.Global.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Grid.Bot.Hooks\MFDLabs.Grid.Bot.Hooks.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Grid.Bot.Tasks\MFDLabs.Grid.Bot.Tasks.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0"/>
+        <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0"/>
+    </ItemGroup>
+
+</Project>

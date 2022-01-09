@@ -1,4 +1,5 @@
 ﻿using System;
+using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
 
 // ReSharper disable once CheckNamespace
@@ -64,7 +65,7 @@ namespace MFDLabs.Concurrency
             var choice = Arbiter.Choice(
                 itemHandlerResult,
                 (success) => completionTask(),
-                ExceptionHandler.LogException
+                SystemLogger.Singleton.Error
             );
             Arbiter.Activate(_dispatcherQueue, choice);
         }

@@ -65,13 +65,10 @@ namespace MFDLabs.Concurrency.Base
         {
             SystemLogger.Singleton.Debug("Starting '{0}' with the delay of '{1}'", Name, ProcessActivationInterval);
 
-            while (true)
+            while (CanReceive)
             {
                 if (Port.ItemCount > 0)
-                {
-                    var result = Activate();
-                    if (result == PluginResult.StopProcessingAndDeallocate) break;
-                }
+                    Activate();
 
                 Thread.Sleep(ProcessActivationInterval);
             }

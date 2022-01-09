@@ -18,7 +18,7 @@ namespace Microsoft.Ccr.Core
             }
             if (count <= 0)
             {
-                throw new ArgumentException(Resource1.JoinSinglePortReceiverAtLeastOneItemMessage, "count");
+                throw new ArgumentException(Resource.JoinSinglePortReceiverAtLeastOneItemMessage, "count");
             }
             this._port = port;
             this._count = count;

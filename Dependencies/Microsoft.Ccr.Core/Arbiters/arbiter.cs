@@ -25,14 +25,14 @@ namespace Microsoft.Ccr.Core
         public static ITask ExecuteToCompletion(DispatcherQueue dispatcherQueue, ITask task)
         {
             var done = new Port<EmptyValue>();
-            if (task.ArbiterCleanupHandler != null) throw new InvalidOperationException(Resource1.TaskAlreadyHasFinalizer);
+            if (task.ArbiterCleanupHandler != null) throw new InvalidOperationException(Resource.TaskAlreadyHasFinalizer);
             task.ArbiterCleanupHandler = () => done.Post(EmptyValue.SharedInstance);
             dispatcherQueue.Enqueue(task);
             return Receive(false, done, (e) => {});
         }
         public static void ExecuteToCompletion(DispatcherQueue dispatcherQueue, ITask task, Port<EmptyValue> donePort)
         {
-            if (task.ArbiterCleanupHandler != null) throw new InvalidOperationException(Resource1.TaskAlreadyHasFinalizer);
+            if (task.ArbiterCleanupHandler != null) throw new InvalidOperationException(Resource.TaskAlreadyHasFinalizer);
             task.ArbiterCleanupHandler = () => donePort.Post(EmptyValue.SharedInstance);
             dispatcherQueue.Enqueue(task);
         }

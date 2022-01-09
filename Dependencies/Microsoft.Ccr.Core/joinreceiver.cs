@@ -45,7 +45,7 @@ namespace Microsoft.Ccr.Core
             }
             if (ports == null || ports.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("aP", Resource1.JoinsMustHaveOnePortMinimumException);
+                throw new ArgumentOutOfRangeException("aP", Resource.JoinsMustHaveOnePortMinimumException);
             }
             this._ports = new Receiver[ports.Length];
             int[] array = new int[ports.Length];

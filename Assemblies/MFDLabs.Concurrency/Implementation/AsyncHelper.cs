@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
-using System.Web.Services.Protocols;
 using Microsoft.Ccr.Core;
 
-// ReSharper disable AccessToDisposedClosure
+#if NETFRAMEWORK
+using System.Diagnostics;
+using System.Web.Services.Protocols;
+#endif
 
+// ReSharper disable AccessToDisposedClosure
 // ReSharper disable CheckNamespace
 
 namespace MFDLabs.Concurrency
@@ -30,14 +32,17 @@ namespace MFDLabs.Concurrency
             }
         }
 
+#if NETFRAMEWORK
         private const string PerformanceCategory = "MFDLABS AsyncHelper";
         private static readonly PerformanceCounter PerfTotalAsyncCalls;
         private static readonly PerformanceCounter TimeoutCounts;
         private static readonly PerformanceCounter RiskyTimeoutCounts;
         private static readonly PerformanceCounter PerfPendingAsyncCallsCount;
+#endif
 
         static AsyncHelper()
         {
+#if NETFRAMEWORK
             if (!PerformanceCounterCategory.Exists(PerformanceCategory))
             {
                 var collection = new CounterCreationDataCollection
@@ -68,6 +73,7 @@ namespace MFDLabs.Concurrency
             {
                 RawValue = 0
             };
+#endif
         }
 
         private static AsyncLookupItem<T0, T1>[] GetAsyncLookupItems<T0, T1>(ICollection<T0> lookupKeys,
@@ -94,24 +100,22 @@ namespace MFDLabs.Concurrency
             DoLookup<T0, T1> itemGetter, PortSet<ICollection<T1>, Exception> result)
         {
             var lookupItems = GetAsyncLookupItems(keys, itemGetter);
-            using (var enumerarator = HandleAsyncLookupItems(lookupItems, result))
-            {
-                while (enumerarator.MoveNext())
-                    yield return enumerarator.Current;
-            }
+            using var enumerarator = HandleAsyncLookupItems(lookupItems, result);
+            while (enumerarator.MoveNext())
+                yield return enumerarator.Current;
         }
 
-        private static IEnumerator<ITask> HandleAsyncLookupItems<T0, T1>(AsyncLookupItem<T0, T1>[] asyncLookupItems,
+        private static IEnumerator<ITask> HandleAsyncLookupItems<T0, T1>(IReadOnlyCollection<AsyncLookupItem<T0, T1>> asyncLookupItems,
             PortSet<ICollection<T1>, Exception> result)
         {
-            var countDown = asyncLookupItems.Length;
+            var countDown = asyncLookupItems.Count;
             if (countDown == 0)
             {
                 result.Post(new List<T1>());
                 yield break;
             }
 
-            var items = new T1[asyncLookupItems.Length];
+            var items = new T1[asyncLookupItems.Count];
             foreach (var asyncLookupItem in asyncLookupItems)
             {
                 yield return (Choice) asyncLookupItem.Result;
@@ -154,7 +158,10 @@ namespace MFDLabs.Concurrency
                 IAsyncResult asyncResult = begin(
                     (ar) =>
                     {
+                        
+#if NETFRAMEWORK
                         PerfPendingAsyncCallsCount.Decrement();
+#endif
 
                         // Take ownership of the result port (ensuring only 1 value is posted)
                         // Moreover, by clearing "result" we remove references in the timeout
@@ -182,9 +189,11 @@ namespace MFDLabs.Concurrency
                     },
                     null
                 );
-
+        
+#if NETFRAMEWORK
                 PerfPendingAsyncCallsCount.Increment();
                 PerfTotalAsyncCalls.Increment();
+#endif
 
                 if (timeout < TimeSpan.MaxValue)
                     ConcurrencyService.Singleton.Activate(
@@ -202,14 +211,16 @@ namespace MFDLabs.Concurrency
                                     port.Post(new TimeoutException(
                                         String.Format("AsyncHelper: timeout of {1} before {0}", end, time)));
 
-                                    TimeoutCounts.Increment();
+#if NETFRAMEWORK
 
+                                    TimeoutCounts.Increment();
                                     // See documentation for WebClientProtocol.Abort()
                                     if (!(asyncResult is WebClientAsyncResult webAsyncResult))
                                         // TODO: Are there other "abort" styles out there?
                                         RiskyTimeoutCounts.Increment();
                                     else
                                         webAsyncResult.Abort();
+#endif
                                 }
 
                                 FinalizeOnce(ref finalizer);

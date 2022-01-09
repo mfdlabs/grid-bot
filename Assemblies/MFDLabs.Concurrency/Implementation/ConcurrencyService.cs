@@ -1,10 +1,15 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
+using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
-// ReSharper disable AccessToDisposedClosure
 
+#if NETFRAMEWORK
+using System.Diagnostics;
+#endif
+
+// ReSharper disable AccessToDisposedClosure
 // ReSharper disable once CheckNamespace
+
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -50,56 +55,56 @@ namespace MFDLabs.Concurrency
 
         private void MonitorPerformance()
         {
-            if (global::MFDLabs.Concurrency.Properties.ConcurrencySettings.Default.UsePerfmon)
+#if NETFRAMEWORK
+            if (!global::MFDLabs.Concurrency.Properties.ConcurrencySettings.Default.UsePerfmon) return;
+            try
             {
-                try
-                {
-                    const string performanceCategory = "MFDLabs ConcurrencyService"; // TODO: Make this into a setting :)
+                const string performanceCategory = "MFDLabs ConcurrencyService"; // TODO: Make this into a setting :)
 
-                    if (!PerformanceCounterCategory.Exists(performanceCategory))
+                if (!PerformanceCounterCategory.Exists(performanceCategory))
+                {
+                    var counterData = new CounterCreationDataCollection
                     {
-                        var counterData = new CounterCreationDataCollection
-                        {
-                            new CounterCreationData("TaskQueue Count", string.Empty, PerformanceCounterType.NumberOfItems32),
-                            new CounterCreationData("TaskQueue CurrentSchedulingRate", string.Empty, PerformanceCounterType.RateOfCountsPerSecond64),
-                            new CounterCreationData("TaskQueue ScheduledTaskCount", string.Empty, PerformanceCounterType.NumberOfItems64),
-                            new CounterCreationData("Dispatcher PendingTaskCount", string.Empty, PerformanceCounterType.NumberOfItems32),
-                            new CounterCreationData("Dispatcher ProcessedTaskCount", string.Empty, PerformanceCounterType.NumberOfItems64),
-                            new CounterCreationData("Dispatcher WorkerThreadCount", string.Empty, PerformanceCounterType.NumberOfItems32)
-                        };
-                        PerformanceCounterCategory.Create(performanceCategory, string.Empty, PerformanceCounterCategoryType.SingleInstance, counterData);
-                    }
-                    var perfQueueCount = new PerformanceCounter(performanceCategory, "TaskQueue Count", false);
-                    var perfCurrentSchedulingRate = new PerformanceCounter(performanceCategory, "TaskQueue CurrentSchedulingRate", false);
-                    var perfScheduledTaskCount = new PerformanceCounter(performanceCategory, "TaskQueue ScheduledTaskCount", false);
-                    var perfPendingTaskCount = new PerformanceCounter(performanceCategory, "Dispatcher PendingTaskCount", false);
-                    var perfProcessdTaskCount = new PerformanceCounter(performanceCategory, "Dispatcher ProcessedTaskCount", false);
-                    var perfWorkerThreadCount = new PerformanceCounter(performanceCategory, "Dispatcher WorkerThreadCount", false);
+                        new CounterCreationData("TaskQueue Count", string.Empty, PerformanceCounterType.NumberOfItems32),
+                        new CounterCreationData("TaskQueue CurrentSchedulingRate", string.Empty, PerformanceCounterType.RateOfCountsPerSecond64),
+                        new CounterCreationData("TaskQueue ScheduledTaskCount", string.Empty, PerformanceCounterType.NumberOfItems64),
+                        new CounterCreationData("Dispatcher PendingTaskCount", string.Empty, PerformanceCounterType.NumberOfItems32),
+                        new CounterCreationData("Dispatcher ProcessedTaskCount", string.Empty, PerformanceCounterType.NumberOfItems64),
+                        new CounterCreationData("Dispatcher WorkerThreadCount", string.Empty, PerformanceCounterType.NumberOfItems32)
+                    };
+                    PerformanceCounterCategory.Create(performanceCategory, string.Empty, PerformanceCounterCategoryType.SingleInstance, counterData);
+                }
+                var perfQueueCount = new PerformanceCounter(performanceCategory, "TaskQueue Count", false);
+                var perfCurrentSchedulingRate = new PerformanceCounter(performanceCategory, "TaskQueue CurrentSchedulingRate", false);
+                var perfScheduledTaskCount = new PerformanceCounter(performanceCategory, "TaskQueue ScheduledTaskCount", false);
+                var perfPendingTaskCount = new PerformanceCounter(performanceCategory, "Dispatcher PendingTaskCount", false);
+                var perfProcessdTaskCount = new PerformanceCounter(performanceCategory, "Dispatcher ProcessedTaskCount", false);
+                var perfWorkerThreadCount = new PerformanceCounter(performanceCategory, "Dispatcher WorkerThreadCount", false);
 
-                    var scheduledTaskCount = TaskQueue.ScheduledTaskCount;
-                    while (true)
+                var scheduledTaskCount = TaskQueue.ScheduledTaskCount;
+                while (true)
+                {
+                    perfQueueCount.RawValue = TaskQueue.Count;
                     {
-                        perfQueueCount.RawValue = TaskQueue.Count;
-                        {
-                            var count = TaskQueue.ScheduledTaskCount;
-                            perfCurrentSchedulingRate.IncrementBy(count - scheduledTaskCount);
-                            scheduledTaskCount = count;
-                        }
-                        perfScheduledTaskCount.RawValue = scheduledTaskCount;
-                        perfPendingTaskCount.RawValue = TaskQueue.Dispatcher.PendingTaskCount;
-                        perfProcessdTaskCount.RawValue = TaskQueue.Dispatcher.ProcessedTaskCount;
-                        perfWorkerThreadCount.RawValue = TaskQueue.Dispatcher.WorkerThreadCount;
-                        Thread.Sleep(500);
+                        var count = TaskQueue.ScheduledTaskCount;
+                        perfCurrentSchedulingRate.IncrementBy(count - scheduledTaskCount);
+                        scheduledTaskCount = count;
                     }
-                }
-                catch (ThreadAbortException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHandler.LogException(ex);
+                    perfScheduledTaskCount.RawValue = scheduledTaskCount;
+                    perfPendingTaskCount.RawValue = TaskQueue.Dispatcher.PendingTaskCount;
+                    perfProcessdTaskCount.RawValue = TaskQueue.Dispatcher.ProcessedTaskCount;
+                    perfWorkerThreadCount.RawValue = TaskQueue.Dispatcher.WorkerThreadCount;
+                    Thread.Sleep(500);
                 }
             }
+            catch (ThreadAbortException)
+            {
+            }
+            catch (Exception ex)
+            {
+                ExceptionHandler.LogException(ex);
+            }
+#endif
         }
 
         /// <summary>
@@ -111,19 +116,17 @@ namespace MFDLabs.Concurrency
         public bool BlockUntilCompletion(ITask task, TimeSpan timeout)
         {
             // TODO: Pool these handles for better performance.
-            using (var handle = new EventWaitHandle(false, EventResetMode.ManualReset))
-            {
-                var donePort = new Port<EmptyValue>();
-                Arbiter.ExecuteToCompletion(TaskQueue, task, donePort);
-                Activate(
-                    Arbiter.Receive(
-                        false,
-                        donePort,
-                        (e) => handle.Set()
-                    )
-                );
-                return handle.WaitOne(timeout);
-            }
+            using var handle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            var donePort = new Port<EmptyValue>();
+            Arbiter.ExecuteToCompletion(TaskQueue, task, donePort);
+            Activate(
+                Arbiter.Receive(
+                    false,
+                    donePort,
+                    _ => handle.Set()
+                )
+            );
+            return handle.WaitOne(timeout);
         }
 
         /// <summary>
@@ -174,7 +177,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        ExceptionHandler.LogException(ex);
+                        SystemLogger.Singleton.Error(ex);
                     }
                 },
                 (result1) =>
@@ -185,7 +188,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        ExceptionHandler.LogException(ex);
+                        SystemLogger.Singleton.Error(ex);
                     }
                 }
             );
@@ -203,7 +206,7 @@ namespace MFDLabs.Concurrency
             Choice(
                 resultPortSet,
                 successHandler,
-                ExceptionHandler.LogException
+                SystemLogger.Singleton.Error
             );
         }
 
@@ -215,7 +218,7 @@ namespace MFDLabs.Concurrency
         public void Delay(TimeSpan timeSpan, Handler handler)
         {
             var timeoutPort = TimeoutPort(timeSpan);
-            var receiver = Arbiter.Receive(false, timeoutPort, (time) => handler());
+            var receiver = Arbiter.Receive(false, timeoutPort, _ => handler());
             Activate(receiver);
         }
 
@@ -227,7 +230,7 @@ namespace MFDLabs.Concurrency
         public void DelayInterator(TimeSpan timeSpan, IteratorHandler handler)
         {
             var timeoutPort = TimeoutPort(timeSpan);
-            var receiver = Arbiter.Receive(false, timeoutPort, (time) => SpawnIterator(handler));
+            var receiver = Arbiter.Receive(false, timeoutPort, _ => SpawnIterator(handler));
             Activate(receiver);
         }
 
@@ -243,7 +246,7 @@ namespace MFDLabs.Concurrency
                 TaskQueue,
                 new IterativeTask<bool>(
                     true,
-                    (notUsed) => handler()
+                    _ => handler()
                  )
             );
         }
@@ -295,7 +298,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        ExceptionHandler.LogException(ex);
+                        SystemLogger.Singleton.Error(ex);
                     }
                 }
             );
@@ -307,7 +310,7 @@ namespace MFDLabs.Concurrency
         /// </summary>
         public new void Spawn(Handler handler)
         {
-            var task = new Task<bool>(true, (notUsed) => handler());
+            var task = new Task<bool>(true, _ => handler());
             TaskQueue.Enqueue(task);
         }
 
@@ -316,7 +319,7 @@ namespace MFDLabs.Concurrency
         /// </summary>
         public new void SpawnIterator(IteratorHandler handler)
         {
-            var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler());
+            var iterativeTask = new IterativeTask<bool>(true, _ => handler());
             TaskQueue.Enqueue(iterativeTask);
         }
 
@@ -328,7 +331,7 @@ namespace MFDLabs.Concurrency
         /// <typeparam name="T0">SuccessResult</typeparam>
         public new void SpawnIterator<T0>(T0 t0, IteratorHandler<T0> handler)
         {
-            var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0));
+            var iterativeTask = new IterativeTask<bool>(true, _ => handler(t0));
             TaskQueue.Enqueue(iterativeTask);
         }
 
@@ -342,7 +345,7 @@ namespace MFDLabs.Concurrency
         /// <typeparam name="T1">FailureResult</typeparam>
         public new void SpawnIterator<T0, T1>(T0 t0, T1 t1, IteratorHandler<T0, T1> handler)
         {
-            var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0, t1));
+            var iterativeTask = new IterativeTask<bool>(true, _ => handler(t0, t1));
             TaskQueue.Enqueue(iterativeTask);
         }
 
@@ -358,7 +361,7 @@ namespace MFDLabs.Concurrency
         /// <typeparam name="T2"></typeparam>
         public new void SpawnIterator<T0, T1, T2>(T0 t0, T1 t1, T2 t2, IteratorHandler<T0, T1, T2> handler)
         {
-            var iterativeTask = new IterativeTask<bool>(true, (notUsed) => handler(t0, t1, t2));
+            var iterativeTask = new IterativeTask<bool>(true, _ => handler(t0, t1, t2));
             TaskQueue.Enqueue(iterativeTask);
         }
 

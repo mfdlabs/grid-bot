@@ -5,6 +5,7 @@
         <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
         <Deterministic>False</Deterministic>
         <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+        <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
         <LangVersion>9</LangVersion>
     </PropertyGroup>
 
@@ -14,23 +15,37 @@
         <DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+        <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
+        <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj"/>
-        <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj"/>
-        <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj"/>
-        <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj"/>
-        <ProjectReference Include="..\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj"/>
-        <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj"/>
-        <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj"/>
+        <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
+        <ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+        <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+        <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
+        <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj" />
+        <ProjectReference Include="..\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+        <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
+        <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-        <Reference Include="System.Configuration"/>
+        <Reference Include="System.Configuration" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0"/>
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>

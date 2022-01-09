@@ -130,6 +130,9 @@ namespace MFDLabs.Logging
 
             Log("Clearing LocalLog...");
 
+            _lockedFileStream.Dispose();
+            _lockedFileStream = null;
+            
             _canLog = wasForGlobalEventLifeTimeClosure != true;
 
             if (!Directory.Exists(FileBasePath)) return;
@@ -311,43 +314,40 @@ namespace MFDLabs.Logging
         private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format,
             params object[] args)
         {
-            if (_canLog)
+            if (!_canLog) return;
+            if (level > MaxLogLevel()) return;
+            
+            // A lock is required here to truly make it thread safe.
+            lock (LogSync)
             {
-                if (level <= MaxLogLevel())
-                {
-                    // A lock is required here to truly make it thread safe.
-                    lock (LogSync)
-                    {
-                        var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
-                        var countNCharsToReplace = 4 - threadId.Length;
+                var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
+                var countNCharsToReplace = 4 - threadId.Length;
 
-                        ConsoleGlobal.WriteContentStr(DateTimeGlobal.GetUtcNowAsIso());
-                        ConsoleGlobal.WriteContentStr(
-                            LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
-                        ConsoleGlobal.WriteContentStr(SystemGlobal.CurrentProcess.Id.ToString("x"));
-                        ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace,
-                            TextGlobal.StringDirection.Left));
-                        ConsoleGlobal.WriteContentStr(
-                            $"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
-                        ConsoleGlobal.WriteContentStr(SystemGlobal.Version);
-                        ConsoleGlobal.WriteContentStr(SystemGlobal.AssemblyVersion);
+                ConsoleGlobal.WriteContentStr(DateTimeGlobal.GetUtcNowAsIso());
+                ConsoleGlobal.WriteContentStr(
+                    LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
+                ConsoleGlobal.WriteContentStr(SystemGlobal.CurrentProcess.Id.ToString("x"));
+                ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace,
+                    TextGlobal.StringDirection.Left));
+                ConsoleGlobal.WriteContentStr(
+                    $"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
+                ConsoleGlobal.WriteContentStr(SystemGlobal.Version);
+                ConsoleGlobal.WriteContentStr(SystemGlobal.AssemblyVersion);
 #if DEBUG
-                        ConsoleGlobal.WriteContentStr("Debug");
+                ConsoleGlobal.WriteContentStr("Debug");
 #else
                         ConsoleGlobal.WriteContentStr("Release");
 #endif
-                        ConsoleGlobal.WriteContentStr(LocalIp);
-                        ConsoleGlobal.WriteContentStr(MachineId);
-                        ConsoleGlobal.WriteContentStr(MachineHost);
-                        ConsoleGlobal.WriteContentStr(ConsoleColor.White,
-                            global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
-                        ConsoleGlobal.WriteContentStr(color, logType.ToUpper());
-                        var message = args is {Length: > 0}
-                            ? string.Format($" {format}\n", args)
-                            : $" {format}\n";
-                        ConsoleGlobal.WriteColoredContent(color, message);
-                    }
-                }
+                ConsoleGlobal.WriteContentStr(LocalIp);
+                ConsoleGlobal.WriteContentStr(MachineId);
+                ConsoleGlobal.WriteContentStr(MachineHost);
+                ConsoleGlobal.WriteContentStr(ConsoleColor.White,
+                    global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                ConsoleGlobal.WriteContentStr(color, logType.ToUpper());
+                var message = args is {Length: > 0}
+                    ? string.Format($" {format}\n", args)
+                    : $" {format}\n";
+                ConsoleGlobal.WriteColoredContent(color, message);
             }
         }
 
@@ -365,7 +365,15 @@ namespace MFDLabs.Logging
 
             var message = ConstructLoggerMessage(logType, format, args);
 
-            short category = logType switch
+            var category = GetEventCategory(logType);
+
+            _eventLog.WriteEntry(message, entryType, _eventId, category);
+            
+        }
+
+        private static short GetEventCategory(string logType)
+        {
+            return logType switch
             {
                 "LOG" => 1,
                 "WARNING" => 2,
@@ -377,9 +385,6 @@ namespace MFDLabs.Logging
                 "LC-EVENT" => 8,
                 _ => 0
             };
-
-            _eventLog.WriteEntry(message, entryType, _eventId, category);
-            
         }
 #endif
     }

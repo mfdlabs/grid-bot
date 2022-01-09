@@ -1,155 +1,31 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FB3389DD-E0BE-430C-8D1B-20544405AD89}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MFDLabs.Concurrency</RootNamespace>
-    <AssemblyName>MFDLabs.Concurrency</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>false</Deterministic>
+    <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <LangVersion>10</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DocumentationFile>bin\Debug\MFDLabs.Concurrency.xml</DocumentationFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>0</WarningLevel>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\MFDLabs.Concurrency.xml</DocumentationFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseNoDeploy|AnyCPU'">
-    <OutputPath>bin\ReleaseNoDeploy\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>bin\Release\MFDLabs.Concurrency.xml</DocumentationFile>
-    <Optimize>true</Optimize>
-    <WarningLevel>0</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\DebugGridDeploy\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Debug\MFDLabs.Concurrency.xml</DocumentationFile>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseGridDeploy|AnyCPU'">
-    <OutputPath>bin\ReleaseGridDeploy\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Release\MFDLabs.Concurrency.xml</DocumentationFile>
-    <Optimize>true</Optimize>
-    <WarningLevel>0</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugDeploy|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\DebugDeploy\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Debug\MFDLabs.Concurrency.xml</DocumentationFile>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="System.Web.Services" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Base\Async\AsyncBasePlugin.cs" />
-    <Compile Include="Base\Async\AsyncBaseTask.cs" />
-    <Compile Include="Base\BaseTask.cs" />
-    <Compile Include="Base\Async\AsyncBaseTaskThread.cs" />
-    <Compile Include="Base\Async\AsyncExpiringTaskThread.cs" />
-    <Compile Include="Base\BasePlugin.cs" />
-    <Compile Include="Base\BaseTaskThread.cs" />
-    <Compile Include="Base\ExpiringTaskThread.cs" />
-    <Compile Include="Base\Unsafe\UnsafeBasePlugin.cs" />
-    <Compile Include="Base\Unsafe\UnsafeBaseTaskThread.cs" />
-    <Compile Include="Base\Unsafe\UnsafeExpiringTaskThread.cs" />
-    <Compile Include="Base\Unsafe\UsafeBaseTask.cs" />
-    <Compile Include="Enums\PacketProcessingStatus.cs" />
-    <Compile Include="Enums\PluginResult.cs" />
-    <Compile Include="Implementation\AsyncHelper.cs" />
-    <Compile Include="Implementation\AsyncWorkQueue.cs" />
-    <Compile Include="Implementation\ConcurrencyService.cs" />
-    <Compile Include="Implementation\FastAsyncResult.cs" />
-    <Compile Include="Implementation\Interleaver.cs" />
-    <Compile Include="Implementation\RefreshAhead.cs" />
-    <Compile Include="Models\Packet.cs" />
-    <Compile Include="PerformanceMonitors\DispatcherMonitor.cs" />
-    <Compile Include="DispatcherQueues\PatchedDispatcherQueue.cs" />
-    <Compile Include="PerformanceMonitors\TaskThreadMonitor.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\ConcurrencySettings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>ConcurrencySettings.settings</DependentUpon>
-    </Compile>
+    <ProjectReference Include="..\..\Dependencies\Microsoft.Ccr.Core\Microsoft.Ccr.Core.csproj" />
+    <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
+    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Dependencies\Microsoft.Ccr.Core\Microsoft.Ccr.Core.csproj">
-      <Project>{17e9a370-0eef-4cec-805e-255ca27e6a44}</Project>
-      <Name>Microsoft.Ccr.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
-      <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
-      <Name>MFDLabs.Abstractions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
-      <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
-      <Name>MFDLabs.Diagnostics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj">
-      <Project>{d3cde6e3-28aa-44c9-98bf-1bf5dba6c714}</Project>
-      <Name>MFDLabs.ErrorHandling</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
-      <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
-      <Name>MFDLabs.Instrumentation</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj">
-      <Project>{091c5862-cc55-434a-80eb-f3e030b15dfe}</Project>
-      <Name>MFDLabs.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj">
-      <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
-      <Name>MFDLabs.Text</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Properties\ConcurrencySettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>ConcurrencySettings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

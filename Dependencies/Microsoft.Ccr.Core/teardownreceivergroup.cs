@@ -20,7 +20,7 @@ namespace Microsoft.Ccr.Core
                 }
                 if (receiverTask.State == ReceiverTaskState.Persistent)
                 {
-                    throw new ArgumentOutOfRangeException("branches", Resource1.TeardownBranchesCannotBePersisted);
+                    throw new ArgumentOutOfRangeException("branches", Resource.TeardownBranchesCannotBePersisted);
                 }
             }
         }

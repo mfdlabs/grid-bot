@@ -61,60 +61,55 @@ namespace MFDLabs.Concurrency.Base
         {
             if (!CanReceive) return _lastResult;
             
-            lock (_lock)
-            {
-                ConcurrencyService.Singleton.Activate(
-                    Arbiter.Receive(
-                        false,
-                        Port,
-                        (item) =>
+            ConcurrencyService.Singleton.Activate(
+                Arbiter.Receive(
+                    true,
+                    Port,
+                    (item) =>
+                    {
+                        _sequenceId++;
+                        Monitor.CountOfItemsProcessed.Increment();
+                        Monitor.RateOfItemsPerSecondProcessed.Increment();
+                        Monitor.AverageRateOfItems.Sample(1.0 / _sequenceId);
+                        try
                         {
-                            _sequenceId++;
-                            Monitor.CountOfItemsProcessed.Increment();
-                            Monitor.RateOfItemsPerSecondProcessed.Increment();
-                            Monitor.AverageRateOfItems.Sample(1.0 / _sequenceId);
-                            lock (_resultLock)
+                            var packet = new Packet<TItem>(item, PacketId, _sequenceId, Monitor);
+                            _lastResult = OnReceive(ref packet);
+                            if (packet.Status == PacketProcessingStatus.Failure)
                             {
-                                try
-                                {
-                                    var packet = new Packet<TItem>(item, PacketId, _sequenceId, Monitor);
-                                    _lastResult = OnReceive(ref packet);
-                                    if (packet.Status == PacketProcessingStatus.Failure)
-                                    {
-                                        Monitor.CountOfItemsProcessedThatFail.Increment();
-                                        Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                        Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
-                                    }
-                                    else
-                                    {
-                                        Monitor.CountOfItemsProcessedThatSucceed.Increment();
-                                        Monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
-                                        Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
-                                    }
-                                    packet.Dispose();
-                                }
-                                catch (Exception ex)
-                                {
-                                    Monitor.CountOfItemsProcessedThatFail.Increment();
-                                    Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
-                                    Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
-
-#if DEBUG
-                                    SystemLogger.Singleton.Error(ex);
-#else
-                                        SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
-#endif
-                                }
+                                Monitor.CountOfItemsProcessedThatFail.Increment();
+                                Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                                Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
+                            }
+                            else
+                            {
+                                Monitor.CountOfItemsProcessedThatSucceed.Increment();
+                                Monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
+                                Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
+                            }
+                            packet.Dispose();
+                            
+                            if (_lastResult == PluginResult.StopProcessingAndDeallocate)
+                            {
+                                Deallocate();
                             }
                         }
-                    )
-                );
-            }
-            lock (_resultLock)
-                if (_lastResult == PluginResult.StopProcessingAndDeallocate)
-                {
-                    Deallocate();
-                }
+                        catch (Exception ex)
+                        {
+                            Monitor.CountOfItemsProcessedThatFail.Increment();
+                            Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
+                            Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
+
+#if DEBUG
+                            SystemLogger.Singleton.Error(ex);
+#else
+                            SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
+#endif
+                        }
+                    }
+                )
+            );
+            
             return _lastResult;
         }
 
@@ -122,13 +117,6 @@ namespace MFDLabs.Concurrency.Base
         {
             CanReceive = false;
         }
-
-        #region Concurrency
-
-        private readonly object _resultLock = new object();
-        private readonly object _lock = new object();
-
-        #endregion Concurrency
 
         #region Other Items
 

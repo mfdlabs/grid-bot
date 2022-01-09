@@ -8,6 +8,8 @@ using MFDLabs.Text.Extensions;
 #if NETFRAMEWORK
 using System.Security.Principal;
 using MFDLabs.Diagnostics.Extensions;
+#else
+using System.Runtime.InteropServices;
 #endif
 
 namespace MFDLabs.Diagnostics
@@ -35,14 +37,21 @@ namespace MFDLabs.Diagnostics
                 : Environment.MachineName;
         }
 
-#if NETFRAMEWORK
-
+#if !NETFRAMEWORK
+        [DllImport("libc")]
+        public static extern uint getuid();
+#endif
+        
         // TODO: Pull out to MFDLabs.Security
         public static bool ContextIsAdministrator()
         {
+#if NETFRAMEWORK
+            
             return WindowsIdentity.GetCurrent().IsAdministrator();
-        }
-
+#else
+            return getuid() == 0;
 #endif
+        }
+        
     }
 }

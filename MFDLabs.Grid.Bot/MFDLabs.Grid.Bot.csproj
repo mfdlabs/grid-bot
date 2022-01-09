@@ -161,125 +161,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Base\HoldsSocketMessagePortAsyncExpiringTaskThread.cs" />
-    <Compile Include="Commands\BatchOpenGridServers.cs" />
-    <Compile Include="Commands\PsExec.cs" />
-    <Compile Include="Commands\SendMessageInGuildChannel.cs" />
-    <Compile Include="Commands\EvaluateScript.cs" />
-    <Compile Include="Commands\Evaluate.cs" />
-    <Compile Include="Commands\CloseAllJobs.cs" />
-    <Compile Include="Commands\CloseExpiredJobs.cs" />
-    <Compile Include="Commands\CloseJob.cs" />
-    <Compile Include="Commands\DisableCommand.cs" />
-    <Compile Include="Commands\EnableCommand.cs" />
-    <Compile Include="Commands\ExecuteScript.cs" />
-    <Compile Include="Commands\Exit.cs" />
-    <Compile Include="Commands\GetJobDiagnostics.cs" />
-    <Compile Include="Commands\GetAllJobs.cs" />
-    <Compile Include="Commands\GetAllSettingsOfAssembly.cs" />
-    <Compile Include="Commands\GetAllSettings.cs" />
-    <Compile Include="Commands\GetJobCount.cs" />
-    <Compile Include="Commands\GetMachineAddress.cs" />
-    <Compile Include="Commands\GetSettingOfAssembly.cs" />
-    <Compile Include="Commands\GetSetting.cs" />
-    <Compile Include="Commands\GetStatus.cs" />
-    <Compile Include="Commands\GridServerExecutionCommandTest.cs" />
-    <Compile Include="Commands\KillArbiterInstance.cs" />
-    <Compile Include="Commands\KillAllArbiterInstances.cs" />
-    <Compile Include="Commands\OpenJob.cs" />
-    <Compile Include="Commands\HelloWorld.cs" />
-    <Compile Include="Commands\GetVersion.cs" />
-    <Compile Include="Commands\Help.cs" />
-    <Compile Include="Commands\KillWebServer.cs" />
-    <Compile Include="Commands\KillGridServer.cs" />
-    <Compile Include="Commands\OpenGridServer.cs" />
-    <Compile Include="Commands\PrefixCheck.cs" />
-    <Compile Include="Commands\ReloadSettingsOfAssembly.cs" />
-    <Compile Include="Commands\ReloadSettingsAndResources.cs" />
-    <Compile Include="Commands\Render.cs" />
-    <Compile Include="Commands\RestartBot.cs" />
-    <Compile Include="Commands\ThrowTest.cs" />
-    <Compile Include="Commands\UpdatePrivilagedUsers.cs" />
-    <Compile Include="Commands\UpdateAdmins.cs" />
-    <Compile Include="Commands\UpdateSetting.cs" />
-    <Compile Include="Commands\UpdateSettingOfAssembly.cs" />
-    <Compile Include="Commands\ViewConsole.cs" />
-    <Compile Include="Commands\ViewCurrentConsole.cs" />
-    <Compile Include="Commands\WtfIsThis.cs" />
     <Compile Include="CrashHandler.cs" />
     <Compile Include="Events\OnBotGlobalAddedToGuild.cs" />
     <Compile Include="Events\OnLatencyUpdated.cs" />
     <Compile Include="Events\OnLoggedOut.cs" />
     <Compile Include="Events\OnLoggedIn.cs" />
     <Compile Include="Events\OnSlashCommand.cs" />
-    <Compile Include="Extensions\DiscordSocketClientExtensions.cs" />
-    <Compile Include="Extensions\IAttachmentExtensions.cs" />
-    <Compile Include="Extensions\ISocketMessageChannelExtensions.cs" />
-    <Compile Include="Extensions\IUserExtensions.cs" />
-    <Compile Include="Extensions\SocketCommandBaseExtensions.cs" />
-    <Compile Include="Extensions\SocketGuildExtensions.cs" />
-    <Compile Include="Guards\CommandCircuitBreakerWrapper.cs" />
-    <Compile Include="Hooks\ClearConsoleHook.cs" />
-    <Compile Include="Hooks\CommandRegistryMetricsReportHook.cs" />
-    <Compile Include="Hooks\SuicideHook.cs" />
-    <Compile Include="Hooks\ListThreadsHook.cs" />
-    <Compile Include="Hooks\OpenGridServerHook.cs" />
-    <Compile Include="Hooks\ShutdownHook.cs" />
-    <Compile Include="Hooks\PartialShutdownHook.cs" />
-    <Compile Include="Hooks\ResetHook.cs" />
-    <Compile Include="Hooks\UtcNowHook.cs" />
-    <Compile Include="Interfaces\IConsoleHook.cs" />
-    <Compile Include="Models\SocketTaskRequest.cs" />
-    <Compile Include="PerformanceMonitors\CommandRegistryInstrumentationPerformanceMonitor.cs" />
-    <Compile Include="PerformanceMonitors\PerfmonCounterRegistryProvider.cs" />
-    <Compile Include="PerformanceMonitors\PerformanceServer.cs" />
-    <Compile Include="PerformanceMonitors\ScriptExecutionTaskPerformanceMonitor.cs" />
-    <Compile Include="PerformanceMonitors\RenderTaskPerformanceMonitor.cs" />
-    <Compile Include="PerformanceMonitors\UserTaskPerformanceMonitor.cs" />
-    <Compile Include="Plugins\PacketMetricsPlugin.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.cs" />
     <None Include="Lua\LuaVM.formatted.lua" />
     <None Include="Lua\LuaVM.lua" />
     <None Include="RuntimeScripts\PointerMagic.csx" />
-    <Compile Include="Properties\SettingsProvider.cs" />
     <Compile Include="Runner.cs" />
-    <Compile Include="SlashCommands\Test.cs" />
-    <Compile Include="Tasks\RenderQueueUserMetricsTask.cs" />
-    <Compile Include="Tasks\ScreenshotTask.cs" />
     <Compile Include="Events\OnConnected.cs" />
     <Compile Include="Events\OnDisconnected.cs" />
     <Compile Include="Events\OnLogMessage.cs" />
     <Compile Include="Events\OnMessage.cs" />
     <Compile Include="Events\OnReady.cs" />
-    <Compile Include="Extensions\SocketMessageExtensions.cs" />
-    <Compile Include="Global\BotGlobal.cs" />
-    <Compile Include="Registries\ConsoleHookRegistry.cs" />
-    <Compile Include="Registries\CommandRegistry.cs" />
-    <Compile Include="Interfaces\IStateSpecificCommandHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="Tasks\ScriptExecutionQueueUserMetricsTask.cs" />
-    <Compile Include="Utility\AdminUtility.cs" />
-    <Compile Include="Utility\GridDeployerUtility.cs" />
-    <Compile Include="Utility\GridServerArbiter.cs" />
-    <Compile Include="Utility\GridServerCommandUtility.cs" />
-    <Compile Include="Utility\JsonScriptingUtility.cs" />
-    <Compile Include="Utility\LuaUtility.cs" />
-    <Compile Include="Utility\SignalUtility.cs" />
-    <Compile Include="Utility\SoapUtility.cs" />
-    <Compile Include="Utility\SystemUtility.cs" />
-    <Compile Include="Utility\UserUtility.cs" />
-    <Compile Include="NativeWin32\NativeMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.release-vault.config" />
@@ -299,13 +197,10 @@
     <None Include="RuntimeScripts\Metrics.csx" />
     <None Include="RuntimeScripts\Test.csx" />
     <None Include="RuntimeScripts\who-is-xlxi.csx" />
+    <None Include="RuntimeScripts\uptime.csx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
@@ -416,6 +311,34 @@
       <Project>{17e9a370-0eef-4cec-805e-255ca27e6a44}</Project>
       <Name>Microsoft.Ccr.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Commands\MFDLabs.Grid.Bot.Commands.csproj">
+      <Project>{53a58bd8-189b-40cd-82d5-7a8ab529a7b6}</Project>
+      <Name>MFDLabs.Grid.Bot.Commands</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Diagnostics\MFDLabs.Grid.Bot.Diagnostics.csproj">
+      <Project>{dae78963-77f7-4169-8849-28ea33102074}</Project>
+      <Name>MFDLabs.Grid.Bot.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Extensions\MFDLabs.Grid.Bot.Extensions.csproj">
+      <Project>{b33c4956-9937-48b4-b342-4574185f9968}</Project>
+      <Name>MFDLabs.Grid.Bot.Extensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Global\MFDLabs.Grid.Bot.Global.csproj">
+      <Project>{ee4347ee-a88e-4287-a857-6d79a472a108}</Project>
+      <Name>MFDLabs.Grid.Bot.Global</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Hooks\MFDLabs.Grid.Bot.Hooks.csproj">
+      <Project>{17578d48-d50b-4c84-b11d-2621fae5adb0}</Project>
+      <Name>MFDLabs.Grid.Bot.Hooks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.Grid.Bot.Utility\MFDLabs.Grid.Bot.Utility.csproj">
+      <Project>{79f4f7a6-362a-416c-b0e9-aea45bfd0d9d}</Project>
+      <Name>MFDLabs.Grid.Bot.Utility</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj">
+      <Project>{f50802cc-810a-4639-99a7-8b15bfc39b24}</Project>
+      <Name>MFDLabs.GridSettings</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -435,12 +358,6 @@
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

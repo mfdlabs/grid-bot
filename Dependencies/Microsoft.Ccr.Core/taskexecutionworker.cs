@@ -32,7 +32,7 @@ namespace Microsoft.Ccr.Core
 
         private void WaitForTask(bool doTimedWait)
         {
-            if (this._dispatcher._pendingTaskCount > 0 && this._dispatcher._cachedDispatcherQueueCount != this._dispatcher._suspendedQueueCount)
+            if (this._dispatcher._pendingTaskCount > 0 && this._dispatcher.CachedDispatcherQueueCount != this._dispatcher.SuspendedQueueCount)
             {
                 return;
             }
@@ -50,20 +50,20 @@ namespace Microsoft.Ccr.Core
 
         private void CheckStartupComplete()
         {
-            int num = Interlocked.Increment(ref this._dispatcher._workerCount);
-            if (num == this._dispatcher._taskExecutionWorkers.Count)
+            int num = Interlocked.Increment(ref this._dispatcher.WorkerCount);
+            if (num == this._dispatcher.TaskExecutionWorkers.Count)
             {
-                this._dispatcher._startupCompleteEvent.Set();
+                this._dispatcher.StartupCompleteEvent.Set();
             }
         }
 
         private void CheckShutdownComplete()
         {
-            if (Interlocked.Decrement(ref this._dispatcher._workerCount) == 0)
+            if (Interlocked.Decrement(ref this._dispatcher.WorkerCount) == 0)
             {
-                lock (this._dispatcher._taskExecutionWorkers)
+                lock (this._dispatcher.TaskExecutionWorkers)
                 {
-                    this._dispatcher._taskExecutionWorkers.Clear();
+                    this._dispatcher.TaskExecutionWorkers.Clear();
                 }
             }
         }
@@ -110,10 +110,10 @@ namespace Microsoft.Ccr.Core
                         }
                         num2++;
                         num = 0;
-                        int cachedDispatcherQueueCount = this._dispatcher._cachedDispatcherQueueCount;
+                        int cachedDispatcherQueueCount = this._dispatcher.CachedDispatcherQueueCount;
                         for (int i = 0; i < cachedDispatcherQueueCount; i++)
                         {
-                            if (cachedDispatcherQueueCount != this._dispatcher._cachedDispatcherQueueCount)
+                            if (cachedDispatcherQueueCount != this._dispatcher.CachedDispatcherQueueCount)
                             {
                                 goto CONTINUE_EXECUTING;
                             }
@@ -161,7 +161,7 @@ namespace Microsoft.Ccr.Core
 
         private static void HandleException(ITask currentTask, Exception e)
         {
-            Dispatcher.LogError(Resource1.HandleExceptionLog, e);
+            Dispatcher.LogError(Resource.HandleExceptionLog, e);
             Dispatcher.FilterExceptionThroughCausalities(currentTask, e);
             Dispatcher.SetCurrentThreadCausalities(null);
             if (currentTask != null && currentTask.ArbiterCleanupHandler != null)
@@ -172,7 +172,7 @@ namespace Microsoft.Ccr.Core
                 }
                 catch (Exception exception)
                 {
-                    Dispatcher.LogError(Resource1.ExceptionDuringArbiterCleanup, exception);
+                    Dispatcher.LogError(Resource.ExceptionDuringArbiterCleanup, exception);
                 }
             }
         }

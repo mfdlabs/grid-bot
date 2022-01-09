@@ -6,12 +6,33 @@ using MFDLabs.Configuration.Logging;
 using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
-using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines;
+using MFDLabs.Hashicorp.VaultClient.V1.Commons;
+using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {
+    internal static class KeyValueSecretsEngineV2Extensions
+    {
+        public static bool PathExists(this IKeyValueSecretsEngineV2 kv, string path, out Secret<ListInfo> o, string mountPoint = null)
+        {
+            o = null;
+            
+            try
+            {
+                o = kv.ReadSecretPathsAsync(path, mountPoint).Result;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+    
     public class VaultConfigurationClient
     {
+        private const string BaseMountPoint = "mfdlabs-sharp-v2/";
+
 #if DEBUG
         private const string AppConfiguration = "Debug";
 #else
@@ -55,23 +76,16 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         public IReadOnlyCollection<ISetting> GetAllSettings(string groupName)
         {
-            var engine = new SecretsEngine
-            {
-                Type = SecretsEngineType.KeyValueV2,
-                Config = new Dictionary<string, object>
-                    {
-                        {  "version", "2" }
-                    },
-                Path = "mfdlabs-sharp-v2/"
-            };
-
-            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
+            if (!_client.V1.Secrets.KeyValue.V2.PathExists($"{AppConfiguration}/{groupName}", out var paths,
+                    BaseMountPoint))
+                return Array.Empty<ISetting>();
+            
             return (from values in
                     from secret in
                         from path in
                             paths.Data.Keys
                         select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                            mountPoint: engine.Path).Result
+                            mountPoint: BaseMountPoint).Result
                     select secret.Data.Data
                 select new Setting
                 {
@@ -85,23 +99,16 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
         {
-            var engine = new SecretsEngine()
-            {
-                Type = SecretsEngineType.KeyValueV2,
-                Config = new Dictionary<string, object>
-                    {
-                        {  "version", "2" }
-                    },
-                Path = "mfdlabs-sharp-v2/"
-            };
-
-            var paths = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync($"{AppConfiguration}/{groupName}", engine.Path).Result;
+            if (!_client.V1.Secrets.KeyValue.V2.PathExists($"{AppConfiguration}/{groupName}", out var paths,
+                    BaseMountPoint))
+                return Array.Empty<IConnectionString>();
+            
             return (from values in
                     from secret in
                         from path in
                             paths.Data.Keys
                         select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                            mountPoint: engine.Path).Result
+                            mountPoint: BaseMountPoint).Result
                     select secret.Data.Data
                 select new ConnectionString
                 {
@@ -114,16 +121,6 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         public void SetProperty(string groupName, string name, string type, string value, DateTime updated)
         {
-            var engine = new SecretsEngine()
-            {
-                Type = SecretsEngineType.KeyValueV2,
-                Config = new Dictionary<string, object>
-                {
-                    {  "version", "2" }
-                },
-                Path = "mfdlabs-sharp-v2/"
-            };
-
             var values = new Dictionary<string, object>
             {
                 { "Name", name },
@@ -131,7 +128,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 { "Value", value },
                 { "Updated", updated }
             };
-            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"{AppConfiguration}/{groupName}/{name}", values, mountPoint: engine.Path);
+            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"{AppConfiguration}/{groupName}/{name}", values, mountPoint: BaseMountPoint);
         }
 
         private readonly IVaultClient _client;

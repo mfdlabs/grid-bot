@@ -526,7 +526,7 @@ namespace Microsoft.Ccr.Core
         {
             if (_dispatcher == null)
             {
-                throw new InvalidOperationException(Resource1.DispatcherPortTestNotValidInThreadpoolMode);
+                throw new InvalidOperationException(Resource.DispatcherPortTestNotValidInThreadpoolMode);
             }
             lock (_taskQueue)
             {

@@ -2,6 +2,9 @@
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
+#pragma warning disable CS0618
+#pragma warning disable SYSLIB0003
+
 namespace Microsoft.Ccr.Core
 {
     [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]

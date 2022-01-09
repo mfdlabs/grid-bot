@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
 
 // ReSharper disable once CheckNamespace
@@ -32,7 +33,7 @@ namespace MFDLabs.Concurrency
             _lastRefresh = DateTime.Now;
 
             _refreshTimer = new Timer(
-                (stateInfo) => Refresh(refreshDelegate),
+                _ => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
                 refreshIntervalInMilliseconds
@@ -46,7 +47,7 @@ namespace MFDLabs.Concurrency
             _lastRefresh = DateTime.Now;
 
             _refreshTimer = new Timer(
-                (stateInfo) => Refresh(refreshDelegate),
+                _ => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
                 refreshIntervalInMilliseconds
@@ -63,7 +64,7 @@ namespace MFDLabs.Concurrency
             var refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
 
             _refreshTimer = new Timer(
-                (stateInfo) => Refresh(refreshDelegate),
+                _ => Refresh(refreshDelegate),
                 null,
                 refreshIntervalInMilliseconds,
                 refreshIntervalInMilliseconds
@@ -83,7 +84,7 @@ namespace MFDLabs.Concurrency
             }
             catch (Exception ex)
             {
-                ExceptionHandler.LogException(ex);
+                SystemLogger.Singleton.Error(ex);
             }
         }
         private void Refresh(Action<PortSet<T, Exception>> refreshDelegate)
@@ -107,7 +108,7 @@ namespace MFDLabs.Concurrency
             }
             catch (Exception ex)
             {
-                ExceptionHandler.LogException(ex);
+                SystemLogger.Singleton.Error(ex);
             }
         }
 

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
+using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
 
 // ReSharper disable once CheckNamespace
@@ -36,7 +36,7 @@ namespace MFDLabs.Concurrency
 
         private void dispatcher_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            ExceptionHandler.LogException(new ApplicationException($"{_dispatcher.Name} had an unhandled exception",
+            SystemLogger.Singleton.Error(new ApplicationException($"{_dispatcher.Name} had an unhandled exception",
                 e.ExceptionObject as Exception));
         }
 
@@ -56,7 +56,7 @@ namespace MFDLabs.Concurrency
                 }
                 catch (Exception ex)
                 {
-                    ExceptionHandler.LogException(ex);
+                    SystemLogger.Singleton.Error(ex);
                 }
 
                 if (sleep != TimeSpan.Zero)
@@ -109,7 +109,7 @@ namespace MFDLabs.Concurrency
                     t.Suspend();
                     try
                     {
-                        trace = new System.Diagnostics.StackTrace(t, true);
+                        trace = new System.Diagnostics.StackTrace();
                     }
                     catch (Exception)
                     {
@@ -125,22 +125,14 @@ namespace MFDLabs.Concurrency
             }
         }
 
-        private void ReportBacklog(int pendingTasks)
-        {
-            var message = $"CcrService detected a backlog of {pendingTasks}. These are the currently running tasks:\r\n\r\n";
-            message = GetWorkerStacks().Aggregate(message, (current, trace) => current + trace + "\r\n\r\n");
-            ExceptionHandler.LogException(message, EventLogEntryType.Warning, 4061);
-        }
-
-
         #region IDisposable Members
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (_dispatcher != null)
-                _dispatcher.Dispose();
+            GC.SuppressFinalize(this);
 
+            _dispatcher?.Dispose();
             _threads.Clear();
         }
 

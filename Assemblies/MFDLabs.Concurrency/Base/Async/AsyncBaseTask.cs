@@ -64,7 +64,7 @@ namespace MFDLabs.Concurrency.Base.Async
             
             ConcurrencyService.Singleton.Activate(
                 Arbiter.Receive(
-                    false,
+                    true,
                     Port,
                     // ReSharper disable once AsyncVoidLambda
                     async (item) =>
@@ -90,6 +90,11 @@ namespace MFDLabs.Concurrency.Base.Async
                                 Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
                             }
                             packet.Dispose();
+                            
+                            if (_lastResult == PluginResult.StopProcessingAndDeallocate)
+                            {
+                                Deallocate();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -100,16 +105,12 @@ namespace MFDLabs.Concurrency.Base.Async
 #if DEBUG
                             SystemLogger.Singleton.Error(ex);
 #else
-                                SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
+                            SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
 #endif
                         }
                     }
                 )
             );
-            if (_lastResult == PluginResult.StopProcessingAndDeallocate)
-            {
-                Deallocate();
-            }
 
             return _lastResult;
         }

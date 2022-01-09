@@ -87,7 +87,7 @@ namespace Microsoft.Ccr.Core
             {
                 receiverTask2.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Exclusive);
             }
-            foreach (ReceiverTask receiverTask3 in concurrent._branches)
+            foreach (ReceiverTask receiverTask3 in concurrent.Branches)
             {
                 receiverTask3.ArbiterContext = new InterleaveReceiverContext(InterleaveReceivers.Concurrent);
             }
@@ -96,7 +96,7 @@ namespace Microsoft.Ccr.Core
             {
                 this._mutexBranches.Add(item);
             }
-            this._concurrentBranches = new List<ReceiverTask>(concurrent._branches);
+            this._concurrentBranches = new List<ReceiverTask>(concurrent.Branches);
         }
 
         public Interleave(ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent) : this(new TeardownReceiverGroup(new ReceiverTask[0]), mutex, concurrent)

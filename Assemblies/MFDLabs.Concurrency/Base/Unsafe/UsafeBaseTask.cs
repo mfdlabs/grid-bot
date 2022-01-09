@@ -65,7 +65,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
             
             ConcurrencyService.Singleton.Activate(
                 Arbiter.Receive(
-                    false,
+                    true,
                     Port,
                     (item) =>
                     {
@@ -101,6 +101,11 @@ namespace MFDLabs.Concurrency.Base.Unsafe
                                     Monitor.RateOfItemsPerSecondProcessedThatSucceed.Increment();
                                     Monitor.AverageRateOfItemsThatSucceed.Sample(1.0 / _sequenceId);
                                 }
+                                
+                                if (_lastResult == PluginResult.StopProcessingAndDeallocate)
+                                {
+                                    Deallocate();
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -112,16 +117,12 @@ namespace MFDLabs.Concurrency.Base.Unsafe
 #if DEBUG
                             SystemLogger.Singleton.Error(ex);
 #else
-                                SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
+                            SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
 #endif
                         }
                     }
                 )
             );
-            if (_lastResult == PluginResult.StopProcessingAndDeallocate)
-            {
-                Deallocate();
-            }
 
             return _lastResult;
         }
