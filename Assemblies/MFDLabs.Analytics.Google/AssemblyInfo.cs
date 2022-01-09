@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: CompilationRelaxations(8)]
 #endif
 [assembly: AssemblyTitle("MFDLabs.Analytics.Google")]
-[assembly: AssemblyDescription("Google Analytics wrapper for the MFDLabs.Google.Analytics.Client")]
+[assembly: AssemblyDescription("Google Analytics wrapper for the MFDLabs.Analytics.Google.Client")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
 #else

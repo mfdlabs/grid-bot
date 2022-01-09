@@ -38,9 +38,8 @@
   </ItemGroup>
   
   <ItemGroup>
-	<ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
 	<ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-	<ProjectReference Include="..\MFDLabs.Google.Analytics.Client\MFDLabs.Google.Analytics.Client.csproj" />
+	<ProjectReference Include="..\MFDLabs.Analytics.Google.Client\MFDLabs.Analytics.Google.Client.csproj" />
 	<ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
 	<ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
   </ItemGroup>

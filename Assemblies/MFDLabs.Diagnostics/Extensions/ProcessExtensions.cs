@@ -1,4 +1,4 @@
-﻿#if NETFRAMEWORK
+﻿#if NETFRAMEWORK // This will be removed if we can find a way of checkin on unix if an app is running as sudo!
 
 using System.Diagnostics;
 
