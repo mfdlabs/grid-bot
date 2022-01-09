@@ -1,6 +1,6 @@
 ﻿namespace MFDLabs.Grid.Bot
 {
-    public sealed class Program
+    public static class Program
     {
         private static string GetBadConfigurationError()
             => $"Could not locate the application configuration at the files '{System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' " +
@@ -46,7 +46,7 @@
                 MFDLabs.Grid.Bot.CrashHandler.Upload(e.ExceptionObject as System.Exception);
                 
                 if (e.ExceptionObject is System.InvalidOperationException) 
-                    MFDLabs.Grid.Bot.Utility.SignalUtility.InvokeInteruptSignal(false);
+                    System.Environment.Exit(1);
             };
 
             MFDLabs.Grid.Bot.Runner.Invoke();

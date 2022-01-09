@@ -7,10 +7,10 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     public static class PerformanceServer
     {
-        private static readonly CounterHttpServer Server = new CounterHttpServer(
+        private static readonly CounterHttpServer Server = new(
             PerfmonCounterRegistryProvider.Registry,
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
-            (ex) =>
+            ex =>
             {
                 if (ex is not HttpListenerException {ErrorCode: 0x3E3})
                 {

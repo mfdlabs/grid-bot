@@ -416,7 +416,8 @@ namespace MFDLabs.Grid.Bot.Registries
 
             if (
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
-                !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$")
+                !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$") && 
+                !message.Author.IsAdmin()
             )
             {
                 SystemLogger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
@@ -445,6 +446,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     {
                         InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
                         await message.ReplyAsync($"The command with the name '{commandAlias}' was not found.");
+                        return;
                     }
                     InstrumentationPerfmon.NotFoundCommandsThatDidNotTellTheFrontendUser.Increment();
                     return;

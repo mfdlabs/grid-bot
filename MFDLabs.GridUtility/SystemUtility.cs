@@ -124,6 +124,8 @@ namespace MFDLabs.Grid.Bot.Utility
         /// </summary>
         public static TimeSpan OpenWebServerIfNotOpen() => !WebServerIsAvailable() ? OpenGridServerSafe(true).Item1 : TimeSpan.Zero;
 
+        // There will have to be a #if here for unix, because we cannot check if there's a window with a title
+        // WIN32: This method is Win32 only
         public static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _);
 
         public static void KillAllProcessByName(string name)

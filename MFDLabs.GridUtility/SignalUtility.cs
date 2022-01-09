@@ -19,7 +19,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Shutdown", "SIGINT",
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGINT",
                     "Shutdown via SIGINT");
                 PerformanceServer.Stop();
                 if (killBot)
@@ -39,7 +39,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Shutdown", "SIGUSR1",
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGUSR1",
                     "Shutdown via SIGINT");
                 PerformanceServer.Stop();
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
@@ -59,7 +59,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Restart", "SIGUSR2",
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Restart", "SIGUSR2",
                     "Restart via SIGINT");
 
                 if (killBot)

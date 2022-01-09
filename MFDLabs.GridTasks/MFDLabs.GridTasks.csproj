@@ -19,8 +19,8 @@
     <ItemGroup>
       <ProjectReference Include="..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
       <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
-      <ProjectReference Include="..\MFDLabs.Grid.Bot.Diagnostics\MFDLabs.Grid.Bot.Diagnostics.csproj" />
-      <ProjectReference Include="..\MFDLabs.Grid.Bot.Extensions\MFDLabs.Grid.Bot.Extensions.csproj" />
+      <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
+      <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
       <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
     </ItemGroup>
 

@@ -73,9 +73,6 @@ namespace MFDLabs.Grid.Bot.Commands
                     return;
                 }
 
-                await message.ReplyAsync(returnValue.IsNullOrEmpty()
-                    ? "Executed script with no return!"
-                    : $"Executed script with return:");
                 if (!returnValue.IsNullOrEmpty())
                 {
                     if (returnValue.Length > EmbedBuilder.MaxDescriptionLength)
@@ -94,6 +91,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         .WithColor(0x00, 0xff, 0x00)
                         .Build()
                     );
+                    return;
                 }
                 await message.ReplyAsync("Executed script with no return!");
             }

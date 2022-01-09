@@ -38,21 +38,21 @@ namespace MFDLabs.Grid.Bot
         {
             SystemLogger.Singleton.LifecycleEvent(BadActorMessage);
 
-            GoogleAnalyticsManager.Singleton.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
+            GoogleAnalyticsManager.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Debug Mode Enabled");
+                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Debug Mode Enabled");
                 SystemLogger.Singleton.Warning(DebugMode);
             }
 #endif
             if (SystemGlobal.ContextIsAdministrator() &&
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
+                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
                 SystemLogger.Singleton.Warning(AdminMode);
             }
-            GoogleAnalyticsManager.Singleton.TrackNetworkEvent(
+            GoogleAnalyticsManager.TrackNetworkEvent(
                 "Startup",
                 "Info",
                 $"Process '{SystemGlobal.CurrentProcess.Id:x}' " +
@@ -78,7 +78,7 @@ namespace MFDLabs.Grid.Bot
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Info", "Performance Server Started");
+                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Info", "Performance Server Started");
                 PerformanceServer.Start();
             }
 
@@ -88,7 +88,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.");
+                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.");
                 SystemLogger.Singleton.LifecycleEvent(PrimaryTaskError);
 #if DEBUG
                 SystemLogger.Singleton.Error(ex);
@@ -108,7 +108,7 @@ namespace MFDLabs.Grid.Bot
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
                 {
-                    await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("MainTask", "Error",
+                    await GoogleAnalyticsManager.TrackNetworkEventAsync("MainTask", "Error",
                         "MainTask Failure: No Bot Token.");
                     SystemLogger.Singleton.Error(NoBotToken);
                     // Case here so backtrace can catch potential hackers trying to use this without a token
@@ -152,13 +152,15 @@ namespace MFDLabs.Grid.Bot
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                     SystemUtility.OpenGridServerSafe();
 
-                GridServerArbiter.SetDefaultHttpBinding(
-                    new BasicHttpBinding(BasicHttpSecurityMode.None)
-                        {
-                            MaxReceivedMessageSize = int.MaxValue,
-                            SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
-                        }
-                    );
+                var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
+                {
+                    MaxReceivedMessageSize = int.MaxValue,
+                    SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
+                };
+
+                GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
+                SoapUtility.SetBinding(defaultHttpBinding);
+                
 
                 GridServerArbiter.Singleton.SetupPool();
 
@@ -181,7 +183,7 @@ namespace MFDLabs.Grid.Bot
             }
             catch (Exception ex)
             {
-                await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("MainTask", "Error",
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("MainTask", "Error",
                     $"MainTask Failure: {ex.ToDetailedString()}.");
                 SystemLogger.Singleton.LifecycleEvent(InitializationError);
 #if DEBUG

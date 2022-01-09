@@ -5,9 +5,7 @@
         <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
         <Deterministic>False</Deterministic>
         <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-        <LangVersion>9</LangVersion>
-        <AssemblyName>MFDLabs.GridUtility</AssemblyName>
-        <RootNamespace>MFDLabs.Grid.Bot.Utility</RootNamespace>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -19,20 +17,12 @@
     <ItemGroup>
       <ProjectReference Include="..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
       <ProjectReference Include="..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
-      <ProjectReference Include="..\Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj" />
-      <ProjectReference Include="..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
-      <ProjectReference Include="..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
-      <ProjectReference Include="..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
       <ProjectReference Include="..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
-      <ProjectReference Include="..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj" />
       <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
-      <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
-      <ProjectReference Include="..\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj" />
+      <ProjectReference Include="..\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
+      <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
       <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+      <ProjectReference Include="..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
     </ItemGroup>
 
 </Project>

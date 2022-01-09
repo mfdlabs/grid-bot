@@ -1,7 +1,7 @@
 --[[
 File Name: SafeLuaMode.lua
 Written By: Nikita Petko
-Description: Disables specific things in the datamodel, by virualizing the fenv
+Description: Disables specific things in the datamodel, by virtualizing the function environment
 Modifications:
 	21/11/2021 01:16 => Removed the game to script check because it was returning nil (we aren't running under a script so it's nil)
 --]] 

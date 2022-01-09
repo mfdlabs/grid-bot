@@ -13,8 +13,8 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static Task<long?> GetRobloxIdAsync(this IUser user) => UserUtility.GetRobloxIdByIUserAsync(user);
         public static long? GetRobloxId(this IUser user) => UserUtility.GetRobloxIdByIUser(user);
         public static void FireEvent(this IUser user, string @event, string extraContext = "none") 
-            => GoogleAnalyticsManager.Singleton.TrackEvent(user.Id.ToString(), "UserAction", @event, extraContext);
+            => GoogleAnalyticsManager.TrackEvent(user.Id.ToString(), "UserAction", @event, extraContext);
         public static Task FireEventAsync(this IUser user, string @event, string extraContext = "none") 
-            => GoogleAnalyticsManager.Singleton.TrackEventAsync(user.Id.ToString(), "UserAction", @event, extraContext);
+            => GoogleAnalyticsManager.TrackEventAsync(user.Id.ToString(), "UserAction", @event, extraContext);
     }
 }

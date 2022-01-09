@@ -46,11 +46,9 @@ namespace MFDLabs.Grid.Bot.Commands
 
             await message.Channel.SendMessageAsync($"Executing script '{scriptName}' at path '{fullScriptName}'.");
 
-            ScriptState<object> result;
-
             using (message.Channel.EnterTypingState())
             {
-
+                ScriptState<object> result;
                 try
                 {
                     // ref the current assembly
@@ -89,6 +87,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         .WithColor(0x00, 0xff, 0x00)
                         .Build()
                     );
+                    return;
                 }
                 await message.ReplyAsync("Executed script with no return!");
             }

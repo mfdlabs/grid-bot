@@ -15,10 +15,10 @@ namespace MFDLabs.Grid.Bot.Plugins
     {
         public override unsafe PluginResult OnReceive(Concurrency.Unsafe.Packet* packet)
         {
-            GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received unsafe result packet '{packet->Id}' with the sequence '{packet->SequenceId}' at '{packet->Created}' with the status of '{packet->Status}'");
+            GoogleAnalyticsManager.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received unsafe result packet '{packet->Id}' with the sequence '{packet->SequenceId}' at '{packet->Created}' with the status of '{packet->Status}'");
             if (packet->Data != null)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"The packet '{packet->Id}' with the sequence '{packet->SequenceId}' had an item with the typeof '{packet->Data->GetType().FullName}'");
+                GoogleAnalyticsManager.TrackNetworkEvent("Concurrency", "PacketReceived", $"The packet '{packet->Id}' with the sequence '{packet->SequenceId}' had an item with the typeof '{packet->Data->GetType().FullName}'");
             }
 #if DEBUG
             SystemLogger.Singleton.Info("Received result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet->Id, packet->SequenceId, packet->Created, packet->Status);
@@ -37,10 +37,10 @@ namespace MFDLabs.Grid.Bot.Plugins
     {
         public override PluginResult OnReceive(ref Packet<TItem> packet)
         {
-            GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
+            GoogleAnalyticsManager.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
             if (packet.Item != null)
             {
-                GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
+                GoogleAnalyticsManager.TrackNetworkEvent("Concurrency", "PacketReceived", $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
             }
 #if DEBUG
             SystemLogger.Singleton.Info("Received result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet.Id, packet.SequenceId, packet.Created, packet.Status);
@@ -58,7 +58,7 @@ namespace MFDLabs.Grid.Bot.Plugins
     {
         public override PluginResult OnReceive(ref Packet packet)
         {
-            GoogleAnalyticsManager.Singleton.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
+            GoogleAnalyticsManager.TrackNetworkEvent("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
 #if DEBUG
             SystemLogger.Singleton.Info("Received default packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet.Id, packet.SequenceId, packet.Created, packet.Status);
 #endif
@@ -71,10 +71,10 @@ namespace MFDLabs.Grid.Bot.Plugins
     {
         public override async Task<PluginResult> OnReceive(Packet<TItem> packet)
         {
-            await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
+            await GoogleAnalyticsManager.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
             if (packet.Item != null)
             {
-                await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
             }
 #if DEBUG
             SystemLogger.Singleton.Info("Received async result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet.Id, packet.SequenceId, packet.Created, packet.Status);
@@ -92,7 +92,7 @@ namespace MFDLabs.Grid.Bot.Plugins
     {
         public override async Task<PluginResult> OnReceive(Packet packet)
         {
-            await GoogleAnalyticsManager.Singleton.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
+            await GoogleAnalyticsManager.TrackNetworkEventAsync("Concurrency", "PacketReceived", $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
 #if DEBUG
             SystemLogger.Singleton.Info("Received default async packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'", packet.Id, packet.SequenceId, packet.Created, packet.Status);
 #endif

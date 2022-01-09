@@ -78,21 +78,22 @@ namespace MFDLabs.Grid.Bot.Commands
                         await message.ReplyWithFileAsync(
                             new MemoryStream(Encoding.UTF8.GetBytes(result.ReturnValue.ToString())),
                             "eval.txt",
-                            result.ReturnValue == null ? "Executed script with no return!" : $"Executed script with return:"
-                        );
+                            "Executed script with return:");
                         return;
                     }
-                    await message.ReplyAsync(
-                        result.ReturnValue == null ? "Executed script with no return!" : "Executed script with return:",
+                    await message.Channel.SendMessageAsync(
+                        "Executed script with return:",
                         embed: new EmbedBuilder()
-                        .WithTitle("Return value")
-                        .WithDescription($"```\n{result.ReturnValue}\n```")
-                        .WithAuthor(message.Author)
-                        .WithCurrentTimestamp()
-                        .WithColor(0x00, 0xff, 0x00)
-                        .Build()
+                            .WithTitle("Return value")
+                            .WithDescription($"```\n{result.ReturnValue}\n```")
+                            .WithAuthor(message.Author)
+                            .WithCurrentTimestamp()
+                            .WithColor(0x00, 0xff, 0x00)
+                            .Build()
                     );
+                    return;
                 }
+                await message.ReplyAsync("Executed script with no return!");
             }
         }
 

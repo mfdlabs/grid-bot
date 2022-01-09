@@ -1,5 +1,5 @@
 using System;
-var elapsed = MFDLabs.Logging.Diagnostics.LoggingSystem.Singleton.GlobalLifetimeWatch.Elapsed;
+var elapsed = MFDLabs.Logging.Diagnostics.LoggingSystem.GlobalLifetimeWatch.Elapsed;
 var ticks = elapsed.Ticks;
 long time = ticks % TimeSpan.TicksPerDay;
 int day = (int)(ticks / TimeSpan.TicksPerDay);
