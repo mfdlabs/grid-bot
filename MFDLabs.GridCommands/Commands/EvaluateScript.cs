@@ -36,7 +36,9 @@ namespace MFDLabs.Grid.Bot.Commands
 
             scriptName = scriptName.Escape().EscapeNewLines().EscapeQuotes().Replace("..", "");
 
-            var fullScriptName = $"{Directory.GetCurrentDirectory()}\\RuntimeScripts\\{scriptName}.csx";
+            
+            
+            var fullScriptName = Path.Combine(Directory.GetCurrentDirectory(), "RuntimeScripts", $"{scriptName}.csx");
 
             if (!File.Exists(fullScriptName))
             {

@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.ServiceModel;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -28,17 +29,30 @@ namespace MFDLabs.Grid.Bot
 #endif
         private const string AdminMode = "WARNING: RUNNING AS ADMINSTRATOR, THIS CAN POTENTIALLY BE DANGEROUS " +
                                          "SECURITY WISE, PLEASE KNOW WHAT YOU ARE DOING!";
-        private const string PrimaryTaskError = "An exception occurred when trying to execute the primary task, please review the error message below: ";
-        private const string InitializationError = "An exception occurred when trying to initialize the bot network, please review the error message below: ";
+        private const string PrimaryTaskError = "An exception occurred when trying to execute the primary task, please check back trace!";
         private const string NoBotToken = "The setting \"BotToken\" was null when it is required.";
         private const string BadActorMessage = "THIS SOFTWARE IS UNLICENSED, IF YOU DO NOT HAVE EXPLICIT WRITTEN PERMISSION " +
                                                "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY";
 
-        public static void Invoke()
+        public static void OnGlobalException(Exception ex)
+        {
+            GoogleAnalyticsManager.TrackNetworkEvent(
+                "Startup",
+                "Error",
+                $"Startup Failure: {ex.Message}."
+            );
+            SystemLogger.Singleton.LifecycleEvent(PrimaryTaskError);
+            PerformanceServer.Stop();
+        }
+
+        public static void Invoke(string[] args)
         {
             SystemLogger.Singleton.LifecycleEvent(BadActorMessage);
 
-            GoogleAnalyticsManager.Initialize(global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID);
+            GoogleAnalyticsManager.Initialize(
+                PerfmonCounterRegistryProvider.Registry,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID
+            );
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
@@ -52,6 +66,7 @@ namespace MFDLabs.Grid.Bot
                 GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
                 SystemLogger.Singleton.Warning(AdminMode);
             }
+
             GoogleAnalyticsManager.TrackNetworkEvent(
                 "Startup",
                 "Info",
@@ -74,7 +89,8 @@ namespace MFDLabs.Grid.Bot
                 SystemGlobal.AssemblyVersion,
                 NetworkingGlobal.GetLocalIp(),
                 SystemGlobal.GetMachineHost(),
-                SystemGlobal.GetMachineId());
+                SystemGlobal.GetMachineId()
+            );
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
@@ -82,118 +98,77 @@ namespace MFDLabs.Grid.Bot
                 PerformanceServer.Start();
             }
 
-            try
-            {
-                InvokeAsync().Wait();
-            }
-            catch (Exception ex)
-            {
-                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Error", $"Startup Failure: {ex.ToDetailedString()}.");
-                SystemLogger.Singleton.LifecycleEvent(PrimaryTaskError);
-#if DEBUG
-                SystemLogger.Singleton.Error(ex);
-#else
-                SystemLogger.Singleton.Error(ex.Message);
-#endif
-                PerformanceServer.Stop();
-                Console.ReadKey(true);
-            }
+            InvokeAsync(args).Wait();
         }
 
-        private static async Task InvokeAsync()
+        private static async Task InvokeAsync(IEnumerable<string> args)
         {
-            try
+            // For Unix, skip this, as I assume we won't need this:)
+            ConsoleHookRegistry.Register();
+
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
             {
-                ConsoleHookRegistry.Register();
-
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
-                {
-                    await GoogleAnalyticsManager.TrackNetworkEventAsync("MainTask", "Error",
-                        "MainTask Failure: No Bot Token.");
-                    SystemLogger.Singleton.Error(NoBotToken);
-                    // Case here so backtrace can catch potential hackers trying to use this without a token
-                    // (they got assemblies but no configuration)
-                    throw new InvalidOperationException(NoBotToken);
-                }
-
-                BotGlobal.Initialize(
-                    new DiscordSocketClient(
-                        new DiscordSocketConfig
-                        {
-                            GatewayIntents =
-                                GatewayIntents.GuildMessages
-                                | GatewayIntents.DirectMessages
-                                | GatewayIntents.Guilds,
-                            LogGatewayIntentWarnings = false,
-#if DEBUG
-                            LogLevel = LogSeverity.Debug,
-#endif
-                        }
-                    )
+                await GoogleAnalyticsManager.TrackNetworkEventAsync(
+                    "MainTask",
+                    "Error",
+                    "MainTask Failure: No Bot Token."
                 );
+                SystemLogger.Singleton.Error(NoBotToken);
+                // Case here so backtrace can catch potential hackers trying to use this without a token
+                // (they got assemblies but no configuration)
+                throw new InvalidOperationException(NoBotToken);
+            }
 
-                BotGlobal.Client.Log += OnLogMessage.Invoke;
-                BotGlobal.Client.LoggedIn += OnLoggedIn.Invoke;
-                BotGlobal.Client.LoggedOut += OnLoggedOut.Invoke;
-                BotGlobal.Client.Ready += OnReady.Invoke;
-                BotGlobal.Client.Connected += OnConnected.Invoke;
-                BotGlobal.Client.MessageReceived += OnMessage.Invoke;
-                BotGlobal.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
-                BotGlobal.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
+            BotGlobal.Initialize(
+                new DiscordSocketClient(
+                    new DiscordSocketConfig
+                    {
+                        GatewayIntents =
+                            GatewayIntents.GuildMessages
+                            | GatewayIntents.DirectMessages
+                            | GatewayIntents.Guilds,
+                        LogGatewayIntentWarnings = false,
+#if DEBUG
+                        LogLevel = LogSeverity.Debug,
+#endif
+                    }
+                )
+            );
+
+            BotGlobal.Client.Log += OnLogMessage.Invoke;
+            BotGlobal.Client.LoggedIn += OnLoggedIn.Invoke;
+            BotGlobal.Client.LoggedOut += OnLoggedOut.Invoke;
+            BotGlobal.Client.Ready += OnReady.Invoke;
+            BotGlobal.Client.Connected += OnConnected.Invoke;
+            BotGlobal.Client.MessageReceived += OnMessage.Invoke;
+            BotGlobal.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
+            BotGlobal.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
 
 #if WE_LOVE_EM_SLASH_COMMANDS
-                BotGlobal.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
+            BotGlobal.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
-                    SystemUtility.KillAllGridServersSafe();
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
+                SystemUtility.KillAllGridServersSafe();
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                    SystemUtility.OpenGridServerSafe();
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                SystemUtility.OpenGridServerSafe();
 
-                var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
-                {
-                    MaxReceivedMessageSize = int.MaxValue,
-                    SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
-                };
+            var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
+            {
+                MaxReceivedMessageSize = int.MaxValue,
+                SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
+            };
 
-                GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
-                SoapUtility.SetBinding(defaultHttpBinding);
-                
+            GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
+            GridServerArbiter.Singleton.SetupPool();
 
-                GridServerArbiter.Singleton.SetupPool();
+            SoapUtility.SetBinding(defaultHttpBinding);
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartBatchAllocate25ArbiterInstances &&
-                    !global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                    ThreadPool.QueueUserWorkItem(_ =>
-                    {
-                        GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(25);
-                    });
-
+            if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();
-                await Task.Delay(-1);
-            }
-            catch (InvalidOperationException)
-            {
-                // HACK: see the above message.
-                // We may remove these try-catches entirely from this thread and just allow
-                // the AppDomain's UnhandledException to hit
-                throw;
-            }
-            catch (Exception ex)
-            {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("MainTask", "Error",
-                    $"MainTask Failure: {ex.ToDetailedString()}.");
-                SystemLogger.Singleton.LifecycleEvent(InitializationError);
-#if DEBUG
-                SystemLogger.Singleton.Error(ex);
-#else
-                SystemLogger.Singleton.Error(ex.Message);
-#endif
-                SignalUtility.InvokeInteruptSignal();
-                await Task.Delay(-1);
-            }
+            await Task.Delay(-1);
         }
     }
 }

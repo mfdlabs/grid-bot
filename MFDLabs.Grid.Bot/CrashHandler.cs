@@ -10,12 +10,12 @@
             try
             {
                 System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_UploadRunning);
-                var bckTraceCreds = new Backtrace.Model.BacktraceCredentials(
+                var bckTraceCreds = new MFDLabs.Backtrace.Model.BacktraceCredentials(
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerURL,
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerAccessToken
                 );
-                var crashUploaderClient = new Backtrace.BacktraceClient(bckTraceCreds);
-                crashUploaderClient.Send(new Backtrace.Model.BacktraceReport(ex));
+                var crashUploaderClient = new MFDLabs.Backtrace.BacktraceClient(bckTraceCreds);
+                crashUploaderClient.Send(new MFDLabs.Backtrace.Model.BacktraceReport(ex));
                 System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Success);
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerExitWhenDone)
                     System.Environment.Exit(1);

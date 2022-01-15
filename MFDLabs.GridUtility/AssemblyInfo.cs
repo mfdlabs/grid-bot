@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 #if !DEBUG
@@ -22,3 +23,4 @@ using System.Runtime.CompilerServices;
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: AssemblyVersion("1.0.*")]
+[assembly: InternalsVisibleTo("MFDLabs.GridUtility.Unit.Test")]

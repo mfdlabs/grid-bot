@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace MFDLabs.Reflection
 {
@@ -23,6 +24,28 @@ namespace MFDLabs.Reflection
                 if (value != null)
                     prop.SetValue(target, value, null);
             }
+        }
+        
+        public static bool IsAnonymousType(Type type)
+        {
+            if (type == null) 
+                throw new ArgumentNullException(nameof(type));
+
+            if (Attribute.IsDefined(type,
+                    typeof(CompilerGeneratedAttribute),
+                    inherit: false) &&
+                type.IsGenericType &&
+                type.Name.Contains("AnonymousType") &&
+                (type.Name.StartsWith("<>",
+                     StringComparison.OrdinalIgnoreCase) ||
+                 type.Name.StartsWith("VB$",
+                     StringComparison.OrdinalIgnoreCase)))
+            {
+                // ReSharper disable once NonConstantEqualityExpressionHasConstantResult
+                return (type.Attributes & TypeAttributes.NotPublic) == 0;
+            }
+
+            return false;
         }
 
         public static bool IsNumericType(Type o) =>

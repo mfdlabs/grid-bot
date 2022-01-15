@@ -17,12 +17,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+
+#if DEBUG
+using MFDLabs.ErrorHandling.Extensions;
+#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -480,14 +483,16 @@ namespace MFDLabs.Grid.Bot.Utility
 
         #region |Invocation Helpers|
 
-        private void InvokeMethod(string method,
+        private void InvokeMethod(
+            string method,
             string name,
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
             params object[] args)
             => InvokeMethod<object>(method, name, maxAttemptsToHitGridServer, hostName, isPoolable, args);
-        private T InvokeMethod<T>(string method,
+        private T InvokeMethod<T>(
+            string method,
             string name,
             int maxAttemptsToHitGridServer,
             string hostName,
@@ -510,14 +515,16 @@ namespace MFDLabs.Grid.Bot.Utility
             return InvokeMethodToInvoke<T>(args, methodToInvoke, instance);
         }
 
-        private async Task InvokeMethodAsync(string method,
+        private async Task InvokeMethodAsync(
+            string method,
             string name,
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
             params object[] args)
             => await InvokeMethodAsync<object>(method, name, maxAttemptsToHitGridServer, hostName, isPoolable, args);
-        private async Task<T> InvokeMethodAsync<T>(string method,
+        private async Task<T> InvokeMethodAsync<T>(
+            string method,
             string name,
             int maxAttemptsToHitGridServer,
             string hostName,
@@ -527,7 +534,8 @@ namespace MFDLabs.Grid.Bot.Utility
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*true, new StackTrace(),*/ method, out var methodToInvoke);
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer) return await InvokeSoapUtilityAsync<T>(args, methodToInvoke);
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer) 
+                return await InvokeSoapUtilityAsync<T>(args, methodToInvoke);
 
             SystemUtility.OpenWebServerIfNotOpen();
 

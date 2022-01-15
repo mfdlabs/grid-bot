@@ -112,14 +112,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CrashHandler.cs" />
@@ -162,6 +155,10 @@
       <Project>{3edc3274-d4ed-4aa1-a347-00a9b4f9fc9d}</Project>
       <Name>MFDLabs.Analytics.Google</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj">
+      <Project>{8b33eacb-f248-491b-a63f-5dfc21954d63}</Project>
+      <Name>MFDLabs.Backtrace</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
       <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
       <Name>MFDLabs.Diagnostics</Name>
@@ -174,6 +171,10 @@
       <Project>{4254cfd2-14da-419d-a7fc-da835cdc513b}</Project>
       <Name>MFDLabs.Grid.ComputeCloud</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
+      <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
+      <Name>MFDLabs.Instrumentation</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj">
       <Project>{091c5862-cc55-434a-80eb-f3e030b15dfe}</Project>
       <Name>MFDLabs.Logging</Name>
@@ -185,10 +186,6 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj">
       <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
       <Name>MFDLabs.Text</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Dependencies\Backtrace\Backtrace.csproj">
-      <Project>{f9c3f667-d954-4563-9e46-30aac9fc07dd}</Project>
-      <Name>Backtrace</Name>
     </ProjectReference>
     <ProjectReference Include="..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj">
       <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>

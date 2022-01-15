@@ -12,20 +12,21 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     internal static class ReplyExtensions
     {
-        public static async Task<RestUserMessage> ReplyAsync(this SocketMessage message,
+        public static async Task<RestUserMessage> ReplyAsync(
+            this SocketMessage message,
             string text = null,
             bool isTts = false,
             Embed embed = null,
             RequestOptions options = null,
             MessageReference messageReference = null)
-            =>
-                await message.Channel.SendMessageAsync(
+            => await message.Channel.SendMessageAsync(
                     $"<@{message.Author.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}",
                     isTts,
                     embed,
                     options,
                     new AllowedMentions(AllowedMentionTypes.Users),
-                    messageReference);
+                    messageReference
+                );
     }
     
     public static class AdminUtility

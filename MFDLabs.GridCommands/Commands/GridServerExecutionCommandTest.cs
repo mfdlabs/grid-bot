@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Discord;
+﻿using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Commands;
-using MFDLabs.Grid.ComputeCloud;
-using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.Bot.Models;
+using MFDLabs.Grid.Bot.Tasks;
+using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -23,40 +20,16 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            using (message.Channel.EnterTypingState())
+            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.",
+                typeof(SocketTaskRequest).FullName,
+                typeof(ScriptExecutionQueueUserMetricsTask).FullName);
+
+            ScriptExecutionQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest()
             {
-                var job = new Job {id = "Test", expirationInSeconds = 20000};
-                var script = new ScriptExecution()
-                {
-                    name = "Test",
-                    script = new ExecuteScriptCommand(
-                        new ExecuteScriptSettings(
-                            "run",
-                            new Dictionary<string, object> {{"script", "return 1, 2, 3;"}}
-                        )
-                    ).ToJson()
-                };
-
-                var result = LuaUtility.ParseLuaValues(await GridServerArbiter.Singleton.OpenJobExAsync(job, script));
-
-
-                if (!result.IsNullOrEmpty())
-                {
-                    await message.ReplyAsync(
-                        "Executed script with return:",
-                        embed: new EmbedBuilder()
-                            .WithTitle("Return value")
-                            .WithDescription($"```\n{result}\n```")
-                            .WithAuthor(message.Author)
-                            .WithCurrentTimestamp()
-                            .WithColor(0x00, 0xff, 0x00)
-                            .Build()
-                    );
-                    return;
-                }
-
-                await message.ReplyAsync("Executed script with no return!");
-            }
+                ContentArray = new [] { "return 1, 2, 3" },
+                Message = message,
+                OriginalCommandName = originalCommand
+            });
         }
     }
 }

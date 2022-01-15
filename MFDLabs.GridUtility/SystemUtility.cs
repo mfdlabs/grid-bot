@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public static class SystemUtility
     {
-        private static readonly object GridLock = new object();
+        private static readonly object GridLock = new();
 
         private static bool _runningOpenJob;
 
@@ -126,9 +126,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
         // There will have to be a #if here for unix, because we cannot check if there's a window with a title
         // WIN32: This method is Win32 only
-        public static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _);
+        private static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _);
 
-        public static void KillAllProcessByName(string name)
+        private static void KillAllProcessByName(string name)
         {
             var psi = new ProcessStartInfo
             {
@@ -157,7 +157,7 @@ namespace MFDLabs.Grid.Bot.Utility
             proc.WaitForExit();
         }
 
-        public static void KillProcessByPid(int pid)
+        private static void KillProcessByPid(int pid)
         {
             var psi = new ProcessStartInfo
             {
@@ -210,12 +210,12 @@ namespace MFDLabs.Grid.Bot.Utility
             return true;
         }
 
-        public static bool KillAllProcessByNameSafe(string name)
+        private static void KillAllProcessByNameSafe(string name)
         {
             if (!ProcessHelper.GetProcessByName(name.ToLower().Replace(".exe", ""), out var pr))
             {
                 SystemLogger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
-                return false;
+                return;
             }
 
             if (!SystemGlobal.ContextIsAdministrator() 
@@ -226,13 +226,12 @@ namespace MFDLabs.Grid.Bot.Utility
                 )
             {
                 SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
-                return false;
+                return;
             }
 
             KillAllProcessByName(name);
 
             SystemLogger.Singleton.Info("Successfully closed process '{0}'.", name);
-            return true;
         }
 
         /// <summary>

@@ -51,7 +51,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static bool GetIsUserBanned(long id) => GetIsUserBannedAsync(id).GetAwaiter().GetResult();
 
-        public static async Task<bool> GetIsUserBannedAsync(long id)
+        private static async Task<bool> GetIsUserBannedAsync(long id)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static long? GetUserIdByUsername(string username) => GetUserIdByUsernameAsync(username).GetAwaiter().GetResult();
 
-        public static async Task<long?> GetUserIdByUsernameAsync(string username)
+        private static async Task<long?> GetUserIdByUsernameAsync(string username)
         {
             var request = new MultiGetByUsernameRequest
             {

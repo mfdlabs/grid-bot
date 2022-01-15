@@ -53,7 +53,7 @@ namespace MFDLabs.Grid.Bot.Utility
             if (value != null) return value;
             if (throwIfNoGridServer) 
                 throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.GetMachineId()}', " +
-                                               $"please contact the datacenter administrator to sort this out.");
+                                               "please contact the datacenter administrator to sort this out.");
             return default;
         }
 
@@ -65,7 +65,7 @@ namespace MFDLabs.Grid.Bot.Utility
             var prefix = GetGridServerPrefixByScriptType(scriptType, throwIfNoGridServer);
 
             scriptName = scriptName.Replace("..", "");
-            var fullPath = $"{prefix}{scriptName}.lua";
+            var fullPath = Path.Combine(prefix, $"{scriptName}.lua");
 
             if (!test) return fullPath;
             
@@ -78,30 +78,28 @@ namespace MFDLabs.Grid.Bot.Utility
         private static string GetGridServerPrefixByScriptType(ScriptType scriptType, bool throwIfNoGridServer = true)
         {
             var prefix = (string)GetGridServerPath(throwIfNoGridServer);
-            prefix += scriptType switch
+            var scriptPart = scriptType switch
             {
-                ScriptType.InternalScript => "internalscripts\\scripts\\",
-                ScriptType.InternalModule => "internalscripts\\modules\\",
-                ScriptType.ThumbnailScript => "internalscripts\\thumbnails\\",
-                ScriptType.ThumbnailModule => "internalscripts\\thumbnails\\modules\\",
-                ScriptType.LuaPackage => "ExtraContent\\LuaPackages\\",
-                ScriptType.SharedCoreScript => "ExtraContent\\scripts\\CoreScripts\\",
-                ScriptType.ClientCoreScript => "ExtraContent\\scripts\\CoreScripts\\CoreScripts\\",
-                ScriptType.CoreModule => "ExtraContent\\scripts\\CoreScripts\\Modules\\",
-                ScriptType.ServerCoreScript => "ExtraContent\\scripts\\CoreScripts\\ServerCoreScripts\\",
-                ScriptType.StarterCharacterScript => "ExtraContent\\scripts\\PlayerScripts\\StarterCharacterScripts\\",
-                ScriptType.StarterPlayerScript => "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts\\",
-                ScriptType.StarterPlayerScriptNewStructure =>
-                    "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScripts_NewStructure\\",
-                ScriptType.StarterPlayerScriptCommon =>
-                    "ExtraContent\\scripts\\PlayerScripts\\StarterPlayerScriptsCommon\\",
-                ScriptType.HiddenCommon => "ExtraContent\\hidden\\common\\",
-                ScriptType.Hidden => "Content\\hidden\\rcc\\",
-                ScriptType.HiddenModule => "Content\\hidden\\rcc\\modules\\",
+                ScriptType.InternalScript => Path.Combine("internalscripts", "scripts"),
+                ScriptType.InternalModule => Path.Combine("internalscripts", "modules"),
+                ScriptType.ThumbnailScript => Path.Combine("internalscripts", "thumbnails"),
+                ScriptType.ThumbnailModule => Path.Combine("internalscripts", "thumbnails", "modules"),
+                ScriptType.LuaPackage => Path.Combine("ExtraContent", "LuaPackges"),
+                ScriptType.SharedCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts"),
+                ScriptType.ClientCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts", "CoreScripts"),
+                ScriptType.CoreModule => Path.Combine("ExtraContent", "scripts", "CoreScripts", "Modules"),
+                ScriptType.ServerCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts", "ServerCoreScripts"),
+                ScriptType.StarterCharacterScript => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterCharacterScripts"),
+                ScriptType.StarterPlayerScript => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScripts"),
+                ScriptType.StarterPlayerScriptNewStructure => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScripts_NewStructure"),
+                ScriptType.StarterPlayerScriptCommon => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScriptsCommon"),
+                ScriptType.HiddenCommon => Path.Combine("ExtraContent", "hidden", "common"),
+                ScriptType.Hidden => Path.Combine("Content", "hidden", "rcc"),
+                ScriptType.HiddenModule => Path.Combine("Content", "hidden", "rcc", "modules"),
                 _ => throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, null)
             };
 
-            return prefix;
+            return Path.Combine(prefix, scriptPart);
         }
 
         private static IEnumerable<object> GetThumbnailArgs(string url, int x, int y)

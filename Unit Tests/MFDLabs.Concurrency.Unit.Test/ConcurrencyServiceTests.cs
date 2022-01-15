@@ -62,9 +62,11 @@ namespace MFDLabs.Concurrency.Unit.Test
         [TestMethod]
         public void BlockUntilCompletionTest()
         {
-            Handler task = (() => { });
+            void Task()
+            {
+            }
 
-            ConcurrencyService.Singleton.BlockUntilCompletion(Arbiter.FromHandler(task), TimeSpan.FromSeconds(1));
+            ConcurrencyService.Singleton.BlockUntilCompletion(Arbiter.FromHandler(Task), TimeSpan.FromSeconds(1));
         }
     }
 }
