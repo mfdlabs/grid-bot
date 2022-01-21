@@ -1,6 +1,6 @@
-﻿using MFDLabs.Diagnostics;
+﻿using System;
+using MFDLabs.Diagnostics;
 using MFDLabs.Drawing;
-using System;
 
 namespace MFDLabs.Grid.Screenshot.Relay
 {
