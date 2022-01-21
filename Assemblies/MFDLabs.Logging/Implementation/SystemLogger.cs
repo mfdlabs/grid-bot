@@ -123,6 +123,7 @@ namespace MFDLabs.Logging
 
             if (!Directory.Exists(FileBasePath)) return;
             Directory.Delete(FileBasePath, true);
+            Directory.CreateDirectory(FileBasePath);
         }
 
         [DebuggerStepThrough]
