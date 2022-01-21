@@ -1,330 +1,90 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A854E7F4-873B-413F-98CF-AB4D4D682D17}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <LangVersion>10</LangVersion>
-    <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
-    <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>false</Deterministic>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>
-    </DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>0</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>
-    </DocumentationFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>app.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseNoDeploy|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <WarningLevel>0</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugGridDeploy|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseGridDeploy|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
-    <Optimize>true</Optimize>
-    <WarningLevel>0</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugDeploy|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.ServiceModel" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="CrashHandler.cs" />
-    <None Include="Lua\LuaVM.formatted.lua" />
-    <None Include="Lua\LuaVM.lua" />
-    <None Include="RuntimeScripts\PointerMagic.csx" />
-    <Compile Include="Runner.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.release-vault.config" />
-    <None Include="App.debug-vault.config" />
-    <None Include="App.debug.config" />
-    <None Include="App.release.config" />
-    <None Include="App.config" />
-    <None Include="runservice.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="RunService.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="RuntimeScripts\Directory.csx" />
-    <None Include="RuntimeScripts\Maximize.csx" />
-    <None Include="RuntimeScripts\MaximizeGridServer.csx" />
-    <None Include="RuntimeScripts\Metrics.csx" />
-    <None Include="RuntimeScripts\Test.csx" />
-    <None Include="RuntimeScripts\who-is-xlxi.csx" />
-    <None Include="RuntimeScripts\uptime.csx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
-      <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
-      <Name>MFDLabs.Abstractions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj">
-      <Project>{3edc3274-d4ed-4aa1-a347-00a9b4f9fc9d}</Project>
-      <Name>MFDLabs.Analytics.Google</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj">
-      <Project>{8b33eacb-f248-491b-a63f-5dfc21954d63}</Project>
-      <Name>MFDLabs.Backtrace</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj">
-      <Project>{6bb5491d-4509-4c18-a2cf-332aae8e0f1d}</Project>
-      <Name>MFDLabs.Diagnostics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj">
-      <Project>{d3cde6e3-28aa-44c9-98bf-1bf5dba6c714}</Project>
-      <Name>MFDLabs.ErrorHandling</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj">
-      <Project>{4254cfd2-14da-419d-a7fc-da835cdc513b}</Project>
-      <Name>MFDLabs.Grid.ComputeCloud</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj">
-      <Project>{227f9d1c-e72b-4cc5-a889-01a1aa4ced35}</Project>
-      <Name>MFDLabs.Instrumentation</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj">
-      <Project>{091c5862-cc55-434a-80eb-f3e030b15dfe}</Project>
-      <Name>MFDLabs.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Networking\MFDLabs.Networking.csproj">
-      <Project>{66691ad6-1713-4996-951a-31a7c81e8f9e}</Project>
-      <Name>MFDLabs.Networking</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj">
-      <Project>{884c78da-c49f-46f2-8d95-3382c24d9791}</Project>
-      <Name>MFDLabs.Text</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj">
-      <Project>{022ff0a7-90f7-4dac-8913-2f02cbccce3e}</Project>
-      <Name>Discord.Net.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Dependencies\Discord.Net.Rest\Discord.Net.Rest.csproj">
-      <Project>{e772df88-34b3-4b39-b0a4-de61e1746d4c}</Project>
-      <Name>Discord.Net.Rest</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj">
-      <Project>{2245fde3-16a9-42d7-8c21-74b3a8951c6a}</Project>
-      <Name>Discord.Net.WebSocket</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj">
-      <Project>{53a58bd8-189b-40cd-82d5-7a8ab529a7b6}</Project>
-      <Name>MFDLabs.GridCommands</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj">
-      <Project>{dae78963-77f7-4169-8849-28ea33102074}</Project>
-      <Name>MFDLabs.GridDiagnostics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridEvents\MFDLabs.GridEvents.csproj">
-      <Project>{4db8670d-12e5-48dc-914e-06c1f0217498}</Project>
-      <Name>MFDLabs.GridEvents</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj">
-      <Project>{b33c4956-9937-48b4-b342-4574185f9968}</Project>
-      <Name>MFDLabs.GridExtensions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj">
-      <Project>{ee4347ee-a88e-4287-a857-6d79a472a108}</Project>
-      <Name>MFDLabs.GridGlobal</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridHooks\MFDLabs.GridHooks.csproj">
-      <Project>{17578d48-d50b-4c84-b11d-2621fae5adb0}</Project>
-      <Name>MFDLabs.GridHooks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj">
-      <Project>{79f4f7a6-362a-416c-b0e9-aea45bfd0d9d}</Project>
-      <Name>MFDLabs.GridUtility</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj">
-      <Project>{f50802cc-810a-4639-99a7-8b15bfc39b24}</Project>
-      <Name>MFDLabs.GridSettings</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="app.ico" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>SET AppSettingsConfiguration=$(ConfigurationName)
-SET IsDebug=F
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-rem Determine the current configuration
-IF "%25AppSettingsConfiguration%25"=="DebugGridDeploy" (
-    SET IsDebug=T
-    SET AppSettingsConfiguration=Debug-Vault
-)
-IF "%25AppSettingsConfiguration%25"=="DebugRunner" (
-    SET IsDebug=T
-    SET AppSettingsConfiguration=Debug-OnTheRun
-)
-IF "%25AppSettingsConfiguration%25"=="DebugActor" (
-    SET IsDebug=T
-    SET AppSettingsConfiguration=Debug-Root
-)
-IF "%25AppSettingsConfiguration%25"=="ReleaseGridDeploy" SET AppSettingsConfiguration=Release-Vault
-IF "%25AppSettingsConfiguration%25"=="ReleaseRunner" SET AppSettingsConfiguration=Release-OnTheRun
-IF "%25AppSettingsConfiguration%25"=="ReleaseActor" SET AppSettingsConfiguration=Release-Root
-
-rem Deploying locally with no actor or runner
-IF "%25AppSettingsConfiguration%25"=="DebugDeploy" (
-    SET AppSettingsConfiguration=Debug
-    SET IsDebug=T
-)
-)
-IF "%25AppSettingsConfiguration%25"=="ReleaseNoDeploy" SET AppSettingsConfiguration=Release
-
-ECHO Deploying with configuration "%25AppSettingsConfiguration%25"
-
-rem Copy the current configuration settings to the target
-COPY /Y "$(ProjectDir)App.%25AppSettingsConfiguration%25.config" "$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config"
-
-rem Delete the old runtime-scripts, in case there are any old files that are not in the new runtime-scripts
-IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ RMDIR $(ProjectDir)$(OutDir)RuntimeScripts\ /S/Q
-
-rem Copy the new runtime-scripts
-XCOPY $(ProjectDir)RuntimeScripts\ $(ProjectDir)$(OutDir)RuntimeScripts\ /E/H/C/I/F/Y
-
-rem Delete the old lua scripts, in case there are any old files that are not in the new lua scripts
-IF EXIST $(ProjectDir)$(OutDir)Lua\ RMDIR $(ProjectDir)$(OutDir)Lua\ /S/Q
-
-rem Copy the new lua scripts
-XCOPY $(ProjectDir)Lua\ $(ProjectDir)$(OutDir)Lua\ /E/H/C/I/F/Y
-
-
-rem Remove translation scripts
-RMDIR /S/Q "cs" "de" "es" "fr" "it" "ja" "ko" "pl" "pt-BR" "ru" "tr" "zh-Hans" "zh-Hant"
-
-rem Determine if we are deploying a component build
-SET IsDeployment=F
-IF "$(Configuration)"=="DebugDeploy" SET IsDeployment=T
-IF "$(Configuration)"=="Release" SET IsDeployment=T
-IF "$(Configuration)"=="ReleaseGridDeploy" SET IsDeployment=T
-IF "$(Configuration)"=="ReleaseRunner" SET IsDeployment=T
-IF "$(Configuration)"=="ReleaseActor" SET IsDeployment=T
-
-SET DeploymentConfiguration=Release
-IF "%25IsDebug%25"=="T" SET DeploymentConfiguration=Debug
-
-IF "%25IsDeployment%25"=="T" (
-    rem Determine if we are deploying a debug or release build, if release delete all pdb files
-    IF NOT "%25IsDebug%25" == "T" del /q "$(TargetDir)*.pdb"
-
-    rem Call on the deploy script
-    ECHO "Deploying."
-    powershell -ExecutionPolicy Unrestricted "$(SolutionDir)Deploy.ps1" -root $(SolutionDir) -config %25DeploymentConfiguration%25
-)
-</PostBuildEvent>
-  </PropertyGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+        <TargetFramework>net472</TargetFramework>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <Deterministic>False</Deterministic>
+        <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+        <LangVersion>9</LangVersion>
+        <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
+        <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
+		<Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy;ReleaseNoDeploy;DebugDeploy</Configurations>
+		<OutputType>Exe</OutputType>
+		<ApplicationIcon>app.ico</ApplicationIcon>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.targets'))" />
-  </Target>
-  <Import Project="..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.targets" Condition="Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.3.3.2\build\Microsoft.CodeAnalysis.Analyzers.targets')" />
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <WarningLevel>0</WarningLevel>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(Configuration)' == 'ReleaseNoDeploy' ">
+      <OutputPath>bin\Release\</OutputPath>
+      <Optimize>true</Optimize>
+      <DebugType>none</DebugType>
+      <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+      <OutputPath>bin\Release\</OutputPath>
+      <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+      <Optimize>true</Optimize>
+      <DebugType>none</DebugType>
+      <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(Configuration)' == 'DebugDeploy' ">
+      <OutputPath>bin\Debug\</OutputPath>
+      <DefineConstants>TRACE;DEBUG</DefineConstants>
+      <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+      <OutputPath>bin\Debug\</OutputPath>
+      <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+      <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+	
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+        <Reference Include="System.Configuration" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Deploy\**" />
+      <EmbeddedResource Remove="Deploy\**" />
+      <None Remove="Deploy\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="app.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+      <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+      <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
+      <ProjectReference Include="..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridEvents\MFDLabs.GridEvents.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridHooks\MFDLabs.GridHooks.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
+      <ProjectReference Include="..\Shared\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="SET AppSettingsConfiguration=$(ConfigurationName)&#xD;&#xA;SET IsDebug=F&#xD;&#xA;&#xD;&#xA;rem Determine the current configuration&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugGridDeploy&quot; (&#xD;&#xA;    SET IsDebug=T&#xD;&#xA;    SET AppSettingsConfiguration=Debug-Vault&#xD;&#xA;)&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugRunner&quot; (&#xD;&#xA;    SET IsDebug=T&#xD;&#xA;    SET AppSettingsConfiguration=Debug-OnTheRun&#xD;&#xA;)&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugActor&quot; (&#xD;&#xA;    SET IsDebug=T&#xD;&#xA;    SET AppSettingsConfiguration=Debug-Root&#xD;&#xA;)&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseGridDeploy&quot; SET AppSettingsConfiguration=Release-Vault&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseRunner&quot; SET AppSettingsConfiguration=Release-OnTheRun&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseActor&quot; SET AppSettingsConfiguration=Release-Root&#xD;&#xA;&#xD;&#xA;rem Deploying locally with no actor or runner&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugDeploy&quot; (&#xD;&#xA;    SET AppSettingsConfiguration=Debug&#xD;&#xA;    SET IsDebug=T&#xD;&#xA;)&#xD;&#xA;)&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseNoDeploy&quot; SET AppSettingsConfiguration=Release&#xD;&#xA;&#xD;&#xA;rem Copy the current configuration settings to the target&#xD;&#xA;COPY /Y &quot;$(ProjectDir)App.%25AppSettingsConfiguration%25.config&quot; &quot;$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config&quot;&#xD;&#xA;&#xD;&#xA;rem Delete the old runtime-scripts, in case there are any old files that are not in the new runtime-scripts&#xD;&#xA;IF EXIST $(ProjectDir)$(OutDir)RuntimeScripts\ RMDIR $(ProjectDir)$(OutDir)RuntimeScripts\ /S/Q&#xD;&#xA;&#xD;&#xA;rem Copy the new runtime-scripts&#xD;&#xA;XCOPY $(ProjectDir)RuntimeScripts\ $(ProjectDir)$(OutDir)RuntimeScripts\ /E/H/C/I/F/Y&#xD;&#xA;&#xD;&#xA;rem Delete the old lua scripts, in case there are any old files that are not in the new lua scripts&#xD;&#xA;IF EXIST $(ProjectDir)$(OutDir)Lua\ RMDIR $(ProjectDir)$(OutDir)Lua\ /S/Q&#xD;&#xA;&#xD;&#xA;rem Copy the new lua scripts&#xD;&#xA;XCOPY $(ProjectDir)Lua\ $(ProjectDir)$(OutDir)Lua\ /E/H/C/I/F/Y&#xD;&#xA;&#xD;&#xA;rem Remove translation scripts&#xD;&#xA;RMDIR /S/Q &quot;$(ProjectDir)$(OutDir)cs\&quot; &quot;$(ProjectDir)$(OutDir)de\&quot; &quot;$(ProjectDir)$(OutDir)es\&quot; &quot;$(ProjectDir)$(OutDir)fr\&quot; &quot;$(ProjectDir)$(OutDir)it\&quot; &quot;$(ProjectDir)$(OutDir)ja\&quot; &quot;$(ProjectDir)$(OutDir)ko\&quot; &quot;$(ProjectDir)$(OutDir)pl\&quot; &quot;$(ProjectDir)$(OutDir)pt-BR\&quot; &quot;$(ProjectDir)$(OutDir)ru\&quot; &quot;$(ProjectDir)$(OutDir)tr\&quot; &quot;$(ProjectDir)$(OutDir)zh-Hans\&quot; &quot;$(ProjectDir)$(OutDir)zh-Hant\&quot;&#xD;&#xA;&#xD;&#xA;rem Determine if we are deploying a component build&#xD;&#xA;SET IsDeployment=F&#xD;&#xA;IF &quot;$(Configuration)&quot;==&quot;DebugDeploy&quot; SET IsDeployment=T&#xD;&#xA;IF &quot;$(Configuration)&quot;==&quot;Release&quot; SET IsDeployment=T&#xD;&#xA;IF &quot;$(Configuration)&quot;==&quot;ReleaseGridDeploy&quot; SET IsDeployment=T&#xD;&#xA;IF &quot;$(Configuration)&quot;==&quot;ReleaseRunner&quot; SET IsDeployment=T&#xD;&#xA;IF &quot;$(Configuration)&quot;==&quot;ReleaseActor&quot; SET IsDeployment=T&#xD;&#xA;&#xD;&#xA;SET DeploymentConfiguration=Release&#xD;&#xA;IF &quot;%25IsDebug%25&quot;==&quot;T&quot; SET DeploymentConfiguration=Debug&#xD;&#xA;&#xD;&#xA;ECHO $(TargetFramework)&#xD;&#xA;&#xD;&#xA;IF &quot;%25IsDeployment%25&quot;==&quot;T&quot; (&#xD;&#xA;	ECHO Deploying with configuration &quot;%25AppSettingsConfiguration%25&quot;&#xD;&#xA;&#xD;&#xA;    rem Determine if we are deploying a debug or release build, if release delete all pdb files&#xD;&#xA;    IF NOT &quot;%25IsDebug%25&quot; == &quot;T&quot; del /q &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;&#xD;&#xA;    rem Call on the deploy script&#xD;&#xA;    ECHO &quot;Deploying.&quot;&#xD;&#xA;    powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Deploy.ps1&quot; -root $(SolutionDir) -config %25DeploymentConfiguration%25 -targetFramework $(TargetFramework)&#xD;&#xA;)&#xD;&#xA;" />
+    </Target>
+
 </Project>

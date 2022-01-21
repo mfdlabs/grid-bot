@@ -8,7 +8,6 @@ using Discord;
 using Discord.WebSocket;
 using MFDLabs.Analytics.Google;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Events;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
@@ -32,7 +31,7 @@ namespace MFDLabs.Grid.Bot
         private const string PrimaryTaskError = "An exception occurred when trying to execute the primary task, please check back trace!";
         private const string NoBotToken = "The setting \"BotToken\" was null when it is required.";
         private const string BadActorMessage = "THIS SOFTWARE IS UNLICENSED, IF YOU DO NOT HAVE EXPLICIT WRITTEN PERMISSION " +
-                                               "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY";
+                                               "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY!";
 
         public static void OnGlobalException(Exception ex)
         {

@@ -6,72 +6,73 @@
         {
             try
             {
-                return System.AppDomain.CurrentDomain.Load(name) != null;
+                return global::System.AppDomain.CurrentDomain.Load(name) != null;
             }
-            catch (System.IO.FileLoadException) { return true; }
-            catch (System.Exception) { return false; }
+            // We assume this means that it's already loaded into another evidence
+            catch (global::System.IO.FileLoadException) { return true; }
+            catch (global::System.Exception) { return false; }
         }
 
         private static string GetBadConfigurationError()
-            => $"Could not locate the application configuration at the files '{System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}' " +
-            $"or '{System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "app.config")}' with your " +
+            => $"Could not locate the application configuration at the files '{(global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile)}' " +
+            $"or '{(global::System.IO.Path.Combine(global::System.IO.Directory.GetCurrentDirectory(), "app.config"))}' with your " +
             "distribution, please install the app correctly and try again.";
 
         public static void Main(string[] args)
         {
-            if (!System.IO.File.Exists(
-                System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
+            if (!global::System.IO.File.Exists(
+                global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
             ))
-                if (System.IO.File.Exists(
-                    System.IO.Path.Combine(
-                        System.IO.Directory.GetCurrentDirectory(),
+                if (global::System.IO.File.Exists(
+                    global::System.IO.Path.Combine(
+                        global::System.IO.Directory.GetCurrentDirectory(),
                         "app.config"
                     )
                 ))
-                    System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = System.IO.Path.Combine(
-                        System.IO.Directory.GetCurrentDirectory(),
+                    global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = global::System.IO.Path.Combine(
+                        global::System.IO.Directory.GetCurrentDirectory(),
                         "app.config"
                     );
                 else
                 {
-                    System.Console.ForegroundColor = System.ConsoleColor.Red;
-                    System.Console.WriteLine("[URGENT]: {0}", GetBadConfigurationError());
-                    System.Console.ResetColor();
+                    global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
+                    global::System.Console.WriteLine("[URGENT]: {0}", GetBadConfigurationError());
+                    global::System.Console.ResetColor();
                     return;
                 }
 
             System.AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
-                if (e.ExceptionObject is System.IO.FileNotFoundException or System.TypeLoadException)
+                if (e.ExceptionObject is global::System.IO.FileNotFoundException or global::System.TypeLoadException)
                 {
-                    System.Console.ForegroundColor = System.ConsoleColor.Yellow;
-                    System.Console.WriteLine(
+                    global::System.Console.ForegroundColor = global::System.ConsoleColor.Yellow;
+                    global::System.Console.WriteLine(
                         "There was an error loading a type or dependency, please review the following error: {0}",
-                        (e.ExceptionObject as System.Exception)?.Message
+                        (e.ExceptionObject as global::System.Exception)?.Message
                     );
-                    System.Console.ResetColor();
-                    System.Environment.Exit(1);
+                    global::System.Console.ResetColor();
+                    global::System.Environment.Exit(1);
                     return;
                 }
 
-                System.Console.ForegroundColor = System.ConsoleColor.Red;
+                global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
 #if DEBUG
-                System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
+                global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
 #else
-                System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", (e.ExceptionObject as System.Exception).Message);
+                global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", (e.ExceptionObject as global::System.Exception).Message);
 #endif
-                System.Console.ResetColor();
+                global::System.Console.ResetColor();
 
-                if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings"))
-                    MFDLabs.Grid.Bot.CrashHandler.Upload(e.ExceptionObject as System.Exception);
+                if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))
+                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(e.ExceptionObject as global::System.Exception);
 
-                MFDLabs.Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as System.Exception);
+                global::MFDLabs.Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
 
-                if (e.ExceptionObject is System.InvalidOperationException)
-                    System.Environment.Exit(1);
+                if (e.ExceptionObject is global::System.InvalidOperationException)
+                    global::System.Environment.Exit(1);
             };
 
-            MFDLabs.Grid.Bot.Runner.Invoke(args);
+            global::MFDLabs.Grid.Bot.Runner.Invoke(args);
         }
     }
 }

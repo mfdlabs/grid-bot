@@ -368,3 +368,4 @@ Deploy/
 App.*.config
 WtfIsThis.cs
 .idea/
+.AssemblyAttributes

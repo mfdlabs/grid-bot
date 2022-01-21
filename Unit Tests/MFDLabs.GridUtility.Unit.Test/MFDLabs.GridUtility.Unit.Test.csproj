@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
+      <ProjectReference Include="..\..\Shared\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
     </ItemGroup>
 
 </Project>

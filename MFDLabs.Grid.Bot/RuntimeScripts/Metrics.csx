@@ -1,1 +1,0 @@
-﻿MFDLabs.Grid.Bot.Registries.CommandRegistry.LogMetricsReport();

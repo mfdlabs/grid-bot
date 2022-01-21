@@ -1,4 +1,4 @@
-param ([string]$root, [string]$config, [bool]$isService=$false)
+param ([string]$root, [string]$config, [bool]$isService=$false, [string]$targetFramework="net472")
 
 $7zipPath = "C:\Program Files\7-Zip\7z.exe"
 
@@ -68,32 +68,33 @@ try {
         [System.IO.Directory]::CreateDirectory($deploymentYear)
     }
 
-    IF (![System.IO.Directory]::Exists("$($location)$($deploymentKind)/bin/$($config)/")) {
+    IF (![System.IO.Directory]::Exists("$($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/")) {
         & Write-Host "The output folder to read the deployment was not found, aborting." -foregroundcolor yellow
         Exit
     }
 
-    $file = "$($deploymentYear)$($date.Year).$(Get-Parsed-Number -num $date.Month).$(Get-Parsed-Number -num $date.Day)-$(Get-Parsed-Number -num $date.Hour).$(Get-Parsed-Number -num $date.Minute).$(Get-Parsed-Number -num $date.Second)_$($branch)_$($hash.ToLower().Substring(0, 9))-$($config).zip"
+    $file = "$($deploymentYear)$($date.Year).$(Get-Parsed-Number -num $date.Month).$(Get-Parsed-Number -num $date.Day)-$(Get-Parsed-Number -num $date.Hour).$(Get-Parsed-Number -num $date.Minute).$(Get-Parsed-Number -num $date.Second)_$($branch)_$($hash.ToLower().Substring(0, 9))-$($config)-$($targetFramework).zip"
 
-    & Write-Host "Deploying $($location)$($deploymentKind)/bin/$($config)/* to $($file)" -ForegroundColor Green
+    & Write-Host "Deploying $($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/* to $($file)" -ForegroundColor Green
 
     $lastdeploy = Get-ChildItem "$($deploymentYear)" | Sort-Object LastWriteTime | Select-Object -Last 1
 
-    & 7zip-Archive a -bb3 -y -tzip $file "$($location)$($deploymentKind)/bin/$($config)/*"
+    & 7zip-Archive a -bb3 -y -tzip $file "$($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/*"
     #& Compress-Archive -Path "$($location)$($deploymentKind)/bin/$($config)/*" -CompressionLevel Fastest -DestinationPath $file -Verbose -Force
 
     $newFile = $file.Replace(".zip", ".mfdlabs-archive")
 
-    IF ($null -ne $lastdeploy) {
-        $md5 = (Get-FileHash -Path $file).Hash
-        $oldMd5 = (Get-FileHash -Path $lastdeploy.FullName).Hash
-
-        if ($oldMd5 -eq $md5) {
-            & Remove-Item -Path $file
-            & Write-Host "Found duplicate deployment, ignoring. Please refer to the deployment $($lastdeploy.Fullname)."-foregroundcolor yellow
-            Exit
-        }
-    }
+    # This has now become obsolete
+    #IF ($null -ne $lastdeploy) {
+    #    $md5 = (Get-FileHash -Path $file).Hash
+    #    $oldMd5 = (Get-FileHash -Path $lastdeploy.FullName).Hash
+    #
+    #    if ($oldMd5 -eq $md5) {
+    #        & Remove-Item -Path $file
+    #        & Write-Host "Found duplicate deployment, ignoring. Please refer to the deployment $($lastdeploy.Fullname)."-foregroundcolor yellow
+    #        Exit
+    #    }
+    #}
 
 
     & Rename-Item -Path $file -NewName $newFile
