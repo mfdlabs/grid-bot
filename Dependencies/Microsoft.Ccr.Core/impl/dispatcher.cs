@@ -79,7 +79,11 @@ namespace Microsoft.Ccr.Core
             {
                 var currentCausalities = GetCurrentThreadCausalities();
                 return CausalityThreadContext.IsEmpty(currentCausalities)
+#if NET40 || NET35
+                    ? new Causality[0]
+#else
                     ? Array.Empty<Causality>()
+#endif
                     : currentCausalities.Causalities;
             }
         }
@@ -292,7 +296,7 @@ namespace Microsoft.Ccr.Core
         {
             var taskExecutionWorker = new TaskExecutionWorker(this);
             var thread = new Thread(taskExecutionWorker.ExecutionLoop, maxThreadStackSize);
-#if !NET461
+#if !NET461 && !NET40 && !NET35
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 thread.SetApartmentState(apartmentState);
 #elif NETFRAMEWORK // Weird hack for a #if statement here, because net461 hates RuntimeInformation

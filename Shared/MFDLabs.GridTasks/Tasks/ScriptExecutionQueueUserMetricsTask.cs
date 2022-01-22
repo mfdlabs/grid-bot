@@ -107,7 +107,7 @@ namespace MFDLabs.Grid.Bot
 #if DEBUG
                     SystemLogger.Singleton.Error(ex);
 #else
-                    SystemLogger.Singleton.Warning("An error occurred when trying to execute render task: {0}", ex.Message);
+                    SystemLogger.Singleton.Warning("An error occurred when trying to execute script execution task: {0}", ex.Message);
 #endif
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
                     {
@@ -331,7 +331,7 @@ namespace MFDLabs.Grid.Bot
                     finally
                     {
                         sw.Stop();
-                        SystemLogger.Singleton.Debug("Took {0}s to execute render task.",
+                        SystemLogger.Singleton.Debug("Took {0}s to execute script execution task.",
                             sw.Elapsed.TotalSeconds.ToString("f7"));
                     }
                 }

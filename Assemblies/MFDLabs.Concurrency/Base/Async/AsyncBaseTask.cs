@@ -64,7 +64,7 @@ namespace MFDLabs.Concurrency.Base.Async
             
             ConcurrencyService.Singleton.Activate(
                 Arbiter.Receive(
-                    true,
+                    false,
                     Port,
                     // ReSharper disable once AsyncVoidLambda
                     async (item) =>

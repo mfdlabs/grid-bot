@@ -60,10 +60,12 @@ namespace MFDLabs.Discord.Configuration
             _client.WriteSetting(message, groupName, settingName, value);
         }
 
-        public static T GetSetting<T>(this SocketMessage message,
+        public static T GetSetting<T>(
+            this SocketMessage message,
             string groupName,
             string settingName,
-            bool requireAuthorization = false)
+            bool requireAuthorization = false
+        )
         {
             CheckUnitialized();
 

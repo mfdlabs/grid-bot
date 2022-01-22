@@ -65,7 +65,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
             
             ConcurrencyService.Singleton.Activate(
                 Arbiter.Receive(
-                    true,
+                    false,
                     Port,
                     (item) =>
                     {

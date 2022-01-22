@@ -4,10 +4,10 @@ using MFDLabs.Configuration.Providers;
 #endif
 
 #if WE_ON_THE_GRID
-namespace MFDLabs.Logging.Properties
+namespace MFDLabs.Concurrency.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
-    internal sealed partial class Settings
+    internal sealed partial class ConcurrencySettings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
@@ -17,10 +17,10 @@ namespace MFDLabs.Logging.Properties
     }
 }
 #elif WE_ON_THE_RUN
-namespace MFDLabs.Logging.Properties
+namespace MFDLabs.Concurrency.Properties
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
-    internal sealed partial class Settings
+    internal sealed partial class ConcurrencySettings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
@@ -30,10 +30,10 @@ namespace MFDLabs.Logging.Properties
     }
 }
 #elif WE_ARE_AN_ACTOR
-namespace MFDLabs.Logging.Properties
+namespace MFDLabs.Concurrency.Properties
 {
     [SettingsProvider(typeof(DataBaseProvider))]
-    internal sealed partial class Settings
+    internal sealed partial class ConcurrencySettings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {

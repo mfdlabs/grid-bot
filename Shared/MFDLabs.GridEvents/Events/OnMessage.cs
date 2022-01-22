@@ -5,6 +5,7 @@ using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
@@ -34,6 +35,8 @@ namespace MFDLabs.Grid.Bot.Events
             {
                 if (!userIsAdmin && !userIsPrivilaged)
                 {
+                    SystemLogger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
+
                     var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
                     if (failureMessage != null) await message.ReplyAsync(failureMessage);
@@ -44,6 +47,7 @@ namespace MFDLabs.Grid.Bot.Events
 
             if (messageContent.ToLower().Contains("@everyone") || messageContent.ToLower().Contains("@here") && !userIsAdmin)
             {
+                await message.Author.FireEventAsync("Fatality", "They tried to ping @everyone or @here");
                 await message.ReplyAsync("You are unable to use the following mentions in your command.");
                 return;
             }

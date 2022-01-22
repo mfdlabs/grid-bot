@@ -41,6 +41,7 @@
   <ItemGroup>
 	<ProjectReference Include="..\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj" />
 	<ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
+	<ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
 	<ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
 	<ProjectReference Include="..\MFDLabs.Threading\MFDLabs.Threading.csproj" />
   </ItemGroup>

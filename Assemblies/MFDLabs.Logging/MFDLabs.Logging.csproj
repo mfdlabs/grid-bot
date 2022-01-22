@@ -1,66 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <Deterministic>False</Deterministic>
-        <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-        <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
-        <LangVersion>9</LangVersion>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
+    <LangVersion>9</LangVersion>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <WarningLevel>0</WarningLevel>
-        <DebugType>none</DebugType>
-        <DebugSymbols>false</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
-        <Optimize>true</Optimize>
-        <DebugType>none</DebugType>
-        <WarningLevel>0</WarningLevel>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
-        <DebugSymbols>true</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
-        <ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
-        <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-        <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
-        <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj" />
-        <ProjectReference Include="..\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
-        <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
-        <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
+    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+    <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
+    <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj" />
+    <ProjectReference Include="..\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+    <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
+    <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
+  </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-        <Reference Include="System.Configuration" />
-    </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <Compile Update="Properties\Settings.Designer.cs">
-            <DesignTimeSharedInput>True</DesignTimeSharedInput>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Settings.settings</DependentUpon>
-        </Compile>
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Update="Properties\Settings.settings">
-            <Generator>SettingsSingleFileGenerator</Generator>
-            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-        </None>
-    </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 
 </Project>

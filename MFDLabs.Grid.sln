@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Bot", "MFDLabs.Grid.Bot\MFDLabs.Grid.Bot.csproj", "{A854E7F4-873B-413F-98CF-AB4D4D682D17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Bot", "MFDLabs.Grid.Bot\MFDLabs.Grid.Bot.csproj", "{A854E7F4-873B-413F-98CF-AB4D4D682D17}"
 	ProjectSection(ProjectDependencies) = postProject
 		{97A80733-86E9-4CCA-92B5-443193EEC53B} = {97A80733-86E9-4CCA-92B5-443193EEC53B}
 		{417DC5CA-7C4C-458E-8733-57D851453427} = {417DC5CA-7C4C-458E-8733-57D851453427}
@@ -23,11 +23,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Reflection", "Assem
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.ComputeCloud", "Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj", "{4254CFD2-14DA-419D-A7FC-DA835CDC513B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Deployer", "Extensions\MFDLabs.Grid.Deployer\MFDLabs.Grid.Deployer.csproj", "{97A80733-86E9-4CCA-92B5-443193EEC53B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Deployer", "Extensions\MFDLabs.Grid.Deployer\MFDLabs.Grid.Deployer.csproj", "{97A80733-86E9-4CCA-92B5-443193EEC53B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReferenceExtensions", "ReferenceExtensions", "{BCC24EDF-E100-430F-961C-9D87DCD3F1DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Grid.Screenshot.Relay", "Extensions\MFDLabs.Grid.Screenshot.Relay\MFDLabs.Grid.Screenshot.Relay.csproj", "{417DC5CA-7C4C-458E-8733-57D851453427}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Screenshot.Relay", "Extensions\MFDLabs.Grid.Screenshot.Relay\MFDLabs.Grid.Screenshot.Relay.csproj", "{417DC5CA-7C4C-458E-8733-57D851453427}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Commands", "Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj", "{8441F32B-F58E-42B4-BE35-4181BF5C0C68}"
 EndProject
@@ -291,12 +291,12 @@ Global
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
-		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
-		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugGridDeploy|Any CPU.ActiveCfg = DebugGridDeploy|Any CPU
+		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.DebugGridDeploy|Any CPU.Build.0 = DebugGridDeploy|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
-		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
+		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseGridDeploy|Any CPU.ActiveCfg = ReleaseGridDeploy|Any CPU
+		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseGridDeploy|Any CPU.Build.0 = ReleaseGridDeploy|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseNoDeploy|Any CPU.ActiveCfg = Release|Any CPU
 		{FB3389DD-E0BE-430C-8D1B-20544405AD89}.ReleaseNoDeploy|Any CPU.Build.0 = Release|Any CPU
 		{D3CDE6E3-28AA-44C9-98BF-1BF5DBA6C714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -543,12 +543,12 @@ Global
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
-		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugGridDeploy|Any CPU.ActiveCfg = DebugGridDeploy|Any CPU
-		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugGridDeploy|Any CPU.Build.0 = DebugGridDeploy|Any CPU
+		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{091C5862-CC55-434A-80EB-F3E030B15DFE}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseGridDeploy|Any CPU.ActiveCfg = ReleaseGridDeploy|Any CPU
-		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseGridDeploy|Any CPU.Build.0 = ReleaseGridDeploy|Any CPU
+		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseNoDeploy|Any CPU.ActiveCfg = Release|Any CPU
 		{091C5862-CC55-434A-80EB-F3E030B15DFE}.ReleaseNoDeploy|Any CPU.Build.0 = Release|Any CPU
 		{884C78DA-C49F-46F2-8D95-3382C24D9791}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

@@ -5,7 +5,6 @@ using System.Threading;
 using MFDLabs.Logging;
 using Microsoft.Ccr.Core;
 
-// ReSharper disable once CheckNamespace
 namespace MFDLabs.Concurrency
 {
     /// <summary>
@@ -36,8 +35,7 @@ namespace MFDLabs.Concurrency
 
         private void dispatcher_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            SystemLogger.Singleton.Error(new ApplicationException($"{_dispatcher.Name} had an unhandled exception",
-                e.ExceptionObject as Exception));
+            SystemLogger.Singleton.Error(new ApplicationException($"{_dispatcher.Name} had an unhandled exception", e.ExceptionObject as Exception));
         }
 
         private static void Monitor()

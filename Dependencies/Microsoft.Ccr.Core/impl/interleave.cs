@@ -67,7 +67,17 @@ namespace Microsoft.Ccr.Core
             _concurrentBranches = new List<ReceiverTask>(concurrent.Branches);
         }
         public Interleave(ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent) 
-            : this(new TeardownReceiverGroup(Array.Empty<ReceiverTask>()), mutex, concurrent)
+            : this(
+                new TeardownReceiverGroup(
+#if NET40 || NET35
+                    new ReceiverTask[0]
+#else
+                    Array.Empty<ReceiverTask>()
+#endif
+                ), 
+                mutex, 
+                concurrent
+            )
         {}
 
         public ITask PartialClone() => throw new NotSupportedException();

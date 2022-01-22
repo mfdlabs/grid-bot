@@ -14,7 +14,7 @@ using MFDLabs.Logging;
 
 namespace MFDLabs.Discord.Configuration
 {
-    internal static class KeyValueSecretsEngineV2Extensions
+    internal static class IKeyValueSecretsEngineV2Extensions
     {
         public static bool SecretExists<T>(this IKeyValueSecretsEngineV2 kv, string path,  out T value, string mountPoint = null)
         {
@@ -51,8 +51,7 @@ namespace MFDLabs.Discord.Configuration
             => InitializeFields(address, new AppRoleAuthMethodInfo(roleId, secretId));
 
         public VaultConfigurationClient(string address, (string, string) ldapUserNamePassword)
-            => InitializeFields(address,
-                new LDAPAuthMethodInfo(ldapUserNamePassword.Item1, ldapUserNamePassword.Item2));
+            => InitializeFields(address, new LDAPAuthMethodInfo(ldapUserNamePassword.Item1, ldapUserNamePassword.Item2));
         
         private void InitializeFields(string address, IAuthMethodInfo authMethod)
         {
@@ -65,8 +64,7 @@ namespace MFDLabs.Discord.Configuration
         }
 
         // This is only here in case we modify it directly on Vault
-        private void RefreshCache(object s)
-            => _cachedSettings.Clear();
+        private void RefreshCache(object s)  => _cachedSettings.Clear();
         
         private void RefreshToken(object s)
         {
@@ -125,9 +123,9 @@ namespace MFDLabs.Discord.Configuration
             var allowedWriters = data[AllowedWriters];
 
             if (!allowedReaders.Contains(ownerId.ToString()))
-                allowedReaders = $"{allowedReaders},{ownerId.ToString()}";
+                allowedReaders = $"{allowedReaders},{ownerId}";
             if (!allowedWriters.Contains(ownerId.ToString()))
-                allowedWriters = $"{allowedWriters},{ownerId.ToString()}";
+                allowedWriters = $"{allowedWriters},{ownerId}";
 
 
             data.Remove(AllowedWriters);

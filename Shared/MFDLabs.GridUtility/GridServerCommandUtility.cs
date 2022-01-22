@@ -165,9 +165,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (first != null)
                 {
                     //setting when for how much is truncated ;-;
-                    SystemLogger.Singleton.Warning("Returning image contents of '{0}...[Truncated]'.",
-                        first.value.Substring(0,
-                            25));
+                    SystemLogger.Singleton.Warning("Returning image contents of '{0}...[Truncated]'.", first.value.Substring(0, 150));
 
                     return (new MemoryStream(Convert.FromBase64String(first.value)), GetFileName(userId, placeId, settings));
                 }
