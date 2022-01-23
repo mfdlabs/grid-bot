@@ -23,6 +23,7 @@
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
+      <ProjectReference Include="..\..\Assemblies\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj" />

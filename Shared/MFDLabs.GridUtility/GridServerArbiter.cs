@@ -22,6 +22,7 @@ using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Threading;
 
 #if DEBUG
 using MFDLabs.ErrorHandling.Extensions;
@@ -207,6 +208,8 @@ namespace MFDLabs.Grid.Bot.Utility
         private const int GridServerStartPort = 47999;
         private readonly List<GridServerInstance> _instances = new();
         private readonly List<int> _allocatedPorts = new();
+        private Atomic _lastAlloctedPort = new();
+        private Atomic _lastRemovedPort = new();
         private readonly GridServerArbiterPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
 
         #endregion |Private Members|
@@ -326,6 +329,7 @@ namespace MFDLabs.Grid.Bot.Utility
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
             currentAllocatedPort++;
+            _lastAlloctedPort = currentAllocatedPort;
 
             _allocatedPorts.Add(currentAllocatedPort);
 
@@ -360,6 +364,7 @@ namespace MFDLabs.Grid.Bot.Utility
             var currentAllocatedPort = _allocatedPorts.LastOrDefault();
             if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
             currentAllocatedPort++;
+            _lastAlloctedPort = currentAllocatedPort;
 
             _allocatedPorts.Add(currentAllocatedPort);
 
@@ -535,9 +540,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
             
-#if DEBUG
             SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
-#endif
             
             return InvokeMethodToInvoke<T>(args, methodToInvoke, instance);
         }
@@ -568,9 +571,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
             
-#if DEBUG
             SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
-#endif
             
             return await InvokeMethodToInvokeAsync<T>(args, methodToInvoke, instance);
         }
