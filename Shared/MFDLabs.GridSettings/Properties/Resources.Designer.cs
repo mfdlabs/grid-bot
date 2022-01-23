@@ -88,37 +88,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to local a=...local b=a[&apos;isAdmin&apos;]if not b then warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)local setfenv=setfenv;local getfenv=getfenv;local setmetatable=setmetatable;local getmetatable=getmetatable;local type=type;local select=select;local tostring=tostring;local newproxy=newproxy;local next=next;local c={}c.__metatable=&quot;This debug metatable is locked.&quot;local d=nil;function c:__index(e)e=e:gsub(&quot;[^%w%s_]+&quot;,&quot;&quot;)if e:lower()==&quot;getservice&quot;then return function(...)local f={...}local g=game: [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string LuaVM {
-            get {
-                return ResourceManager.GetString("LuaVM", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to --[[
-        ///File Name: SafeLuaMode.lua
-        ///Written By: Nikita Petko
-        ///Description: Disables specific things in the datamodel, by virualizing the fenv
-        ///Modifications:
-        ///	21/11/2021 01:16 =&gt; Removed the game to script check because it was returning nil (we aren&apos;t running under a script so it&apos;s nil)
-        ///--]] 
-        ///local args = ...
-        ///local isAdmin = args[&apos;isAdmin&apos;] -- might be able to be hacked, but we&apos;ll see
-        ///
-        ///if (not isAdmin) then
-        ///    warn(&quot;We are in a VM state, blocking specific methods is expected.&quot;)
-        ///
-        ///    local setfenv =  [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string LuaVM_formatted {
-            get {
-                return ResourceManager.GetString("LuaVM_formatted", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to [URGENT]: {0}.
         /// </summary>
         public static string Program_Main_BadConfiguration {

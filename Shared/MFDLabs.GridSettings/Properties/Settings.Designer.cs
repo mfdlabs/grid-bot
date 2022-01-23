@@ -34,15 +34,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PersistLocalLogs {
-            get {
-                return ((bool)(this["PersistLocalLogs"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Prefix {
             get {
@@ -906,10 +897,19 @@ namespace MFDLabs.Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:8200")]
         public string DiscordConfigurationVaultAddress {
             get {
                 return ((string)(this["DiscordConfigurationVaultAddress"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BlacklistedUsernames {
+            get {
+                return ((string)(this["BlacklistedUsernames"]));
             }
         }
     }
