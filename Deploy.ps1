@@ -5,7 +5,6 @@ param (
     [string]$targetFramework = "net472",
     [bool]$isGitIntegrated = $true,
     [bool]$replaceExtensions = $true,
-    [bool]$logToFile = $true,
     [bool]$checkForExistingSourceArchive = $true,
     [bool]$checkForExistingConfigArchive = $true
 )
@@ -191,8 +190,8 @@ try {
     $deploymentYear = "$($deploymentFolder)$($date.Year)\"
 	
 	$componentDir = IF ([string]::IsNullOrEmpty($deploymentKind)) {"$($location)\bin\"} ELSE {"$($location)$($deploymentKind)\bin\"}
-	$componentDir = IF ([string]::IsNullOrEmpty($config)) {"$($componentDir)\"} ELSE {"$($componentDir)$($config)\"}
-	$componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) {"$($componentDir)\"} ELSE {"$($componentDir)$($config)\$($targetFramework)\"}
+	$componentDir = IF ([string]::IsNullOrEmpty($config)) {$componentDir} ELSE {"$($componentDir)$($config)\"}
+	$componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) {$componentDir} ELSE {"$($componentDir)$($targetFramework)\"}
 
     IF (![System.IO.Directory]::Exists($deploymentFolder)) {
         & Write-Host "The deployment folder at $($deploymentFolder) does not exist, creating..." -ForegroundColor Yellow
@@ -386,20 +385,6 @@ finally {
             if ([System.IO.File]::Exists($configArchive)) {
                 & Write-Host "Deleting $($configArchive)" -ForegroundColor Green
                 [System.IO.File]::Delete($configArchive)
-            }
-        }
-
-        if ($null -ne $newSourceArchive) {
-            if ([System.IO.File]::Exists($newSourceArchive)) {
-                & Write-Host "Deleting $($newSourceArchive)" -ForegroundColor Green
-                [System.IO.File]::Delete($newSourceArchive)
-            }
-        }
-
-        if ($null -ne $newConfigArchive) {
-            if ([System.IO.File]::Exists($newConfigArchive)) {
-                & Write-Host "Deleting $($newConfigArchive)" -ForegroundColor Green
-                [System.IO.File]::Delete($newConfigArchive)
             }
         }
     }
