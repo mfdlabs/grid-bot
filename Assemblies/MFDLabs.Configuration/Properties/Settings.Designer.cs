@@ -34,10 +34,37 @@ namespace MFDLabs.Configuration.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public int ConsulKVConfigurationFetcherBackoffBaseMilliseconds {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ConsulServiceDiscoveryEnabled {
             get {
-                return ((int)(this["ConsulKVConfigurationFetcherBackoffBaseMilliseconds"]));
+                return ((bool)(this["ConsulServiceDiscoveryEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ConsulServiceDiscoveryUrl {
+            get {
+                return ((string)(this["ConsulServiceDiscoveryUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ConsulServiceDiscoveryAclToken {
+            get {
+                return ((string)(this["ConsulServiceDiscoveryAclToken"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("vault")]
+        public string ConsulServiceDiscoveryVaultServiceName {
+            get {
+                return ((string)(this["ConsulServiceDiscoveryVaultServiceName"]));
             }
         }
     }

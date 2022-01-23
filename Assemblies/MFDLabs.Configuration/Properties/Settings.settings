@@ -5,8 +5,17 @@
     <Setting Name="VaultConfigurationFetcherBackoffBaseMilliseconds" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">100</Value>
     </Setting>
-    <Setting Name="ConsulKVConfigurationFetcherBackoffBaseMilliseconds" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">100</Value>
+    <Setting Name="ConsulServiceDiscoveryEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ConsulServiceDiscoveryUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ConsulServiceDiscoveryAclToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ConsulServiceDiscoveryVaultServiceName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">vault</Value>
     </Setting>
   </Settings>
 </SettingsFile>

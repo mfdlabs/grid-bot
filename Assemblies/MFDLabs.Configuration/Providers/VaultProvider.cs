@@ -25,7 +25,22 @@ namespace MFDLabs.Configuration.Providers
             {
                 var configuration = GetGroupConfigurationElement();
                 var address = configuration.Address;
-                ConfigurationClient = new VaultConfigurationClient(address, configuration.RoleId, configuration.SecretId);
+
+                if (address == null)
+                {
+                    if (!global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryEnabled)
+                        throw new ConfigurationErrorsException("Consul Service discovery is not enabled, and the vault configuration address was null.");
+
+                    address = ConsulServiceDiscovery.GetFullyQualifiedServiceURL(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName);
+
+                    if (address == null)
+                        throw new ApplicationException($"Consul Service discovery address lookup for service '{(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName)}' failed: The Service did not exist.");
+                }
+
+                if (configuration.Credential.IsNullOrEmpty())
+                    throw new ConfigurationErrorsException("The configuration credential was null or empty when that was unexpected!");
+
+                ConfigurationClient = GetClient(address, configuration.AuthenticationType, configuration.Credential);
                 ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Vault Client point to address '{0}'.", address);
                 var updateInterval = configuration.UpdateInterval;
                 Timer = new SelfDisposingTimer(RefreshRegisteredProviders, updateInterval, updateInterval);
@@ -34,6 +49,37 @@ namespace MFDLabs.Configuration.Providers
                 return;
             }
             ConfigurationLogging.Warning("No config file found with mfdlabsVaultConfiguration.");
+        }
+
+        private static VaultConfigurationClient GetClient(string address, VaultAuthenticationType authenticationType, string vaultCredential)
+        {
+            switch (authenticationType)
+            {
+                case VaultAuthenticationType.Token:
+                    ConfigurationLogging.Info("Got Token AuthType!");
+                    return new VaultConfigurationClient(address, vaultCredential);
+                case VaultAuthenticationType.AppRole:
+                    ConfigurationLogging.Info("Got AppRole AuthType!");
+                    var split = vaultCredential.Split(':');
+                    if (split.Length != 2)
+                        throw new ArgumentException("The vaultCredential key when using AppRole authType is expected in the following format: 'roleId:secretId'");
+
+                    var roleId = split[0];
+                    var secretId = split[1];
+                    return new VaultConfigurationClient(address, roleId, secretId);
+                case VaultAuthenticationType.LDAP:
+                    ConfigurationLogging.Info("Got LDAP AuthType!");
+                    var ldapSplit = vaultCredential.Split(':');
+                    if (ldapSplit.Length != 2)
+                        throw new ArgumentException("The vaultCredential key when using LDAP authType is expected in the following format: 'userName:passWord'");
+
+                    var username = ldapSplit[0];
+                    var passWord = ldapSplit[1];
+
+                    return new VaultConfigurationClient(address, (username, passWord));
+                default:
+                    throw new ApplicationException($"Unsupported VaultAuthenticationType '{authenticationType}'");
+            }
         }
 
         public static void Register(SettingsLoadedEventArgs e, ApplicationSettingsBase settings)
@@ -239,7 +285,7 @@ namespace MFDLabs.Configuration.Providers
             DetectSettingsAndConnectionStringInClass(context);
             var el = GetGroupConfigurationElement(_groupName);
             DetectFileSystemOverridesForGroup(el);
-            if (string.IsNullOrEmpty(el?.Address)) DetectAlternateSettings();
+            if (el?.UseFileBasedConfig == true) DetectAlternateSettings();
             _oneTimeInitComplete = true;
         }
 

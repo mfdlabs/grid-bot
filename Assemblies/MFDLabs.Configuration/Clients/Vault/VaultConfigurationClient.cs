@@ -6,6 +6,9 @@ using MFDLabs.Configuration.Logging;
 using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
 using MFDLabs.Hashicorp.VaultClient.V1.Commons;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
 
@@ -39,21 +42,37 @@ namespace MFDLabs.Configuration.Clients.Vault
         private const string AppConfiguration = "Release";
 #endif
 
+        public VaultConfigurationClient(string address, string token)
+           => InitializeFields(address, new TokenAuthMethodInfo(token));
+
         public VaultConfigurationClient(string address, string roleId, string secretId)
+            => InitializeFields(address, new AppRoleAuthMethodInfo(roleId, secretId));
+
+        public VaultConfigurationClient(string address, (string username, string password) ldapUserNamePassword)
+            => InitializeFields(address, new LDAPAuthMethodInfo(ldapUserNamePassword.username, ldapUserNamePassword.password));
+
+        private void InitializeFields(string address, IAuthMethodInfo authMethod)
         {
-            var authMethod = new AppRoleAuthMethodInfo(roleId, secretId);
             var settings = new VaultClientSettings(address, authMethod);
-            _client = new VaultClient(settings);
-            _vaultClientRefreshTimer = new Timer(RefreshToken, null, TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
+            var client = new VaultClient(settings);
+            _kvV2 = client.V1.Secrets.KeyValue.V2;
+            _token = client.V1.Auth.Token;
+            _vaultClientRefreshTimer = new(RefreshToken, null, TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
 
         private void RefreshToken(object s)
         {
+            _tokenStr ??= _token.LookupSelfAsync()
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+                .Result.Data.Id[..6];
+#else
+                .Result.Data.Id.Substring(0, 6);
+#endif
+
+
             _vaultClientRefreshTimer.Change(-1, -1);
-            ConfigurationLogging.Info("Renewing vault client's token, '{0}...'",
-                _client.V1.Auth.Token.LookupSelfAsync()
-                    .Result.Data.Id.Substring(0, 6));
-            _client.V1.Auth.Token.RenewSelfAsync().Wait();
+            ConfigurationLogging.Info("Renewing vault client's token, '{0}...'", _tokenStr);
+            _token.RenewSelfAsync().Wait();
             _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
 
@@ -76,15 +95,14 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         public IReadOnlyCollection<ISetting> GetAllSettings(string groupName)
         {
-            if (!_client.V1.Secrets.KeyValue.V2.PathExists($"{AppConfiguration}/{groupName}", out var paths,
-                    BaseMountPoint))
+            if (!_kvV2.PathExists($"{AppConfiguration}/{groupName}", out var paths, BaseMountPoint))
                 return Array.Empty<ISetting>();
             
             return (from values in
                     from secret in
                         from path in
                             paths.Data.Keys
-                        select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                        select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
                             mountPoint: BaseMountPoint).Result
                     select secret.Data.Data
                 select new Setting
@@ -99,15 +117,14 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
         {
-            if (!_client.V1.Secrets.KeyValue.V2.PathExists($"{AppConfiguration}/{groupName}", out var paths,
-                    BaseMountPoint))
+            if (!_kvV2.PathExists($"{AppConfiguration}/{groupName}", out var paths, BaseMountPoint))
                 return Array.Empty<IConnectionString>();
             
             return (from values in
                     from secret in
                         from path in
                             paths.Data.Keys
-                        select _client.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                        select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
                             mountPoint: BaseMountPoint).Result
                     select secret.Data.Data
                 select new ConnectionString
@@ -128,10 +145,12 @@ namespace MFDLabs.Configuration.Clients.Vault
                 { "Value", value },
                 { "Updated", updated }
             };
-            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync($"{AppConfiguration}/{groupName}/{name}", values, mountPoint: BaseMountPoint);
+            _kvV2.WriteSecretAsync($"{AppConfiguration}/{groupName}/{name}", values, mountPoint: BaseMountPoint);
         }
 
-        private readonly IVaultClient _client;
-        private readonly Timer _vaultClientRefreshTimer;
+        private string _tokenStr;
+        private Timer _vaultClientRefreshTimer;
+        private IKeyValueSecretsEngineV2 _kvV2;
+        private ITokenAuthMethod _token;
     }
 }

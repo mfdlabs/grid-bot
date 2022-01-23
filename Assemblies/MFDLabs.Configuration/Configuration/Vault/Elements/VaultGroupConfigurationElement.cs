@@ -3,20 +3,29 @@ using System.Configuration;
 
 namespace MFDLabs.Configuration.Elements.Vault
 {
+    public enum VaultAuthenticationType
+    {
+        Token,
+        AppRole,
+        LDAP
+    }
+
     public class VaultGroupConfigurationElement : ConfigurationElement
     {
         static VaultGroupConfigurationElement()
         {
-            _updateInterval = new ConfigurationProperty("updateInterval", typeof(TimeSpan), TimeSpan.FromSeconds(1.5), ConfigurationPropertyOptions.None);
+            _updateInterval = new ConfigurationProperty("updateInterval", typeof(TimeSpan), TimeSpan.FromMinutes(30), ConfigurationPropertyOptions.None);
             _props.Add(_updateInterval);
-            _groupName = new ConfigurationProperty("groupName", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _groupName = new ConfigurationProperty("groupName", typeof(string), "*", ConfigurationPropertyOptions.None);
             _props.Add(_groupName);
-            _vaultAddress = new ConfigurationProperty("address", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _vaultAddress = new ConfigurationProperty("address", typeof(string), null, ConfigurationPropertyOptions.None);
             _props.Add(_vaultAddress);
-            _vaultRoleId = new ConfigurationProperty("roleId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
-            _props.Add(_vaultRoleId);
-            _vaultSecretId = new ConfigurationProperty("secretId", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
-            _props.Add(_vaultSecretId);
+            _authType = new ConfigurationProperty("authType", typeof(VaultAuthenticationType), VaultAuthenticationType.Token, ConfigurationPropertyOptions.None);
+            _props.Add(_authType);
+            _vaultCredential = new ConfigurationProperty("credential", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            _props.Add(_vaultCredential);
+            _useFileBasedConfig = new ConfigurationProperty("useFileBasedConfig", typeof(bool), false, ConfigurationPropertyOptions.None);
+            _props.Add(_useFileBasedConfig);
             _overrideFileName = new ConfigurationProperty("overrideFileName", typeof(string), null, ConfigurationPropertyOptions.None);
             _props.Add(_overrideFileName);
         }
@@ -33,22 +42,28 @@ namespace MFDLabs.Configuration.Elements.Vault
             set => base[_updateInterval] = value;
         }
 
+        public VaultAuthenticationType AuthenticationType
+        {
+            get => (VaultAuthenticationType)base[_authType];
+            set => base[_authType] = value;
+        }
+
         public string Address
         {
             get => (string)base[_vaultAddress];
             set => base[_vaultAddress] = value;
         }
 
-        public string RoleId
+        public string Credential
         {
-            get => (string)base[_vaultRoleId];
-            set => base[_vaultRoleId] = value;
+            get => (string)base[_vaultCredential];
+            set => base[_vaultCredential] = value;
         }
 
-        public string SecretId
+        public bool UseFileBasedConfig
         {
-            get => (string)base[_vaultSecretId];
-            set => base[_vaultSecretId] = value;
+            get => (bool)base[_useFileBasedConfig];
+            set => base[_useFileBasedConfig] = value;
         }
 
         public string OverrideFileName
@@ -63,9 +78,10 @@ namespace MFDLabs.Configuration.Elements.Vault
 
         private static readonly ConfigurationProperty _updateInterval;
         private static readonly ConfigurationProperty _groupName;
+        private static readonly ConfigurationProperty _authType;
         private static readonly ConfigurationProperty _vaultAddress;
-        private static readonly ConfigurationProperty _vaultRoleId;
-        private static readonly ConfigurationProperty _vaultSecretId;
+        private static readonly ConfigurationProperty _vaultCredential;
+        private static readonly ConfigurationProperty _useFileBasedConfig;
         private static readonly ConfigurationProperty _overrideFileName;
     }
 }
