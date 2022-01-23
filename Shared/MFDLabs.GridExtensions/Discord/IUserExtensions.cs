@@ -1,7 +1,7 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Rest;
 using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
@@ -11,6 +11,30 @@ namespace MFDLabs.Grid.Bot.Extensions
 {
     public static class IUserExtensions
     {
+        public static void Whitelist(this IUser user)
+        {
+            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+
+            if (blacklistedUsers.Contains(user.Id.ToString()))
+            {
+                var blIds = blacklistedUsers.Split(',').ToList();
+                blIds.Remove(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
+        public static void Blacklist(this IUser user)
+        {
+            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+
+            if (!blacklistedUsers.Contains(user.Id.ToString()))
+            {
+                var blIds = blacklistedUsers.Split(',').ToList();
+                blIds.Add(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
         public static bool IsBlacklisted(this IUser user) => AdminUtility.UserIsBlacklisted(user);
         public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
         public static bool IsPrivilaged(this IUser user) => AdminUtility.UserIsPrivilaged(user);
