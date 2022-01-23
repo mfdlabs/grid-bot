@@ -6,6 +6,7 @@ using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Logging;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Events
 {
@@ -39,7 +40,7 @@ namespace MFDLabs.Grid.Bot.Events
 
                     var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
-                    if (failureMessage != null) await message.ReplyAsync(failureMessage);
+                    if (!failureMessage.IsNullOrEmpty()) await message.ReplyAsync(failureMessage);
 
                     return;
                 }
