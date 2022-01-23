@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading;
+
 // ReSharper disable CompareOfFloatsByEqualityOperator
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
@@ -11,8 +12,11 @@ namespace MFDLabs.Threading
     [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
     public sealed class Atomic
     {
+        #region |Private Members|
         private long _value;
+        #endregion |Private Members|
 
+        #region |Constructors|
         public Atomic() => _value = 0;
         public Atomic(long value) => this._value = value;
         public Atomic(ulong value) => this._value = (long)value;
@@ -27,7 +31,9 @@ namespace MFDLabs.Threading
         public Atomic(double value) => this._value = (long)value;
         public Atomic(decimal value) => this._value = (long)value;
         public Atomic(Atomic other) => _value = other._value;
+        #endregion |Constructors|
 
+        #region |Comparison Operators|
         public override bool Equals(object obj) => obj is Atomic atomic && _value == atomic._value;
         public static bool operator ==(Atomic self, Atomic obj) => self?._value == obj?._value;
         public static bool operator !=(Atomic self, Atomic obj) => self?._value != obj?._value;
@@ -55,7 +61,9 @@ namespace MFDLabs.Threading
         public static bool operator !=(Atomic self, double obj) => self?._value != obj;
         public static bool operator ==(Atomic self, decimal obj) => self?._value == obj;
         public static bool operator !=(Atomic self, decimal obj) => self?._value != obj;
+        #endregion |Comparison Operators|
 
+        #region |Implicit Cast Operators|
         public static implicit operator long(Atomic self) => self._value;
         public static implicit operator ulong(Atomic self) => (ulong)self._value;
         public static implicit operator int(Atomic self) => (int)self._value;
@@ -80,7 +88,9 @@ namespace MFDLabs.Threading
         public static implicit operator Atomic(float v) => new Atomic(v);
         public static implicit operator Atomic(double v) => new Atomic(v);
         public static implicit operator Atomic(decimal v) => new Atomic(v);
+        #endregion |Implicit Cast Operators|
 
+        #region |Compare And Swap|
         public long CompareAndSwap(long value, long comparand) => Interlocked.CompareExchange(ref this._value, value, comparand);
         public long CompareAndSwap(ulong value, ulong comparand) => Interlocked.CompareExchange(ref this._value, (long)value, (long)comparand);
         public long CompareAndSwap(int value, int comparand) => Interlocked.CompareExchange(ref this._value, value, comparand);
@@ -93,11 +103,9 @@ namespace MFDLabs.Threading
         public long CompareAndSwap(float value, float comparand) => Interlocked.CompareExchange(ref this._value, (long)value, (long)comparand);
         public long CompareAndSwap(double value, double comparand) => Interlocked.CompareExchange(ref this._value, (long)value, (long)comparand);
         public long CompareAndSwap(decimal value, decimal comparand) => Interlocked.CompareExchange(ref this._value, (long)value, (long)comparand);
-        public override int GetHashCode() => -1584136870 + _value.GetHashCode();
+        #endregion |Compare And Swap|
 
-        public static Atomic operator ++(Atomic self) => Interlocked.Increment(ref self._value);
-        public static Atomic operator --(Atomic self) => Interlocked.Decrement(ref self._value);
-
+        #region |Swap|
         public long Swap(long value) => Interlocked.Exchange(ref this._value, value);
         public long Swap(ulong value) => Interlocked.Exchange(ref this._value, (long)value);
         public long Swap(int value) => Interlocked.Exchange(ref this._value, value);
@@ -110,7 +118,17 @@ namespace MFDLabs.Threading
         public long Swap(float value) => Interlocked.Exchange(ref this._value, (long)value);
         public long Swap(double value) => Interlocked.Exchange(ref this._value, (long)value);
         public long Swap(decimal value) => Interlocked.Exchange(ref this._value, (long)value);
+        #endregion |Swap|
+
+        #region |Arithmetic Operators|
+        public static Atomic operator ++(Atomic self) => Interlocked.Increment(ref self._value);
+        public static Atomic operator --(Atomic self) => Interlocked.Decrement(ref self._value);
+        #endregion |Arithmetic Operators|
+
+        #region Auto-Generated Items
+        public override int GetHashCode() => -1584136870 + _value.GetHashCode();
         public override string ToString() => _value.ToString();
         private string GetDebuggerDisplay() => ToString();
+        #endregion Auto-Generated Items
     }
 }
