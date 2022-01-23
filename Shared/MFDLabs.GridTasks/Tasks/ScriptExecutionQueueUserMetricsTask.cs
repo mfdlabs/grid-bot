@@ -56,7 +56,7 @@ namespace MFDLabs.Grid.Bot
                 catch (Exception ex)
                 {
                     if (ex is not FaultException)
-                        global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex);
+                        global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
 
                     message.Author.FireEvent("ScriptExecutionQueueFailure", ex.ToDetailedString());
                     perfmon.TotalItemsProcessedThatFailed.Increment();
@@ -295,7 +295,7 @@ namespace MFDLabs.Grid.Bot
                             }
                             catch (IOException ex)
                             {
-                                global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex);
+                                global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                                 _perfmon.TotalItemsProcessedThatFailed.Increment();
                                 message.Reply("There was an IO error when writing the script to the system, " +
                                               "please try again later.");
@@ -316,7 +316,7 @@ namespace MFDLabs.Grid.Bot
                                 }
                                 catch (Exception ex)
                                 {
-                                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex);
+                                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                                     _perfmon.TotalItemsProcessedThatFailed.Increment();
                                     SystemLogger.Singleton.Warning(
                                         "Failed to delete the user script '{0}' because '{1}'",
