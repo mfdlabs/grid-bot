@@ -56,8 +56,8 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             catch (EndpointNotFoundException)
             {
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default
-                        .OpenServiceOnEndpointNotFoundException) throw;
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException) 
+                    throw;
 
                 SystemUtility.OpenGridServerSafe();
                 return HelloWorld();

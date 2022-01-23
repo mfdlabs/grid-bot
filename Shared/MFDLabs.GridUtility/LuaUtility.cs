@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
@@ -10,10 +11,11 @@ namespace MFDLabs.Grid.Bot.Utility
     {
         public static string SafeLuaMode
 #if DEBUG
-            => global::MFDLabs.Grid.Bot.Properties.Resources.LuaVM_formatted;
+            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.formatted.lua"));
 #else
-            => global::MFDLabs.Grid.Bot.Properties.Resources.LuaVM;
+            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.lua"));
 #endif
+
 
         public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
 

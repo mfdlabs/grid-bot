@@ -14,7 +14,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         private static bool _runningOpenJob;
 
-        private static (TimeSpan, int) OpenGridServer(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
+        private static (TimeSpan elapsed, int procId) OpenGridServer(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
         {
             var sw = Stopwatch.StartNew();
             if (onlyWebServer)
@@ -96,7 +96,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return (sw.Elapsed, onlyGridServer ? procId : 0);
         }
 
-        public static (TimeSpan, int) OpenGridServerSafe(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
+        public static (TimeSpan elapsed, int procId) OpenGridServerSafe(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
         {
             if (_runningOpenJob) return (TimeSpan.Zero, 0);
             
@@ -110,8 +110,7 @@ namespace MFDLabs.Grid.Bot.Utility
         /// </summary>
         /// <param name="port">Port</param>
         /// <param name="unsafe"></param>
-        /// well fuck the tcp port check because it is slower than jakob getting out of the toilet
-        public static (TimeSpan, int) OpenGridServerInstance(int port = 0, bool @unsafe = false)
+        public static (TimeSpan elapsed, int procId) OpenGridServerInstance(int port = 0, bool @unsafe = false)
         {
             // this is so fucking slow, please just use win32 native, don't hook fucking netstat
             //if (!ProcessHelper.GetProcessByTcpPortAndName(_GridServerSignature, port == 0 ? 53640 : port, out var process))
@@ -219,7 +218,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
 
             if (!SystemGlobal.ContextIsAdministrator() 
-#if NETFRAMEWORK
+#if NETFRAMEWORK // for now
                 && pr.IsElevated()
 #endif
                 
