@@ -1,4 +1,17 @@
-param ([string]$root, [string]$config, [bool]$isService=$false, [string]$targetFramework="net472")
+param (
+    [string]$root,
+    [string]$deploymentKind,
+    [string]$config,
+    [string]$targetFramework = "net472",
+    [bool]$isGitIntegrated = $true,
+    [bool]$replaceExtensions = $true,
+    [bool]$logToFile = $true,
+    [bool]$checkForExistingSourceArchive = $true,
+    [bool]$checkForExistingConfigArchive = $true
+)
+
+$date = Get-Date;
+
 
 $7zipPath = "C:\Program Files\7-Zip\7z.exe"
 
@@ -7,99 +20,397 @@ if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
     Exit
 }
 
-Set-Alias 7zip-Archive $7zipPath
+& Set-Alias 7zip-Archive $7zipPath
 
-function Get-RandomHex {
-    param(
-        [int] $Bits = 256
-    )
-    $bytes = new-object 'System.Byte[]' ($Bits / 8)
+function GetParsedNumber([int] $num) {
+    return [string]::new("0", 2 - $num.ToString().Length) + $num.ToString()
+}
+
+function GetRandomHexString([int] $bits = 256) {
+    $bytes = new-object 'System.Byte[]' ($bits / 8)
     (new-object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes)
-    (new-object System.Runtime.Remoting.Metadata.W3cXsd2001.SoapHexBinary @(,$bytes)).ToString()
+    (new-object System.Runtime.Remoting.Metadata.W3cXsd2001.SoapHexBinary @(, $bytes)).ToString()
 }
 
-function Get-Parsed-Number {
-    param (
-        [int] $num
-    )
-    
-    $str = [string]::new("0", 2 - $num.ToString().Length) + $num.ToString();
+function GetArchiveHash([string] $File) {
+    if (!(Test-Path -Path $File -PathType Leaf)) {
+        return $null
+    }
 
-    return $str
+    $fileInfo = Get-ItemProperty -Path $File
+
+    $archivePath = "$env:temp\$($fileInfo.Name)\"
+
+    try {
+
+        if (![System.IO.Directory]::Exists($archivePath)) {
+            & Write-Host "Creating temp directory $archivePath" -ForegroundColor Green
+            [System.IO.Directory]::CreateDirectory($archivePath) *> $null;
+        }
+
+        7zip-Archive x $File "-o$archivePath" -y *> $null
+
+        $data = 7zip-Archive h $archivePath* | FindStr "data:";
+
+        return ($data -split ":")[1].Trim();
+    }
+    finally {
+        & Write-Host "Removing temp directory $archivePath" -ForegroundColor Green
+        [System.IO.Directory]::Delete($archivePath, $true)
+    }
 }
+
+function HasGitRepository([string] $path) {
+    if ([string]::IsNullOrEmpty($path)) {
+        throw "`$path is null or empty";
+    }
+
+    $gitDir = [System.IO.Path]::Combine($path, ".git");
+
+    return [System.IO.Directory]::Exists($gitDir);
+}
+
+function ReadGitBranch([string] $from) {
+    if ([string]::IsNullOrEmpty($from)) {
+        throw "`$from is null or empty";
+    }
+
+    if (-not (HasGitRepository($from))) {
+        throw "`$from is not a git repository";
+    }
+
+    $branch = (Invoke-Expression -Command "git rev-parse --abbrev-ref HEAD");
+
+    if ([string]::IsNullOrEmpty($branch)) {
+        return $null
+    }
+
+    if ($branch.StartsWith("fatal")) {
+        return $null
+    }
+
+    return $branch;
+}
+
+
+function CheckHash([string]$newLocation, [string]$existingLocation) {
+    & Write-Host "Checking hash for $newLocation" -ForegroundColor Green
+
+    if ([string]::IsNullOrEmpty($existingLocation)) {
+        & Write-Host "Existing location is null or empty" -ForegroundColor Yellow
+        return $false;
+    }
+
+    # determine if the contents of the currently deploying source archive is the same as the last deployed source archive
+    $existingSourceArchiveHash = GetArchiveHash -File $existingLocation
+    $sourceArchiveHash = GetArchiveHash -File $newLocation
+
+    & Write-Host "New location: $newLocation" -ForegroundColor Green
+    & Write-Host "Existing location: $existingLocation" -ForegroundColor Green
+    & Write-Host "Existing Archive Hash: $existingSourceArchiveHash" -ForegroundColor Green
+    & Write-Host "New Archive Hash: $sourceArchiveHash" -ForegroundColor Green
+    & Write-Host "Comparing existing archive hash to new archive hash..." -ForegroundColor Green
+    & Write-Host "Existing Archive Hash == New Archive Hash: $(IF($existingSourceArchiveHash -eq $sourceArchiveHash){"Yes"} ELSE {"No"})" -ForegroundColor Green
+
+    return $existingSourceArchiveHash -eq $sourceArchiveHash
+}
+
+function ReadGitHash([string] $from, [bool] $readShortHash = $false) {
+    if ([string]::IsNullOrEmpty($from)) {
+        throw "`$from is null or empty";
+    }
+
+    if (-not (HasGitRepository($from))) {
+        throw "`$from is not a git repository";
+    }
+
+    $gitHash = $null;
+
+    if ($readShortHash) {
+        $gitHash = (Invoke-Expression -Command "git rev-parse --short HEAD")
+    }
+    else {
+        $gitHash = (Invoke-Expression -Command "git rev-parse HEAD")
+    }
+
+    # Trim and then remove the git hash spaces via regex
+    $gitHash = $gitHash.Trim().Replace(" ", "");
+
+    if ([string]::IsNullOrEmpty($gitHash)) {
+        return $null
+    }
+
+    if ($gitHash.StartsWith("fatal")) {
+        return $null
+    }
+
+    return $gitHash;
+}
+
+<#
+Attempts to read the short hash revision from the directory for github revisions
+#>
+function ReadGitShortHash([string] $from) {
+    $hash = $(ReadGitHash -from $from -readShortHash $true);
+    return $hash.Trim().Replace(" ", "") -replace '\t', '';
+}
+
+# TODO: Seperate configurations from the rest of the code
+
+IF ([string]::IsNullOrEmpty($root)) {
+    & Write-Host "The root directory cannot be empty." -ForegroundColor Red
+    Exit
+}
+
+IF (!$root.EndsWith("\")) {
+    $root = $root + "\"
+}
+
+if (!(Test-Path $root)) {
+    & Write-Host "The root directory does not exist." -ForegroundColor Red
+    Exit
+}
+
+IF ([string]::IsNullOrEmpty($config)) {
+    & Write-Host "The config was invalid." -ForegroundColor Red
+    Exit
+}
+
+if ([string]::IsNullOrEmpty($deploymentKind)) {
+    & Write-Host "The deployment kind was invalid." -ForegroundColor Red
+    Exit
+}
+
+& Write-Host "Trying to deploy $deploymentKind => $config|$(IF ([string]::IsNullOrEmpty($targetFramework)){"No Specific Framework"}ELSE{$targetFramework}) from root $root at date $date" -ForegroundColor Green
+
+
+[string] $newSourceArchive;
+[string] $newConfigArchive;
+[string] $sourceArchive;
+[string] $configArchive;
+[bool] $deleteArchivesBecauseNotFinished = $true;
 
 try {
-
-    IF ([string]::IsNullOrEmpty($root)) {
-        & Write-Host "The root directory cannot be empty." -ForegroundColor Red
-        Exit
-    }
-
-    IF ([string]::IsNullOrEmpty($config)) {
-        & Write-Host "The config was invalid." -ForegroundColor Red
-        Exit
-    }
-
-
-
-    IF (($config.ToLower() -ne "release") -and ($config.ToLower() -ne "debug")) {
-        & Write-Host "The config was invalid." -ForegroundColor Red
-        Exit
-    }
-
-
-    [String] $hash = Get-RandomHex -Bits 128
-    $date = Get-Date
-    $branch = "master"
+    
     $location = $root
-    $deploymentKind = IF ($isService) {"MFDLabs.Grid.Bot.Service"} ELSE {"MFDLabs.Grid.Bot"}
-    $deploymentFolder = "$($location)$($deploymentKind)/Deploy/"
-    $deploymentYear = "$($deploymentFolder)$($date.Year)/"
+    $deploymentFolder = "$($location)$($deploymentKind)\Deploy\"
+    $deploymentYear = "$($deploymentFolder)$($date.Year)\"
 
-    Write-Host "Trying to deploy at date $($date)" -ForegroundColor Green
+    $componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) { "$($location)$($deploymentKind)\bin\$($config)\" } ELSE { "$($location)$($deploymentKind)\bin\$($config)\$($targetFramework)\" };
 
-    IF (![System.IO.Directory]::Exists($deploymentFolder)){
-        & Write-Host "Deployment folder not found, creating." -foregroundcolor yellow
-        [System.IO.Directory]::CreateDirectory($deploymentFolder)
+    IF (![System.IO.Directory]::Exists($deploymentFolder)) {
+        & Write-Host "The deployment folder at $($deploymentFolder) does not exist, creating..." -ForegroundColor Yellow
+        [System.IO.Directory]::CreateDirectory($deploymentFolder) *>$null
     }
 
     IF (![System.IO.Directory]::Exists($deploymentYear)) {
-        & Write-Host "Deployment bin folder not found, creating." -foregroundcolor yellow
-        [System.IO.Directory]::CreateDirectory($deploymentYear)
+        & Write-Host "The deployment year folder at $($deploymentYear) does not exist, creating..." -ForegroundColor Yellow
+        [System.IO.Directory]::CreateDirectory($deploymentYear) *>$null
     }
 
-    IF (![System.IO.Directory]::Exists("$($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/")) {
-        & Write-Host "The output folder to read the deployment was not found, aborting." -foregroundcolor yellow
+    IF (![System.IO.Directory]::Exists($componentDir)) {
+        & Write-Host "The component bin folder at $($componentDir) does not exist, aborting..." -ForegroundColor Red
         Exit
     }
 
-    $file = "$($deploymentYear)$($date.Year).$(Get-Parsed-Number -num $date.Month).$(Get-Parsed-Number -num $date.Day)-$(Get-Parsed-Number -num $date.Hour).$(Get-Parsed-Number -num $date.Minute).$(Get-Parsed-Number -num $date.Second)_$($branch)_$($hash.ToLower().Substring(0, 9))-$($config)-$($targetFramework).zip"
+    # If the component directory is empty, we can't deploy
+    IF ([System.IO.Directory]::GetFiles($componentDir, "*.*", [System.IO.SearchOption]::AllDirectories).Length -eq 0) {
+        & Write-Host "The component bin folder at $($componentDir) is empty, aborting..." -ForegroundColor Red
+        Exit
+    }
 
-    & Write-Host "Deploying $($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/* to $($file)" -ForegroundColor Green
+    IF ([string]::IsNullOrEmpty($targetFramework)) { $targetFramework = "DotNet"; }
 
-    $lastdeploy = Get-ChildItem "$($deploymentYear)" | Sort-Object LastWriteTime | Select-Object -Last 1
+    [String] $hash;
+    [String] $branch;
 
-    & 7zip-Archive a -bb3 -y -tzip $file "$($location)$($deploymentKind)/bin/$($config)/$($targetFramework)/*"
-    #& Compress-Archive -Path "$($location)$($deploymentKind)/bin/$($config)/*" -CompressionLevel Fastest -DestinationPath $file -Verbose -Force
+    if ($isGitIntegrated) {
+        $branch = (ReadGitBranch -from $root);
+        $hash = (ReadGitShortHash -from $root);
 
-    $newFile = $file.Replace(".zip", ".mfdlabs-archive")
+        if ($null -eq $branch) {
+            $branch = "master";
+        }
 
-    # This has now become obsolete
-    #IF ($null -ne $lastdeploy) {
-    #    $md5 = (Get-FileHash -Path $file).Hash
-    #    $oldMd5 = (Get-FileHash -Path $lastdeploy.FullName).Hash
-    #
-    #    if ($oldMd5 -eq $md5) {
-    #        & Remove-Item -Path $file
-    #        & Write-Host "Found duplicate deployment, ignoring. Please refer to the deployment $($lastdeploy.Fullname)."-foregroundcolor yellow
-    #        Exit
-    #    }
-    #}
+        if ($null -eq $hash) {
+            $hash = (GetRandomHexString -Bits 128).ToLower().Substring(0, 7);
+        }
+    }
+    else {
+        $hash = (GetRandomHexString -Bits 128).ToLower().Substring(0, 7);
+        $branch = "master"
+    }
 
 
-    & Rename-Item -Path $file -NewName $newFile
-    & Write-Host "Completed deployment of ""$($newFile)"", press enter to continue." -ForegroundColor Green
-} catch [Exception] {
-    & Write-Host "An error occurred when trying to deploy, please try again later. Error: $($_)"
+    & Write-Host "Got Git Branch: $branch, Is Fake Branch: $(IF($isGitIntegrated){"No"} ELSE {"Yes"})" -ForegroundColor Green
+    & Write-Host "Got Git Hash: $hash, Is Fake Hash: $(IF($isGitIntegrated){"No"} ELSE {"Yes"})" -ForegroundColor Green
+
+    $archivePrefix = "$($deploymentYear)$($date.Year).
+                      $(GetParsedNumber -num $date.Month).
+                      $(GetParsedNumber -num $date.Day)-
+                      $(GetParsedNumber -num $date.Hour).
+                      $(GetParsedNumber -num $date.Minute).
+                      $(GetParsedNumber -num $date.Second)_
+                      $($branch)_
+                      $($hash)-
+                      $($targetFramework)" -replace '\s+', '';
+
+    Write-Host "Archive Prefix: $archivePrefix" -ForegroundColor Green
+
+    $sourceArchive = "$($archivePrefix)-$($config).zip"
+    $configArchive = "$($archivePrefix)-$($config)Config.zip"
+    $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+
+    & Write-Host "Deploying source archive $componentDir*.pdb,*.dll,*.xml to $($sourceArchive)" -ForegroundColor Green
+    & Write-Host "Deploying config archive $componentDir*.config to $($configArchive)" -ForegroundColor Green
+
+    & 7zip-Archive a -r -bb3 -y -tzip $sourceArchive "$componentDir*.*" "-x!*.config"
+    & 7zip-Archive a -r -bb3 -y -tzip $configArchive "$componentDir*.config"
+
+    [bool] $deployingNewSource = $true;
+    [bool] $deployingNewConfig = $true;
+
+    if ($checkForExistingSourceArchive) {
+
+        if (CheckHash -NewLocation $sourceArchive -ExistingLocation $existingSourceArchive) {
+            & Write-Host "There is already an existing source archive with the same hash, deleting the new source archive... Please refer to the old source archive $($existingSourceArchive) for details." -ForegroundColor Yellow
+            $newSourceArchive = $existingSourceArchive
+            $deployingNewSource = $false
+            [System.IO.File]::Delete($sourceArchive)
+        }
+        else {
+            $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config).mfdlabs-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+
+            if (![string]::IsNullOrEmpty($existingSourceArchive)) {
+                & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".mfdlabs-archive", ".zip")
+                $existingSourceArchive = ("$existingSourceArchive" -replace ".mfdlabs-archive", ".zip")
+            }
+
+            & Write-Host "Existing source archive: $($existingSourceArchive)" -ForegroundColor Yellow
+
+            if (CheckHash -NewLocation $sourceArchive -ExistingLocation $existingSourceArchive) {
+                if (![string]::IsNullOrEmpty($existingSourceArchive)) {
+                    & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+                    $existingSourceArchive = ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+                }
+
+                & Write-Host "There is already an existing source archive with the same hash, deleting the new source archive... Please refer to the old source archive $($existingSourceArchive) for details." -ForegroundColor Yellow
+                $newSourceArchive = $existingSourceArchive
+                $deployingNewSource = $false
+                [System.IO.File]::Delete($sourceArchive)
+            }
+
+            if (![string]::IsNullOrEmpty($existingSourceArchive) -and $deployingNewSource) {
+                & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+                $existingSourceArchive = ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+            }
+        }
+    }
+
+    if ($checkForExistingConfigArchive) {
+        if (CheckHash -NewLocation $configArchive -ExistingLocation $existingConfigArchive) {
+            & Write-Host "There is already an existing config archive with the same hash, deleting the new config archive... Please refer to the old config archive $($existingConfigArchive) for details." -ForegroundColor Yellow
+            $newConfigArchive = $existingConfigArchive
+            $deployingNewConfig = $false
+            [System.IO.File]::Delete($configArchive)
+        }
+        else {
+            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+
+            if (![string]::IsNullOrEmpty($existingConfigArchive)) {
+                & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".mfdlabs-config-archive", ".zip")
+                $existingConfigArchive = ("$existingConfigArchive" -replace ".mfdlabs-config-archive", ".zip")
+            }
+
+            if (CheckHash -NewLocation $configArchive -ExistingLocation $existingConfigArchive) {
+                if (![string]::IsNullOrEmpty($existingConfigArchive)) {
+                    & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+                    $existingConfigArchive = ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+                }
+
+                & Write-Host "There is already an existing config archive with the same hash, deleting the new config archive... Please refer to the old config archive $($existingConfigArchive) for details." -ForegroundColor Yellow
+                $newConfigArchive = $existingConfigArchive
+                $deployingNewConfig = $false
+                [System.IO.File]::Delete($configArchive)
+            }
+
+            if (![string]::IsNullOrEmpty($existingConfigArchive) -and $deployingNewConfig) {
+                & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+                $existingConfigArchive = ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+            }
+        }
+    }
+
+
+    if ($deployingNewSource) {
+        $newSourceArchive = $sourceArchive;
+
+        if ($replaceExtensions) {
+            $newSourceArchive = $sourceArchive.Replace(".zip", ".mfdlabs-archive")
+            & Write-Host "Renaming $($sourceArchive) to $($newSourceArchive)" -ForegroundColor Green
+            & Rename-Item -Path $sourceArchive -NewName $newSourceArchive
+        }
+    }
+
+    if ($deployingNewConfig) {
+        $newConfigArchive = $configArchive;
+
+        if ($replaceExtensions) {
+            $newConfigArchive = $configArchive.Replace(".zip", ".mfdlabs-config-archive")
+            & Write-Host "Renaming $($configArchive) to $($newConfigArchive)" -ForegroundColor Green
+            & Rename-Item -Path $configArchive -NewName $newConfigArchive
+        }
+    }
+
+    # If we aren't deploying a new component archive, but we are deploying a config archive, then delete the new archive and warn the user
+    if (!$deployingNewSource -and $deployingNewConfig) {
+        & Write-Host "We are not deploying a new component archive, but we are deploying a config archive. Ignoring..." -ForegroundColor Yellow
+        Exit;
+    }
+
+    $deleteArchivesBecauseNotFinished = $false;
+
+    & Write-Host "Completed deployment of ""$($deploymentKind)"". Source Archive: ""$($newSourceArchive)"", Configuration Archive: ""$($newConfigArchive)"", press enter to continue." -ForegroundColor Green
+}
+catch [Exception] {
+    
+
+
+    & Write-Host "An error occurred when trying to deploy, please try again later. Error: $($_.ToString())" -ForegroundColor Red
     Exit
+}
+finally {
+    & Write-Host "Cleaning up..." -ForegroundColor Green
+    if ($deleteArchivesBecauseNotFinished) {
+        # Delete the archive if it exists
+
+        if ($null -ne $sourceArchive) {
+            if ([System.IO.File]::Exists($sourceArchive)) {
+                & Write-Host "Deleting $($sourceArchive)" -ForegroundColor Green
+                [System.IO.File]::Delete($sourceArchive)
+            }
+        }
+
+        if ($null -ne $configArchive) {
+            if ([System.IO.File]::Exists($configArchive)) {
+                & Write-Host "Deleting $($configArchive)" -ForegroundColor Green
+                [System.IO.File]::Delete($configArchive)
+            }
+        }
+
+        if ($null -ne $newSourceArchive) {
+            if ([System.IO.File]::Exists($newSourceArchive)) {
+                & Write-Host "Deleting $($newSourceArchive)" -ForegroundColor Green
+                [System.IO.File]::Delete($newSourceArchive)
+            }
+        }
+
+        if ($null -ne $newConfigArchive) {
+            if ([System.IO.File]::Exists($newConfigArchive)) {
+                & Write-Host "Deleting $($newConfigArchive)" -ForegroundColor Green
+                [System.IO.File]::Delete($newConfigArchive)
+            }
+        }
+    }
 }
