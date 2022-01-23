@@ -114,7 +114,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         blacklistedUsers.Remove(user);
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blacklistedUsers.Join(',');
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-                        await message.ReplyAsync($"Successfully added '{user}' to the blacklisted users list.");
+                        await message.ReplyAsync($"Successfully removed '{user}' to the blacklisted users list.");
                         break;
                     }
                     await message.ReplyAsync($"The user '{user}' is not blacklisted, " +

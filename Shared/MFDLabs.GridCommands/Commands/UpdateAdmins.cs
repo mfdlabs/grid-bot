@@ -114,7 +114,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     admins.Remove(user);
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = admins.Join(',');
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-                    await message.ReplyAsync($"Successfully added '{user}' to the admin whitelist.");
+                    await message.ReplyAsync($"Successfully removed '{user}' from the admin whitelist.");
                     break;
                 }
                 await message.ReplyAsync($"The user '{user}' is not an admin," +

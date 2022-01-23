@@ -114,7 +114,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     higherPrivilagedUsers.Remove(user);
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = higherPrivilagedUsers.Join(',');
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-                    await message.ReplyAsync($"Successfully added '{user}' to the privilaged users whitelist.");
+                    await message.ReplyAsync($"Successfully removed '{user}' from the privilaged users whitelist.");
                     break;
                 }
                 await message.ReplyAsync($"The user '{user}' is not a higher privilaged user, " +
