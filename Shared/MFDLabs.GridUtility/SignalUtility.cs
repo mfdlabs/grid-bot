@@ -19,8 +19,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGINT",
-                    "Shutdown via SIGINT");
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGINT", "Shutdown via SIGINT");
+                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
+                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
                 if (killBot)
                     await BotGlobal.TryLogout();
@@ -39,8 +40,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGUSR1",
-                    "Shutdown via SIGINT");
+                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGUSR1", "Shutdown via SIGINT");
+                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
+                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                     GridServerArbiter.Singleton.KillAllOpenInstances();

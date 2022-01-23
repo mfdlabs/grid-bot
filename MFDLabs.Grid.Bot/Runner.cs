@@ -91,6 +91,22 @@ namespace MFDLabs.Grid.Bot
                 SystemGlobal.GetMachineId()
             );
 
+            ConsulServiceRegistrationUtility.RegisterService("MFDLabs.Grid.Bot", true, null, null, new[] { "C#", ".NET" });
+            ConsulServiceRegistrationUtility.RegisterSubService(
+                "MFDLabs.Grid.Bot",
+                "MFDLabs.Grid.Bot.PerfmonServerV2",
+                false,
+                NetworkingGlobal.GetLocalIp(),
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
+                new[] { "perf", "node-perf", "perf-counter-v2" }
+            );
+            ConsulServiceRegistrationUtility.RegisterServiceHttpCheck(
+                "MFDLabs.Grid.Bot.PerfmonServerV2",
+                "Counter Server Health Check",
+                $"http://{NetworkingGlobal.GetLocalIp()}:{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort)}",
+                "Health For Counter Server"
+            );
+
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
             {
                 GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Info", "Performance Server Started");
