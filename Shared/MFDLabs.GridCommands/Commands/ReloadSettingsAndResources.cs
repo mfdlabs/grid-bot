@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.Reload();
             await message.ReplyAsync($"Successfully reloaded all settings " +
-                                     $"from {Assembly.GetExecutingAssembly().GetName().Name}.exe.config");
+                                     $"from {Assembly.GetEntryAssembly().GetName().Name}.exe.config");
         }
     }
 }
