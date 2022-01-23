@@ -6,12 +6,27 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
@@ -38,6 +53,7 @@
   </ItemGroup>
   
   <ItemGroup>
+	<ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
 	<ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
 	<ProjectReference Include="..\MFDLabs.Analytics.Google.Client\MFDLabs.Analytics.Google.Client.csproj" />
 	<ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
