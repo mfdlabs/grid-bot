@@ -66,8 +66,11 @@ function HasGitRepository([string] $path) {
     }
 
     $gitDir = [System.IO.Path]::Combine($path, ".git");
+	$exists = [System.IO.Directory]::Exists($gitDir);
+	
+	Write-Host "Test path $($gitDir): $exists";
 
-    return [System.IO.Directory]::Exists($gitDir);
+    return $exists;
 }
 
 function ReadGitBranch([string] $from) {
@@ -75,8 +78,8 @@ function ReadGitBranch([string] $from) {
         throw "`$from is null or empty";
     }
 
-    if (-not (HasGitRepository($from))) {
-        throw "`$from is not a git repository";
+    if ($false -eq $(HasGitRepository($from))) {
+        return $null;
     }
 
     $branch = (Invoke-Expression -Command "git rev-parse --abbrev-ref HEAD");
@@ -117,14 +120,14 @@ function CheckHash([string]$newLocation, [string]$existingLocation) {
 
 function ReadGitHash([string] $from, [bool] $readShortHash = $false) {
     if ([string]::IsNullOrEmpty($from)) {
-        throw "`$from is null or empty";
+        throw $null;
     }
 
-    if (-not (HasGitRepository($from))) {
-        throw "`$from is not a git repository";
+    if ($false -eq $(HasGitRepository($from))) {
+        return $null;
     }
 
-    $gitHash = $null;
+    $gitHash = "";
 
     if ($readShortHash) {
         $gitHash = (Invoke-Expression -Command "git rev-parse --short HEAD")
@@ -152,7 +155,8 @@ Attempts to read the short hash revision from the directory for github revisions
 #>
 function ReadGitShortHash([string] $from) {
     $hash = $(ReadGitHash -from $from -readShortHash $true);
-    return $hash.Trim().Replace(" ", "") -replace '\t', '';
+	$hash = if ($null -ne $hash) {$hash.Trim().Replace(" ", "") -replace '\t', ''} else {$null}
+    return $hash;
 }
 
 # TODO: Seperate configurations from the rest of the code
@@ -171,16 +175,6 @@ if (!(Test-Path $root)) {
     Exit
 }
 
-IF ([string]::IsNullOrEmpty($config)) {
-    & Write-Host "The config was invalid." -ForegroundColor Red
-    Exit
-}
-
-if ([string]::IsNullOrEmpty($deploymentKind)) {
-    & Write-Host "The deployment kind was invalid." -ForegroundColor Red
-    Exit
-}
-
 & Write-Host "Trying to deploy $deploymentKind => $config|$(IF ([string]::IsNullOrEmpty($targetFramework)){"No Specific Framework"}ELSE{$targetFramework}) from root $root at date $date" -ForegroundColor Green
 
 
@@ -195,8 +189,10 @@ try {
     $location = $root
     $deploymentFolder = "$($location)$($deploymentKind)\Deploy\"
     $deploymentYear = "$($deploymentFolder)$($date.Year)\"
-
-    $componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) { "$($location)$($deploymentKind)\bin\$($config)\" } ELSE { "$($location)$($deploymentKind)\bin\$($config)\$($targetFramework)\" };
+	
+	$componentDir = IF ([string]::IsNullOrEmpty($deploymentKind)) {"$($location)\bin\"} ELSE {"$($location)$($deploymentKind)\bin\"}
+	$componentDir = IF ([string]::IsNullOrEmpty($config)) {"$($componentDir)\"} ELSE {"$($componentDir)$($config)\"}
+	$componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) {"$($componentDir)\"} ELSE {"$($componentDir)$($config)\$($targetFramework)\"}
 
     IF (![System.IO.Directory]::Exists($deploymentFolder)) {
         & Write-Host "The deployment folder at $($deploymentFolder) does not exist, creating..." -ForegroundColor Yellow
@@ -220,6 +216,7 @@ try {
     }
 
     IF ([string]::IsNullOrEmpty($targetFramework)) { $targetFramework = "DotNet"; }
+	IF ([string]::IsNullOrEmpty($config)) { $config = "AnyConfiguration"; }
 
     [String] $hash;
     [String] $branch;
@@ -372,13 +369,6 @@ try {
     $deleteArchivesBecauseNotFinished = $false;
 
     & Write-Host "Completed deployment of ""$($deploymentKind)"". Source Archive: ""$($newSourceArchive)"", Configuration Archive: ""$($newConfigArchive)"", press enter to continue." -ForegroundColor Green
-}
-catch [Exception] {
-    
-
-
-    & Write-Host "An error occurred when trying to deploy, please try again later. Error: $($_.ToString())" -ForegroundColor Red
-    Exit
 }
 finally {
     & Write-Host "Cleaning up..." -ForegroundColor Green
