@@ -758,7 +758,7 @@ namespace MFDLabs.Grid.Bot.Registries
             var exceptionId = Guid.NewGuid();
 
             if (ex is not FaultException)
-                global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex);
+                global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
 
             switch (ex)
             {

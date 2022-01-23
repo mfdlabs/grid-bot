@@ -25,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (option.IsNullOrEmpty())
             {
-                await message.ReplyAsync("Expected the option to either be 'enable', 'disable', 'get' or 'update'");
+                await message.ReplyAsync("Expected the option to either be 'enable', 'disable', 'get', 'delete' or 'update'");
                 return;
             }
 
@@ -40,7 +40,7 @@ namespace MFDLabs.Grid.Bot.Commands
                         if (!optionalMessage.IsNullOrEmpty() && optionalMessage != global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying)
                         {
                             await message.ReplyAsync("The maintenance status is already enabled, and it appears you have a different message, " +
-                                                    "if you want to update the exsting message, please re-run the command like:" +
+                                                    "if you want to update the exsting message, please re-run the command like: " +
                                                     $"'{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}{originalCommand} update {optionalMessage}'");
                             return;
                         }
@@ -63,8 +63,8 @@ namespace MFDLabs.Grid.Bot.Commands
                 case "disable":
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
                     {
-                        await message.ReplyAsync("The maintenance status is not enabled!" +
-                                                 "if you want to enable it, please re-run the command like:" +
+                        await message.ReplyAsync("The maintenance status is not enabled! " +
+                                                 "if you want to enable it, please re-run the command like: " +
                                                  $"'{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}{originalCommand} enable optionalMessage?'");
                         return;
                     }
@@ -78,8 +78,8 @@ namespace MFDLabs.Grid.Bot.Commands
                 case "update":
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
                     {
-                        await message.ReplyAsync("The maintenance status is not enabled!" +
-                                                 "if you want to enable it, please re-run the command like:" +
+                        await message.ReplyAsync("The maintenance status is not enabled! " +
+                                                 "if you want to enable it, please re-run the command like: " +
                                                  $"'{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}{originalCommand} enable optionalMessage?'");
                         return;
                     }
@@ -102,6 +102,21 @@ namespace MFDLabs.Grid.Bot.Commands
                                             $"'{(optionalMessageForUpdate.IsNullOrEmpty() ? "No Message" : optionalMessageForUpdate)}'!");
 
                     return;
+                case "delete":
+                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying.IsNullOrEmpty())
+                    {
+                        await message.ReplyAsync("The maintenance text is already empty!");
+                        return;
+                    }
+
+                    // This only removes the maintenance text
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = string.Empty;
+                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+
+                    await message.ReplyAsync("Sucessfully removed the maintenance text!");
+
+                    return;
+
                 case "get":
                     var deathMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
@@ -127,7 +142,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     await message.ReplyAsync(embed: embed.Build());
                     return;
                 default:
-                    await message.ReplyAsync($"Unkown option '{option.ToLower()}'. Expected the option to either be 'enable', 'disable', 'get' or 'update'");
+                    await message.ReplyAsync($"Unkown option '{option.ToLower()}'. Expected the option to either be 'enable', 'disable', 'get', 'delete' or 'update'");
                     return;
             }
         }
