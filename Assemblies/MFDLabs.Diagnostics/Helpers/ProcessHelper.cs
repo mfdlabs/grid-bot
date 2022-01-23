@@ -6,8 +6,10 @@ using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 
 #if NETFRAMEWORK
+using System;
 using System.ComponentModel;
 using System.Security.Principal;
+using System.Management;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Diagnostics.NativeWin32;
 
@@ -53,6 +55,138 @@ namespace MFDLabs.Diagnostics
             return false;
         }
 
+        public static string GetCurrentUser()
+        {
+#if NETFRAMEWORK || WE_LOVE_ENVIRONMENT_USERNAME
+            return Environment.UserName;
+#else
+            var command = $"whoami";
+            var startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = command, };
+            var proc = new Process() { StartInfo = startInfo, };
+            proc.Start();
+            proc.WaitForExit();
+
+            var user = proc.StandardOutput.ReadToEnd();
+
+            return user.IsNullOrEmpty() ? null : user;
+#endif
+        }
+
+        public static string GetProcessOwnerByProcess(Process process)
+        {
+#if NETFRAMEWORK
+#if !SIMPLISTIC_FETCH_OF_OWNER
+            var processHandle = PHANDLE.Zero;
+            try
+            {
+                NativeMethods.OpenProcessToken(process.Handle, 0x8, out processHandle);
+                var wi = new WindowsIdentity(processHandle);
+                string user = wi.Name;
+                return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (processHandle != IntPtr.Zero) 
+                    NativeMethods.CloseHandle(processHandle);
+            }
+#else
+            return GetProcessOwnerByProcessId(process.Id);
+#endif
+#else
+            return ProcessHelper.GetProcessOwnerByProcessId(process.Id);
+#endif
+        }
+
+        public static string GetProcessOwnerByProcessName(string processName)
+        {
+#if NETFRAMEWORK
+            var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Process WHERE Name = \"{processName}\"");
+
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                var argList = new string[] { string.Empty, string.Empty };
+                var returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                if (returnVal == 0)
+                {
+                    // return DOMAIN\user
+                    return $"{argList[1]}\\{argList[0]}";
+                }
+            }
+
+            return null;
+#else
+            var command = $"ps -o user= -C \"{processName}\"";
+            var startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = command, };
+            var proc = new Process() { StartInfo = startInfo, };
+            proc.Start();
+            proc.WaitForExit();
+
+            var owner = proc.StandardOutput.ReadToEnd();
+
+            return owner.IsNullOrEmpty() ? null : owner;
+#endif
+        }
+
+        public static string GetProcessOwnerByProcessId(int processId)
+        {
+#if NETFRAMEWORK
+            var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Process WHERE ProcessID = {processId}");
+
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                var argList = new string[] { string.Empty, string.Empty };
+                var returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                if (returnVal == 0)
+                {
+                    // return DOMAIN\user
+                    return $"{argList[1]}\\{argList[0]}";
+                }
+            }
+
+            return null;
+#else
+            var command = $"ps -o user= -p {processId}";
+            var startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = command, };
+            var proc = new Process() { StartInfo = startInfo, };
+            proc.Start();
+            proc.WaitForExit();
+
+            var owner = proc.StandardOutput.ReadToEnd();
+
+            return owner.IsNullOrEmpty() ? null : owner;
+#endif
+        }
+
+        public static bool ProcessIsElevatedByProcessId(int processId)
+        {
+#if NETFRAMEWORK
+            try
+            {
+                var process = Process.GetProcessById(processId);
+
+                return ProcessIsElavatedByHandle(process.Handle);
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 0x5)
+            {
+                // Access denied
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+#else
+            var owner = GetProcessOwnerByProcessId(processId);
+            var user = GetCurrentUser();
+
+            return owner != user && user != "root"; // ?? Maybe
+#endif
+        }
+
 #if NETFRAMEWORK
 
         public static bool ProcessIsElevatedByWindowHandle(HWND hwnd)
@@ -96,8 +230,12 @@ namespace MFDLabs.Diagnostics
             }
         }
 
+
+#endif
+
         public static bool ProcessIsElevated(Process p)
         {
+#if NETFRAMEWORK
             try
             {
                 // Should throw access denied if is admin and we aren't
@@ -110,9 +248,10 @@ namespace MFDLabs.Diagnostics
                 // Access is denied to the process's handle.
                 return true;
             }
-        }
-
+#else
+            return ProcessIsElevatedByProcessId(p.Id);
 #endif
+        }
 
         public static bool GetProcessByName(string processName, out Process p)
         {
