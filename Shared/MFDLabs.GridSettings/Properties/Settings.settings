@@ -296,7 +296,10 @@
     <Setting Name="DiscordConfigurationVaultAddress" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://localhost:8200</Value>
     </Setting>
-    <Setting Name="BlacklistedUsernames" Type="System.String" Scope="Application">
+    <Setting Name="BlacklistedUsernamesForRendering" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BlacklistedDiscordUserIds" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

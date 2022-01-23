@@ -99,7 +99,7 @@ namespace MFDLabs.Grid.Bot
         internal sealed class RenderExecutionTaskPlugin : BasePlugin<RenderExecutionTaskPlugin, SocketTaskRequest>
         {
             private IEnumerable<string> BlacklistedUsernames =>
-                (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernames.Split(',')
+                (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
                  select uname).ToArray();
 

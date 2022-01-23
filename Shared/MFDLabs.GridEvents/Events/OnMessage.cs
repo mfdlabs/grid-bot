@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Utility;
@@ -19,6 +21,7 @@ namespace MFDLabs.Grid.Bot.Events
 
             var userIsAdmin = message.Author.IsAdmin();
             var userIsPrivilaged = message.Author.IsPrivilaged();
+            var userIsBlacklisted = message.Author.IsBlacklisted();
 
             if (message.Author.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
 
@@ -44,6 +47,23 @@ namespace MFDLabs.Grid.Bot.Events
 
                     return;
                 }
+            }
+
+            if (userIsBlacklisted)
+            {
+                await message.Author.FireEventAsync("Fatality", "They tried to use the bot while blacklisted");
+                SystemLogger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", message.Author.Id, message.Author.Username, message.Author.Discriminator);
+
+                try
+                {
+                    await message.Author.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please contact <@{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID)}>");
+                }
+                catch
+                {
+                    SystemLogger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
+                }
+
+                return;
             }
 
             if (messageContent.ToLower().Contains("@everyone") || messageContent.ToLower().Contains("@here") && !userIsAdmin)

@@ -907,9 +907,18 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string BlacklistedUsernames {
+        public string BlacklistedUsernamesForRendering {
             get {
-                return ((string)(this["BlacklistedUsernames"]));
+                return ((string)(this["BlacklistedUsernamesForRendering"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BlacklistedDiscordUserIds {
+            get {
+                return ((string)(this["BlacklistedDiscordUserIds"]));
             }
         }
     }

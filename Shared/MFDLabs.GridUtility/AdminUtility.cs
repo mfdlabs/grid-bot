@@ -46,6 +46,11 @@ namespace MFDLabs.Grid.Bot.Utility
                 where !id.IsNullOrEmpty()
                 select id).ToArray();
 
+        private static IEnumerable<string> BlacklistedUserIDs =>
+            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',')
+             where !id.IsNullOrEmpty()
+             select id).ToArray();
+
         public static bool UserIsOwner(IUser user) => UserIsOwner(user.Id);
 
         public static bool UserIsOwner(ulong id) => id == global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID;
@@ -61,6 +66,12 @@ namespace MFDLabs.Grid.Bot.Utility
         public static bool UserIsPrivilaged(ulong id) => UserIsPrivilaged(id.ToString());
 
         public static bool UserIsPrivilaged(string id) => UserIsAdmin(id) || HigherPrivilagedUserIDs.Contains(id);
+
+        public static bool UserIsBlacklisted(IUser user) => UserIsBlacklisted(user.Id);
+
+        public static bool UserIsBlacklisted(ulong id) => UserIsBlacklisted(id.ToString());
+
+        public static bool UserIsBlacklisted(string id) => !UserIsOwner(ulong.Parse(id)) && BlacklistedUserIDs.Contains(id);
 
         public static bool ChannelIsAllowed(IChannel channel) => ChannelIsAllowed(channel.Id);
 
