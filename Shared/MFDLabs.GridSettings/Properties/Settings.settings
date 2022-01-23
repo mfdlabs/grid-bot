@@ -29,9 +29,6 @@
     <Setting Name="BotGlobalUserStatus" Type="Discord.UserStatus" Scope="Application">
       <Value Profile="(Default)">Offline</Value>
     </Setting>
-    <Setting Name="LoggingUtilDataName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="AllowedChannels" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
@@ -143,14 +140,8 @@
     <Setting Name="OnLaunchWarnAboutDebugMode" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ScriptExectionEnabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="ViewConsoleEnabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="SettingsReloadInterval" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
     <Setting Name="GridServerRegistryKeyName" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
@@ -159,9 +150,6 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="AllowAdminScripts" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="AdminScriptsOnlyAllowedByOwner" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="OnLaunchWarnAboutAdminMode" Type="System.Boolean" Scope="Application">
@@ -187,9 +175,6 @@
     </Setting>
     <Setting Name="RenderJobTimeoutInSeconds" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="RenderJobShouldDeleteResult" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="AllowAdminsToBypassDisabledCommands" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
@@ -245,9 +230,6 @@
     <Setting Name="GoogleAnalyticsTrackerID" Type="System.String" Scope="Application">
       <Value Profile="(Default)">UA-201817978-5</Value>
     </Setting>
-    <Setting Name="GAOnMessage" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="CommandRegistryOnlyMatchAlphabetCharactersForCommandName" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -257,16 +239,7 @@
     <Setting Name="GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="RestartShouldReOpenAllGridServerInstances" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="OnStartBatchAllocate25ArbiterInstances" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="OnStartCloseAllOpenGridServerInstances" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="WtfCommandsEnabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ScriptExecutionRequireProtections" Type="System.Boolean" Scope="Application">
@@ -287,9 +260,6 @@
     <Setting Name="CrashHandlerExitWhenDone" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="CommandCircuitBreakerWrapperRetryInterval" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
     <Setting Name="DiscordConfigurationVaultToken" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
@@ -301,6 +271,24 @@
     </Setting>
     <Setting Name="BlacklistedDiscordUserIds" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ConsulServiceRegistrationEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ConsulServiceRegistrationUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://localhost:8500</Value>
+    </Setting>
+    <Setting Name="ConsulServiceRegistrationAclToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorLeaseTimeSpanAddition" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

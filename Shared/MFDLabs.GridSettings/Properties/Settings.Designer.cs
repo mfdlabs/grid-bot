@@ -107,15 +107,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LoggingUtilDataName {
-            get {
-                return ((string)(this["LoggingUtilDataName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string AllowedChannels {
             get {
                 return ((string)(this["AllowedChannels"]));
@@ -448,27 +439,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ScriptExectionEnabled {
-            get {
-                return ((bool)(this["ScriptExectionEnabled"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ViewConsoleEnabled {
             get {
                 return ((bool)(this["ViewConsoleEnabled"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan SettingsReloadInterval {
-            get {
-                return ((global::System.TimeSpan)(this["SettingsReloadInterval"]));
             }
         }
         
@@ -496,15 +469,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public bool AllowAdminScripts {
             get {
                 return ((bool)(this["AllowAdminScripts"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AdminScriptsOnlyAllowedByOwner {
-            get {
-                return ((bool)(this["AdminScriptsOnlyAllowedByOwner"]));
             }
         }
         
@@ -577,15 +541,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public int RenderJobTimeoutInSeconds {
             get {
                 return ((int)(this["RenderJobTimeoutInSeconds"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool RenderJobShouldDeleteResult {
-            get {
-                return ((bool)(this["RenderJobShouldDeleteResult"]));
             }
         }
         
@@ -754,15 +709,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GAOnMessage {
-            get {
-                return ((bool)(this["GAOnMessage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool CommandRegistryOnlyMatchAlphabetCharactersForCommandName {
             get {
                 return ((bool)(this["CommandRegistryOnlyMatchAlphabetCharactersForCommandName"]));
@@ -790,36 +736,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool RestartShouldReOpenAllGridServerInstances {
-            get {
-                return ((bool)(this["RestartShouldReOpenAllGridServerInstances"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool OnStartBatchAllocate25ArbiterInstances {
-            get {
-                return ((bool)(this["OnStartBatchAllocate25ArbiterInstances"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool OnStartCloseAllOpenGridServerInstances {
             get {
                 return ((bool)(this["OnStartCloseAllOpenGridServerInstances"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool WtfCommandsEnabled {
-            get {
-                return ((bool)(this["WtfCommandsEnabled"]));
             }
         }
         
@@ -879,15 +798,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan CommandCircuitBreakerWrapperRetryInterval {
-            get {
-                return ((global::System.TimeSpan)(this["CommandCircuitBreakerWrapperRetryInterval"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string DiscordConfigurationVaultToken {
             get {
@@ -919,6 +829,60 @@ namespace MFDLabs.Grid.Bot.Properties {
         public string BlacklistedDiscordUserIds {
             get {
                 return ((string)(this["BlacklistedDiscordUserIds"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ConsulServiceRegistrationEnabled {
+            get {
+                return ((bool)(this["ConsulServiceRegistrationEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:8500")]
+        public string ConsulServiceRegistrationUrl {
+            get {
+                return ((string)(this["ConsulServiceRegistrationUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ConsulServiceRegistrationAclToken {
+            get {
+                return ((string)(this["ConsulServiceRegistrationAclToken"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan ExceptionBasedAutomoderatorLeaseTimeSpanAddition {
+            get {
+                return ((global::System.TimeSpan)(this["ExceptionBasedAutomoderatorLeaseTimeSpanAddition"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist {
+            get {
+                return ((int)(this["ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExceptionBasedAutomoderatorEnabled {
+            get {
+                return ((bool)(this["ExceptionBasedAutomoderatorEnabled"]));
             }
         }
     }
