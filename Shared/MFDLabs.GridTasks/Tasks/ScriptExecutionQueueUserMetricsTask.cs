@@ -67,6 +67,7 @@ namespace MFDLabs.Grid.Bot
                         case TimeoutException:
                             message.Reply("the script you tried to execute has timed out, please try identify " +
                                                      "the leading cause of a timeout.");
+                            message.Author.IncrementExceptionLimit();
                             return PluginResult.ContinueProcessing;
                         case FaultException fault:
                         {
