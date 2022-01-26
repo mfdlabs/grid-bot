@@ -34,11 +34,6 @@ namespace Discord.Interactions
         public string WildCardExpression { get; set; }
 
         /// <summary>
-        ///     Gets or sets the option to delete Slash Command acknowledgements if no Slash Command handler is found in the <see cref="InteractionService"/>.
-        /// </summary>
-        public bool DeleteUnknownSlashCommandAck { get; set; } = true;
-
-        /// <summary>
         ///     Gets or sets the option to use compiled lambda expressions to create module instances and execute commands. This method improves performance at the cost of memory.
         /// </summary>
         public bool UseCompiledLambda { get; set; } = false;
@@ -51,6 +46,11 @@ namespace Discord.Interactions
         ///     disabled to decrease the lookup time.
         /// </remarks>
         public bool EnableAutocompleteHandlers { get; set; } = true;
+
+        /// <summary>
+        ///     Gets or sets whether new service scopes should be automatically created when resolving module depedencies on every command execution.
+        /// </summary>
+        public bool AutoServiceScopes { get; set; } = true;
 
         /// <summary>
         ///     Gets or sets delegate to be used by the <see cref="InteractionService"/> when responding to a Rest based interaction.

@@ -107,7 +107,8 @@ namespace Discord.WebSocket
             }
         }
         private static API.DiscordSocketApiClient CreateApiClient(DiscordSocketConfig config)
-            => new API.DiscordSocketApiClient(config.RestClientProvider, config.WebSocketProvider, DiscordRestConfig.UserAgent);
+            => new DiscordSocketApiClient(config.RestClientProvider, config.WebSocketProvider, DiscordRestConfig.UserAgent, config.GatewayHost,
+                useSystemClock: config.UseSystemClock, defaultRatelimitCallback: config.DefaultRatelimitCallback);
 
         internal async Task AcquireIdentifyLockAsync(int shardId, CancellationToken token)
         {
@@ -445,7 +446,7 @@ namespace Discord.WebSocket
             client.GuildUpdated += (oldGuild, newGuild) => _guildUpdatedEvent.InvokeAsync(oldGuild, newGuild);
 
             client.UserJoined += (user) => _userJoinedEvent.InvokeAsync(user);
-            client.UserLeft += (user) => _userLeftEvent.InvokeAsync(user);
+            client.UserLeft += (guild, user) => _userLeftEvent.InvokeAsync(guild, user);
             client.UserBanned += (user, guild) => _userBannedEvent.InvokeAsync(user, guild);
             client.UserUnbanned += (user, guild) => _userUnbannedEvent.InvokeAsync(user, guild);
             client.UserUpdated += (oldUser, newUser) => _userUpdatedEvent.InvokeAsync(oldUser, newUser);
@@ -567,6 +568,25 @@ namespace Discord.WebSocket
             }
 
             base.Dispose(disposing);
+        }
+
+        internal override ValueTask DisposeAsync(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    if (_shards != null)
+                    {
+                        foreach (var client in _shards)
+                            client?.Dispose();
+                    }
+                }
+
+                _isDisposed = true;
+            }
+
+            return base.DisposeAsync(disposing);
         }
         #endregion
     }

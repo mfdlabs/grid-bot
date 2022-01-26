@@ -50,7 +50,7 @@ namespace Discord.Interactions
         public abstract bool SupportsWildCards { get; }
 
         /// <inheritdoc/>
-        public bool IsTopLevelCommand => IgnoreGroupNames || !Module.IsTopLevelGroup;
+        public bool IsTopLevelCommand { get; }
 
         /// <inheritdoc/>
         public RunMode RunMode { get; }
@@ -72,6 +72,7 @@ namespace Discord.Interactions
             Name = builder.Name;
             MethodName = builder.MethodName;
             IgnoreGroupNames = builder.IgnoreGroupNames;
+            IsTopLevelCommand = IgnoreGroupNames || CheckTopLevel(Module);
             RunMode = builder.RunMode != RunMode.Default ? builder.RunMode : commandService._runMode;
             Attributes = builder.Attributes.ToImmutableArray();
             Preconditions = builder.Preconditions.ToImmutableArray();
@@ -131,14 +132,24 @@ namespace Discord.Interactions
             {
                 case RunMode.Sync:
                     {
-                        using var scope = services?.CreateScope();
-                        return await ExecuteInternalAsync(context, args, scope?.ServiceProvider ?? EmptyServiceProvider.Instance).ConfigureAwait(false);
+                        if (CommandService._autoServiceScopes)
+                        {
+                            using var scope = services?.CreateScope();
+                            return await ExecuteInternalAsync(context, args, scope?.ServiceProvider ?? EmptyServiceProvider.Instance).ConfigureAwait(false);
+                        }
+                        else
+                            return await ExecuteInternalAsync(context, args, services).ConfigureAwait(false);
                     }
                 case RunMode.Async:
                     _ = Task.Run(async () =>
                     {
-                        using var scope = services?.CreateScope();
-                        await ExecuteInternalAsync(context, args, scope?.ServiceProvider ?? EmptyServiceProvider.Instance).ConfigureAwait(false);
+                        if (CommandService._autoServiceScopes)
+                        {
+                            using var scope = services?.CreateScope();
+                            await ExecuteInternalAsync(context, args, scope?.ServiceProvider ?? EmptyServiceProvider.Instance).ConfigureAwait(false);
+                        }
+                        else
+                            await ExecuteInternalAsync(context, args, services).ConfigureAwait(false);
                     });
                     break;
                 default:
@@ -220,6 +231,20 @@ namespace Discord.Interactions
             }
         }
 
+        private static bool CheckTopLevel(ModuleInfo parent)
+        {
+            var currentParent = parent;
+
+            while (currentParent != null)
+            {
+                if (currentParent.IsSlashGroup)
+                    return false;
+
+                currentParent = currentParent.Parent;
+            }
+            return true;
+        }
+
         // ICommandInfo
 
         /// <inheritdoc/>
@@ -241,7 +266,7 @@ namespace Discord.Interactions
             }
             builder.AppendFormat(" {0}", Name);
 
-            return builder.ToString();
+            return builder.ToString().Trim();
         }
     }
 }

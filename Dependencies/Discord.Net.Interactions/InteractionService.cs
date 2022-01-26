@@ -67,7 +67,7 @@ namespace Discord.Interactions
         internal readonly LogManager _logManager;
         internal readonly Func<DiscordRestClient> _getRestClient;
 
-        internal readonly bool _throwOnError, _deleteUnkownSlashCommandAck, _useCompiledLambda, _enableAutocompleteHandlers;
+        internal readonly bool _throwOnError, _useCompiledLambda, _enableAutocompleteHandlers, _autoServiceScopes;
         internal readonly string _wildCardExp;
         internal readonly RunMode _runMode;
         internal readonly RestResponseCallback _restResponseCallback;
@@ -153,10 +153,10 @@ namespace Discord.Interactions
                 throw new InvalidOperationException($"RunMode cannot be set to {RunMode.Default}");
 
             _throwOnError = config.ThrowOnError;
-            _deleteUnkownSlashCommandAck = config.DeleteUnknownSlashCommandAck;
             _wildCardExp = config.WildCardExpression;
             _useCompiledLambda = config.UseCompiledLambda;
             _enableAutocompleteHandlers = config.EnableAutocompleteHandlers;
+            _autoServiceScopes = config.AutoServiceScopes;
             _restResponseCallback = config.RestResponseCallback;
 
             _genericTypeConverters = new ConcurrentDictionary<Type, Type>
@@ -166,7 +166,8 @@ namespace Discord.Interactions
                 [typeof(IUser)] = typeof(DefaultUserConverter<>),
                 [typeof(IMentionable)] = typeof(DefaultMentionableConverter<>),
                 [typeof(IConvertible)] = typeof(DefaultValueConverter<>),
-                [typeof(Enum)] = typeof(EnumConverter<>)
+                [typeof(Enum)] = typeof(EnumConverter<>),
+                [typeof(Nullable<>)] = typeof(NullableConverter<>),
             };
 
             _typeConverters = new ConcurrentDictionary<Type, TypeConverter>
@@ -588,6 +589,60 @@ namespace Discord.Interactions
         }
 
         /// <summary>
+        ///     Search the registered slash commands using a <see cref="ISlashCommandInteraction"/>.
+        /// </summary>
+        /// <param name="slashCommandInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>
+        ///     The search result. When successful, result contains the found <see cref="SlashCommandInfo"/>.
+        /// </returns>
+        public SearchResult<SlashCommandInfo> SearchSlashCommand(ISlashCommandInteraction slashCommandInteraction)
+            => _slashCommandMap.GetCommand(slashCommandInteraction.Data.GetCommandKeywords());
+
+        /// <summary>
+        ///     Search the registered slash commands using a <see cref="IComponentInteraction"/>.
+        /// </summary>
+        /// <param name="componentInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>
+        ///     The search result. When successful, result contains the found <see cref="ComponentCommandInfo"/>.
+        /// </returns>
+        public SearchResult<ComponentCommandInfo> SearchComponentCommand(IComponentInteraction componentInteraction)
+            => _componentCommandMap.GetCommand(componentInteraction.Data.CustomId);
+
+        /// <summary>
+        ///     Search the registered slash commands using a <see cref="IUserCommandInteraction"/>.
+        /// </summary>
+        /// <param name="userCommandInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>
+        ///     The search result. When successful, result contains the found <see cref="ContextCommandInfo"/>.
+        /// </returns>
+        public SearchResult<ContextCommandInfo> SearchUserCommand(IUserCommandInteraction userCommandInteraction)
+            => _contextCommandMaps[ApplicationCommandType.User].GetCommand(userCommandInteraction.Data.Name);
+
+        /// <summary>
+        ///     Search the registered slash commands using a <see cref="IMessageCommandInteraction"/>.
+        /// </summary>
+        /// <param name="messageCommandInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>
+        ///     The search result. When successful, result contains the found <see cref="ContextCommandInfo"/>.
+        /// </returns>
+        public SearchResult<ContextCommandInfo> SearchMessageCommand(IMessageCommandInteraction messageCommandInteraction)
+            => _contextCommandMaps[ApplicationCommandType.Message].GetCommand(messageCommandInteraction.Data.Name);
+
+        /// <summary>
+        ///     Search the registered slash commands using a <see cref="IAutocompleteInteraction"/>.
+        /// </summary>
+        /// <param name="autocompleteInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>
+        ///     The search result. When successful, result contains the found <see cref="AutocompleteCommandInfo"/>.
+        /// </returns>
+        public SearchResult<AutocompleteCommandInfo> SearchAutocompleteCommand(IAutocompleteInteraction autocompleteInteraction)
+        {
+            var keywords = autocompleteInteraction.Data.GetCommandKeywords();
+            keywords.Add(autocompleteInteraction.Data.Current.Name);
+            return _autocompleteCommandMap.GetCommand(keywords);
+        }
+
+        /// <summary>
         ///     Execute a Command from a given <see cref="IInteractionContext"/>.
         /// </summary>
         /// <param name="context">Name context of the command.</param>
@@ -619,12 +674,6 @@ namespace Discord.Interactions
             if (!result.IsSuccess)
             {
                 await _cmdLogger.DebugAsync($"Unknown slash command, skipping execution ({string.Join(" ", keywords).ToUpper()})");
-
-                if (_deleteUnkownSlashCommandAck)
-                {
-                    var response = await context.Interaction.GetOriginalResponseAsync().ConfigureAwait(false);
-                    await response.DeleteAsync().ConfigureAwait(false);
-                }
 
                 await _slashCommandExecutedEvent.InvokeAsync(null, context, result).ConfigureAwait(false);
                 return result;
@@ -699,8 +748,8 @@ namespace Discord.Interactions
         {
             if (_typeConverters.TryGetValue(type, out var specific))
                 return specific;
-
-            else if (_genericTypeConverters.Any(x => x.Key.IsAssignableFrom(type)))
+            else if (_genericTypeConverters.Any(x => x.Key.IsAssignableFrom(type)
+            || (x.Key.IsGenericTypeDefinition && type.IsGenericType && x.Key.GetGenericTypeDefinition() == type.GetGenericTypeDefinition())))
             {
                 services ??= EmptyServiceProvider.Instance;
 
@@ -932,6 +981,9 @@ namespace Discord.Interactions
         {
             if (_genericTypeConverters.TryGetValue(type, out var matching))
                 return matching;
+
+            if (type.IsGenericType && _genericTypeConverters.TryGetValue(type.GetGenericTypeDefinition(), out var genericDefinition))
+                return genericDefinition;
 
             var typeInterfaces = type.GetInterfaces();
             var candidates = _genericTypeConverters.Where(x => x.Key.IsAssignableFrom(type))

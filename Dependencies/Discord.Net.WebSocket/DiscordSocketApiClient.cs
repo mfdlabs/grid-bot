@@ -39,8 +39,8 @@ namespace Discord.API
 
         public DiscordSocketApiClient(RestClientProvider restClientProvider, WebSocketProvider webSocketProvider, string userAgent,
             string url = null, RetryMode defaultRetryMode = RetryMode.AlwaysRetry, JsonSerializer serializer = null,
-			bool useSystemClock = true)
-            : base(restClientProvider, userAgent, defaultRetryMode, serializer, useSystemClock)
+			bool useSystemClock = true, Func<IRateLimitInfo, Task> defaultRatelimitCallback = null)
+            : base(restClientProvider, userAgent, defaultRetryMode, serializer, useSystemClock, defaultRatelimitCallback)
         {
             _gatewayUrl = url;
             if (url != null)
@@ -124,10 +124,37 @@ namespace Discord.API
                     _decompressor?.Dispose();
                     _compressed?.Dispose();
                 }
-                _isDisposed = true;
             }
 
             base.Dispose(disposing);
+        }
+
+#if NETSTANDARD2_1
+        internal override async ValueTask DisposeAsync(bool disposing)
+#else
+        internal override ValueTask DisposeAsync(bool disposing)
+#endif
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    _connectCancelToken?.Dispose();
+                    (WebSocketClient as IDisposable)?.Dispose();
+#if NETSTANDARD2_1
+                    if (!(_decompressor is null))
+                        await _decompressor.DisposeAsync().ConfigureAwait(false);
+#else
+                    _decompressor?.Dispose();
+#endif
+                }
+            }
+
+#if NETSTANDARD2_1
+            await base.DisposeAsync(disposing).ConfigureAwait(false);
+#else
+            return base.DisposeAsync(disposing);
+#endif
         }
 
         public async Task ConnectAsync()
@@ -311,7 +338,6 @@ namespace Discord.API
         }
         public async Task SendVoiceStateUpdateAsync(ulong guildId, ulong? channelId, bool selfDeaf, bool selfMute, RequestOptions options = null)
         {
-            options = RequestOptions.CreateOrClone(options);
             var payload = new VoiceStateUpdateParams
             {
                 GuildId = guildId,
@@ -319,6 +345,12 @@ namespace Discord.API
                 SelfDeaf = selfDeaf,
                 SelfMute = selfMute
             };
+            options = RequestOptions.CreateOrClone(options);
+            await SendGatewayAsync(GatewayOpCode.VoiceStateUpdate, payload, options: options).ConfigureAwait(false);
+        }
+        public async Task SendVoiceStateUpdateAsync(VoiceStateUpdateParams payload, RequestOptions options = null)
+        {
+            options = RequestOptions.CreateOrClone(options);
             await SendGatewayAsync(GatewayOpCode.VoiceStateUpdate, payload, options: options).ConfigureAwait(false);
         }
         public async Task SendGuildSyncAsync(IEnumerable<ulong> guildIds, RequestOptions options = null)
