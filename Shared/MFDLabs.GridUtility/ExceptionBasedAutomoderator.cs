@@ -25,18 +25,43 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        private static ConcurrentDictionary<IUser, (DateTime, Atomic)> TrackedUsers = new();
+        private static readonly ConcurrentDictionary<ulong, (DateTime, Atomic)> TrackedUsers = new();
 
-        public static (DateTime, Atomic) GetOrCreateTrack(this IUser user)
+        public static (DateTime, Atomic) GetOrCreateTrack(this IUser user, Atomic count, TimeSpan lease)
         {
-            return TrackedUsers.GetOrAdd(user, (DateTime.MinValue, 0));
+            return TrackedUsers.GetOrAdd(user.Id, (DateTime.Now.Add(lease), count));
+        }
+
+        public static (DateTime, Atomic) UpdateOrCreateTrack(this IUser user, Atomic count, TimeSpan? lease, bool incrementLastCount = false)
+        {
+            (DateTime? expires, Atomic count) updateTuple;
+            if (lease == null) updateTuple = (null, count);
+            else updateTuple = (DateTime.Now.Add(lease.Value), count);
+
+            return TrackedUsers.AddOrUpdate(user.Id, 
+                _ =>
+                {
+                    if (updateTuple.count == null) updateTuple.count = 0;
+                    return (updateTuple.expires.Value, updateTuple.count);
+                },
+                (_, old) =>
+                {
+                    if (updateTuple.count == null && !incrementLastCount) updateTuple.count = old.Item2 ?? 0;
+                    if (incrementLastCount)
+                    {
+                        updateTuple.count = old.Item2++;
+                        updateTuple.expires = old.Item1;
+                    }
+                    return (updateTuple.expires.Value, updateTuple.count);
+                }
+            );
         }
 
         public static bool DetermineIfUserHasExceededExceptionLimit(this IUser user)
         {
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return false;
 
-            var (exceptionCounterExpires, exceptionCounter) = user.GetOrCreateTrack();
+            var (exceptionCounterExpires, exceptionCounter) = user.GetOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
             if (exceptionCounterExpires < DateTime.Now)
             {
@@ -49,20 +74,22 @@ namespace MFDLabs.Grid.Bot.Utility
                 }
 
                 // Exlusive in case another thread had hit them just in the nick of time :/
-                if (exceptionCounter < global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist)
+                if (exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist)
                 {
                     SystemLogger.Singleton.Warning("Their exception counter exceeded the maximum before blacklist, return true");
                     return true;
                 }
 
                 SystemLogger.Singleton.Info("The user didn't exceed the maximum before blacklist, reset their track.");
-                TrackedUsers.AddOrUpdate(user, _ => (DateTime.MinValue, 0), (_, _) => (DateTime.Now.Add(global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition), 0));
+                user.UpdateOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
                 return false;
             }
 
+            SystemLogger.Singleton.Info("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
 
-            return exceptionCounter < global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
+
+            return exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
         }
 
         public static bool CheckIfUserShouldBeBlacklisted(this IUser user)
@@ -85,18 +112,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             if (user.CheckIfUserShouldBeBlacklisted()) return;
 
-            TrackedUsers.AddOrUpdate(
-                user,
-                _ => (DateTime.Now.Add(global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition), 0),
-                (k, v) =>
-                {
-                    var (ex, counter) = v;
+            SystemLogger.Singleton.Verbose("User {0} has not exceeded the exception limit, increment their count atomically.", user.Id);
 
-                    counter++;
-
-                    return (ex, counter);
-                }
-            );
+            user.UpdateOrCreateTrack(null, null, true);
         }
     }
 }
