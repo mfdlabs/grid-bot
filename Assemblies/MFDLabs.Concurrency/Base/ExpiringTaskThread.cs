@@ -113,7 +113,7 @@ namespace MFDLabs.Concurrency.Base
 
         private static void DetermineIfDeletionNeeded()
         {
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.LifecycleEvent("Determining if task thread '{0}' has expired.",
                 _singleton == null
                     ? "Expired Task Thread"
@@ -129,7 +129,7 @@ namespace MFDLabs.Concurrency.Base
                     _singleton = null;
                     return;
                 }
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Verbose("Task thread '{0}' has not expired.", _singleton == null ? "Expired Task Thread" : _singleton.Name);
 #endif
             _singleton?._reloadTimer.Change(_singleton.Expiration, _singleton.Expiration);

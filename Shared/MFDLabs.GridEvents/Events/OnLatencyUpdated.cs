@@ -2,7 +2,7 @@
 using MFDLabs.Analytics.Google;
 using MFDLabs.Networking;
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
 using MFDLabs.Logging;
 #endif
 
@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Events
             await GoogleAnalyticsManager.TrackNetworkEventAsync("KeepAlive",
                 "LatencyUpdate",
                 $"Received a latency update from the discord socket, old latency '{oldLatency}', new latency '{newLatency}'.");
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received a latency update from the discord socket, old latency '{0}', new latency '{1}'.",
                 oldLatency,

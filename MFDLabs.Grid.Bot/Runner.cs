@@ -143,7 +143,7 @@ namespace MFDLabs.Grid.Bot
                             | GatewayIntents.DirectMessages
                             | GatewayIntents.Guilds,
                         LogGatewayIntentWarnings = false,
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                         LogLevel = LogSeverity.Debug,
 #endif
                     }

@@ -55,7 +55,7 @@ namespace MFDLabs.Grid.Bot
                 }
                 catch (Exception ex)
                 {
-                    if (ex is not FaultException)
+                    if (ex is not FaultException or TimeoutException)
                         global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
 
                     message.Author.FireEvent("ScriptExecutionQueueFailure", ex.ToDetailedString());
@@ -80,6 +80,7 @@ namespace MFDLabs.Grid.Bot
                                     return PluginResult.ContinueProcessing;
                                 case "BatchJob Timeout":
                                     message.Reply("The job timed out, please try again later.");
+                                    message.Author.IncrementExceptionLimit();
                                     return PluginResult.ContinueProcessing;
                             }
 
@@ -105,7 +106,7 @@ namespace MFDLabs.Grid.Bot
                         }
                     }
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                     SystemLogger.Singleton.Error(ex);
 #else
                     SystemLogger.Singleton.Warning("An error occurred when trying to execute script execution task: {0}", ex.Message);

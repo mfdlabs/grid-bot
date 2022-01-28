@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Events
             {
                 if (message.Exception?.InnerException is WebSocketClosedException) return Task.CompletedTask;
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                 if (!(message.Exception is TaskCanceledException &&
                       !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
                     SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",

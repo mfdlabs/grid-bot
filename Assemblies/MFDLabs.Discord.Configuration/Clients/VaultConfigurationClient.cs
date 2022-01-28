@@ -93,7 +93,7 @@ namespace MFDLabs.Discord.Configuration
                 }
                 catch (Exception ex)
                 {
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                     SystemLogger.Singleton.Error(ex);
 #else
                     SystemLogger.Singleton.Warning(ex.Message);

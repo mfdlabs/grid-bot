@@ -5,7 +5,7 @@ using MFDLabs.Concurrency.Base;
 using MFDLabs.Concurrency.Base.Async;
 using MFDLabs.Concurrency.Base.Unsafe;
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
 using MFDLabs.Logging;
 #endif
 
@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.Plugins
                     "PacketReceived",
                     $"The packet '{packet->Id}' with the sequence '{packet->SequenceId}' had an item with the typeof '{packet->Data->GetType().FullName}'");
             }
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'",
                 packet->Id,
@@ -60,7 +60,7 @@ namespace MFDLabs.Grid.Bot.Plugins
                     "PacketReceived",
                     $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
             }
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'",
                 packet.Id,
@@ -89,7 +89,7 @@ namespace MFDLabs.Grid.Bot.Plugins
             GoogleAnalyticsManager.TrackNetworkEvent("Concurrency",
                 "PacketReceived",
                 $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received default packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'",
                 packet.Id,
@@ -115,7 +115,7 @@ namespace MFDLabs.Grid.Bot.Plugins
                     "PacketReceived",
                     $"The packet '{packet.Id}' with the sequence '{packet.SequenceId}' had an item with the typeof '{packet.Item.GetType().FullName}'");
             }
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received async result packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'",
                 packet.Id,
@@ -144,7 +144,7 @@ namespace MFDLabs.Grid.Bot.Plugins
             await GoogleAnalyticsManager.TrackNetworkEventAsync("Concurrency",
                 "PacketReceived",
                 $"Received result packet '{packet.Id}' with the sequence '{packet.SequenceId}' at '{packet.Created}' with the status of '{packet.Status}'");
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Info(
                 "Received default async packet '{0}' with the sequence '{1}' at '{2}' with the status of '{3}'",
                 packet.Id,

@@ -106,7 +106,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
                                     Monitor.RateOfItemsPerSecondProcessedThatFail.Increment();
                                     Monitor.AverageRateOfItemsThatFail.Sample(1.0 / _sequenceId);
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                                     SystemLogger.Singleton.Error(ex);
 #else
                                     SystemLogger.Singleton.Warning("An error occurred when trying to process a received task item: {0}", ex.Message);
@@ -126,7 +126,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
 
         private void DetermineIfDeletionNeeded()
         {
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.LifecycleEvent("Determining if task thread '{0}' has expired.",
                 _singleton == null
                     ? "Expired Task Thread"
@@ -144,7 +144,7 @@ namespace MFDLabs.Concurrency.Base.Unsafe
                     _singleton = null;
                     return;
                 }
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Verbose("Task thread '{0}' has not expired.", _singleton == null ? "Expired Task Thread" : _singleton.Name);
 #endif
             _singleton?._reloadTimer.Change(_singleton.Expiration, _singleton.Expiration);

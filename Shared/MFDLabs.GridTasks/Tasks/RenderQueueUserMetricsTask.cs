@@ -48,7 +48,7 @@ namespace MFDLabs.Grid.Bot
                     message.Author.FireEvent("RenderQueueFailure", ex.ToDetailedString());
                     perfmon.TotalItemsProcessedThatFailed.Increment();
                     packet.Status = PacketProcessingStatus.Failure;
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                     SystemLogger.Singleton.Error(ex);
 #else
                     SystemLogger.Singleton.Warning("An error occurred when trying to execute render task: {0}", ex.Message);

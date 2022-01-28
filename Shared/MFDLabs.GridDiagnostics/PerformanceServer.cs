@@ -14,7 +14,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             {
                 if (ex is not HttpListenerException {ErrorCode: 0x3E3})
                 {
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                     SystemLogger.Singleton.Error(ex);
 #else
                     SystemLogger.Singleton.Warning("An error occurred on the perfmon counter server, please review this error message: {0}.", ex.Message);

@@ -56,7 +56,7 @@
                 }
 
                 global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                 global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
 #else
                 global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", (e.ExceptionObject as global::System.Exception).Message);
