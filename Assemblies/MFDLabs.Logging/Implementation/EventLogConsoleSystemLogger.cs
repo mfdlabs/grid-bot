@@ -185,20 +185,20 @@ namespace MFDLabs.Logging
         public void Trace(string format, params object[] args)
         {
 #if NETFRAMEWORK
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", format, args);
+            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
 #endif
-            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", format, args);
-            LogLocally(LogLevel.Error, "TRACE", format, args);
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
+            LogLocally(LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
         }
 
         [DebuggerStepThrough]
         public void Trace(Func<string> messageGetter)
         {
 #if NETFRAMEWORK
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", messageGetter());
+            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
 #endif
-            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", messageGetter());
-            LogLocally(LogLevel.Error, "TRACE", messageGetter());
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
+            LogLocally(LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
         }
 
         [DebuggerStepThrough]

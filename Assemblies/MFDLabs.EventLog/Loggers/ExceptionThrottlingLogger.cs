@@ -152,6 +152,34 @@ namespace MFDLabs.EventLog
                 _logger.Warning(format, args);
         }
         public void Warning(Func<string> messageGetter) => _logger.Warning(messageGetter);
+        public void Trace(string format, params object[] args)
+        {
+            if (_isThrottlingEnabledGetter())
+            {
+                var countBeforeThrottling = _countBeforeThrottlingGetter();
+                var throttlingInterval = _throttlingIntervalGetter();
+                var warningCountByFormat = _warningCountsByFormat.GetOrAdd(format, _ => new ExpiringCount(throttlingInterval));
+                var resetFormat = 0;
+                if (warningCountByFormat.Expiration < DateTime.UtcNow)
+                    resetFormat = warningCountByFormat.Reset(throttlingInterval) - countBeforeThrottling;
+                var incremental = warningCountByFormat.Increment();
+                if (resetFormat > 0)
+                {
+                    _logger.Warning(
+                        "{0}\r\nWarning Logs Throttled. {1} warnings of the same format in the last {2} seconds were throttled.",
+                        format,
+                        resetFormat,
+                        throttlingInterval.TotalSeconds);
+                    return;
+                }
+
+                if (incremental > countBeforeThrottling) return;
+                _logger.Warning(format, args);
+            }
+            else
+                _logger.Warning(format, args);
+        }
+        public void Trace(Func<string> messageGetter) => _logger.Warning(messageGetter);
         public void Verbose(string format, params object[] args) => _logger.Verbose(format, args);
         public void Verbose(Func<string> messageGetter) => _logger.Verbose(messageGetter);
         public void LifecycleEvent(string format, params object[] args) => _logger.LifecycleEvent(format, args);

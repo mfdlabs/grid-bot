@@ -16,6 +16,8 @@ namespace MFDLabs.EventLog
         void Info(Func<string> messageGetter);
         void Warning(string format, params object[] args);
         void Warning(Func<string> messageGetter);
+        void Trace(string format, params object[] args);
+        void Trace(Func<string> messageGetter);
         void Verbose(string format, params object[] args);
         void Verbose(Func<string> messageGetter);
         void LifecycleEvent(string format, params object[] args);

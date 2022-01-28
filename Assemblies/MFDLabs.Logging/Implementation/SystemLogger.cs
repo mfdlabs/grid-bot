@@ -157,15 +157,15 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         public void Trace(string format, params object[] args)
         {
-            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", format, args);
-            LogLocally(LogLevel.Error, "TRACE", format, args);
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
+            LogLocally(LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
         }
 
         [DebuggerStepThrough]
         public void Trace(Func<string> messageGetter)
         {
-            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", messageGetter());
-            LogLocally(LogLevel.Error, "TRACE", messageGetter());
+            LogColorString(ConsoleColor.Red, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
+            LogLocally(LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
         }
 
         [DebuggerStepThrough]

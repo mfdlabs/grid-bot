@@ -50,6 +50,8 @@ namespace MFDLabs.EventLog
         public void Info(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Information, messageGetter);
         public void Warning(string format, params object[] args) => LogIfNeeded(LogLevel.Warning, format, args);
         public void Warning(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Warning, messageGetter);
+        public void Trace(string format, params object[] args) => LogIfNeeded(LogLevel.Verbose, format, args);
+        public void Trace(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Verbose, messageGetter);
         public void Verbose(string format, params object[] args) => LogIfNeeded(LogLevel.Verbose, format, args);
         public void Verbose(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Verbose, messageGetter);
         public void LifecycleEvent(string format, params object[] args) => Log(LogLevel.Information, format, args);
