@@ -1,65 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <Deterministic>False</Deterministic>
-        <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-        <LangVersion>9</LangVersion>
-        <AssemblyName>MFDLabs.Grid.Deployer</AssemblyName>
-		<OutputType>Exe</OutputType>
-		<ApplicationIcon>app.ico</ApplicationIcon>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <LangVersion>9</LangVersion>
+    <AssemblyName>MFDLabs.Grid.Deployer</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <WarningLevel>0</WarningLevel>
-        <DebugType>none</DebugType>
-        <DebugSymbols>false</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
 
-	
-	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-        <Reference Include="System.Configuration" />
-    </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    </ItemGroup>
-	
-	<ItemGroup>
-        <Compile Update="Properties\Settings.Designer.cs">
-            <DesignTimeSharedInput>True</DesignTimeSharedInput>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Settings.settings</DependentUpon>
-        </Compile>
-        <Compile Update="Properties\Settings.Designer.cs">
-          <AutoGen>True</AutoGen>
-          <DesignTimeSharedInput>True</DesignTimeSharedInput>
-          <DependentUpon>Settings.settings</DependentUpon>
-        </Compile>
-    </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Update="Properties\Settings.settings">
-            <Generator>SettingsSingleFileGenerator</Generator>
-            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-        </None>
-        <None Update="Properties\Settings.settings">
-          <Generator>SettingsSingleFileGenerator</Generator>
-          <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-        </None>
-    </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="app.ico" />
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="SET AppSettingsConfiguration=$(ConfigurationName)&#xD;&#xA;&#xD;&#xA;rem Determine the current configuration&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugGridDeploy&quot; SET AppSettingsConfiguration=Debug-Vault&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugRunner&quot; SET AppSettingsConfiguration=Debug-OnTheRun&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;DebugActor&quot; SET AppSettingsConfiguration=Debug-Root&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseGridDeploy&quot; SET AppSettingsConfiguration=Release-Vault&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseRunner&quot; SET AppSettingsConfiguration=Release-OnTheRun&#xD;&#xA;IF &quot;%25AppSettingsConfiguration%25&quot;==&quot;ReleaseActor&quot; SET AppSettingsConfiguration=Release-Root&#xD;&#xA;&#xD;&#xA;ECHO Deploying with configuration &quot;%25AppSettingsConfiguration%25&quot;&#xD;&#xA;&#xD;&#xA;rem Copy the current configuration settings to the target&#xD;&#xA;IF NOT &quot;%25AppSettingsConfiguration%25&quot;==&quot;Debug&quot; (&#xD;&#xA;    IF NOT &quot;%25AppSettingsConfiguration%25&quot;==&quot;Release&quot; (&#xD;&#xA;        echo Copying configuration settings $(ProjectDir)App.%25AppSettingsConfiguration%25.config to $(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config&#xD;&#xA;        COPY /Y &quot;$(ProjectDir)App.%25AppSettingsConfiguration%25.config&quot; &quot;$(ProjectDir)$(OutDir)$(TargetName)$(TargetExt).config&quot;&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;xcopy /C/I/Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)&quot;&#xD;&#xA;xcopy /C/I/Y &quot;$(TargetPath).config&quot; &quot;$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)&quot;" />
-    </Target>
+  <ItemGroup>
+    <Content Include="app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /C/I/Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)&quot;&#xD;&#xA;xcopy /C/I/Y &quot;$(TargetPath).config&quot; &quot;$(ProjectDir)..\..\MFDLabs.Grid.Bot\$(OutDir)&quot;" />
+  </Target>
 
 </Project>
