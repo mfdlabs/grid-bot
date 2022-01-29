@@ -29,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Commands
             if (!PercentageInvoker.InvokeAction(
                 () => GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request),
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewViewGridServerConsoleWorkQueueRolloutPercentage
-            ))
+            ) && !message.Author.IsAdmin())
             {
                 await message.ReplyAsync("View console is not enabled at this time.");
                 return;
