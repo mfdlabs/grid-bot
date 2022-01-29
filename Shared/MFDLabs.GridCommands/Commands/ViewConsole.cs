@@ -29,13 +29,15 @@ namespace MFDLabs.Grid.Bot.Commands
             if (!PercentageInvoker.InvokeAction(
                 () => GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request),
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewViewGridServerConsoleWorkQueueRolloutPercentage
-            ) && !message.Author.IsAdmin())
+            ))
             {
+                if (message.Author.IsAdmin())
+                {
+                    GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
+                    return;
+                }
                 await message.ReplyAsync("View console is not enabled at this time.");
                 return;
-            } else
-            {
-                GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
             }
         }
     }
