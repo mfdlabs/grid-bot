@@ -27,11 +27,15 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         {
             SystemLogger.Singleton.LifecycleEvent("Launching performance monitor server...");
 
-            if (SystemGlobal.ContextIsAdministrator())
+#if !DEBUG
+
+            if (!SystemGlobal.ContextIsAdministrator())
             {
                 SystemLogger.Singleton.Warning("Not launching performance monitor service due to context accessibility issues.");
                 return;
             }
+
+#endif
 
             Server.Start();
             SystemLogger.Singleton.Warning("Launched performance monitor server on host 'http://*:{0}'.",
@@ -42,11 +46,15 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         {
             SystemLogger.Singleton.LifecycleEvent("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
 
-            if (SystemGlobal.ContextIsAdministrator())
+#if !DEBUG
+
+            if (!SystemGlobal.ContextIsAdministrator())
             {
                 SystemLogger.Singleton.Warning("Not stopping performance monitor service due to context accessibility issues.");
                 return;
             }
+
+#endif
 
             try
             {
