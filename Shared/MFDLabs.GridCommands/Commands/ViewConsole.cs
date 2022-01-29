@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Tasks;
+using MFDLabs.Grid.Bot.Models;
+using MFDLabs.Grid.Bot.Tasks.WorkQueues;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -17,12 +17,15 @@ namespace MFDLabs.Grid.Bot.Commands
 
         public Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+            var request = new SocketTaskRequest
             {
-                return message.ReplyAsync("Cannot screenshot grid server in multi-instanced mode!");
-            }
+                ContentArray = messageContentArray,
+                Message = message,
+                OriginalCommandName = originalCommand
+            };
 
-            ScreenshotTask.Singleton.Port.Post(message);
+            GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
+
             return Task.CompletedTask;
         }
     }
