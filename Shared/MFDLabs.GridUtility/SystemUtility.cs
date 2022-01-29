@@ -125,7 +125,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         // There will have to be a #if here for unix, because we cannot check if there's a window with a title
         // WIN32: This method is Win32 only
-        private static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _);
+        private static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _) || ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out _);
 
         private static void KillAllProcessByName(string name)
         {
@@ -328,5 +328,6 @@ namespace MFDLabs.Grid.Bot.Utility
         private const string GridDeployerSignature = "mfdlabs.grid.deployer";
         private const string GridDeployerSignatureExe = "mfdlabs.grid.deployer.exe";
         private const string GlobalServerJobSignature = "npm run Start-Main-Job";
+		private const string GlobalQuickServerJobSignature = "npm start";
     }
 }
