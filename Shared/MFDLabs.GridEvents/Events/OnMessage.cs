@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Utility;
