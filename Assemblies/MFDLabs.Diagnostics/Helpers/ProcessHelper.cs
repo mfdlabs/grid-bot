@@ -1,19 +1,21 @@
 ﻿using System.Diagnostics;
-using System.Collections.Generic;
 using MFDLabs.Text.Extensions;
-
-using HANDLE = System.IntPtr;
-using HWND = System.IntPtr;
 
 #if NETFRAMEWORK
 using System;
 using System.ComponentModel;
 using System.Security.Principal;
+using System.Collections.Generic;
 using System.Management;
+using System.Runtime.InteropServices;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Diagnostics.NativeWin32;
 
+// WinAPI members
 using PHANDLE = System.IntPtr;
+using HANDLE = System.IntPtr;
+using HWND = System.IntPtr;
+using DWORD = System.Int32;
 #endif
 
 namespace MFDLabs.Diagnostics
@@ -267,6 +269,21 @@ namespace MFDLabs.Diagnostics
             return false;
         }
 
+#if NETFRAMEWORK
+
+        [Obsolete("Just use Process.MainWindowHandle")]
+        public static HWND GetWindowHandleLegacy(DWORD dwProcessId)
+        {
+            var process = Process.GetProcessById(dwProcessId);
+            if (process == null) return HWND.Zero;
+
+            GetHWNDByProcess(out HWND hWnd, out DWORD dwMainWindowHandle32, ref process);
+
+            if (dwMainWindowHandle32 > 0) return hWnd;
+
+            return HWND.Zero;
+        }
+
         public static HWND GetWindowHandle(string processName)
         {
             var processesByName = Process.GetProcessesByName(processName);
@@ -281,7 +298,7 @@ namespace MFDLabs.Diagnostics
                 return HWND.Zero;
             }
 
-            GetMainWindowHandleForProcess(processesByName, out HANDLE mainWindowHandle, out int mainWindowHandle32);
+            GetMainWindowHandleForProcess(processesByName, out HWND mainWindowHandle, out int mainWindowHandle32);
 
             if (mainWindowHandle32 > 0)
             {
@@ -293,14 +310,20 @@ namespace MFDLabs.Diagnostics
             return GetWindowHandle(processName);
         }
 
-        private static void GetMainWindowHandleForProcess(IReadOnlyList<Process> processesByName, out HANDLE mainWindowHandle, out int mainWindowHandle32)
+        private static void GetMainWindowHandleForProcess(IReadOnlyList<Process> processesByName, out HWND mainWindowHandle, out DWORD dwMainWindowHandle32)
         {
             var process = _lastProcessId > processesByName.Count - 1 ? processesByName[processesByName.Count - 1] : processesByName[_lastProcessId];
+            GetHWNDByProcess(out mainWindowHandle, out dwMainWindowHandle32, ref process);
+        }
 
+        private static void GetHWNDByProcess(out HWND mainWindowHandle, out DWORD dwMainWindowHandle32, [In] ref Process process)
+        {
             mainWindowHandle = process.MainWindowHandle;
-            mainWindowHandle32 = mainWindowHandle.ToInt32();
+            dwMainWindowHandle32 = mainWindowHandle.ToInt32();
         }
 
         private static int _lastProcessId;
+
+#endif
     }
 }
