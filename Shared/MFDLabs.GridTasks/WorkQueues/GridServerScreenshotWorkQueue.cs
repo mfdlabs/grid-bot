@@ -32,7 +32,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 {
     public sealed class GridServerScreenshotWorkQueue : AsyncWorkQueue<SocketTaskRequest>
     {
-        public sealed class GridServerScreenshotWorkQueuePerformanceMonitor
+        private sealed class GridServerScreenshotWorkQueuePerformanceMonitor
         {
             private const string Category = "MFDLabs.Grid.WorkQueues.GridServerScreenshotWorkQueue";
 
@@ -244,9 +244,8 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:
-                        var expiresIn = instance.Expiration - DateTime.Now;
-
-                        message.ReplyWithFile(stream, fileName, $"This instance will expire in {Math.Floor(expiresIn.TotalSeconds)} seconds.");
+                        var expiration = instance.Expiration;
+                        message.ReplyWithFile(stream, fileName, $"This instance will expire at {expiration.Hour}:{expiration.Minute} {TimeZone.CurrentTimeZone.StandardName}");
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.DisposedInstance:
