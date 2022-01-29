@@ -70,15 +70,6 @@ namespace MFDLabs.Grid.Deployer.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("npm run Build-And-Run")]
-        public string WebServerWorkspaceCommand {
-            get {
-                return ((string)(this["WebServerWorkspaceCommand"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("53640")]
         public int GridServerLookupPort {
             get {
@@ -119,6 +110,15 @@ namespace MFDLabs.Grid.Deployer.Properties {
         public string LatencyMeasurementsHealthCheckExpectedResponseText {
             get {
                 return ((string)(this["LatencyMeasurementsHealthCheckExpectedResponseText"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool WebServerBuildBeforeRun {
+            get {
+                return ((bool)(this["WebServerBuildBeforeRun"]));
             }
         }
     }

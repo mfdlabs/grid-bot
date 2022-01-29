@@ -17,9 +17,6 @@
     <Setting Name="WebServerLookupHost" Type="System.String" Scope="Application">
       <Value Profile="(Default)">lms.simulpong.com</Value>
     </Setting>
-    <Setting Name="WebServerWorkspaceCommand" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">npm run Build-And-Run</Value>
-    </Setting>
     <Setting Name="GridServerLookupPort" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">53640</Value>
     </Setting>
@@ -34,6 +31,9 @@
     </Setting>
     <Setting Name="LatencyMeasurementsHealthCheckExpectedResponseText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">robloxup</Value>
+    </Setting>
+    <Setting Name="WebServerBuildBeforeRun" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

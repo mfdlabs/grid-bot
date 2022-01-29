@@ -165,12 +165,18 @@ namespace MFDLabs.Grid.Deployer
 
             _launchingWebServer = true;
 
+            
+            var command = "npm start";
+
+            if (global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerBuildBeforeRun)
+                command = "npm run Build-And-Run";
+
             var psi = new ProcessStartInfo
             {
                 FileName = "CMD.exe",
                 Arguments =
                     $"/C \"cd {(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspacePath)} && " +
-                    $"{(global::MFDLabs.Grid.Deployer.Properties.Settings.Default.WebServerWorkspaceCommand)}\"",
+                    $"{command}\"",
             };
 
             if (SystemGlobal.ContextIsAdministrator())
