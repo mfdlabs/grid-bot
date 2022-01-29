@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Discord;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Logging;
@@ -8,6 +9,11 @@ namespace MFDLabs.Grid.Bot.Events
 {
     public static class OnReady
     {
+        private static string GetStatusText(string updateText)
+        {
+            return updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
+        }
+
         public static async Task Invoke()
         {
 
@@ -20,6 +26,14 @@ namespace MFDLabs.Grid.Bot.Events
                 BotGlobal.Client.CurrentUser.Discriminator
             );
 
+            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+            {
+                var text = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+                await BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
+                await BotGlobal.Client.SetGameAsync(GetStatusText(text), null, ActivityType.Playing);
+                return;
+            }
+
             await BotGlobal.Client.SetStatusAsync(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
             );
@@ -30,7 +44,6 @@ namespace MFDLabs.Grid.Bot.Events
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
                 );
-            return;
         }
     }
 }

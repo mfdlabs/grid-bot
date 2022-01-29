@@ -7,6 +7,8 @@ using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Text.Extensions;
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
 namespace MFDLabs.Grid.Bot.Commands
 {
     internal class Maintenance : IStateSpecificCommandHandler
@@ -16,6 +18,11 @@ namespace MFDLabs.Grid.Bot.Commands
         public string[] CommandAliases => new[] { "maint", "maintenance" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
+
+        private string GetStatusText(string updateText)
+        {
+            return updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
+        }
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
@@ -50,6 +57,13 @@ namespace MFDLabs.Grid.Bot.Commands
 
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = false;
 
+                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
+                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                        GetStatusText(optionalMessage),
+                        null,
+                        ActivityType.Playing
+                    );
+
                     if (!optionalMessage.IsNullOrEmpty() && optionalMessage != global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying)
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = optionalMessage;
 
@@ -71,6 +85,17 @@ namespace MFDLabs.Grid.Bot.Commands
 
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = true;
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+
+                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(
+                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
+                    );
+
+                    if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
+                        global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
+                        );
 
                     await message.ReplyAsync("Successfully disabled the maintenance status!");
 
@@ -98,6 +123,12 @@ namespace MFDLabs.Grid.Bot.Commands
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = optionalMessageForUpdate;
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
 
+                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                        GetStatusText(optionalMessageForUpdate),
+                        null,
+                        ActivityType.Playing
+                    );
+
                     await message.ReplyAsync($"Successfully updated the maintenance status text from '{oldMessage}' to " +
                                             $"'{(optionalMessageForUpdate.IsNullOrEmpty() ? "No Message" : optionalMessageForUpdate)}'!");
 
@@ -112,6 +143,9 @@ namespace MFDLabs.Grid.Bot.Commands
                     // This only removes the maintenance text
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = string.Empty;
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+
+                    if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+                        global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(GetStatusText(null), null, ActivityType.Playing);
 
                     await message.ReplyAsync("Sucessfully removed the maintenance text!");
 
@@ -148,3 +182,5 @@ namespace MFDLabs.Grid.Bot.Commands
         }
     }
 }
+
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
