@@ -23,6 +23,7 @@ using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Concurrency;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
 using MFDLabs.ErrorHandling.Extensions;
@@ -48,7 +49,8 @@ namespace MFDLabs.Grid.Bot.Utility
         public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding;
 
         public void SetupPool()
-            => BatchQueueUpArbiteredInstancesUnsafe(
+            => BatchQueueUpLeasedArbiteredInstancesUnsafe(
+                null,
                 DefaultPoolSize
 #if DEBUG
                 ,
@@ -228,9 +230,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
                         if (IsPortInUse(port))
                         {
-#if DEBUG || DEBUG_LOGGING_IN_PROD
                             SystemLogger.Singleton.Warning("Chosen random port, {0}, is already in use", port);
-#endif
                             continue;
                         }
 
@@ -240,19 +240,16 @@ namespace MFDLabs.Grid.Bot.Utility
                             sw.Stop();
                             _perfmon.PortAllocationSuccessesPerSecond.Increment();
                             _perfmon.PortAllocationSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
-#if DEBUG || DEBUG_LOGGING_IN_PROD
+
                             SystemLogger.Singleton.Info(
                                 "Port {0} is chosen for the next GridServerInstance. Number of attempts = {1}, time taken = {2} ms",
                                 port,
                                 i + 1,
                                 sw.ElapsedMilliseconds
                             );
-#endif
                             return port;
                         }
-#if DEBUG || DEBUG_LOGGING_IN_PROD
                         SystemLogger.Singleton.Warning("Chosen random port {0} has been used recently. Total number of recently used ports is {1}", port, _cache.Count);
-#endif
                     }
                 }
                 sw.Stop();
@@ -311,6 +308,8 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
+        public void RemoveInstanceFromQueue(GridServerInstance inst) => _instances.Remove(inst);
+
         public bool KillInstanceByNameUnsafe(string name, string hostName = "localhost")
         {
             var instance = GetInstance(name, hostName);
@@ -351,6 +350,23 @@ namespace MFDLabs.Grid.Bot.Utility
             return instances;
         }
 
+        public List<LeasedGridServerInstance> BatchQueueUpLeasedArbiteredInstances(
+            TimeSpan? lease = null,
+            int count = 1,
+            int maxAttemptsToHitGridServer = 5,
+            string hostName = "localhost",
+            bool startUp = true
+        )
+        {
+            if (count < 1)
+                throw new ArgumentOutOfRangeException(nameof(count));
+
+            var instances = new List<LeasedGridServerInstance>();
+            for (var i = 0; i < count; i++)
+                instances.Add(QueueUpLeasedArbiteredInstance(null, lease, maxAttemptsToHitGridServer, hostName, startUp));
+            return instances;
+        }
+
         public List<GridServerInstance> BatchQueueUpArbiteredInstancesUnsafe(int count = 1,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
@@ -365,6 +381,23 @@ namespace MFDLabs.Grid.Bot.Utility
                     maxAttemptsToHitGridServer,
                     hostName,
                     startUp));
+            return instances;
+        }
+
+        public List<LeasedGridServerInstance> BatchQueueUpLeasedArbiteredInstancesUnsafe(
+            TimeSpan? lease = null,
+            int count = 1,
+            int maxAttemptsToHitGridServer = 5,
+            string hostName = "localhost",
+            bool startUp = true
+        )
+        {
+            if (count < 1)
+                throw new ArgumentOutOfRangeException(nameof(count));
+
+            var instances = new List<LeasedGridServerInstance>();
+            for (var i = 0; i < count; i++)
+                instances.Add(QueueUpLeasedArbiteredInstanceUnsafe(null, lease, maxAttemptsToHitGridServer, hostName, startUp));
             return instances;
         }
 
@@ -394,6 +427,44 @@ namespace MFDLabs.Grid.Bot.Utility
             SystemLogger.Singleton.Debug("Queueing up arbitered instance '{0}' on host '{1}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString());
+            _instances.Add(instance);
+            return instance;
+        }
+
+        public LeasedGridServerInstance QueueUpLeasedArbiteredInstanceUnsafe(
+            string name = null,
+            TimeSpan? lease = null,
+            int maxAttemptsToHitGridServer = 5,
+            string hostName = "localhost",
+            bool startUp = true,
+            bool openNowInNewThread = true
+        )
+        {
+            TimeSpan newLease;
+
+            if (lease == null) newLease = LeasedGridServerInstance.DefaultLease;
+            else newLease = lease.Value;
+
+            _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
+
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
+
+            SystemUtility.OpenWebServerIfNotOpen();
+            var instance = new LeasedGridServerInstance(
+                newLease,
+                hostName,
+                currentAllocatedPort,
+                name ?? Guid.NewGuid().ToString(),
+                startUp,
+                maxAttemptsToHitGridServer,
+                true,
+                openNowInNewThread
+            );
+            SystemLogger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
+                instance.Name,
+                instance.Endpoint.Address.Uri.ToString(),
+                newLease
+            );
             _instances.Add(instance);
             return instance;
         }
@@ -455,6 +526,46 @@ namespace MFDLabs.Grid.Bot.Utility
                 _instances.Add(instance);
             return instance;
         }
+
+        public LeasedGridServerInstance QueueUpLeasedArbiteredInstance(
+            string name = null,
+            TimeSpan? lease = null,
+            int maxAttemptsToHitGridServer = 5,
+            string hostName = "localhost",
+            bool startUp = true,
+            bool openNowInNewThread = true
+        )
+        {
+            TimeSpan newLease;
+
+            if (lease == null) newLease = LeasedGridServerInstance.DefaultLease;
+            else newLease = lease.Value;
+
+            _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
+
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
+
+            SystemUtility.OpenWebServerIfNotOpen();
+            var instance = new LeasedGridServerInstance(
+                newLease,
+                hostName,
+                currentAllocatedPort,
+                name ?? Guid.NewGuid().ToString(),
+                startUp,
+                maxAttemptsToHitGridServer,
+                true,
+                openNowInNewThread
+            );
+            SystemLogger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
+                instance.Name,
+                instance.Endpoint.Address.Uri.ToString(),
+                newLease
+            );
+            lock (_instances)
+                _instances.Add(instance);
+            return instance;
+        }
+
         public GridServerInstance QueueUpPersistentArbiteredInstance(string name,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
@@ -523,18 +634,41 @@ namespace MFDLabs.Grid.Bot.Utility
                 return (from instance in _instances where instance.IsPoolable && instance.IsAvailable select instance).FirstOrDefault();
         }
 
-        public GridServerInstance GetOrCreateAvailableInstance(int maxAttemptsToHitGridServer = 5,
+        public LeasedGridServerInstance GetAvailableLeasedInstance()
+        {
+            lock (_instances)
+                return (LeasedGridServerInstance)(from instance in _instances 
+                        where instance.IsPoolable && instance.IsAvailable && 
+                        instance.GetType() == typeof(LeasedGridServerInstance) select instance).FirstOrDefault();
+        }
+
+        public GridServerInstance GetOrCreateAvailableInstance(
+            int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
-            bool openNowInNewThread = false)
+            bool openNowInNewThread = false
+        )
         {
             var instance = GetAvailableInstance();
             return instance ?? QueueUpArbiteredInstance(null, maxAttemptsToHitGridServer, hostName, openNowInNewThread);
+
+        }
+        public LeasedGridServerInstance GetOrCreateAvailableLeasedInstance(
+            TimeSpan? lease = null,
+            int maxAttemptsToHitGridServer = 5,
+            string hostName = "localhost",
+            bool openNowInNewThread = false
+        )
+        {
+            var instance = GetAvailableLeasedInstance();
+            return instance ?? QueueUpLeasedArbiteredInstance(null, lease, maxAttemptsToHitGridServer, hostName, openNowInNewThread);
         }
 
-        private GridServerInstance GetOrCreateGridServerInstance(string name,
+        private GridServerInstance GetOrCreateGridServerInstance(
+            string name,
             int maxAttemptsToHitGridServer,
             string hostName,
-            bool isPoolable)
+            bool isPoolable
+        )
         {
             var instance = !name.IsNullOrEmpty() ?
                 GetOrCreatePersistentInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable) :
@@ -944,7 +1078,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         #endregion |SOAP Methods|
 
-        [DebuggerDisplay("{" + nameof(ToString) + "(),nq}")]
+        [DebuggerDisplay($"{{{nameof(ToString)}(),nq}}")]
         public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable
         {
             #region |Private Members|
@@ -991,7 +1125,8 @@ namespace MFDLabs.Grid.Bot.Utility
                     openNowInNewThread)
             { }
 
-            private GridServerInstance(EndpointAddress remoteAddress,
+            protected GridServerInstance(
+                EndpointAddress remoteAddress,
                 string name,
                 bool openProcessNow,
                 int maxAttemptsToHitGridServer = 5,
@@ -1077,10 +1212,15 @@ namespace MFDLabs.Grid.Bot.Utility
                 finally { Unlock(); }
             }
 
-            private void LockAndTryOpen()
+            public void Lock()
             {
                 lock (_availableLock)
                     _isAvailable = false;
+            }
+
+            private void LockAndTryOpen()
+            {
+                Lock();
 
                 if (IsOpened) return;
 
@@ -1132,8 +1272,14 @@ namespace MFDLabs.Grid.Bot.Utility
                     if (lastMethod == "InvokeMethod") lastMethod = stack.GetFrame(2).GetMethod().Name;
                 }*/
 
-                methodToInvoke = GetType()
-                    .BaseType?.GetMethod(lastMethod,
+                var type = GetType();
+
+                Type baseType = null;
+
+                if (type == typeof(GridServerInstance)) baseType = type.BaseType;
+                else if (type == typeof(LeasedGridServerInstance)) baseType = type?.BaseType?.BaseType;
+
+                methodToInvoke = baseType?.GetMethod(lastMethod,
                         BindingFlags.Instance | BindingFlags.Public,
                         null,
                         args.Select(x => x.GetType())
@@ -1145,7 +1291,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
             }
 
-            private void Unlock()
+            // Virtual here, because leased instance will override this to renew lease
+            public virtual void Unlock()
             {
                 lock (_availableLock)
                     _isAvailable = true;
@@ -1274,13 +1421,16 @@ namespace MFDLabs.Grid.Bot.Utility
             #region Auto-Generated Items
 
             public override string ToString()
-                => $"[{(_isPersistent ? "Persistent" : "Disposable")}] [{(_isPoolable ? "Poolable" : "Non Poolable")}] Instance [http://{Endpoint.Address.Uri.Host}:{Port}], State = {(IsOpened ? "Opened" : "Closed")}";
+                => $"[{(_isPersistent ? "Persistent" : "Disposable")}] [{(_isPoolable ? "Poolable" : "Non Poolable")}] Instance [http://{Endpoint.Address.Uri.Host}:{Port}], Name = {Name}, State = {(IsOpened ? "Opened" : "Closed")}";
 
             public override bool Equals(object obj) => obj is GridServerInstance instance &&
                                                        _maxAttemptsToHitGridServer ==
                                                        instance._maxAttemptsToHitGridServer &&
                                                        _isPersistent == instance._isPersistent &&
                                                        _name == instance._name;
+
+            public static bool operator ==(GridServerInstance self, GridServerInstance obj) => self?.GetHashCode() == obj?.GetHashCode();
+            public static bool operator !=(GridServerInstance self, GridServerInstance obj) => self?.GetHashCode() != obj?.GetHashCode();
 
             // auto generated
             public override int GetHashCode()
@@ -1293,6 +1443,131 @@ namespace MFDLabs.Grid.Bot.Utility
             }
 
             #endregion Auto-Generated Items
+        }
+
+        public class LeasedGridServerInstance : GridServerInstance, IDisposable
+        {
+            #region |Delegates|
+
+            public delegate void OnExpired(LeasedGridServerInstance instance);
+
+            #endregion |Delegates|
+
+            #region |Private Members|
+
+            public static readonly TimeSpan DefaultLease = TimeSpan.FromMinutes(1);
+            private readonly TimeSpan _lease;
+            private readonly IRandom _rng = RandomFactory.GetDefaultRandom();
+            private bool _disposed;
+            private OnExpired _onExpiredListeners = new(_ => { });
+            private DateTime _expiration;
+
+            #endregion |Private Members|
+
+            #region |Informative Members|
+
+            public DateTime Expiration => _expiration;
+            public TimeSpan Lease => _lease;
+            public bool HasLease => _lease != TimeSpan.Zero;
+            public bool IsExpired => _expiration.Subtract(DateTime.Now) <= TimeSpan.Zero;
+            public bool IsDisposed => _disposed;
+            public new bool IsAvailable => base.IsAvailable && !IsExpired && !IsDisposed;
+
+            #endregion |Informative Members|
+
+            #region |Constructors|
+
+            internal LeasedGridServerInstance(
+                TimeSpan lease,
+                string host,
+                int port,
+                string name,
+                bool openProcessNow,
+                int maxAttemptsToHitGridServer = 5,
+                bool poolable = true,
+                bool openNowInNewThread = false
+            )
+                : base(
+                    host,
+                    port,
+                    name,
+                    openProcessNow,
+                    maxAttemptsToHitGridServer,
+                    false,
+                    poolable,
+                    openNowInNewThread
+                )
+            {
+                _lease = lease;
+                _expiration = DateTime.Now.Add(lease);
+            }
+
+            #endregion |Constructors|
+
+            #region |Leasing Helpers|
+
+            private void ScheduleExpirationCheck()
+            {
+                var span = TimeSpan.FromMilliseconds((1 + 0.2 * _rng.NextDouble()) * _lease.TotalMilliseconds + 20);
+                ConcurrencyService.Singleton.Delay(span, CheckExpiration);
+            }
+            private void CheckExpiration()
+            {
+                if (IsExpired)
+                {
+                    SystemLogger.Singleton.Warning("Instance '{0}' lease has expired, disposing...", Name);
+                    Dispose();
+                }
+                else
+                    ScheduleExpirationCheck();
+            }
+            public void RenewLease()
+            {
+                SystemLogger.Singleton.LifecycleEvent("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
+                var t = DateTime.Now.Subtract(_lease);
+                if (t > _expiration) _expiration = t;
+                ScheduleExpirationCheck();
+            }
+            public void SubscribeExpirationListener(OnExpired @delegate)
+            {
+                SystemLogger.Singleton.Warning("Subscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
+                _onExpiredListeners += @delegate;
+            }
+            public void UnsubscribeExpirationListener(OnExpired @delegate)
+            {
+                SystemLogger.Singleton.Warning("Unsubscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
+                _onExpiredListeners -= @delegate;
+            }
+
+            #endregion |Leasing Helpers|
+
+            #region |Overrides|
+
+            public override string ToString()
+            {
+                var old = base.ToString();
+                old += $", Lease = {Lease}, Expiration = {Expiration}";
+                return $"[Leased] {old}";
+            }
+
+            public override void Unlock()
+            {
+                base.Unlock();
+                RenewLease();
+            }
+
+            public new void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _onExpiredListeners(this);
+                    base.Dispose();
+                    _disposed = true;
+                    Singleton.RemoveInstanceFromQueue(this);
+                }
+            }
+
+            #endregion |Overrides|
         }
     }
 }
