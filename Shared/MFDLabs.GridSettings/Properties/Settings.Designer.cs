@@ -885,5 +885,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["ExceptionBasedAutomoderatorEnabled"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RenderWorkQueueRolloutPercentage {
+            get {
+                return ((int)(this["RenderWorkQueueRolloutPercentage"]));
+            }
+        }
     }
 }
