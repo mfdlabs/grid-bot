@@ -35,6 +35,56 @@ namespace MFDLabs.Grid.Bot.Extensions
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
             }
         }
+
+        public static void Disentitle(this IUser user)
+        {
+            var privilagedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
+
+            if (privilagedUsers.Contains(user.Id.ToString()))
+            {
+                var pIds = privilagedUsers.Split(',').ToList();
+                pIds.Remove(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
+        public static void Entitle(this IUser user)
+        {
+            var privilagedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
+
+            if (!privilagedUsers.Contains(user.Id.ToString()))
+            {
+                var pIds = privilagedUsers.Split(',').ToList();
+                pIds.Add(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
+
+        public static void Demote(this IUser user)
+        {
+            var admins = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins;
+
+            if (admins.Contains(user.Id.ToString()))
+            {
+                var adIds = admins.Split(',').ToList();
+                adIds.Remove(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
+        public static void Promote(this IUser user)
+        {
+            var admins = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins;
+
+            if (!admins.Contains(user.Id.ToString()))
+            {
+                var adIds = admins.Split(',').ToList();
+                adIds.Add(user.Id.ToString());
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            }
+        }
         public static bool IsBlacklisted(this IUser user) => AdminUtility.UserIsBlacklisted(user);
         public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
         public static bool IsPrivilaged(this IUser user) => AdminUtility.UserIsPrivilaged(user);
