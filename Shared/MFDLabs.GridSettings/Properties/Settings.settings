@@ -293,5 +293,8 @@
     <Setting Name="RenderWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="NewViewGridServerConsoleWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

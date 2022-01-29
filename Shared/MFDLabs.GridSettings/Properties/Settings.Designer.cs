@@ -894,5 +894,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((int)(this["RenderWorkQueueRolloutPercentage"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int NewViewGridServerConsoleWorkQueueRolloutPercentage {
+            get {
+                return ((int)(this["NewViewGridServerConsoleWorkQueueRolloutPercentage"]));
+            }
+        }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
+using MFDLabs.Diagnostics;
+using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Models;
 using MFDLabs.Grid.Bot.Tasks.WorkQueues;
@@ -15,7 +17,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public bool Internal => !global::MFDLabs.Grid.Bot.Properties.Settings.Default.ViewConsoleEnabled;
         public bool IsEnabled { get; set; } = true;
 
-        public Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
+        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
             var request = new SocketTaskRequest
             {
@@ -24,9 +26,14 @@ namespace MFDLabs.Grid.Bot.Commands
                 OriginalCommandName = originalCommand
             };
 
-            GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
-
-            return Task.CompletedTask;
+            if (!PercentageInvoker.InvokeAction(
+                () => GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request),
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewViewGridServerConsoleWorkQueueRolloutPercentage
+            ))
+            {
+                await message.ReplyAsync("View console is not enabled at this time.");
+                return;
+            }
         }
     }
 }
