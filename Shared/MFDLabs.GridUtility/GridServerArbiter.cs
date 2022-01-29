@@ -1455,7 +1455,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             #region |Private Members|
 
-            public static readonly TimeSpan DefaultLease = TimeSpan.FromMinutes(1);
+            public static readonly TimeSpan DefaultLease = global::MFDLabs.Grid.Bot.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
             private readonly TimeSpan _lease;
             private readonly IRandom _rng = RandomFactory.GetDefaultRandom();
             private bool _disposed;

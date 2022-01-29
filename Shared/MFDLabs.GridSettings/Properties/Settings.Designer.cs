@@ -903,5 +903,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((int)(this["NewViewGridServerConsoleWorkQueueRolloutPercentage"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan DefaultLeasedGridServerInstanceLease {
+            get {
+                return ((global::System.TimeSpan)(this["DefaultLeasedGridServerInstanceLease"]));
+            }
+        }
     }
 }
