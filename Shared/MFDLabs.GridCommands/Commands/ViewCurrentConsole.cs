@@ -21,6 +21,12 @@ namespace MFDLabs.Grid.Bot.Commands
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
 
+        private static void MaximizeSelf()
+        {
+            const int SW_MAXIMIZE = 3;
+            NativeMethods.ShowWindow(NativeMethods.GetConsoleWindow(), SW_MAXIMIZE);
+        }
+
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
             if (!await message.RejectIfNotAdminAsync()) return;
@@ -34,7 +40,10 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
+            MaximizeSelf();
+
             var bitmap = currentMainwindowHandle.GetBitmapForWindowByWindowHandle();
+
             bitmap.Save("ServerShot.png");
 
             await message.Channel.SendFileAsync("ServerShot.png");
