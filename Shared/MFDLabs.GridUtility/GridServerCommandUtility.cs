@@ -128,7 +128,8 @@ namespace MFDLabs.Grid.Bot.Utility
                 placeId,
                 sizeX,
                 sizeY,
-                url);
+                url
+            );
 
             ThumbnailCommandType thumbType;
 
