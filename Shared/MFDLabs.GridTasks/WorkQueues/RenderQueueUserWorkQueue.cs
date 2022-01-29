@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
     {
         private const string OnCareToLeakException = "An error occured with the render work queue task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
 
-        public RenderQueueUserMetricsWorkQueue()
+        private RenderQueueUserMetricsWorkQueue()
             : base(WorkQueueDispatcherQueueRegistry.RenderQueue, OnReceive)
         { }
 
