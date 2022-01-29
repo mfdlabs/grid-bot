@@ -33,9 +33,10 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 await message.ReplyAsync("View console is not enabled at this time.");
                 return;
+            } else
+            {
+                GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
             }
-
-            GridServerScreenshotWorkQueue.Singleton.EnqueueWorkItem(request);
         }
     }
 }
