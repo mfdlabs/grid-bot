@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
 using MFDLabs.Logging;
 #endif
 
@@ -11,7 +11,7 @@ namespace MFDLabs.Grid.Bot.Events
     {
         public static Task Invoke(Exception ex)
         {
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
             if (!(ex is TaskCanceledException && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
                 SystemLogger.Singleton.Error(ex);
 #endif
