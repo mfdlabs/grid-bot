@@ -8,13 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.NetworkInformation;
+using Microsoft.Extensions.Caching.Memory;
 using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
@@ -22,9 +23,8 @@ using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using MFDLabs.Threading;
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
 using MFDLabs.ErrorHandling.Extensions;
 #endif
 
@@ -46,14 +46,14 @@ namespace MFDLabs.Grid.Bot.Utility
         private static Binding _defaultHttpBinding;
 
         public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding;
-        
-        public void SetupPool() 
+
+        public void SetupPool()
             => BatchQueueUpArbiteredInstancesUnsafe(
                 DefaultPoolSize
 #if DEBUG
                 ,
-                5, 
-                "localhost", 
+                5,
+                "localhost",
                 false
 #endif
             );
@@ -98,20 +98,50 @@ namespace MFDLabs.Grid.Bot.Utility
         private const string BaseClassDiagAsyncMethodName = "DiagAsync";
         private const string BaseClassDiagExMethodName = "DiagEx";
         private const string BaseClassDiagExAsyncMethodName = "DiagExAsync";
+
+#if DEBUG
+        private const int DefaultPoolSize = 5;
+#else
         private const int DefaultPoolSize = 25;
+#endif
 
         #endregion |Constants|
 
         #region |Instrumentation|
 
+        private class PortAllocationPerformanceMonitor
+        {
+            private const string Category = "MFDLabs.Grid.Arbiter.PortAllocation.PerfmonV2";
+
+            internal IRateOfCountsPerSecondCounter PortAllocationAttemptsPerSecond { get; set; }
+            internal IRateOfCountsPerSecondCounter PortAllocationSuccessesPerSecond { get; set; }
+            internal IRateOfCountsPerSecondCounter PortAllocationFailuresPerSecond { get; set; }
+            internal IAverageValueCounter PortAllocationSuccessAverageTimeTicks { get; set; }
+            internal IAverageValueCounter PortAllocationFailureAverageTimeTicks { get; set; }
+
+            public PortAllocationPerformanceMonitor(ICounterRegistry counterRegistry)
+            {
+                if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
+
+                var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
+
+                PortAllocationAttemptsPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationAttemptsPerSecond", instance);
+                PortAllocationSuccessesPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationSuccessesPerSecond", instance);
+                PortAllocationFailuresPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationFailuresPerSecond", instance);
+                PortAllocationSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "PortAllocationSuccessAverageTimeTicks", instance);
+                PortAllocationFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "PortAllocationFailureAverageTimeTicks", instance);
+            }
+
+        }
+
         private class GridServerInstancePerformanceMonitor
         {
             private const string Category = "MFDLabs.Grid.Arbiter.Instance.PerfmonV2";
-            
+
             internal IRawValueCounter TotalInvocations { get; }
             internal IRawValueCounter TotalInvocationsThatSucceeded { get; }
             internal IRawValueCounter TotalInvocationsThatFailed { get; }
-            
+
             internal GridServerInstancePerformanceMonitor(ICounterRegistry counterRegistry, GridServerInstance inst)
             {
                 if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
@@ -152,64 +182,91 @@ namespace MFDLabs.Grid.Bot.Utility
 
         #endregion |Instrumentation|
 
-        #region |Networking Utility|
+        #region |Port Allocation|
 
-        private static class NetUtility
+        private static class PortAllocation
         {
-            private const string MutexPostfix = "NetUtility";
+            #region |Constants|
 
-            public static int FindNextAvailablePort(int startPort)
+            private const int InclusiveStartPort = 45000;
+            private const int ExclusiveEndPort = 47000;
+            private const int MaximumAttemptsToFindPort = 1000;
+
+            #endregion |Constants|
+
+            #region |Performance|
+
+            private static readonly PortAllocationPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
+
+            #endregion |Performance|
+
+            #region |Thread Safety|
+
+            private static readonly object _sync = new();
+
+            #endregion |Thread Safety|
+
+            private static readonly IRandom _rng = RandomFactory.GetDefaultRandom();
+            private static readonly TimeSpan _portReusedForbiddenDuration = TimeSpan.FromSeconds(30);
+            private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
+
+            public static void RemovePortFromCacheIfExists(int port) => _cache.Remove(port.ToString());
+
+            private static bool IsPortInUse(int port)
+                => (from listener in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners() select listener.Port).Contains(port);
+
+            public static int FindNextAvailablePort()
             {
-                var port = startPort;
-                var isAvailable = true;
+                _perfmon.PortAllocationAttemptsPerSecond.Increment();
+                var sw = Stopwatch.StartNew();
 
-                var mutex = new System.Threading.Mutex(false, string.Concat("Global/", MutexPostfix));
-                mutex.WaitOne();
-                try
+                lock (_sync)
                 {
-                    System.Net.NetworkInformation.IPGlobalProperties ipGlobalProperties =
-                        System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
-                    System.Net.IPEndPoint[] endPoints =
-                        ipGlobalProperties.GetActiveTcpListeners();
-
-                    do
+                    for (int i = 0; i < MaximumAttemptsToFindPort; i++)
                     {
-                        if (!isAvailable)
+                        var port = _rng.Next(InclusiveStartPort, ExclusiveEndPort);
+
+                        if (IsPortInUse(port))
                         {
-                            port++;
-                            isAvailable = true;
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+                            SystemLogger.Singleton.Warning("Chosen random port, {0}, is already in use", port);
+#endif
+                            continue;
                         }
 
-                        foreach (System.Net.IPEndPoint endPoint in endPoints)
+                        if (_cache.Get(port.ToString()) == null)
                         {
-                            if (endPoint.Port != port) continue;
-                            isAvailable = false;
-                            break;
+                            _cache.Set(port.ToString(), string.Empty, DateTime.Now.Add(_portReusedForbiddenDuration));
+                            sw.Stop();
+                            _perfmon.PortAllocationSuccessesPerSecond.Increment();
+                            _perfmon.PortAllocationSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+                            SystemLogger.Singleton.Info(
+                                "Port {0} is chosen for the next GridServerInstance. Number of attempts = {1}, time taken = {2} ms",
+                                port,
+                                i + 1,
+                                sw.ElapsedMilliseconds
+                            );
+#endif
+                            return port;
                         }
-
-                    } while (!isAvailable && port < System.Net.IPEndPoint.MaxPort);
-
-                    if (!isAvailable)
-                        throw new Exception("NoAvailablePortsInRangeException");
-
-                    return port;
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+                        SystemLogger.Singleton.Warning("Chosen random port {0} has been used recently. Total number of recently used ports is {1}", port, _cache.Count);
+#endif
+                    }
                 }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                }
+                sw.Stop();
+                _perfmon.PortAllocationFailuresPerSecond.Increment();
+                _perfmon.PortAllocationFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
+                throw new TimeoutException(string.Format("Failed to find an open port. Time taken = {0} ms", sw.ElapsedMilliseconds));
             }
         }
 
-        #endregion |Networking Utility|
+        #endregion |Port Allocation|
 
         #region |Private Members|
 
-        private const int GridServerStartPort = 47999;
         private readonly List<GridServerInstance> _instances = new();
-        private readonly List<int> _allocatedPorts = new();
-        private Atomic _lastAlloctedPort = new();
-        private Atomic _lastRemovedPort = new();
         private readonly GridServerArbiterPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
 
         #endregion |Private Members|
@@ -222,15 +279,14 @@ namespace MFDLabs.Grid.Bot.Utility
                 return _instances.ToImmutableArray();
         }
 
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public int KillAllOpenInstancesUnsafe()
         {
             var instanceCount = _instances.Count;
             SystemLogger.Singleton.LifecycleEvent("Disposing of all grid server instances");
             foreach (var instance in _instances.ToArray())
             {
-                SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.Name);
-                _allocatedPorts.Remove(instance.Port);
+                SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
+                PortAllocation.RemovePortFromCacheIfExists(instance.Port);
                 _instances.Remove(instance);
                 instance.Dispose();
             }
@@ -245,9 +301,8 @@ namespace MFDLabs.Grid.Bot.Utility
                 SystemLogger.Singleton.LifecycleEvent("Disposing of all grid server instances");
                 foreach (var instance in _instances.ToArray())
                 {
-                    SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.Name);
-                    lock (_allocatedPorts)
-                        _allocatedPorts.Remove(instance.Port);
+                    SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
+                    PortAllocation.RemovePortFromCacheIfExists(instance.Port);
                     _instances.Remove(instance);
                     instance.Dispose();
                 }
@@ -256,13 +311,12 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public bool KillInstanceByNameUnsafe(string name, string hostName = "localhost")
         {
             var instance = GetInstance(name, hostName);
             if (instance == null) return false;
-            
-            _allocatedPorts.Remove(instance.Port);
+
+            PortAllocation.RemovePortFromCacheIfExists(instance.Port);
             _instances.Remove(instance);
             instance.Dispose();
             return true;
@@ -272,9 +326,8 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var instance = GetInstance(name, hostName);
             if (instance == null) return false;
-            
-            lock (_allocatedPorts)
-                _allocatedPorts.Remove(instance.Port);
+
+            PortAllocation.RemovePortFromCacheIfExists(instance.Port);
             lock (_instances)
                 _instances.Remove(instance);
             instance.Dispose();
@@ -286,9 +339,9 @@ namespace MFDLabs.Grid.Bot.Utility
             string hostName = "localhost",
             bool startUp = true)
         {
-            if (count < 1) 
+            if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count));
-            
+
             var instances = new List<GridServerInstance>();
             for (var i = 0; i < count; i++)
                 instances.Add(QueueUpArbiteredInstance(null,
@@ -303,9 +356,9 @@ namespace MFDLabs.Grid.Bot.Utility
             string hostName = "localhost",
             bool startUp = true)
         {
-            if (count < 1) 
+            if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count));
-            
+
             var instances = new List<GridServerInstance>();
             for (var i = 0; i < count; i++)
                 instances.Add(QueueUpArbiteredInstanceUnsafe(null,
@@ -317,7 +370,6 @@ namespace MFDLabs.Grid.Bot.Utility
 
         //warning: THIS HAS ZERO THREAD SAFETY !!!
         //it also pools start up, so we may not get the arbiter back for a while!!!!!!
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public GridServerInstance QueueUpArbiteredInstanceUnsafe(string name = null,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
@@ -326,17 +378,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
 
-            var currentAllocatedPort = _allocatedPorts.LastOrDefault();
-            if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
-            currentAllocatedPort++;
-            _lastAlloctedPort = currentAllocatedPort;
-
-            _allocatedPorts.Add(currentAllocatedPort);
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
             SystemUtility.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
                 hostName,
-                NetUtility.FindNextAvailablePort(currentAllocatedPort),
+                currentAllocatedPort,
                 name ?? Guid.NewGuid().ToString(),
                 startUp,
                 maxAttemptsToHitGridServer,
@@ -351,7 +398,6 @@ namespace MFDLabs.Grid.Bot.Utility
             return instance;
         }
 
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public GridServerInstance QueueUpPersistentArbiteredInstanceUnsafe(string name,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
@@ -361,17 +407,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             _perfmon.TotalPersistentArbiteredGridServerInstancesOpened.Increment();
 
-            var currentAllocatedPort = _allocatedPorts.LastOrDefault();
-            if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
-            currentAllocatedPort++;
-            _lastAlloctedPort = currentAllocatedPort;
-
-            _allocatedPorts.Add(currentAllocatedPort);
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
             SystemUtility.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
                 hostName,
-                NetUtility.FindNextAvailablePort(currentAllocatedPort),
+                currentAllocatedPort,
                 name,
                 startUp,
                 maxAttemptsToHitGridServer,
@@ -394,17 +435,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
 
-            var currentAllocatedPort = _allocatedPorts.LastOrDefault();
-            if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
-            currentAllocatedPort++;
-
-            lock (_allocatedPorts)
-                _allocatedPorts.Add(currentAllocatedPort);
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
             SystemUtility.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
                 hostName,
-                NetUtility.FindNextAvailablePort(currentAllocatedPort),
+                currentAllocatedPort,
                 name ?? Guid.NewGuid().ToString(),
                 startUp,
                 maxAttemptsToHitGridServer,
@@ -428,17 +464,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             _perfmon.TotalPersistentArbiteredGridServerInstancesOpened.Increment();
 
-            var currentAllocatedPort = _allocatedPorts.LastOrDefault();
-            if (currentAllocatedPort == default) currentAllocatedPort = GridServerStartPort;
-            currentAllocatedPort++;
-
-            lock (_allocatedPorts)
-                _allocatedPorts.Add(currentAllocatedPort);
+            var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
             SystemUtility.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
                 hostName,
-                NetUtility.FindNextAvailablePort(currentAllocatedPort),
+                currentAllocatedPort,
                 name,
                 startUp,
                 maxAttemptsToHitGridServer,
@@ -458,8 +489,8 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             lock (_instances)
                 return (from instance in _instances
-                    where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName
-                    select instance).FirstOrDefault();
+                        where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName
+                        select instance).FirstOrDefault();
         }
 
         public GridServerInstance GetOrCreateInstance(string name, int maxAttemptsToHitGridServer = 5, string hostName = "hostname")
@@ -472,8 +503,8 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             lock (_instances)
                 return (from instance in _instances
-                    where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName && instance.Persistent
-                    select instance).FirstOrDefault();
+                        where instance.Name == name && instance.Endpoint.Address.Uri.Host == hostName && instance.Persistent
+                        select instance).FirstOrDefault();
         }
 
         public GridServerInstance GetOrCreatePersistentInstance(string name,
@@ -505,8 +536,8 @@ namespace MFDLabs.Grid.Bot.Utility
             string hostName,
             bool isPoolable)
         {
-            var instance = !name.IsNullOrEmpty() ? 
-                GetOrCreatePersistentInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable) : 
+            var instance = !name.IsNullOrEmpty() ?
+                GetOrCreatePersistentInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable) :
                 GetOrCreateAvailableInstance(maxAttemptsToHitGridServer, hostName);
             return instance;
         }
@@ -539,9 +570,9 @@ namespace MFDLabs.Grid.Bot.Utility
             SystemUtility.OpenWebServerIfNotOpen();
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
-            
+
             SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
-            
+
             return InvokeMethodToInvoke<T>(args, methodToInvoke, instance);
         }
 
@@ -564,15 +595,15 @@ namespace MFDLabs.Grid.Bot.Utility
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*true, new StackTrace(),*/ method, out var methodToInvoke);
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer) 
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                 return await InvokeSoapUtilityAsync<T>(args, methodToInvoke);
 
             SystemUtility.OpenWebServerIfNotOpen();
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
-            
+
             SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
-            
+
             return await InvokeMethodToInvokeAsync<T>(args, methodToInvoke, instance);
         }
 
@@ -587,7 +618,7 @@ namespace MFDLabs.Grid.Bot.Utility
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
-                if (ex.InnerException != null) 
+                if (ex.InnerException != null)
                     throw ex.InnerException;
 
                 throw;
@@ -598,16 +629,15 @@ namespace MFDLabs.Grid.Bot.Utility
         private void TryCleanupInstance(GridServerInstance instance)
         {
             if (instance.Persistent) return;
-            lock (_allocatedPorts)
-                _allocatedPorts.Remove(instance.Port);
+            PortAllocation.RemovePortFromCacheIfExists(instance.Port);
             lock (_instances)
                 _instances.Remove(instance);
             instance.Dispose();
             BatchQueueUpArbiteredInstancesUnsafe(
 #if DEBUG
-                1, 
-                5, 
-                "localhost", 
+                1,
+                5,
+                "localhost",
                 false
 #endif
             );
@@ -624,7 +654,7 @@ namespace MFDLabs.Grid.Bot.Utility
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
-                if (ex.InnerException != null) 
+                if (ex.InnerException != null)
                     throw ex.InnerException;
 
                 throw;
@@ -639,7 +669,7 @@ namespace MFDLabs.Grid.Bot.Utility
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
-                if (ex.InnerException != null) 
+                if (ex.InnerException != null)
                     throw ex.InnerException;
 
                 throw;
@@ -651,12 +681,12 @@ namespace MFDLabs.Grid.Bot.Utility
             try
             {
                 _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment();
-                return await ((Task<T>) methodToInvoke.Invoke(SoapUtility.Singleton, args)).ConfigureAwait(false);
+                return await ((Task<T>)methodToInvoke.Invoke(SoapUtility.Singleton, args)).ConfigureAwait(false);
             }
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
-                if (ex.InnerException != null) 
+                if (ex.InnerException != null)
                     throw ex.InnerException;
 
                 throw;
@@ -732,7 +762,7 @@ namespace MFDLabs.Grid.Bot.Utility
             => await InvokeMethodAsync<string>(BaseClassGetVersionAsyncMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
         public Status GetStatus() => GetStatus(5, "localhost");
-        public Status GetStatus(int maxAttemptsToHitGridServer, string hostName) 
+        public Status GetStatus(int maxAttemptsToHitGridServer, string hostName)
             => InvokeMethod<Status>(BaseClassGetStatusMethodName, null, maxAttemptsToHitGridServer, hostName, false);
         public Status GetStatus(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false)
              => InvokeMethod<Status>(BaseClassGetStatusMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
@@ -792,7 +822,7 @@ namespace MFDLabs.Grid.Bot.Utility
             => await InvokeMethodAsync<LuaValue[]>(BaseClassExecuteExAsyncMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable, jobId, script);
 
         public void CloseJob(string jobId) => CloseJob(jobId, 5, "localhost");
-        public void CloseJob(string jobId, int maxAttemptsToHitGridServer, string hostName) 
+        public void CloseJob(string jobId, int maxAttemptsToHitGridServer, string hostName)
             => InvokeMethod(BaseClassCloseJobMethodName, null, maxAttemptsToHitGridServer, hostName, false, jobId);
         public void CloseJob(string name, string jobId, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false)
             => InvokeMethod(BaseClassCloseJobMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable, jobId);
@@ -828,7 +858,7 @@ namespace MFDLabs.Grid.Bot.Utility
             => await InvokeMethodAsync<LuaValue[]>(BaseClassBatchJobExAsyncMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable, job, script);
 
         public double GetExpiration(string jobId) => GetExpiration(jobId, 5, "localhost");
-        public double GetExpiration(string jobId, int maxAttemptsToHitGridServer, string hostName) 
+        public double GetExpiration(string jobId, int maxAttemptsToHitGridServer, string hostName)
             => InvokeMethod<double>(BaseClassGetExpirationMethodName, null, maxAttemptsToHitGridServer, hostName, false, jobId);
         public double GetExpiration(string name, string jobId, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false)
             => InvokeMethod<double>(BaseClassGetExpirationMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable, jobId);
@@ -864,7 +894,7 @@ namespace MFDLabs.Grid.Bot.Utility
             => await InvokeMethodAsync<Job[]>(BaseClassGetAllJobsExAsyncMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
         public int CloseExpiredJobs() => CloseExpiredJobs(5, "localhost");
-        public int CloseExpiredJobs(int maxAttemptsToHitGridServer, string hostName) 
+        public int CloseExpiredJobs(int maxAttemptsToHitGridServer, string hostName)
             => InvokeMethod<int>(BaseClassCloseExpiredJobsMethodName, null, maxAttemptsToHitGridServer, hostName, false);
         public int CloseExpiredJobs(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false)
             => InvokeMethod<int>(BaseClassCloseExpiredJobsMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
@@ -876,7 +906,7 @@ namespace MFDLabs.Grid.Bot.Utility
             => await InvokeMethodAsync<int>(BaseClassCloseExpiredJobsAsyncMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
         public int CloseAllJobs() => CloseAllJobs(5, "localhost");
-        public int CloseAllJobs(int maxAttemptsToHitGridServer, string hostName) 
+        public int CloseAllJobs(int maxAttemptsToHitGridServer, string hostName)
             => InvokeMethod<int>(BaseClassCloseAllJobsMethodName, null, maxAttemptsToHitGridServer, hostName, false);
         public int CloseAllJobs(string name, int maxAttemptsToHitGridServer = 5, string hostName = "localhost", bool isPoolable = false)
             => InvokeMethod<int>(BaseClassCloseAllJobsMethodName, name, maxAttemptsToHitGridServer, hostName, isPoolable);
@@ -927,7 +957,7 @@ namespace MFDLabs.Grid.Bot.Utility
             private readonly bool _isPoolable;
             private readonly object _availableLock = new();
             private readonly GridServerInstancePerformanceMonitor _perf;
-            
+
             #endregion |Private Members|
 
             #region |Informative Members|
@@ -970,7 +1000,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 bool openNowInNewThread = false)
                 : base(_defaultHttpBinding, remoteAddress)
             {
-                if (maxAttemptsToHitGridServer < 1)  throw new ArgumentOutOfRangeException(nameof(maxAttemptsToHitGridServer));
+                if (maxAttemptsToHitGridServer < 1) throw new ArgumentOutOfRangeException(nameof(maxAttemptsToHitGridServer));
                 _maxAttemptsToHitGridServer = maxAttemptsToHitGridServer;
                 _isPersistent = persistent;
                 if (name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(name));
@@ -981,10 +1011,10 @@ namespace MFDLabs.Grid.Bot.Utility
                     PerfmonCounterRegistryProvider.Registry,
                     this
                 );
-                
+
                 if (!openProcessNow) return;
 
-                
+
                 if (openNowInNewThread)
                 {
                     ThreadPool.QueueUserWorkItem(_ => TryOpen(true));
@@ -1011,6 +1041,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             public void Dispose()
             {
+                GC.SuppressFinalize(this);
                 SystemLogger.Singleton.LifecycleEvent("Closing instance '{0}'...", _name);
                 SystemUtility.KillProcessByPidSafe(ProcessId);
             }
@@ -1025,7 +1056,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 try
                 {
                     _perf.TotalInvocations.Increment();
-                    
+
                     LockAndTryOpen();
                     TryGetInstanceMethodToInvoke(args, /*false, new StackTrace(), */method, out var methodToInvoke);
 
@@ -1052,8 +1083,8 @@ namespace MFDLabs.Grid.Bot.Utility
                     _isAvailable = false;
 
                 if (IsOpened) return;
-                
-                while (!TryOpen()) 
+
+                while (!TryOpen())
                     Thread.Sleep(1000);
             }
 
@@ -1160,7 +1191,7 @@ namespace MFDLabs.Grid.Bot.Utility
                     }
                 }
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
                 SystemLogger.Singleton.Error("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.ToDetailedString());
 #else
                 SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.Message);
@@ -1173,10 +1204,10 @@ namespace MFDLabs.Grid.Bot.Utility
                 SystemLogger.Singleton.Warning("The grid server instance command the name of '{0}->{1}' threw an EndpointNotFoundException, opening and retrying...", _name, lastMethod);
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     return default;
-                
-                if (!TryOpen()) 
+
+                if (!TryOpen())
                     throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
-                
+
                 return default;
             }
 
