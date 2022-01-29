@@ -1,1 +1,0 @@
-using System;using System.Runtime.InteropServices;private const int SW_MAXIMIZE = 3;[DllImport("kernel32.dll")]static extern IntPtr GetConsoleWindow();[DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)]static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);ShowWindow(GetConsoleWindow(), SW_MAXIMIZE);
