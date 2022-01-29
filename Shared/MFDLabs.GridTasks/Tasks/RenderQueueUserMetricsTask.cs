@@ -98,7 +98,7 @@ namespace MFDLabs.Grid.Bot
         //jakob: have you ever tried to write code that works? ha. never in a million years!!
         internal sealed class RenderExecutionTaskPlugin : BasePlugin<RenderExecutionTaskPlugin, SocketTaskRequest>
         {
-            private IEnumerable<string> BlacklistedUsernames =>
+            private static IEnumerable<string> BlacklistedUsernames =>
                 (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
                  select uname).ToArray();
