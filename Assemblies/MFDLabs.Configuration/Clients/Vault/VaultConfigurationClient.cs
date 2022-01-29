@@ -11,6 +11,7 @@ using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
 using MFDLabs.Hashicorp.VaultClient.V1.Commons;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
+using MFDLabs.Hashicorp.VaultClient.Core;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {
@@ -19,19 +20,21 @@ namespace MFDLabs.Configuration.Clients.Vault
         public static bool PathExists(this IKeyValueSecretsEngineV2 kv, string path, out Secret<ListInfo> o, string mountPoint = null)
         {
             o = null;
-            
+
             try
             {
                 o = kv.ReadSecretPathsAsync(path, mountPoint).Result;
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                if (ex is AggregateException agg) if (agg.GetBaseException() is not VaultApiException) ConfigurationLogging.Error(ex.ToString());
+
                 return false;
             }
         }
     }
-    
+
     public class VaultConfigurationClient
     {
         private const string BaseMountPoint = "mfdlabs-sharp-v2/";
@@ -97,43 +100,43 @@ namespace MFDLabs.Configuration.Clients.Vault
         {
             if (!_kvV2.PathExists($"{AppConfiguration}/{groupName}", out var paths, BaseMountPoint))
                 return Array.Empty<ISetting>();
-            
+
             return (from values in
-                    from secret in
-                        from path in
-                            paths.Data.Keys
-                        select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                            mountPoint: BaseMountPoint).Result
-                    select secret.Data.Data
-                select new Setting
-                {
-                    GroupName = groupName,
-                    Name = (string) values["Name"],
-                    Type = (string) values["Type"],
-                    Updated = (DateTime) values["Updated"],
-                    Value = (string) values["Value"]
-                }).Cast<ISetting>().ToArray();
+                        from secret in
+                            from path in
+                                paths.Data.Keys
+                            select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                                mountPoint: BaseMountPoint).Result
+                        select secret.Data.Data
+                    select new Setting
+                    {
+                        GroupName = groupName,
+                        Name = (string)values["Name"],
+                        Type = (string)values["Type"],
+                        Updated = (DateTime)values["Updated"],
+                        Value = (string)values["Value"]
+                    }).Cast<ISetting>().ToArray();
         }
 
         public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
         {
             if (!_kvV2.PathExists($"{AppConfiguration}/{groupName}", out var paths, BaseMountPoint))
                 return Array.Empty<IConnectionString>();
-            
+
             return (from values in
-                    from secret in
-                        from path in
-                            paths.Data.Keys
-                        select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                            mountPoint: BaseMountPoint).Result
-                    select secret.Data.Data
-                select new ConnectionString
-                {
-                    GroupName = groupName,
-                    Name = (string) values["Name"],
-                    Updated = (DateTime) values["Updated"],
-                    Value = (string) values["Value"]
-                }).Cast<IConnectionString>().ToArray();
+                        from secret in
+                            from path in
+                                paths.Data.Keys
+                            select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
+                                mountPoint: BaseMountPoint).Result
+                        select secret.Data.Data
+                    select new ConnectionString
+                    {
+                        GroupName = groupName,
+                        Name = (string)values["Name"],
+                        Updated = (DateTime)values["Updated"],
+                        Value = (string)values["Value"]
+                    }).Cast<IConnectionString>().ToArray();
         }
 
         public void SetProperty(string groupName, string name, string type, string value, DateTime updated)
