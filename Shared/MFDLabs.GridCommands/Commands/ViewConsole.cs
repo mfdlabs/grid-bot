@@ -14,7 +14,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public string CommandDescription => "Dispatches a 'ScreenshotTask' request to the task thread port." +
                                             " Will try to screenshot the current grid server's console output.";
         public string[] CommandAliases => new[] { "vc", "viewconsole" };
-        public bool Internal => !global::MFDLabs.Grid.Bot.Properties.Settings.Default.ViewConsoleEnabled;
+        public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)

@@ -912,5 +912,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((global::System.TimeSpan)(this["DefaultLeasedGridServerInstanceLease"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int NewScriptExecutionWorkQueueRolloutPercentage {
+            get {
+                return ((int)(this["NewScriptExecutionWorkQueueRolloutPercentage"]));
+            }
+        }
     }
 }
