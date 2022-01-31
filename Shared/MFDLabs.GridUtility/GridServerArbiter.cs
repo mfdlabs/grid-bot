@@ -301,7 +301,10 @@ namespace MFDLabs.Grid.Bot.Utility
                     SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
                     PortAllocation.RemovePortFromCacheIfExists(instance.Port);
                     _instances.Remove(instance);
-                    instance.Dispose();
+
+                    // What is this hack here? Why does it not call inherited class's Dipose() method?
+                    if (instance is LeasedGridServerInstance lI) lI.Dispose();
+                    else instance.Dispose();
                 }
 
                 return instanceCount;
@@ -1560,6 +1563,8 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 if (!_disposed)
                 {
+                    GC.SuppressFinalize(this);
+
                     _onExpiredListeners(this);
                     base.Dispose();
                     _disposed = true;
