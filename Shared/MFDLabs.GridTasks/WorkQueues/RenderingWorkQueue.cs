@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -14,26 +15,77 @@ using MFDLabs.Grid.Bot.Models;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Diagnostics;
 using MFDLabs.Threading;
 using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Instrumentation;
+using MFDLabs.Diagnostics;
 
 namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 {
-    public sealed class RenderQueueUserMetricsWorkQueue : AsyncWorkQueue<SocketTaskRequest>
+    public sealed class RenderingWorkQueue : AsyncWorkQueue<SocketTaskRequest>
     {
+        private sealed class RenderWorkQueuePerformanceMonitor
+        {
+            private const string Category = "MFDLabs.Grid.WorkQueues.RenderWorkQueue";
+
+            public IRawValueCounter TotalItemsProcessed { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedPerSecond { get; }
+            public IRawValueCounter TotalItemsProcessedThatFailed { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedThatFailedPerSecond { get; }
+            public IRawValueCounter TotalItemsProcessedThatHadInvalidUserIDs { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadInvalidUserIDsPerSecond { get; }
+            public IRawValueCounter TotalItemsProcessedThatHadNullOrEmptyUsernames { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond { get; }
+            public IRawValueCounter TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond { get; }
+            public IRawValueCounter TotalItemsProcessedThatHadBlacklistedUsernames { get; }
+            public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadBlacklistedUsernamesPerSecond { get; }
+            public IAverageValueCounter RenderWorkQueueSuccessAverageTimeTicks { get; }
+            public IAverageValueCounter RenderWorkQueueFailureAverageTimeTicks { get; }
+
+            public RenderWorkQueuePerformanceMonitor(ICounterRegistry counterRegistry)
+            {
+                if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
+
+                var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
+
+                TotalItemsProcessed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessed", instance);
+                TotalItemsProcessedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedPerSecond", instance);
+                TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
+                TotalItemsProcessedThatFailedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatFailedPerSecond", instance);
+                TotalItemsProcessedThatHadInvalidUserIDs = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadInvalidUserIDs", instance);
+                TotalItemsProcessedThatHadInvalidUserIDsPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadInvalidUserIDsPerSecond", instance);
+                TotalItemsProcessedThatHadNullOrEmptyUsernames = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadNullOrEmptyUsernames", instance);
+                TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond", instance);
+                TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount = counterRegistry.GetRawValueCounter(
+                    Category,
+                    "TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount",
+                    instance
+                );
+                TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(
+                    Category,
+                    "TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond",
+                    instance
+                );
+                TotalItemsProcessedThatHadBlacklistedUsernames = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadBlacklistedUsernames", instance);
+                TotalItemsProcessedThatHadBlacklistedUsernamesPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadBlacklistedUsernamesPerSecond", instance);
+                RenderWorkQueueSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "RenderWorkQueueSuccessAverageTimeTicks", instance);
+                RenderWorkQueueFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "RenderWorkQueueFailureAverageTimeTicks", instance);
+            }
+        }
+
         private const string OnCareToLeakException = "An error occured with the render work queue task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
 
-        private RenderQueueUserMetricsWorkQueue()
+        private RenderingWorkQueue()
             : base(WorkQueueDispatcherQueueRegistry.RenderQueue, OnReceive)
         { }
 
         // Doesn't break HATE SINGLETON because we never need multiple instances of this
-        public static readonly RenderQueueUserMetricsWorkQueue Singleton = new();
+        public static readonly RenderingWorkQueue Singleton = new();
 
         private static readonly ConcurrentDictionary<ulong, UserWorkQueuePerformanceMonitor> _userPerformanceMonitors = new();
         private static UserWorkQueuePerformanceMonitor GetUserPerformanceMonitor(IUser user)
-            => _userPerformanceMonitors.GetOrAdd(user.Id, _ => new UserWorkQueuePerformanceMonitor(PerfmonCounterRegistryProvider.Registry, "RenderWorkQueue", user));
+            => _userPerformanceMonitors.GetOrAdd(user.Id, _ => new UserWorkQueuePerformanceMonitor(PerfmonCounterRegistryProvider.Registry, "RenderingWorkQueue", user));
 
         private static void HandleWorkQueueException(Exception ex, SocketMessage message, UserWorkQueuePerformanceMonitor perf)
         {
