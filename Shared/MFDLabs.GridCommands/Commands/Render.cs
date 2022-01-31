@@ -4,9 +4,7 @@ using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Models;
-using MFDLabs.Grid.Bot.Tasks;
 using MFDLabs.Grid.Bot.Tasks.WorkQueues;
-using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -18,16 +16,11 @@ namespace MFDLabs.Grid.Bot.Commands
                                             $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render " +
                                             $"robloxUserID?|discordUserMention?|...userName?";
         public string[] CommandAliases => new[] { "r", "render", "sexually-weird-render" };
-        public bool Internal => !global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderingEnabled;
+        public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderingEnabled)
-            {
-                if (!await message.RejectIfNotAdminAsync()) return;
-            }
-
             var request = new SocketTaskRequest
             {
                 ContentArray = messageContentArray,
@@ -35,22 +28,19 @@ namespace MFDLabs.Grid.Bot.Commands
                 OriginalCommandName = originalCommand
             };
 
-            if (PercentageInvoker.InvokeAction(
-                    () => RenderQueueUserMetricsWorkQueue.Singleton.EnqueueWorkItem(request),
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderWorkQueueRolloutPercentage
-                )
-            ) return;
-
-            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.",
-                typeof(SocketTaskRequest).FullName,
-                typeof(RenderQueueUserMetricsTask).FullName);
-
-            RenderQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest
+            if (!PercentageInvoker.InvokeAction(
+                () => RenderingWorkQueue.Singleton.EnqueueWorkItem(request),
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderWorkQueueRolloutPercentage
+            ))
             {
-                ContentArray = messageContentArray,
-                Message = message,
-                OriginalCommandName = originalCommand
-            });
+                if (message.Author.IsAdmin())
+                {
+                    RenderingWorkQueue.Singleton.EnqueueWorkItem(request);
+                    return;
+                }
+                await message.ReplyAsync("Rendering is not enabled at this time.");
+                return;
+            }
         }
     }
 }
