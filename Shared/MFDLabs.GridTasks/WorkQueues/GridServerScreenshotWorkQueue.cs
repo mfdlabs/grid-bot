@@ -40,8 +40,8 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
             public IRateOfCountsPerSecondCounter TotalItemsProcessedPerSecond { get; }
             public IRawValueCounter TotalItemsProcessedThatFailed { get; }
             public IRateOfCountsPerSecondCounter TotalItemsProcessedThatFailedPerSecond { get; }
-            public IAverageValueCounter RenderWorkQueueSuccessAverageTimeTicks { get; }
-            public IAverageValueCounter RenderWorkQueueFailureAverageTimeTicks { get; }
+            public IAverageValueCounter GridServerScreenshotWorkQueueSuccessAverageTimeTicks { get; }
+            public IAverageValueCounter GridServerScreenshotWorkQueueFailureAverageTimeTicks { get; }
 
             public GridServerScreenshotWorkQueuePerformanceMonitor(ICounterRegistry counterRegistry)
             {
@@ -53,15 +53,15 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                 TotalItemsProcessedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedPerSecond", instance);
                 TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
                 TotalItemsProcessedThatFailedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatFailedPerSecond", instance);
-                RenderWorkQueueSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "RenderWorkQueueSuccessAverageTimeTicks", instance);
-                RenderWorkQueueFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "RenderWorkQueueFailureAverageTimeTicks", instance);
+                GridServerScreenshotWorkQueueSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "GridServerScreenshotWorkQueueSuccessAverageTimeTicks", instance);
+                GridServerScreenshotWorkQueueFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "GridServerScreenshotWorkQueueFailureAverageTimeTicks", instance);
             }
         }
 
-        private const string OnCareToLeakException = "An error occured with the render work queue task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
+        private const string OnCareToLeakException = "An error occured with the grid server screenshot work queue task and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
 
         private GridServerScreenshotWorkQueue()
-            : base(WorkQueueDispatcherQueueRegistry.RenderQueue, OnReceive)
+            : base(WorkQueueDispatcherQueueRegistry.GridServerScreenshotQueue, OnReceive)
         { }
 
         // Doesn't break HATE SINGLETON because we never need multiple instances of this
@@ -83,7 +83,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 #if DEBUG || DEBUG_LOGGING_IN_PROD
             SystemLogger.Singleton.Error(ex);
 #else
-            SystemLogger.Singleton.Warning("An error occurred when trying to execute render work queue task: {0}", ex.Message);
+            SystemLogger.Singleton.Warning("An error occurred when trying to execute grid server screenshot work queue task: {0}", ex.Message);
 #endif
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
@@ -105,7 +105,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                 );
                 return;
             }
-            message.Reply("An error occurred when trying to execute render task, please try again later.");
+            message.Reply("An error occurred when trying to execute grid server screenshot work queue, please try again later.");
         }
 
         private static void OnReceive(SocketTaskRequest item, SuccessFailurePort result)
@@ -217,7 +217,10 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                         return;
                     }
 
-                    message.Reply(embed: embed);
+                    message.Reply(
+                        $"Type `{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}viewconsole {{instanceId}}` to screenshot the specified instance.", 
+                        embed: embed
+                    );
                     return;
                 }
 
@@ -245,7 +248,8 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:
                         var expiration = instance.Expiration;
-                        message.ReplyWithFile(stream, fileName, $"This instance will expire at {expiration.Hour}:{expiration.Minute} {TimeZone.CurrentTimeZone.StandardName}");
+                        var timeStamp = new DateTimeOffset(expiration).ToUnixTimeSeconds();
+                        message.ReplyWithFile(stream, fileName, $"This instance will expire <t:{timeStamp}:R>");
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.DisposedInstance:
@@ -264,11 +268,11 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                 {
                     _perfmon.TotalItemsProcessedThatFailed.Increment();
                     _perfmon.TotalItemsProcessedThatFailedPerSecond.Increment();
-                    _perfmon.RenderWorkQueueFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
+                    _perfmon.GridServerScreenshotWorkQueueFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
                 }
                 else
                 {
-                    _perfmon.RenderWorkQueueSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
+                    _perfmon.GridServerScreenshotWorkQueueSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
                 }
             }
         }
