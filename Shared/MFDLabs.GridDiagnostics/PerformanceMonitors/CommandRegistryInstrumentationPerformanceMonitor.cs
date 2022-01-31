@@ -44,6 +44,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         public IRawValueCounter CommandsInNamespaceThatWereNotClasses { get; }
         public IRawValueCounter CommandThatWereNotStateSpecific { get; }
         public IRawValueCounter StateSpecificCommandsThatHadNoAliases { get; }
+        public IRawValueCounter StateSpecificCommandAliasesThatAlreadyExisted { get; }
         public IRawValueCounter StateSpecificCommandsThatHadNoName { get; }
         public IRawValueCounter StateSpecificCommandsThatHadNoNullButEmptyDescription { get; }
         public IRawValueCounter StateSpecificCommandsThatWereAddedToTheRegistry { get; }
@@ -101,6 +102,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             CommandsInNamespaceThatWereNotClasses = counterRegistry.GetRawValueCounter(Category, "CommandsInNamespaceThatWereNotClasses", instance);
             CommandThatWereNotStateSpecific = counterRegistry.GetRawValueCounter(Category, "CommandThatWereNotStateSpecific", instance);
             StateSpecificCommandsThatHadNoAliases = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoAliases", instance);
+            StateSpecificCommandAliasesThatAlreadyExisted = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandAliasesThatAlreadyExisted", instance);
             StateSpecificCommandsThatHadNoName = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoName", instance);
             StateSpecificCommandsThatHadNoNullButEmptyDescription = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatHadNoNullButEmptyDescription", instance);
             StateSpecificCommandsThatWereAddedToTheRegistry = counterRegistry.GetRawValueCounter(Category, "StateSpecificCommandsThatWereAddedToTheRegistry", instance);
