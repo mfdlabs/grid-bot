@@ -27,24 +27,74 @@ namespace MFDLabs.Grid.Bot.Utility
                     new AllowedMentions(AllowedMentionTypes.Users),
                     messageReference
                 );
+
+        public static async Task RespondEphemeralAsync(
+            this SocketCommandBase command,
+            string text = null,
+            bool pingUser = false,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent component = null,
+            Embed embed = null,
+            RequestOptions options = null
+        )
+        {
+            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
+
+            if (!command.HasResponded)
+            {
+                await command.RespondAsync(
+                    text,
+                    embeds,
+                    isTts,
+                    true,
+                    new AllowedMentions(AllowedMentionTypes.Users),
+                    component,
+                    embed,
+                    options
+                );
+                return;
+            }
+
+            await command.FollowupAsync(
+                text,
+                embeds,
+                isTts,
+                true,
+                new AllowedMentions(AllowedMentionTypes.Users),
+                component,
+                embed,
+                options
+            );
+        }
+
+        public static async Task RespondEphemeralPingAsync(
+            this SocketCommandBase command,
+            string text = null,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent component = null,
+            Embed embed = null,
+            RequestOptions options = null
+        ) => await command.RespondEphemeralAsync(text, true, embeds, isTts, component, embed, options);
     }
-    
+
     public static class AdminUtility
     {
         private static IEnumerable<string> AllowedChannelIDs =>
             (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',')
-                where !id.IsNullOrEmpty()
-                select id).ToArray();
+             where !id.IsNullOrEmpty()
+             select id).ToArray();
 
         private static IEnumerable<string> AdministratorUserIDs =>
             (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',')
-                where !id.IsNullOrEmpty()
-                select id).ToArray();
+             where !id.IsNullOrEmpty()
+             select id).ToArray();
 
         private static IEnumerable<string> HigherPrivilagedUserIDs =>
             (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',')
-                where !id.IsNullOrEmpty()
-                select id).ToArray();
+             where !id.IsNullOrEmpty()
+             select id).ToArray();
 
         private static IEnumerable<string> BlacklistedUserIDs =>
             (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',')
@@ -85,14 +135,55 @@ namespace MFDLabs.Grid.Bot.Utility
             return allowedChannelIds.Contains(message.Channel.Id.ToString());
         }
 
+#if WE_LOVE_EM_SLASH_COMMANDS
+        public static async Task<bool> RejectIfNotPrivilagedAsync(SocketCommandBase command)
+        {
+            var isPrivilaged = UserIsPrivilaged(command.User);
+
+            if (!isPrivilaged)
+            {
+                await command.RespondEphemeralPingAsync("Only privilaged users or administrators can execute that command.");
+                return false;
+            }
+
+            SystemLogger.Singleton.Info("User '{0}' is privilaged or an admin.", command.User.Id);
+            return true;
+        }
+
+        public static async Task<bool> RejectIfNotAdminAsync(SocketCommandBase command)
+        {
+            var isAdmin = UserIsAdmin(command.User);
+
+            if (!isAdmin)
+            {
+                await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
+                return false;
+            }
+
+            SystemLogger.Singleton.Info("User '{0}' is an admin.", command.User.Id);
+            return true;
+        }
+        public static async Task<bool> RejectIfNotOwnerAsync(SocketCommandBase command)
+        {
+            var isOwner = UserIsOwner(command.User);
+
+            if (!isOwner)
+            {
+                await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
+                return false;
+            }
+
+            SystemLogger.Singleton.Info("User '{0}' is the owner.", command.User.Id);
+            return true;
+        }
+#endif
+
         public static async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
         {
             var isPrivilaged = UserIsPrivilaged(message.Author);
 
             if (!isPrivilaged)
             {
-                SystemLogger.Singleton.Warning("User '{0}' is not on the admin whitelist or the privilaged users " +
-                                               "list. Please take this with caution as leaked internal methods may be abused!", message.Author.Id);
                 await message.ReplyAsync("Only privilaged users or administrators can execute that command.");
                 return false;
             }

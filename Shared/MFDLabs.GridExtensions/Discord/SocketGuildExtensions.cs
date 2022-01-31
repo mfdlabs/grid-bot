@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
+
+using Discord;
 using Discord.WebSocket;
 
 namespace MFDLabs.Grid.Bot.Extensions
@@ -12,3 +14,5 @@ namespace MFDLabs.Grid.Bot.Extensions
 
     }
 }
+
+#endif

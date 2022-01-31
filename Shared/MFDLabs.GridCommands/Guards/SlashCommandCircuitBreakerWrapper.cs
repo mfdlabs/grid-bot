@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
@@ -7,13 +8,15 @@ using MFDLabs.Sentinels;
 
 namespace MFDLabs.Grid.Bot.Guards
 {
-    public class CommandCircuitBreakerWrapper
+
+
+    public class SlashCommandCircuitBreakerWrapper
     {
         public TimeSpan RetryInterval { get; set; }
         public TimeSpan TimeoutIntervalForTripping { get; set; }
-        public IStateSpecificCommandHandler Command => _Command;
-        
-        public CommandCircuitBreakerWrapper(IStateSpecificCommandHandler cmd)
+        public IStateSpecificSlashCommandHandler Command => _Command;
+
+        public SlashCommandCircuitBreakerWrapper(IStateSpecificSlashCommandHandler cmd)
         {
             _Command = cmd ?? throw new ArgumentNullException(nameof(cmd));
             _CircuitBreaker = new CircuitBreaker(GetType().Name);
@@ -40,29 +43,30 @@ namespace MFDLabs.Grid.Bot.Guards
                 if (Interlocked.CompareExchange(ref _ShouldRetrySignal, 1, 0) != 0) throw;
             }
         }
-        public void Execute(string[] contentArray, SocketMessage message, string ocn)
+        public void Execute(SocketSlashCommand cmd)
         {
             Test();
-            try { _Command.Invoke(contentArray, message, ocn).Wait(); }
+            try { _Command.Invoke(cmd).Wait(); }
             catch (Exception ex) { TripAndRethrow(ex); }
             finally { ResetSignal(); }
             ResetCircuitBreaker();
         }
-        public async Task ExecuteAsync(string[] contentArray, SocketMessage message, string ocn)
+        public async Task ExecuteAsync(SocketSlashCommand cmd)
         {
             Test();
-            try { await _Command.Invoke(contentArray, message, ocn).ConfigureAwait(false); }
+            try { await _Command.Invoke(cmd).ConfigureAwait(false); }
             catch (Exception ex) { TripAndRethrow(ex); }
             finally { ResetSignal(); }
             ResetCircuitBreaker();
         }
-        
-        
 
-        private readonly IStateSpecificCommandHandler _Command;
+
+
+        private readonly IStateSpecificSlashCommandHandler _Command;
         private readonly CircuitBreaker _CircuitBreaker;
         private DateTime _NextRetry = DateTime.MinValue;
         private int _ShouldRetrySignal;
     }
-
 }
+
+#endif
