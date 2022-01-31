@@ -210,8 +210,7 @@ namespace MFDLabs.Grid.Bot.Utility
             if (!message.CheckIfHasIds(out var ids)) return null;
 
             var builder = new EmbedBuilder()
-                .WithTitle("Your Grid Server Instances")
-                .WithDescription($"Type `{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}viewconsole {{instanceId}}` to screenshot the specified instance.");
+                .WithTitle("Your Grid Server Instances");
 
             var text = "";
             
