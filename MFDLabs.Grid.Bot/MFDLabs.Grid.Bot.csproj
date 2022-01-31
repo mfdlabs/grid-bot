@@ -28,7 +28,7 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+    <DefineConstants>TRACE;WE_ON_THE_GRID;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
     <WarningLevel>0</WarningLevel>
