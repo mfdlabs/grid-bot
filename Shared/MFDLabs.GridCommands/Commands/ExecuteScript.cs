@@ -1,9 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
+using MFDLabs.Diagnostics;
+using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Models;
-using MFDLabs.Grid.Bot.Tasks;
-using MFDLabs.Logging;
+using MFDLabs.Grid.Bot.Tasks.WorkQueues;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -16,20 +17,28 @@ namespace MFDLabs.Grid.Bot.Commands
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
 
-        public Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
+        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            SystemLogger.Singleton.Debug("Dispatching '{0}' to '{1}' for processing.",
-                typeof(SocketTaskRequest).FullName,
-                typeof(ScriptExecutionQueueUserMetricsTask).FullName);
-
-            ScriptExecutionQueueUserMetricsTask.Singleton.Port.Post(new SocketTaskRequest()
+            var request = new SocketTaskRequest
             {
                 ContentArray = messageContentArray,
                 Message = message,
                 OriginalCommandName = originalCommand
-            });
+            };
 
-            return Task.CompletedTask;
+            if (!PercentageInvoker.InvokeAction(
+                () => ScriptExecutionWorkQueue.Singleton.EnqueueWorkItem(request),
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewScriptExecutionWorkQueueRolloutPercentage
+            ))
+            {
+                if (message.Author.IsAdmin())
+                {
+                    ScriptExecutionWorkQueue.Singleton.EnqueueWorkItem(request);
+                    return;
+                }
+                await message.ReplyAsync("Script execution is not enabled at this time.");
+                return;
+            }
         }
     }
 }
