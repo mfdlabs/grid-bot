@@ -6,7 +6,8 @@ param (
     [bool]$isGitIntegrated = $true,
     [bool]$replaceExtensions = $true,
     [bool]$checkForExistingSourceArchive = $true,
-    [bool]$checkForExistingConfigArchive = $true
+    [bool]$checkForExistingConfigArchive = $true,
+    [bool]$writeUnpackerScripts = $true
 )
 
 $date = Get-Date;
@@ -18,6 +19,7 @@ if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
     & Write-Host "7Zip not found on the system." -ForegroundColor Red
     Exit
 }
+
 
 & Set-Alias 7zip-Archive $7zipPath
 
@@ -65,9 +67,9 @@ function HasGitRepository([string] $path) {
     }
 
     $gitDir = [System.IO.Path]::Combine($path, ".git");
-	$exists = [System.IO.Directory]::Exists($gitDir);
+    $exists = [System.IO.Directory]::Exists($gitDir);
 	
-	Write-Host "Test path $($gitDir): $exists";
+    Write-Host "Test path $($gitDir): $exists";
 
     return $exists;
 }
@@ -154,15 +156,14 @@ Attempts to read the short hash revision from the directory for github revisions
 #>
 function ReadGitShortHash([string] $from) {
     $hash = $(ReadGitHash -from $from -readShortHash $true);
-	$hash = if ($null -ne $hash) {$hash.Trim().Replace(" ", "") -replace '\t', ''} else {$null}
+    $hash = if ($null -ne $hash) { $hash.Trim().Replace(" ", "") -replace '\t', '' } else { $null }
     return $hash;
 }
 
 # TODO: Seperate configurations from the rest of the code
 
 IF ([string]::IsNullOrEmpty($root)) {
-    & Write-Host "The root directory cannot be empty." -ForegroundColor Red
-    Exit
+    $root = (Get-Location).Path;
 }
 
 IF (!$root.EndsWith("\")) {
@@ -189,9 +190,9 @@ try {
     $deploymentFolder = "$($location)$($deploymentKind)\Deploy\"
     $deploymentYear = "$($deploymentFolder)$($date.Year)\"
 	
-	$componentDir = IF ([string]::IsNullOrEmpty($deploymentKind)) {"$($location)\bin\"} ELSE {"$($location)$($deploymentKind)\bin\"}
-	$componentDir = IF ([string]::IsNullOrEmpty($config)) {$componentDir} ELSE {"$($componentDir)$($config)\"}
-	$componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) {$componentDir} ELSE {"$($componentDir)$($targetFramework)\"}
+    $componentDir = IF ([string]::IsNullOrEmpty($deploymentKind)) { "$($location)\bin\" } ELSE { "$($location)$($deploymentKind)\bin\" }
+    $componentDir = IF ([string]::IsNullOrEmpty($config)) { $componentDir } ELSE { "$($componentDir)$($config)\" }
+    $componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) { $componentDir } ELSE { "$($componentDir)$($targetFramework)\" }
 
     IF (![System.IO.Directory]::Exists($deploymentFolder)) {
         & Write-Host "The deployment folder at $($deploymentFolder) does not exist, creating..." -ForegroundColor Yellow
@@ -215,7 +216,7 @@ try {
     }
 
     IF ([string]::IsNullOrEmpty($targetFramework)) { $targetFramework = "DotNet"; }
-	IF ([string]::IsNullOrEmpty($config)) { $config = "AnyConfiguration"; }
+    IF ([string]::IsNullOrEmpty($config)) { $config = "AnyConfiguration"; }
 
     [String] $hash;
     [String] $branch;
@@ -241,7 +242,7 @@ try {
     & Write-Host "Got Git Branch: $branch, Is Fake Branch: $(IF($isGitIntegrated){"No"} ELSE {"Yes"})" -ForegroundColor Green
     & Write-Host "Got Git Hash: $hash, Is Fake Hash: $(IF($isGitIntegrated){"No"} ELSE {"Yes"})" -ForegroundColor Green
 
-    $archivePrefix = "$($deploymentYear)$($date.Year).
+    $archivePrefixName = "$($date.Year).
                       $(GetParsedNumber -num $date.Month).
                       $(GetParsedNumber -num $date.Day)-
                       $(GetParsedNumber -num $date.Hour).
@@ -250,6 +251,8 @@ try {
                       $($branch)_
                       $($hash)-
                       $($targetFramework)" -replace '\s+', '';
+
+    $archivePrefix = "$($deploymentYear)$($archivePrefixName)" -replace '\s+', '';
 
     Write-Host "Archive Prefix: $archivePrefix" -ForegroundColor Green
 
@@ -368,6 +371,54 @@ try {
     $deleteArchivesBecauseNotFinished = $false;
 
     & Write-Host "Completed deployment of ""$($deploymentKind)"". Source Archive: ""$($newSourceArchive)"", Configuration Archive: ""$($newConfigArchive)"", press enter to continue." -ForegroundColor Green
+
+    if ($writeUnpackerScripts) {
+        $defaultPs1ScriptToExtract = "& Set-Alias 7z ""$7zipPath""`n7z x -y ""-o{{SOURCE_NAME}}"" ""{{SOURCE_ARCHIVE}}""";
+
+        $defaultBatchScriptPs1Wrapper = "
+@echo off
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted ""{{PS1_SCRIPT}}""
+"
+
+
+        & Write-Host "Writing unpacker scripts..." -ForegroundColor Green
+
+        $outputDir = $newSourceArchive.Replace(".zip", "").Replace(".mfdlabs-archive", "").Replace("$($deploymentYear)", "");
+        [string] $outSourceArchive = "$outputDir.zip";
+
+        if ($replaceExtensions) {
+            $outSourceArchive = "$outputDir.mfdlabs-archive"
+        }
+
+        $unpackerPs1ScriptContents = $defaultPs1ScriptToExtract.Replace("{{SOURCE_NAME}}", $outputDir).Replace("{{SOURCE_ARCHIVE}}", $outSourceArchive);
+
+        if ($deployingNewConfig) {
+            [string] $outConfigArchive = "$($outputDir)Config.zip";
+
+            if ($replaceExtensions) {
+                $outConfigArchive = "$($outputDir)Config.mfdlabs-config-archive"
+            }
+
+            $unpackerPs1ScriptContents += "`n7z x -y ""-o$outputDir"" ""$outConfigArchive"""
+        }
+
+        $unpackerPs1ScriptContents += "`nexit;";
+
+        $ps1Name = "$($outputDir).Unpacker.ps1";
+        $batName = "$($outputDir).Unpacker.bat";
+
+        # Write the unpacker script
+        [System.IO.File]::WriteAllText("$($deploymentYear)$($ps1Name)", $unpackerPs1ScriptContents);
+
+        & Write-Host "Wrote unpacker script $($ps1Name)" -ForegroundColor Green
+
+        $unpackerWrapperContents = $defaultBatchScriptPs1Wrapper.Replace("{{PS1_SCRIPT}}", ".\$($ps1Name)");
+
+        # Write the unpacker batch wrapper
+        [System.IO.File]::WriteAllText("$($deploymentYear)$($batName)", $unpackerWrapperContents);
+
+        & Write-Host "Wrote unpacker batch wrapper $($batName)" -ForegroundColor Green
+    }
 }
 finally {
     & Write-Host "Cleaning up..." -ForegroundColor Green
