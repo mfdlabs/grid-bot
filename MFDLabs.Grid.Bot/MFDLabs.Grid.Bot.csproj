@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net461;net472;net48</TargetFrameworks>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <LangVersion>9</LangVersion>
+    <LangVersion>10</LangVersion>
     <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
     <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
     <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy;ReleaseNoDeploy;DebugDeploy</Configurations>
