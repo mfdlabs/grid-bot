@@ -1,0 +1,13 @@
+name: Compile Source Code
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build 
+      run: build-grid-integration.bat
