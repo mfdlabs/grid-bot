@@ -124,7 +124,7 @@
     <value>Crash handler successfuly uploaded dump!</value>
   </data>
   <data name="CrashHandler_Upload_Failure" xml:space="preserve">
-    <value>Crash Handler failed to upload the contents of the crash.</value>
+    <value>Crash Handler failed to upload the contents of the crash. Reason: {0}</value>
   </data>
   <data name="Runner_Invoke_Title" xml:space="preserve">
     <value>[{0:X}] '{1}' @ '{2}' [{3}@{4} ({5})]</value>

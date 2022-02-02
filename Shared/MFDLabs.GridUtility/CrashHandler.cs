@@ -20,9 +20,9 @@
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerExitWhenDone && !overrideSystemWhenExitingCrashHandler)
                     System.Environment.Exit(1);
             }
-            catch
+            catch (global::System.Exception e)
             {
-                System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure);
+                System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure, e.Message);
             }
         }
     }

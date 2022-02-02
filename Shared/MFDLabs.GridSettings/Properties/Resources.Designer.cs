@@ -61,7 +61,7 @@ namespace MFDLabs.Grid.Bot.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Crash Handler failed to upload the contents of the crash..
+        ///   Looks up a localized string similar to Crash Handler failed to upload the contents of the crash. Reason: {0}.
         /// </summary>
         public static string CrashHandler_Upload_Failure {
             get {
