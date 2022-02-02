@@ -10,7 +10,7 @@ namespace MFDLabs.Threading
     /// Pulled from Arctic-Assignments
     /// </summary>
     [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
-    public sealed class Atomic
+    public struct Atomic
     {
         #region |Private Members|
         private long _value;
@@ -35,32 +35,32 @@ namespace MFDLabs.Threading
 
         #region |Comparison Operators|
         public override bool Equals(object obj) => obj is Atomic atomic && _value == atomic._value;
-        public static bool operator ==(Atomic self, Atomic obj) => self?._value == obj?._value;
-        public static bool operator !=(Atomic self, Atomic obj) => self?._value != obj?._value;
-        public static bool operator ==(Atomic self, ulong obj) => self?._value == (long)obj;
-        public static bool operator !=(Atomic self, ulong obj) => self?._value != (long)obj;
-        public static bool operator ==(Atomic self, long obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, long obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, int obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, int obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, uint obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, uint obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, short obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, short obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, ushort obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, ushort obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, char obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, char obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, byte obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, byte obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, sbyte obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, sbyte obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, float obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, float obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, double obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, double obj) => self?._value != obj;
-        public static bool operator ==(Atomic self, decimal obj) => self?._value == obj;
-        public static bool operator !=(Atomic self, decimal obj) => self?._value != obj;
+        public static bool operator ==(Atomic self, Atomic obj) => self._value == obj._value;
+        public static bool operator !=(Atomic self, Atomic obj) => self._value != obj._value;
+        public static bool operator ==(Atomic self, ulong obj) => self._value == (long)obj;
+        public static bool operator !=(Atomic self, ulong obj) => self._value != (long)obj;
+        public static bool operator ==(Atomic self, long obj) => self._value == obj;
+        public static bool operator !=(Atomic self, long obj) => self._value != obj;
+        public static bool operator ==(Atomic self, int obj) => self._value == obj;
+        public static bool operator !=(Atomic self, int obj) => self._value != obj;
+        public static bool operator ==(Atomic self, uint obj) => self._value == obj;
+        public static bool operator !=(Atomic self, uint obj) => self._value != obj;
+        public static bool operator ==(Atomic self, short obj) => self._value == obj;
+        public static bool operator !=(Atomic self, short obj) => self._value != obj;
+        public static bool operator ==(Atomic self, ushort obj) => self._value == obj;
+        public static bool operator !=(Atomic self, ushort obj) => self._value != obj;
+        public static bool operator ==(Atomic self, char obj) => self._value == obj;
+        public static bool operator !=(Atomic self, char obj) => self._value != obj;
+        public static bool operator ==(Atomic self, byte obj) => self._value == obj;
+        public static bool operator !=(Atomic self, byte obj) => self._value != obj;
+        public static bool operator ==(Atomic self, sbyte obj) => self._value == obj;
+        public static bool operator !=(Atomic self, sbyte obj) => self._value != obj;
+        public static bool operator ==(Atomic self, float obj) => self._value == obj;
+        public static bool operator !=(Atomic self, float obj) => self._value != obj;
+        public static bool operator ==(Atomic self, double obj) => self._value == obj;
+        public static bool operator !=(Atomic self, double obj) => self._value != obj;
+        public static bool operator ==(Atomic self, decimal obj) => self._value == obj;
+        public static bool operator !=(Atomic self, decimal obj) => self._value != obj;
         #endregion |Comparison Operators|
 
         #region |Implicit Cast Operators|

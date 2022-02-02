@@ -32,9 +32,9 @@ namespace MFDLabs.Grid.Bot.Utility
             return TrackedUsers.GetOrAdd(user.Id, (DateTime.Now.Add(lease), count));
         }
 
-        public static (DateTime, Atomic) UpdateOrCreateTrack(this IUser user, Atomic count, TimeSpan? lease, bool incrementLastCount = false)
+        public static (DateTime, Atomic) UpdateOrCreateTrack(this IUser user, Atomic? count, TimeSpan? lease, bool incrementLastCount = false)
         {
-            (DateTime? expires, Atomic count) updateTuple;
+            (DateTime? expires, Atomic? count) updateTuple;
             if (lease == null) updateTuple = (null, count);
             else updateTuple = (DateTime.Now.Add(lease.Value), count);
 
@@ -42,17 +42,17 @@ namespace MFDLabs.Grid.Bot.Utility
                 _ =>
                 {
                     if (updateTuple.count == null) updateTuple.count = 0;
-                    return (updateTuple.expires.Value, updateTuple.count);
+                    return (updateTuple.expires.Value, updateTuple.count.Value);
                 },
                 (_, old) =>
                 {
-                    if (updateTuple.count == null && !incrementLastCount) updateTuple.count = old.Item2 ?? 0;
+                    if (updateTuple.count == null && !incrementLastCount) updateTuple.count = old.Item2;
                     if (incrementLastCount)
                     {
                         updateTuple.count = old.Item2++;
                         updateTuple.expires = old.Item1;
                     }
-                    return (updateTuple.expires.Value, updateTuple.count);
+                    return (updateTuple.expires.Value, updateTuple.count.Value);
                 }
             );
         }
