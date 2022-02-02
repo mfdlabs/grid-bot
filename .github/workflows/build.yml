@@ -10,4 +10,4 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Build 
-      run: build-grid-integration.bat
+      run: ${{ env.GITHUB_ACTION_PATH }}\Build.ps1
