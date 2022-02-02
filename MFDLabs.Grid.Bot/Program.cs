@@ -38,6 +38,10 @@
                     global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
                     global::System.Console.WriteLine("[URGENT]: {0}", GetBadConfigurationError());
                     global::System.Console.ResetColor();
+
+                    if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))
+                        global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()));
+
                     return;
                 }
 
@@ -64,7 +68,7 @@
                 global::System.Console.ResetColor();
 
                 if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))
-                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(e.ExceptionObject as global::System.Exception);
+                    global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception);
 
                 global::MFDLabs.Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
 
