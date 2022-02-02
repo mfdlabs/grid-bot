@@ -10,4 +10,4 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Build 
-      run: ${{ github.workspace }}\Build.ps1
+      run: ${{ github.workspace }}\BuildGridIntegration.ps1
