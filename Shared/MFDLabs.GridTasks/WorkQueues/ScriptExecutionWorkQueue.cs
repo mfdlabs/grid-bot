@@ -331,6 +331,8 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 #if NETFRAMEWORK
                         var result = LuaUtility.ParseLuaValues(instance.BatchJobEx(job, scriptEx));
 
+                        instance.Lock();
+
                         message.CreateGridServerInstanceReference(ref instance);
 #else
                         var result = LuaUtility.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
@@ -375,6 +377,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
 
 #if NETFRAMEWORK
                         // We assume that it didn't actually track screenshots here.
+                        instance.Lock();
                         message.CreateGridServerInstanceReference(ref instance);
 #endif
 
