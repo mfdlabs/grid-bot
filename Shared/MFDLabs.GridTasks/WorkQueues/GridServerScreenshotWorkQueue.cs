@@ -249,7 +249,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:
                         var expiration = instance.Expiration;
                         var timeStamp = new DateTimeOffset(expiration).ToUnixTimeSeconds();
-                        message.ReplyWithFile(stream, fileName, $"This instance will expire <t:{timeStamp}:R>");
+                        message.ReplyWithFile(stream, fileName, $"This instance will expire at <t:{timeStamp}:T>");
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.DisposedInstance:
