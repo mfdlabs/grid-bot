@@ -6,7 +6,6 @@ Description: A helper to arbiter grid server instances to avoid single instanced
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -18,7 +17,6 @@ using System.Net.NetworkInformation;
 using Microsoft.Extensions.Caching.Memory;
 using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
 using MFDLabs.Logging;
@@ -32,12 +30,10 @@ using MFDLabs.ErrorHandling.Extensions;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-/** TODO: Pull out to MFDLabs.Grid.Arbiter **/
-
-namespace MFDLabs.Grid.Bot.Utility
+namespace MFDLabs.Grid
 {
     // In here check for SingleInstancedGridServer
-    // if true, piggyback off SoapUtility :)
+    // if true, piggyback off SoapHelper :)
 
     // so what if we have 2 instances with the same name but on different ports?
     // should we queue them up regardless, or only queue them if it's not persistent
@@ -47,8 +43,10 @@ namespace MFDLabs.Grid.Bot.Utility
         #region |Setup|
 
         private static Binding _defaultHttpBinding;
+        private static ICounterRegistry _counterRegistry;
 
-        public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding;
+        public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding ?? throw new ArgumentNullException(nameof(binding));
+        public static void SetCounterRegistry(ICounterRegistry counterRegistry) => _counterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
 
         public void SetupPool()
             => BatchQueueUpLeasedArbiteredInstancesUnsafe(
@@ -200,7 +198,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             #region |Performance|
 
-            private static readonly PortAllocationPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
+            internal static PortAllocationPerformanceMonitor _perfmon;
 
             #endregion |Performance|
 
@@ -263,10 +261,22 @@ namespace MFDLabs.Grid.Bot.Utility
 
         #endregion |Port Allocation|
 
+        #region |Constructors|
+
+        public GridServerArbiter()
+        {
+            if (_counterRegistry == null) throw new ApplicationException("The counter registry was not set.");
+
+            _perfmon = new(_counterRegistry);
+            PortAllocation._perfmon = new(_counterRegistry);
+        }
+
+        #endregion |Constructors|
+
         #region |Private Members|
 
         private readonly List<GridServerInstance> _instances = new();
-        private readonly GridServerArbiterPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
+        private readonly GridServerArbiterPerformanceMonitor _perfmon;
 
         #endregion |Private Members|
 
@@ -275,7 +285,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public IReadOnlyCollection<GridServerInstance> GetAllInstances()
         {
             lock (_instances)
-                return _instances.ToImmutableArray();
+                return _instances.ToArray();
         }
 
         public int KillAllOpenInstancesUnsafe()
@@ -418,8 +428,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
+                _counterRegistry,
                 hostName,
                 currentAllocatedPort,
                 name ?? Guid.NewGuid().ToString(),
@@ -454,8 +465,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new LeasedGridServerInstance(
+                _counterRegistry,
                 newLease,
                 hostName,
                 currentAllocatedPort,
@@ -485,8 +497,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
+                _counterRegistry,
                 hostName,
                 currentAllocatedPort,
                 name,
@@ -513,8 +526,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
+                _counterRegistry,
                 hostName,
                 currentAllocatedPort,
                 name ?? Guid.NewGuid().ToString(),
@@ -550,8 +564,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new LeasedGridServerInstance(
+                _counterRegistry,
                 newLease,
                 hostName,
                 currentAllocatedPort,
@@ -582,8 +597,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
             var instance = new GridServerInstance(
+                _counterRegistry,
                 hostName,
                 currentAllocatedPort,
                 name,
@@ -704,9 +720,9 @@ namespace MFDLabs.Grid.Bot.Utility
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*false, new StackTrace(),*/ method, out var methodToInvoke);
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer) return InvokeSoapUtility<T>(args, methodToInvoke);
+            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer) return InvokeSoapHelper<T>(args, methodToInvoke);
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
@@ -734,10 +750,10 @@ namespace MFDLabs.Grid.Bot.Utility
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*true, new StackTrace(),*/ method, out var methodToInvoke);
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                return await InvokeSoapUtilityAsync<T>(args, methodToInvoke);
+            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
+                return await InvokeSoapHelperAsync<T>(args, methodToInvoke);
 
-            SystemUtility.OpenWebServerIfNotOpen();
+            GridProcessHelper.OpenWebServerIfNotOpen();
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
@@ -802,9 +818,9 @@ namespace MFDLabs.Grid.Bot.Utility
         }
 
 
-        private T InvokeSoapUtility<T>(object[] args, MethodInfo methodToInvoke)
+        private T InvokeSoapHelper<T>(object[] args, MethodInfo methodToInvoke)
         {
-            try { _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment(); return (T)methodToInvoke.Invoke(SoapUtility.Singleton, args); }
+            try { _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment(); return (T)methodToInvoke.Invoke(SoapHelper.Singleton, args); }
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
@@ -815,12 +831,12 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        private async Task<T> InvokeSoapUtilityAsync<T>(object[] args, MethodInfo methodToInvoke)
+        private async Task<T> InvokeSoapHelperAsync<T>(object[] args, MethodInfo methodToInvoke)
         {
             try
             {
                 _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment();
-                return await ((Task<T>)methodToInvoke.Invoke(SoapUtility.Singleton, args)).ConfigureAwait(false);
+                return await ((Task<T>)methodToInvoke.Invoke(SoapHelper.Singleton, args)).ConfigureAwait(false);
             }
             catch (TargetInvocationException ex)
             {
@@ -854,8 +870,8 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (lastMethod == "InvokeMethod") lastMethod = stack.GetFrame(2).GetMethod().Name;
             }*/
 
-            methodToInvoke = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer
-                ? SoapUtility.Singleton.GetType()
+            methodToInvoke = global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer
+                ? SoapHelper.Singleton.GetType()
                     .GetMethod(lastMethod,
                         BindingFlags.Instance | BindingFlags.Public,
                         null,
@@ -1113,15 +1129,20 @@ namespace MFDLabs.Grid.Bot.Utility
 
             #region |Contructors|
 
-            internal GridServerInstance(string host,
+            internal GridServerInstance(
+                ICounterRegistry counterRegistry,
+                string host,
                 int port,
                 string name,
                 bool openProcessNow,
                 int maxAttemptsToHitGridServer = 5,
                 bool persistent = false,
                 bool poolable = true,
-                bool openNowInNewThread = false)
-                : this(new EndpointAddress($"http://{host}:{port}"),
+                bool openNowInNewThread = false
+            )
+                : this(
+                    counterRegistry,
+                    new EndpointAddress($"http://{host}:{port}"),
                     name,
                     openProcessNow,
                     maxAttemptsToHitGridServer,
@@ -1131,16 +1152,19 @@ namespace MFDLabs.Grid.Bot.Utility
             { }
 
             protected GridServerInstance(
+                ICounterRegistry counterRegistry,
                 EndpointAddress remoteAddress,
                 string name,
                 bool openProcessNow,
                 int maxAttemptsToHitGridServer = 5,
                 bool persistent = false,
                 bool poolable = true,
-                bool openNowInNewThread = false)
+                bool openNowInNewThread = false
+            )
                 : base(_defaultHttpBinding, remoteAddress)
             {
                 if (maxAttemptsToHitGridServer < 1) throw new ArgumentOutOfRangeException(nameof(maxAttemptsToHitGridServer));
+                if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
                 _maxAttemptsToHitGridServer = maxAttemptsToHitGridServer;
                 _isPersistent = persistent;
                 if (name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(name));
@@ -1148,7 +1172,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 _isAvailable = true;
                 _isPoolable = poolable;
                 _perf = new GridServerInstancePerformanceMonitor(
-                    PerfmonCounterRegistryProvider.Registry,
+                    counterRegistry,
                     this
                 );
 
@@ -1171,9 +1195,9 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 int proc;
                 if (@unsafe)
-                    (_, proc) = SystemUtility.OpenGridServerInstance(Port, true);
+                    (_, proc) = GridProcessHelper.OpenGridServerInstance(Port, true);
                 else
-                    (_, proc) = SystemUtility.OpenGridServerInstance(Port);
+                    (_, proc) = GridProcessHelper.OpenGridServerInstance(Port);
                 if (proc == 0) return false;
                 _gridServerProcessId = proc;
                 return true;
@@ -1183,7 +1207,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 GC.SuppressFinalize(this);
                 SystemLogger.Singleton.LifecycleEvent("Closing instance '{0}'...", _name);
-                SystemUtility.KillProcessByPidSafe(ProcessId);
+                GridProcessHelper.KillProcessByPidSafe(ProcessId);
             }
 
             #endregion |LifeCycle Managment Helpers|
@@ -1206,7 +1230,7 @@ namespace MFDLabs.Grid.Bot.Utility
                         if (!@continue) return result;
                     }
 
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts)
+                    if (global::MFDLabs.Grid.Properties.Settings.Default.GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts)
                     {
                         _perf.TotalInvocationsThatFailed.Increment();
                         throw new TimeoutException($"The command '{_name}->{method}' reached it's max attempts to give a result.");
@@ -1247,7 +1271,7 @@ namespace MFDLabs.Grid.Bot.Utility
                         if (!EqualityComparer<T>.Default.Equals(result, default)) return result;
                     }
 
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts)
+                    if (global::MFDLabs.Grid.Properties.Settings.Default.GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts)
                         throw new TimeoutException($"The command '{_name}->{method}' reached it's max attempts to give a result.");
 
                     return default;
@@ -1354,7 +1378,7 @@ namespace MFDLabs.Grid.Bot.Utility
             private T HandleEndpointNotFoundException<T>(string lastMethod)
             {
                 SystemLogger.Singleton.Warning("The grid server instance command the name of '{0}->{1}' threw an EndpointNotFoundException, opening and retrying...", _name, lastMethod);
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
+                if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     return default;
 
                 if (!TryOpen())
@@ -1460,7 +1484,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             #region |Private Members|
 
-            public static TimeSpan DefaultLease => global::MFDLabs.Grid.Bot.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
+            public static TimeSpan DefaultLease => global::MFDLabs.Grid.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
             private readonly TimeSpan _lease;
             private readonly IRandom _rng = RandomFactory.GetDefaultRandom();
             private bool _disposed;
@@ -1483,6 +1507,7 @@ namespace MFDLabs.Grid.Bot.Utility
             #region |Constructors|
 
             internal LeasedGridServerInstance(
+                ICounterRegistry counterRegistry,
                 TimeSpan lease,
                 string host,
                 int port,
@@ -1493,6 +1518,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 bool openNowInNewThread = false
             )
                 : base(
+                    counterRegistry,
                     host,
                     port,
                     name,

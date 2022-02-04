@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <LangVersion>10</LangVersion>
+    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
+    <ProjectReference Include="..\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
+    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+    <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
+    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+</Project>
