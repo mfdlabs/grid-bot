@@ -167,16 +167,17 @@ namespace MFDLabs.Grid.Bot
                 GridProcessHelper.KillAllGridServersSafe();
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                 GridProcessHelper.OpenGridServerSafe();
 
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
             {
                 MaxReceivedMessageSize = int.MaxValue,
-                SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.SoapUtilityRemoteServiceTimeout
+                SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterDefaultTimeout
             };
 
             GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
+            GridServerArbiter.SetCounterRegistry(PerfmonCounterRegistryProvider.Registry);
             GridServerArbiter.Singleton.SetupPool();
 
             SingleInstancedArbiter.SetBinding(defaultHttpBinding);

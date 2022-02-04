@@ -261,22 +261,20 @@ namespace MFDLabs.Grid
 
         #endregion |Port Allocation|
 
-        #region |Constructors|
+        #region |Private Members|
 
-        public GridServerArbiter()
+        private readonly List<GridServerInstance> _instances = new();
+        private GridServerArbiterPerformanceMonitor _perfmon;
+
+        private void CheckAndSetPerfmon()
         {
+            if (!(_perfmon == null && PortAllocation._perfmon == null)) return;
+
             if (_counterRegistry == null) throw new ApplicationException("The counter registry was not set.");
 
             _perfmon = new(_counterRegistry);
             PortAllocation._perfmon = new(_counterRegistry);
         }
-
-        #endregion |Constructors|
-
-        #region |Private Members|
-
-        private readonly List<GridServerInstance> _instances = new();
-        private readonly GridServerArbiterPerformanceMonitor _perfmon;
 
         #endregion |Private Members|
 
@@ -348,10 +346,12 @@ namespace MFDLabs.Grid
             return true;
         }
 
-        public List<GridServerInstance> BatchQueueUpArbiteredInstances(int count = 1,
+        public List<GridServerInstance> BatchQueueUpArbiteredInstances(
+            int count = 1,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
-            bool startUp = true)
+            bool startUp = true
+        )
         {
             if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count));
@@ -382,10 +382,12 @@ namespace MFDLabs.Grid
             return instances;
         }
 
-        public List<GridServerInstance> BatchQueueUpArbiteredInstancesUnsafe(int count = 1,
+        public List<GridServerInstance> BatchQueueUpArbiteredInstancesUnsafe(
+            int count = 1,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
-            bool startUp = true)
+            bool startUp = true
+        )
         {
             if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count));
@@ -418,12 +420,16 @@ namespace MFDLabs.Grid
 
         //warning: THIS HAS ZERO THREAD SAFETY !!!
         //it also pools start up, so we may not get the arbiter back for a while!!!!!!
-        public GridServerInstance QueueUpArbiteredInstanceUnsafe(string name = null,
+        public GridServerInstance QueueUpArbiteredInstanceUnsafe(
+            string name = null,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
             bool startUp = true,
-            bool openNowInNewThread = true)
+            bool openNowInNewThread = true
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
@@ -456,6 +462,8 @@ namespace MFDLabs.Grid
             bool openNowInNewThread = true
         )
         {
+            CheckAndSetPerfmon();
+
             TimeSpan newLease;
 
             if (lease == null) newLease = LeasedGridServerInstance.DefaultLease;
@@ -486,13 +494,17 @@ namespace MFDLabs.Grid
             return instance;
         }
 
-        public GridServerInstance QueueUpPersistentArbiteredInstanceUnsafe(string name,
+        public GridServerInstance QueueUpPersistentArbiteredInstanceUnsafe(
+            string name,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
             bool isPoolable = false,
             bool startUp = true,
-            bool openNowInNewThread = true)
+            bool openNowInNewThread = true
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalPersistentArbiteredGridServerInstancesOpened.Increment();
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
@@ -516,12 +528,16 @@ namespace MFDLabs.Grid
             return instance;
         }
 
-        public GridServerInstance QueueUpArbiteredInstance(string name = null,
+        public GridServerInstance QueueUpArbiteredInstance(
+            string name = null,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
             bool startUp = true,
-            bool openNowInNewThread = false)
+            bool openNowInNewThread = false
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
@@ -555,6 +571,8 @@ namespace MFDLabs.Grid
             bool openNowInNewThread = true
         )
         {
+            CheckAndSetPerfmon();
+
             TimeSpan newLease;
 
             if (lease == null) newLease = LeasedGridServerInstance.DefaultLease;
@@ -586,13 +604,17 @@ namespace MFDLabs.Grid
             return instance;
         }
 
-        public GridServerInstance QueueUpPersistentArbiteredInstance(string name,
+        public GridServerInstance QueueUpPersistentArbiteredInstance(
+            string name,
             int maxAttemptsToHitGridServer = 5,
             string hostName = "localhost",
             bool isPoolable = false,
             bool startUp = true,
-            bool openNowInNewThread = false)
+            bool openNowInNewThread = false
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalPersistentArbiteredGridServerInstancesOpened.Increment();
 
             var currentAllocatedPort = PortAllocation.FindNextAvailablePort();
@@ -707,7 +729,8 @@ namespace MFDLabs.Grid
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
-            params object[] args)
+            params object[] args
+        )
             => InvokeMethod<object>(method, name, maxAttemptsToHitGridServer, hostName, isPoolable, args);
         private T InvokeMethod<T>(
             string method,
@@ -715,8 +738,11 @@ namespace MFDLabs.Grid
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
-            params object[] args)
+            params object[] args
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*false, new StackTrace(),*/ method, out var methodToInvoke);
@@ -737,7 +763,8 @@ namespace MFDLabs.Grid
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
-            params object[] args)
+            params object[] args
+        )
             => await InvokeMethodAsync<object>(method, name, maxAttemptsToHitGridServer, hostName, isPoolable, args);
         private async Task<T> InvokeMethodAsync<T>(
             string method,
@@ -745,8 +772,11 @@ namespace MFDLabs.Grid
             int maxAttemptsToHitGridServer,
             string hostName,
             bool isPoolable,
-            params object[] args)
+            params object[] args
+        )
         {
+            CheckAndSetPerfmon();
+
             _perfmon.TotalInvocations.Increment();
 
             TryGetMethodToInvoke(args, /*true, new StackTrace(),*/ method, out var methodToInvoke);
