@@ -164,11 +164,11 @@ namespace MFDLabs.Grid.Bot
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
-                SystemUtility.KillAllGridServersSafe();
+                GridProcessHelper.KillAllGridServersSafe();
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
-                SystemUtility.OpenGridServerSafe();
+                GridProcessHelper.OpenGridServerSafe();
 
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
             {
@@ -179,7 +179,7 @@ namespace MFDLabs.Grid.Bot
             GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
             GridServerArbiter.Singleton.SetupPool();
 
-            SoapUtility.SetBinding(defaultHttpBinding);
+            SingleInstancedArbiter.SetBinding(defaultHttpBinding);
 
             if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();
