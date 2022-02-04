@@ -123,73 +123,10 @@ namespace MFDLabs.Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SoapUtilityRemoteServicePort {
-            get {
-                return ((int)(this["SoapUtilityRemoteServicePort"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan SoapUtilityRemoteServiceTimeout {
+        public global::System.TimeSpan GridServerArbiterDefaultTimeout {
             get {
-                return ((global::System.TimeSpan)(this["SoapUtilityRemoteServiceTimeout"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ScreenshotRelayExecutableName {
-            get {
-                return ((string)(this["ScreenshotRelayExecutableName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan ScreenshotRelayActivationTimeout {
-            get {
-                return ((global::System.TimeSpan)(this["ScreenshotRelayActivationTimeout"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ScreenshotRelayOutputFilename {
-            get {
-                return ((string)(this["ScreenshotRelayOutputFilename"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string GridServerDeployerExecutableName {
-            get {
-                return ((string)(this["GridServerDeployerExecutableName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GridServerDeployerShouldShowLauncherWindow {
-            get {
-                return ((bool)(this["GridServerDeployerShouldShowLauncherWindow"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ScreenshotRelayShouldShowLauncherWindow {
-            get {
-                return ((bool)(this["ScreenshotRelayShouldShowLauncherWindow"]));
+                return ((global::System.TimeSpan)(this["GridServerArbiterDefaultTimeout"]));
             }
         }
         
@@ -208,15 +145,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public global::Discord.ActivityType BotGlobalActivityType {
             get {
                 return ((global::Discord.ActivityType)(this["BotGlobalActivityType"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan RenderQueueDelay {
-            get {
-                return ((global::System.TimeSpan)(this["RenderQueueDelay"]));
             }
         }
         
@@ -412,36 +340,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool OpenServiceOnEndpointNotFoundException {
-            get {
-                return ((bool)(this["OpenServiceOnEndpointNotFoundException"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool RenderingEnabled {
-            get {
-                return ((bool)(this["RenderingEnabled"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool OnLaunchWarnAboutDebugMode {
             get {
                 return ((bool)(this["OnLaunchWarnAboutDebugMode"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ViewConsoleEnabled {
-            get {
-                return ((bool)(this["ViewConsoleEnabled"]));
             }
         }
         
@@ -592,36 +493,9 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool HideProcessWindows {
-            get {
-                return ((bool)(this["HideProcessWindows"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool OpenGridServerAtStartup {
             get {
                 return ((bool)(this["OpenGridServerAtStartup"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan RenderQueueExpiration {
-            get {
-                return ((global::System.TimeSpan)(this["RenderQueueExpiration"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan ScreenshotRelayExpiration {
-            get {
-                return ((global::System.TimeSpan)(this["ScreenshotRelayExpiration"]));
             }
         }
         
@@ -631,15 +505,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public bool DebugAllowTaskCanceledExceptions {
             get {
                 return ((bool)(this["DebugAllowTaskCanceledExceptions"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool StopProcessingOnNullPacketItem {
-            get {
-                return ((bool)(this["StopProcessingOnNullPacketItem"]));
             }
         }
         
@@ -718,24 +583,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SingleInstancedGridServer {
-            get {
-                return ((bool)(this["SingleInstancedGridServer"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts {
-            get {
-                return ((bool)(this["GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool OnStartCloseAllOpenGridServerInstances {
             get {
                 return ((bool)(this["OnStartCloseAllOpenGridServerInstances"]));
@@ -748,24 +595,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public bool ScriptExecutionRequireProtections {
             get {
                 return ((bool)(this["ScriptExecutionRequireProtections"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan ScriptExecutionQueueDelay {
-            get {
-                return ((global::System.TimeSpan)(this["ScriptExecutionQueueDelay"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan ScriptExecutionQueueExpiration {
-            get {
-                return ((global::System.TimeSpan)(this["ScriptExecutionQueueExpiration"]));
             }
         }
         
@@ -901,15 +730,6 @@ namespace MFDLabs.Grid.Bot.Properties {
         public int NewViewGridServerConsoleWorkQueueRolloutPercentage {
             get {
                 return ((int)(this["NewViewGridServerConsoleWorkQueueRolloutPercentage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan DefaultLeasedGridServerInstanceLease {
-            get {
-                return ((global::System.TimeSpan)(this["DefaultLeasedGridServerInstanceLease"]));
             }
         }
         

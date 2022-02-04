@@ -35,38 +35,14 @@
     <Setting Name="BotOwnerID" Type="System.UInt64" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SoapUtilityRemoteServicePort" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SoapUtilityRemoteServiceTimeout" Type="System.TimeSpan" Scope="Application">
+    <Setting Name="GridServerArbiterDefaultTimeout" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="ScreenshotRelayExecutableName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="ScreenshotRelayActivationTimeout" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="ScreenshotRelayOutputFilename" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="GridServerDeployerExecutableName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="GridServerDeployerShouldShowLauncherWindow" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="ScreenshotRelayShouldShowLauncherWindow" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="BotGlobalStreamURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="BotGlobalActivityType" Type="Discord.ActivityType" Scope="Application">
       <Value Profile="(Default)">Playing</Value>
-    </Setting>
-    <Setting Name="RenderQueueDelay" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
     <Setting Name="UsersServiceRemoteURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
@@ -131,16 +107,7 @@
     <Setting Name="RegisterCommandRegistryAtAppStart" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="OpenServiceOnEndpointNotFoundException" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="RenderingEnabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="OnLaunchWarnAboutDebugMode" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="ViewConsoleEnabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="GridServerRegistryKeyName" Type="System.String" Scope="Application">
@@ -191,22 +158,10 @@
     <Setting Name="UserUtilityShouldResolveBannedUsers" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="HideProcessWindows" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="OpenGridServerAtStartup" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="RenderQueueExpiration" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="ScreenshotRelayExpiration" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
     <Setting Name="DebugAllowTaskCanceledExceptions" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="StopProcessingOnNullPacketItem" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="HigherPrivilagedUsers" Type="System.String" Scope="Application">
@@ -233,23 +188,11 @@
     <Setting Name="CommandRegistryOnlyMatchAlphabetCharactersForCommandName" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="SingleInstancedGridServer" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="GridServerArbiterInstanceThrowExceptionIfReachedMaxAttempts" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="OnStartCloseAllOpenGridServerInstances" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ScriptExecutionRequireProtections" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="ScriptExecutionQueueDelay" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="ScriptExecutionQueueExpiration" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
     <Setting Name="CrashHandlerURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://mfdlabs.sp.backtrace.io:6097</Value>
@@ -295,9 +238,6 @@
     </Setting>
     <Setting Name="NewViewGridServerConsoleWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="DefaultLeasedGridServerInstanceLease" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
     <Setting Name="NewScriptExecutionWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
