@@ -4,7 +4,7 @@ using MFDLabs.Configuration.Providers;
 #endif
 
 #if WE_ON_THE_GRID
-namespace MFDLabs.Grid
+namespace MFDLabs.Grid.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
     public sealed partial class Settings
@@ -17,7 +17,7 @@ namespace MFDLabs.Grid
     }
 }
 #elif WE_ON_THE_RUN
-namespace MFDLabs.Grid
+namespace MFDLabs.Grid.Properties
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
     public sealed partial class Settings
@@ -30,7 +30,7 @@ namespace MFDLabs.Grid
     }
 }
 #elif WE_ARE_AN_ACTOR
-namespace MFDLabs.Grid
+namespace MFDLabs.Grid.Properties
 {
     [SettingsProvider(typeof(DataBaseProvider))]
     public sealed partial class Settings
