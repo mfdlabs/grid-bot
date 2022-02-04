@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
     <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />

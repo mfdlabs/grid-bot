@@ -16,6 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
       <ProjectReference Include="..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />

@@ -9,7 +9,7 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class GetVersion : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Grid Server Version";
-        public string CommandDescription => "Attempts to fetch the Grid Server's version via SoapUtility.";
+        public string CommandDescription => "Attempts to fetch the Grid Server's version via GridServerArbiter.";
         public string[] CommandAliases => new[] { "gv", "getversion" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            await message.ReplyAsync(await SoapUtility.Singleton.GetVersionAsync());
+            await message.ReplyAsync(await GridServerArbiter.Singleton.GetVersionAsync());
         }
     }
 }

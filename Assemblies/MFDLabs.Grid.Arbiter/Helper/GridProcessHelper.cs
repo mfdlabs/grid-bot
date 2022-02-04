@@ -14,6 +14,13 @@ namespace MFDLabs.Grid
 
         private static bool _runningOpenJob;
 
+        /// <summary>
+        /// Special case here, opens either a grid server or webserver, or both.
+        /// </summary>
+        /// <param name="onlyWebServer"></param>
+        /// <param name="onlyGridServer"></param>
+        /// <param name="gridServerPort"></param>
+        /// <returns></returns>
         private static (TimeSpan elapsed, int procId) OpenGridServer(bool onlyWebServer = false, bool onlyGridServer = false, int gridServerPort = 0)
         {
             var sw = Stopwatch.StartNew();
@@ -121,11 +128,12 @@ namespace MFDLabs.Grid
         /// <summary>
         /// Safe open of web server
         /// </summary>
-        public static TimeSpan OpenWebServerIfNotOpen() => !WebServerIsAvailable() ? OpenGridServerSafe(true).Item1 : TimeSpan.Zero;
+        public static TimeSpan OpenWebServerIfNotOpen() => !WebServerIsAvailable() ? OpenGridServerSafe(true).elapsed : TimeSpan.Zero;
 
         // There will have to be a #if here for unix, because we cannot check if there's a window with a title
         // WIN32: This method is Win32 only
-        private static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _) || ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out _);
+        private static bool WebServerIsAvailable() => ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _) || 
+                                                      ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out _);
 
         private static void KillAllProcessByName(string name)
         {

@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MFDLabs.Grid.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="SoapHelperRemoteServicePort" Type="System.Int32" Scope="Application">
+    <Setting Name="SingleInstancedArbiterRemoteServicePort" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">53640</Value>
     </Setting>
     <Setting Name="OpenServiceOnEndpointNotFoundException" Type="System.Boolean" Scope="Application">

@@ -19,7 +19,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (!SystemUtility.KillServerSafe())
+            if (!GridProcessHelper.KillServerSafe())
             {
                 await message.ReplyAsync("The Web Server was not closed because it was either not running, " +
                                          "or on a higher context than the current application.");

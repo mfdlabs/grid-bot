@@ -26,9 +26,9 @@ namespace MFDLabs.Grid.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("53640")]
-        public int SoapHelperRemoteServicePort {
+        public int SingleInstancedArbiterRemoteServicePort {
             get {
-                return ((int)(this["SoapHelperRemoteServicePort"]));
+                return ((int)(this["SingleInstancedArbiterRemoteServicePort"]));
             }
         }
         

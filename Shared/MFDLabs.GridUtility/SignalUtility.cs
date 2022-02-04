@@ -25,9 +25,9 @@ namespace MFDLabs.Grid.Bot.Utility
                 PerformanceServer.Stop();
                 if (killBot)
                     await BotGlobal.TryLogout();
-                SystemUtility.KillAllDeployersSafe();
-                SystemUtility.KillAllGridServersSafe();
-                SystemUtility.KillServerSafe();
+                GridProcessHelper.KillAllDeployersSafe();
+                GridProcessHelper.KillAllGridServersSafe();
+                GridProcessHelper.KillServerSafe();
                 LoggingSystem.EndLifetimeWatch();
                 SystemLogger.Singleton.TryClearLocalLog(false, true);
                 Environment.Exit(0);
@@ -47,7 +47,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                     GridServerArbiter.Singleton.KillAllOpenInstances();
                 if (killBot)
-                    SystemUtility.KillAllDeployersSafe();
+                    GridProcessHelper.KillAllDeployersSafe();
                 await BotGlobal.TryLogout();
                 LoggingSystem.EndLifetimeWatch();
                 SystemLogger.Singleton.TryClearLocalLog(false, true);
@@ -69,19 +69,19 @@ namespace MFDLabs.Grid.Bot.Utility
                 SystemLogger.Singleton.TryClearLocalLog(true);
                 LoggingSystem.RestartLifetimeWatch();
                 await BotGlobal.SingletonLaunch();
-                SystemUtility.KillAllDeployersSafe();
+                GridProcessHelper.KillAllDeployersSafe();
 
                 if (!restartServers) return;
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
                 {
-                    SystemUtility.KillAllGridServersSafe();
-                    SystemUtility.KillServerSafe();
-                    SystemUtility.OpenGridServerSafe();
+                    GridProcessHelper.KillAllGridServersSafe();
+                    GridProcessHelper.KillServerSafe();
+                    GridProcessHelper.OpenGridServerSafe();
                 }
                 else
                 {
-                    SystemUtility.KillAllGridServersSafe();
+                    GridProcessHelper.KillAllGridServersSafe();
                 }
 
                 PerformanceServer.Stop();

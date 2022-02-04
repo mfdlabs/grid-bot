@@ -165,7 +165,7 @@ namespace MFDLabs.Grid
             internal IRawValueCounter TotalInvocationsThatFailed { get; }
             internal IRawValueCounter TotalArbiteredGridServerInstancesOpened { get; }
             internal IRawValueCounter TotalPersistentArbiteredGridServerInstancesOpened { get; }
-            internal IRawValueCounter TotalInvocationsThatHitTheSoapUtility { get; }
+            internal IRawValueCounter TotalInvocationsThatHitTheSingleInstancedArbiter { get; }
 
             internal GridServerArbiterPerformanceMonitor(ICounterRegistry counterRegistry)
             {
@@ -178,7 +178,7 @@ namespace MFDLabs.Grid
                 TotalInvocationsThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalInvocationsThatFailed", instance);
                 TotalArbiteredGridServerInstancesOpened = counterRegistry.GetRawValueCounter(Category, "TotalArbiteredGridServerInstancesOpened", instance);
                 TotalPersistentArbiteredGridServerInstancesOpened = counterRegistry.GetRawValueCounter(Category, "TotalPersistentArbiteredGridServerInstancesOpened", instance);
-                TotalInvocationsThatHitTheSoapUtility = counterRegistry.GetRawValueCounter(Category, "TotalInvocationsThatHitTheSoapUtility", instance);
+                TotalInvocationsThatHitTheSingleInstancedArbiter = counterRegistry.GetRawValueCounter(Category, "TotalInvocationsThatHitTheSingleInstancedArbiter", instance);
             }
         }
 
@@ -820,7 +820,7 @@ namespace MFDLabs.Grid
 
         private T InvokeSoapHelper<T>(object[] args, MethodInfo methodToInvoke)
         {
-            try { _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment(); return (T)methodToInvoke.Invoke(SoapHelper.Singleton, args); }
+            try { _perfmon.TotalInvocationsThatHitTheSingleInstancedArbiter.Increment(); return (T)methodToInvoke.Invoke(SingleInstancedArbiter.Singleton, args); }
             catch (TargetInvocationException ex)
             {
                 _perfmon.TotalInvocationsThatFailed.Increment();
@@ -835,8 +835,8 @@ namespace MFDLabs.Grid
         {
             try
             {
-                _perfmon.TotalInvocationsThatHitTheSoapUtility.Increment();
-                return await ((Task<T>)methodToInvoke.Invoke(SoapHelper.Singleton, args)).ConfigureAwait(false);
+                _perfmon.TotalInvocationsThatHitTheSingleInstancedArbiter.Increment();
+                return await ((Task<T>)methodToInvoke.Invoke(SingleInstancedArbiter.Singleton, args)).ConfigureAwait(false);
             }
             catch (TargetInvocationException ex)
             {
@@ -871,7 +871,7 @@ namespace MFDLabs.Grid
             }*/
 
             methodToInvoke = global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer
-                ? SoapHelper.Singleton.GetType()
+                ? SingleInstancedArbiter.Singleton.GetType()
                     .GetMethod(lastMethod,
                         BindingFlags.Instance | BindingFlags.Public,
                         null,
