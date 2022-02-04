@@ -39,7 +39,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
             using (await command.DeferEphemeralAsync())
             {
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                 {
                     await command.RespondEphemeralPingAsync("Not opening any instances due to single-instanced environment.");
                     return;

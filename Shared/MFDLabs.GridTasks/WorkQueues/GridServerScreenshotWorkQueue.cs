@@ -202,7 +202,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                 SystemLogger.Singleton.Warning("Screenshots are not supported on this framework.");
                 message.Reply("Grid Server Screenshots are not enabled at this time, please try again later.");
 #else
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                 {
                     ProcessSingleInstancedGridServerScreenshot(message);
                     return;

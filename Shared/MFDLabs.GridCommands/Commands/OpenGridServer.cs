@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Open Grid Server";
         public string CommandDescription => $"Attempts to open the grid server via " +
-                                            $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerDeployerExecutableName}', " +
+                                            $"'{MFDLabs.Grid.Properties.Settings.Default.GridServerDeployerExecutableName}', " +
                                             $"if the deployer fails it will return info on why it failed.";
         public string[] CommandAliases => new[] { "ogsrv", "opengridserver" };
         public bool Internal => true;
@@ -20,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+            if (!global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
             {
                 await message.ReplyAsync("Not closing any instances, we are not in a single instanced environment.");
                 return;

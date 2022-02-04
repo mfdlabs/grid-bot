@@ -21,7 +21,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.SingleInstancedGridServer)
+            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
             {
                 await message.ReplyAsync("Not opening any instances due to single-instanced environment.");
                 return;

@@ -7,7 +7,7 @@ using MFDLabs.Configuration.Providers;
 namespace MFDLabs.Grid
 {
     [SettingsProvider(typeof(VaultProvider))]
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
@@ -20,7 +20,7 @@ namespace MFDLabs.Grid
 namespace MFDLabs.Grid
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
@@ -33,7 +33,7 @@ namespace MFDLabs.Grid
 namespace MFDLabs.Grid
 {
     [SettingsProvider(typeof(DataBaseProvider))]
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
