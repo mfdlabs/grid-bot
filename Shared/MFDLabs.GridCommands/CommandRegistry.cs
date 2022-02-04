@@ -38,8 +38,9 @@ using MFDLabs.Threading;
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 using MFDLabs.Grid.Bot.Global;
-// ReSharper disable AsyncVoidLambda
 #endif // WE_LOVE_EM_SLASH_COMMANDS
+
+// ReSharper disable AsyncVoidLambda
 
 namespace MFDLabs.Grid.Bot.Registries
 {
@@ -50,7 +51,7 @@ namespace MFDLabs.Grid.Bot.Registries
         private static bool _wasRegistered;
         private static readonly object RegistrationLock = new();
 
-        private static readonly ICollection<CommandCircuitBreakerWrapper> CircuitBreakerWrappers = new List<CommandCircuitBreakerWrapper>();
+        private static readonly ICollection<CommandCircuitBreakerWrapper> CommandCircuitBreakerWrappers = new List<CommandCircuitBreakerWrapper>();
         private static readonly ICollection<IStateSpecificCommandHandler> StateSpecificCommandHandlers = new List<IStateSpecificCommandHandler>();
         private static ICollection<(IStateSpecificCommandHandler, string)> _disabledCommandsReasons = new List<(IStateSpecificCommandHandler, string)>();
 
@@ -966,8 +967,8 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static CommandCircuitBreakerWrapper GetWrapperByCommand(IStateSpecificCommandHandler command)
         {
-            lock (CircuitBreakerWrappers)
-                return (from wrapper in CircuitBreakerWrappers
+            lock (CommandCircuitBreakerWrappers)
+                return (from wrapper in CommandCircuitBreakerWrappers
                         where wrapper.Command.CommandName == command.CommandName
                         select wrapper).FirstOrDefault();
         }
@@ -1007,111 +1008,117 @@ namespace MFDLabs.Grid.Bot.Registries
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 
-                    var slashCommandNamespace = GetSlashCommandNamespace();
-                    SystemLogger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
-                    var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
+                    // Queue up a thread here because slash command
+                    // registration can block the main thread
+                    ThreadPool.QueueUserWorkItem(s =>
+                    {
+
+                        var slashCommandNamespace = GetSlashCommandNamespace();
+                        SystemLogger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
+                        var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
 
 
-                    if (slashCommandTypes.Length == 0)
-                    {
-                        InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                        SystemLogger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
-                    }
-                    else
-                    {
-                        foreach (var type in slashCommandTypes)
+                        if (slashCommandTypes.Length == 0)
                         {
-                            try
+                            InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
+                            SystemLogger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
+                        }
+                        else
+                        {
+                            foreach (var type in slashCommandTypes)
                             {
-                                if (type.IsClass)
+                                try
                                 {
-                                    var commandHandler = Activator.CreateInstance(type);
-
-                                    if (commandHandler is not IStateSpecificSlashCommandHandler trueCommandHandler) continue;
-
-                                    SystemLogger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
-
-                                    if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
+                                    if (type.IsClass)
                                     {
-                                        InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                        SystemLogger.Singleton.Error(
-                                            "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' " +
-                                            "to not be null or empty",
-                                            type.FullName
-                                        );
+                                        var commandHandler = Activator.CreateInstance(type);
 
-                                        continue;
-                                    }
-                                    
-                                    if (GetSlashCommandByCommandAlias(trueCommandHandler.CommandAlias) != null)
-                                    {
-                                        InstrumentationPerfmon.StateSpecificCommandAliasesThatAlreadyExisted.Increment();
-                                        SystemLogger.Singleton.Error(
-                                            "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
-                                            type.FullName,
-                                            trueCommandHandler.CommandAlias
-                                        );
-                                        continue;
-                                    }
+                                        if (commandHandler is not IStateSpecificSlashCommandHandler trueCommandHandler) continue;
 
-                                    if (trueCommandHandler.CommandDescription is { Length: 0 })
-                                    {
-                                        InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                        SystemLogger.Singleton.Error(
-                                            "Exception when reading '{0}': Expected field 'CommandDescription' " +
-                                            "to have a size greater than 0",
-                                            type.FullName
-                                        );
-                                    }
+                                        SystemLogger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
 
-                                    InstrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
-
-                                    var builder = new SlashCommandBuilder();
-
-                                    builder.WithName(trueCommandHandler.CommandAlias);
-                                    builder.WithDescription(trueCommandHandler.CommandDescription);
-                                    builder.WithDefaultPermission(true); // command is enabled by default
-
-                                    if (trueCommandHandler.Options != null)
-                                        builder.AddOptions(trueCommandHandler.Options);
-
-                                    if (trueCommandHandler.GuildId != null)
-                                    {
-                                        var guild = BotGlobal.Client.GetGuild(trueCommandHandler.GuildId.Value);
-
-                                        if (guild == null)
+                                        if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
                                         {
-                                            SystemLogger.Singleton.Trace(
-                                                "Exception when reading '{0}': Unknown Guild '{1}'",
-                                                type.FullName,
-                                                trueCommandHandler.GuildId
+                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
+                                            SystemLogger.Singleton.Error(
+                                                "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' " +
+                                                "to not be null or empty",
+                                                type.FullName
                                             );
 
                                             continue;
                                         }
 
-                                        guild.CreateApplicationCommand(builder.Build());
+                                        if (GetSlashCommandByCommandAlias(trueCommandHandler.CommandAlias) != null)
+                                        {
+                                            InstrumentationPerfmon.StateSpecificCommandAliasesThatAlreadyExisted.Increment();
+                                            SystemLogger.Singleton.Error(
+                                                "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
+                                                type.FullName,
+                                                trueCommandHandler.CommandAlias
+                                            );
+                                            continue;
+                                        }
+
+                                        if (trueCommandHandler.CommandDescription is { Length: 0 })
+                                        {
+                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
+                                            SystemLogger.Singleton.Error(
+                                                "Exception when reading '{0}': Expected field 'CommandDescription' " +
+                                                "to have a size greater than 0",
+                                                type.FullName
+                                            );
+                                        }
+
+                                        InstrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
+
+                                        var builder = new SlashCommandBuilder();
+
+                                        builder.WithName(trueCommandHandler.CommandAlias);
+                                        builder.WithDescription(trueCommandHandler.CommandDescription);
+                                        builder.WithDefaultPermission(true); // command is enabled by default
+
+                                        if (trueCommandHandler.Options != null)
+                                            builder.AddOptions(trueCommandHandler.Options);
+
+                                        if (trueCommandHandler.GuildId != null)
+                                        {
+                                            var guild = BotGlobal.Client.GetGuild(trueCommandHandler.GuildId.Value);
+
+                                            if (guild == null)
+                                            {
+                                                SystemLogger.Singleton.Trace(
+                                                    "Exception when reading '{0}': Unknown Guild '{1}'",
+                                                    type.FullName,
+                                                    trueCommandHandler.GuildId
+                                                );
+
+                                                continue;
+                                            }
+
+                                            guild.CreateApplicationCommand(builder.Build());
+                                        }
+                                        else
+                                        {
+                                            BotGlobal.Client.CreateGlobalApplicationCommand(builder.Build());
+                                        }
+
+                                        StateSpecificSlashCommandHandlers.Add(trueCommandHandler);
+                                        SlashCommandCircuitBreakerWrappers.Add(new SlashCommandCircuitBreakerWrapper(trueCommandHandler));
                                     }
                                     else
                                     {
-                                        BotGlobal.Client.CreateGlobalApplicationCommand(builder.Build());
+                                        InstrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
                                     }
-
-                                    StateSpecificSlashCommandHandlers.Add(trueCommandHandler);
-                                    SlashCommandCircuitBreakerWrappers.Add(new SlashCommandCircuitBreakerWrapper(trueCommandHandler));
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    InstrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
+                                    InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
+                                    SystemLogger.Singleton.Error(ex);
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                                SystemLogger.Singleton.Error(ex);
                             }
                         }
-                    }
+                    });
 
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
@@ -1173,7 +1180,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
 
                                         StateSpecificCommandHandlers.Add(trueCommandHandler);
-                                        CircuitBreakerWrappers.Add(new CommandCircuitBreakerWrapper(trueCommandHandler));
+                                        CommandCircuitBreakerWrappers.Add(new CommandCircuitBreakerWrapper(trueCommandHandler));
                                     }
                                     else
                                     {
@@ -1206,6 +1213,26 @@ namespace MFDLabs.Grid.Bot.Registries
             }
         }
 
+        public static void Unregister()
+        {
+            if (!_wasRegistered) return;
+
+            lock (RegistrationLock)
+            {
+                _wasRegistered = false;
+                _disabledCommandsReasons.Clear();
+                StateSpecificCommandHandlers.Clear();
+                CommandCircuitBreakerWrappers.Clear();
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+                _disabledSlashCommandsReasons.Clear();
+                StateSpecificSlashCommandHandlers.Clear();
+                SlashCommandCircuitBreakerWrappers.Clear();
+
+#endif
+            }
+        }
 
 
         public static void RegisterOnce()
