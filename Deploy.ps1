@@ -232,6 +232,8 @@ try {
         if ($null -eq $hash) {
             $hash = (GetRandomHexString -Bits 128).ToLower().Substring(0, 7);
         }
+
+        $branch = $branch.Replace("/", "_");
     }
     else {
         $hash = (GetRandomHexString -Bits 128).ToLower().Substring(0, 7);
