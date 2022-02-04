@@ -248,7 +248,7 @@ namespace MFDLabs.Grid
         {
             SystemLogger.Singleton.Log("Trying to close Backend server.");
 
-            if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server))
+            if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server) || !ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out server))
             {
                 SystemLogger.Singleton.Warning("Backend server is not running, ignoring...");
                 return false;
