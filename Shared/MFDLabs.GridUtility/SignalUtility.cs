@@ -25,7 +25,6 @@ namespace MFDLabs.Grid.Bot.Utility
                 PerformanceServer.Stop();
                 if (killBot)
                     await BotGlobal.TryLogout();
-                GridProcessHelper.KillAllDeployersSafe();
                 GridProcessHelper.KillAllGridServersSafe();
                 GridProcessHelper.KillServerSafe();
                 LoggingSystem.EndLifetimeWatch();
@@ -47,8 +46,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                     GridServerArbiter.Singleton.KillAllOpenInstances();
                 if (killBot)
-                    GridProcessHelper.KillAllDeployersSafe();
-                await BotGlobal.TryLogout();
+                    await BotGlobal.TryLogout();
                 LoggingSystem.EndLifetimeWatch();
                 SystemLogger.Singleton.TryClearLocalLog(false, true);
                 Environment.Exit(0);
@@ -69,7 +67,6 @@ namespace MFDLabs.Grid.Bot.Utility
                 SystemLogger.Singleton.TryClearLocalLog(true);
                 LoggingSystem.RestartLifetimeWatch();
                 await BotGlobal.SingletonLaunch();
-                GridProcessHelper.KillAllDeployersSafe();
 
                 if (!restartServers) return;
 
@@ -77,7 +74,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 {
                     GridProcessHelper.KillAllGridServersSafe();
                     GridProcessHelper.KillServerSafe();
-                    GridProcessHelper.OpenGridServerSafe();
+                    GridProcessHelper.OpenServerSafe();
                 }
                 else
                 {

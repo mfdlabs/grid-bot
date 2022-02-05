@@ -9,9 +9,8 @@ namespace MFDLabs.Grid.Bot.Commands
     internal sealed class OpenGridServer : IStateSpecificCommandHandler
     {
         public string CommandName => "Open Grid Server";
-        public string CommandDescription => $"Attempts to open the grid server via " +
-                                            $"'{MFDLabs.Grid.Properties.Settings.Default.GridServerDeployerExecutableName}', " +
-                                            $"if the deployer fails it will return info on why it failed.";
+        public string CommandDescription => "Attempts to open the grid server via 'Memory Roblox Grid Server Deployer', " +
+                                            "if the deployer fails it will return info on why it failed.";
         public string[] CommandAliases => new[] { "ogsrv", "opengridserver" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -26,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var tto = GridProcessHelper.OpenGridServerSafe().elapsed;
+            var tto = GridProcessHelper.OpenServerSafe().elapsed;
 
             await message.ReplyAsync($"Successfully opened grid server in '{tto.TotalSeconds}' seconds!");
         }
