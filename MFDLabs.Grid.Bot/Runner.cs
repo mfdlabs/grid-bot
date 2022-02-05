@@ -32,6 +32,8 @@ namespace MFDLabs.Grid.Bot
         private const string NoBotToken = "The setting \"BotToken\" was null when it is required.";
         private const string BadActorMessage = "THIS SOFTWARE IS UNLICENSED, IF YOU DO NOT HAVE EXPLICIT WRITTEN PERMISSION " +
                                                "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY!";
+        private const string WarningFeatureDeployment = "WARNING: THIS IS A FEATURE DEPLOYMENT, SO EXPECT THIS TO BE UNSTABLE TO A DEGREE." +
+                                                        " DEPLOYMENT BRANCH: feature/memory-grid-deployer.";
 
         public static void OnGlobalException(Exception ex)
         {
@@ -65,6 +67,9 @@ namespace MFDLabs.Grid.Bot
                 GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
                 SystemLogger.Singleton.Warning(AdminMode);
             }
+
+            GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Feature Deployment (feature/memory-grid-deployer)");
+            SystemLogger.Singleton.Warning(WarningFeatureDeployment);
 
             GoogleAnalyticsManager.TrackNetworkEvent(
                 "Startup",

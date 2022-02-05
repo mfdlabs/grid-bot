@@ -47,6 +47,7 @@ namespace MFDLabs.Grid.Bot.Registries
     public static class CommandRegistry
     {
         private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
+        private const string FeatureDeploymentWarning = "This command was executed on a feature deployment, expect any issues to occur. Deployment ID: feature/memory-grid-deployer.";
 
         private static bool _wasRegistered;
         private static readonly object RegistrationLock = new();
@@ -274,6 +275,8 @@ namespace MFDLabs.Grid.Bot.Registries
 
         public static async Task CheckAndRunSlashCommand(SocketSlashCommand command)
         {
+            await command.Channel.SendMessageAsync(FeatureDeploymentWarning);
+
             var commandAlias = command.CommandName;
 
             InstrumentationPerfmon.CommandsPerSecond.Increment();
@@ -476,6 +479,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
         public static async Task CheckAndRunCommandByAlias(string commandAlias, string[] messageContent, SocketMessage message)
         {
+            await message.Channel.SendMessageAsync(FeatureDeploymentWarning);
 
             InstrumentationPerfmon.CommandsPerSecond.Increment();
 
