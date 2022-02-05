@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Hooks
         public void Callback(char key)
         {
             if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
             else 
                 GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances();
         }

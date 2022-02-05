@@ -77,7 +77,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 {
                     GridProcessHelper.KillAllGridServersSafe();
                     GridProcessHelper.KillServerSafe();
-                    GridProcessHelper.OpenGridServerSafe();
+                    GridProcessHelper.OpenServerSafe();
                 }
                 else
                 {

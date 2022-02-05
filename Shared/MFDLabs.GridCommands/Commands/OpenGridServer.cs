@@ -26,7 +26,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            var tto = GridProcessHelper.OpenGridServerSafe().elapsed;
+            var tto = GridProcessHelper.OpenServerSafe().elapsed;
 
             await message.ReplyAsync($"Successfully opened grid server in '{tto.TotalSeconds}' seconds!");
         }

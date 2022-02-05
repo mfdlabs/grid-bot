@@ -168,7 +168,7 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
         {
             using (message.Channel.EnterTypingState())
             {
-                var tte = GridProcessHelper.OpenGridServerSafe().elapsed;
+                var tte = GridProcessHelper.OpenServerSafe().elapsed;
 
                 if (tte.TotalSeconds > 1.5)
                 {

@@ -168,7 +168,7 @@ namespace MFDLabs.Grid.Bot
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
                 global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
 
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
             {

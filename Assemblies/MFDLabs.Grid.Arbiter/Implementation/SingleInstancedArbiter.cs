@@ -64,7 +64,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return HelloWorld();
             }
         }
@@ -80,7 +80,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await HelloWorldAsync();
             }
         }
@@ -96,7 +96,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return GetVersion();
             }
         }
@@ -112,7 +112,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await GetVersionAsync();
             }
         }
@@ -128,7 +128,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return GetStatus();
             }
         }
@@ -144,7 +144,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await GetStatusAsync();
             }
         }
@@ -160,7 +160,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return OpenJob(job, script);
             }
         }
@@ -176,7 +176,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await OpenJobAsync(job, script);
             }
         }
@@ -192,7 +192,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return OpenJobEx(job, script);
             }
         }
@@ -208,7 +208,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await OpenJobExAsync(job, script);
             }
         }
@@ -224,7 +224,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return RenewLease(jobId, expirationInSeconds);
             }
         }
@@ -240,7 +240,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await RenewLeaseAsync(jobId, expirationInSeconds);
             }
         }
@@ -256,7 +256,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return Execute(jobId, script);
             }
         }
@@ -272,7 +272,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await ExecuteAsync(jobId, script);
             }
         }
@@ -288,7 +288,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return ExecuteEx(jobId, script);
             }
         }
@@ -304,7 +304,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await ExecuteExAsync(jobId, script);
             }
         }
@@ -320,7 +320,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 CloseJob(jobId);
             }
         }
@@ -336,7 +336,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 await CloseJobAsync(jobId);
             }
         }
@@ -352,7 +352,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return BatchJob(job, script);
             }
         }
@@ -368,7 +368,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await BatchJobAsync(job, script);
             }
         }
@@ -384,7 +384,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return BatchJobEx(job, script);
             }
         }
@@ -400,7 +400,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await BatchJobExAsync(job, script);
             }
         }
@@ -416,7 +416,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return GetExpiration(jobId);
             }
         }
@@ -432,7 +432,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await GetExpirationAsync(jobId);
             }
         }
@@ -448,7 +448,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return GetAllJobs();
             }
         }
@@ -464,7 +464,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await GetAllJobsAsync();
             }
         }
@@ -480,7 +480,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return GetAllJobsEx();
             }
         }
@@ -496,7 +496,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await GetAllJobsExAsync();
             }
         }
@@ -512,7 +512,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return CloseExpiredJobs();
             }
         }
@@ -528,7 +528,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await CloseExpiredJobsAsync();
             }
         }
@@ -544,7 +544,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return CloseAllJobs();
             }
         }
@@ -560,7 +560,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await CloseAllJobsAsync();
             }
         }
@@ -576,7 +576,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return Diag(type, jobId);
             }
         }
@@ -592,7 +592,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await DiagAsync(type, jobId);
             }
         }
@@ -608,7 +608,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return DiagEx(type, jobId);
             }
         }
@@ -624,7 +624,7 @@ namespace MFDLabs.Grid
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     throw;
 
-                GridProcessHelper.OpenGridServerSafe();
+                GridProcessHelper.OpenServerSafe();
                 return await DiagExAsync(type, jobId);
             }
         }
