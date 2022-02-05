@@ -59,8 +59,8 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
+                    System.Threading.Tasks.Task.Delay(1000).Wait();
                 }
-                Thread.Sleep(1000);
             }
 
             return bAvailable;
@@ -107,29 +107,23 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
-                    Thread.Sleep(1000);//long sleep causes slow responses
+                    System.Threading.Tasks.Task.Delay(1000).Wait();
                 }
             }
 
             return bAvailable;
         }
 
-        public static bool WebServerIsAvailable(out bool aliveButBadCheck)
-        {
-            aliveButBadCheck = false;
-
-            return (ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out _) ||
-                    ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out _)) &&
-                    IsServiceAliveHttp(
-                        global::MFDLabs.Grid.Properties.Settings.Default.WebServerLookupHost,
-                        80,
-                        0,
-                        out aliveButBadCheck,
-                        "/checkhealth",
-                        global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText,
-                        false
-                    );
-        }
+        public static bool WebServerIsAvailable(out bool aliveButBadCheck) 
+            =>  IsServiceAliveHttp(
+                    global::MFDLabs.Grid.Properties.Settings.Default.WebServerLookupHost,
+                    80,
+                    0,
+                    out aliveButBadCheck,
+                    "/checkhealth",
+                    global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText,
+                    false
+                );
 
         public enum WebServerDeploymentStatus
         {
@@ -137,7 +131,6 @@ namespace MFDLabs.Grid
             UpButIncorrectHealthCheckText,
             Success
         }
-
 
 
         private static void InvokeDeploymentOnWebServer()
@@ -285,8 +278,6 @@ namespace MFDLabs.Grid
 
         private static bool _runningWebServerLaunch = false;
 
-        private const string GlobalServerJobSignature = "npm run Start-Main-Job";
-        private const string GlobalQuickServerJobSignature = "npm start";
         private const string WebServerUpButBadHealthCheckText = "The web server was up, but it didn't return the OK response the grid deployer expected, most likely there is another service hogging the healthcheck port.";
         private const string MaxAttemptsExceededWhenLaunchingWebServer = "The grid deployer exceeded it's maximum attempts when trying to launch the web server.";
         private const string CouldNotFindGridServer = "The grid deployer tried to launch a grid server but it couldn't find the grid server's path in Win32 registry.";
