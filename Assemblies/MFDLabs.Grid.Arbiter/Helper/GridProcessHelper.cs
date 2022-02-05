@@ -43,16 +43,15 @@ namespace MFDLabs.Grid
                 if (onlyWebServer) GridDeployer.LaunchWebServer(15);
 
                 SystemLogger.Singleton.Info(
-                    "Successfully opened {0} Server via Memory Grid Deployer V1.00",
+                    "Successfully opened '{0}' Server via Memory Roblox Grid Server Deployer",
                     onlyWebServer ? "Web" : onlyGridServer ? "Grid" : "Web and Grid"
                 );
             }
             finally
             {
                 SystemLogger.Singleton.Debug(
-                    "Took {0}s to open Grid Server via {1}",
-                    sw.Elapsed.TotalSeconds.ToString("f7"),
-                    global::MFDLabs.Grid.Properties.Settings.Default.GridServerDeployerExecutableName
+                    "Took {0}s to open Grid Server via Memory Roblox Grid Server Deployer",
+                    sw.Elapsed.TotalSeconds.ToString("f7")
                 );
                 sw.Stop();
                 _runningOpenJob = false;
@@ -205,7 +204,7 @@ namespace MFDLabs.Grid
         {
             SystemLogger.Singleton.Log("Trying to close Backend server.");
 
-            if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server) || !ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out server))
+            if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server) && !ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out server))
             {
                 SystemLogger.Singleton.Warning("Backend server is not running, ignoring...");
                 return false;
@@ -225,36 +224,6 @@ namespace MFDLabs.Grid
             KillProcessByPidSafe(server.Id);
 
             SystemLogger.Singleton.Info("Successfully closed backend Server.");
-            return true;
-        }
-
-        /// <summary>
-        /// "Safe" because it checks if the process exists first.
-        /// </summary>
-        public static bool KillAllDeployersSafe()
-        {
-            SystemLogger.Singleton.Log("Trying to close all open grid deployer instances.");
-
-            if (!ProcessHelper.GetProcessByWindowTitle(GridDeployerSignature, out var deployer))
-            {
-                SystemLogger.Singleton.Warning("There are no grid deployers running, ignoring...");
-                return false;
-            }
-
-            if (!SystemGlobal.ContextIsAdministrator()
-#if NETFRAMEWORK
-                && deployer.IsElevated()
-#endif
-                )
-            {
-                // This is quite useless I think
-                SystemLogger.Singleton.Warning("The grid deployer we caught is running on a different context than us, ignoring...");
-                return false;
-            }
-
-            KillAllProcessByNameSafe(GridDeployerSignatureExe);
-
-            SystemLogger.Singleton.Info("Successfully closed all grid deployer instances.");
             return true;
         }
 
@@ -290,8 +259,6 @@ namespace MFDLabs.Grid
 
         private const string GridServerSignature = "rccservice";
         private const string GridServerSignatureExe = "rccservice.exe";
-        private const string GridDeployerSignature = "mfdlabs.grid.deployer";
-        private const string GridDeployerSignatureExe = "mfdlabs.grid.deployer.exe";
         private const string GlobalServerJobSignature = "npm run Start-Main-Job";
         private const string GlobalQuickServerJobSignature = "npm start";
     }

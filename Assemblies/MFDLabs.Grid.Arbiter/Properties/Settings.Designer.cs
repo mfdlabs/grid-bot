@@ -43,24 +43,6 @@ namespace MFDLabs.Grid.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mfdlabs.grid.deployer.exe")]
-        public string GridServerDeployerExecutableName {
-            get {
-                return ((string)(this["GridServerDeployerExecutableName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GridServerDeployerShouldShowLauncherWindow {
-            get {
-                return ((bool)(this["GridServerDeployerShouldShowLauncherWindow"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool HideProcessWindows {
             get {

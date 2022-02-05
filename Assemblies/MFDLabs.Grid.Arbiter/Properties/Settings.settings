@@ -8,12 +8,6 @@
     <Setting Name="OpenServiceOnEndpointNotFoundException" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="GridServerDeployerExecutableName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">mfdlabs.grid.deployer.exe</Value>
-    </Setting>
-    <Setting Name="GridServerDeployerShouldShowLauncherWindow" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="HideProcessWindows" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
