@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 using MFDLabs.Diagnostics;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
@@ -22,6 +22,8 @@ namespace MFDLabs.Grid
 
         private static string GetGridServerLaunchPath()
         {
+            SystemLogger.Singleton.Info("Trying to get the grid server's path...");
+
 #if NETFRAMEWORK
             var gridServicePath = Registry.GetValue(
                 global::MFDLabs.Grid.Properties.Settings.Default.GridServerRegistryKeyName,
@@ -32,8 +34,11 @@ namespace MFDLabs.Grid
             var gridServicePath = Environment.GetEnvironmentVariable("GRID_SERVER_PATH");
 #endif
 
-            if (gridServicePath == null) 
+            if (gridServicePath == null)
+            {
+                SystemLogger.Singleton.Error("The grid server is not installed on this machine.");
                 throw new InvalidOperationException(CouldNotFindGridServer);
+            }
 
             return (string)gridServicePath;
         }
@@ -59,7 +64,7 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
-                    System.Threading.Tasks.Task.Delay(1000).Wait();
+                    Task.Delay(1000).Wait();
                 }
             }
 
@@ -107,7 +112,7 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
-                    System.Threading.Tasks.Task.Delay(1000).Wait();
+                    Task.Delay(1000).Wait();
                 }
             }
 
@@ -171,8 +176,13 @@ namespace MFDLabs.Grid
             if (global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath.IsNullOrEmpty())
                 throw new InvalidOperationException("Cannot open web server if the workspace is not set!");
 
+            SystemLogger.Singleton.Info("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
+
             if (!Directory.Exists(global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath))
+            {
+                SystemLogger.Singleton.Error("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
                 throw new InvalidOperationException(CouldNotFindWebServer);
+            }
         }
 
         public static int BootstrapLaunch(string hostName = "localhost", int port = 53640, int maxAttempts = 15)
@@ -185,6 +195,8 @@ namespace MFDLabs.Grid
         {
             if (!IsServiceAvailableTcp(hostName, port, 0))
             {
+                SystemLogger.Singleton.Info("Grid server was not running on http://{0}:{1}, try to launch it.", hostName, port);
+
                 var path = GetGridServerLaunchPath();
 
                 var command = $"{path}{(global::MFDLabs.Grid.Properties.Settings.Default.GridServerExecutableName)}";
@@ -217,8 +229,6 @@ namespace MFDLabs.Grid
 
         public static void LaunchWebServer(int maxAttempts = 15)
         {
-            CheckWorkspace();
-
             if (WebServerIsAvailable(out var aliveButBadCheck))
             {
                 if (aliveButBadCheck)
@@ -226,6 +236,10 @@ namespace MFDLabs.Grid
 
                 return;
             }
+
+            SystemLogger.Singleton.Info("Trying to launch web server...");
+
+            CheckWorkspace();
 
             for (int attempt = 0; attempt < maxAttempts; ++attempt)
             {
@@ -249,13 +263,15 @@ namespace MFDLabs.Grid
 
         public static WebServerDeploymentStatus LaunchWebServerSafe(int maxAttempts = 15)
         {
-            CheckWorkspace();
-
             if (WebServerIsAvailable(out var aliveButBadCheck))
             {
                 if (aliveButBadCheck) return WebServerDeploymentStatus.UpButIncorrectHealthCheckText;
                 return WebServerDeploymentStatus.Success;
             }
+
+            SystemLogger.Singleton.Info("Trying to launch web server...");
+
+            CheckWorkspace();
 
             for (int attempt = 0; attempt < maxAttempts; ++attempt)
             {
