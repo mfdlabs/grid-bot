@@ -1,46 +1,35 @@
-﻿using Microsoft.Ccr.Core.Arbiters;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Microsoft.Ccr.Core.Arbiters;
+
+// Nikita Petko:
+//      This file is 5.6K Lines long, I am not doing clean ups on this.
 
 namespace Microsoft.Ccr.Core
 {
     public class PortSet : IPortSet, IPort
     {
         protected PortSet()
-        {
-        }
-
+        { }
         public PortSet(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException("types");
-            }
-            if (types.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException("types");
-            }
-            int num = 0;
+            if (types == null) throw new ArgumentNullException(nameof(types)); 
+            if (types.Length == 0) throw new ArgumentOutOfRangeException(nameof(types));
+
+            int idx = 0;
             PortsTable = new IPort[types.Length];
             Types = types;
-            foreach (Type type in types)
+            foreach (var type in types)
             {
-                Type type2 = typeof(Port<>).MakeGenericType(new Type[]
-                {
-                    type
-                });
-                PortsTable[num++] = (IPort)Activator.CreateInstance(type2);
+                var port = typeof(Port<>).MakeGenericType(type);
+                PortsTable[idx++] = (IPort)Activator.CreateInstance(port);
             }
         }
 
         public void PostUnknownType(object item)
         {
-            if (!TryPostUnknownType(item))
-            {
-                throw new PortNotFoundException(this, item);
-            }
+            if (!TryPostUnknownType(item)) throw new PortNotFoundException(this, item);
         }
-
         public bool TryPostUnknownType(object item)
         {
             if (ModeInternal == PortSetMode.SharedPort)
@@ -48,20 +37,18 @@ namespace Microsoft.Ccr.Core
                 SharedPortInternal.Post(item);
                 return true;
             }
-            if (!PortSet.FindTypeFromRuntimeType(item, Types, out Type portItemType))
-            {
-                return false;
-            }
-            IPort port = this[portItemType];
+
+            if (!FindTypeFromRuntimeType(item, Types, out var portItemType)) return false;
+
+            var port = this[portItemType];
             return port != null && port.TryPostUnknownType(item);
         }
-
         public static bool FindTypeFromRuntimeType(object item, Type[] types, out Type portItemType)
         {
             portItemType = null;
             if (item == null)
             {
-                for (int i = 0; i < types.Length; i++)
+                for (var i = 0; i < types.Length; i++)
                 {
                     if (!types[i].IsValueType || (types[i].IsGenericType && !types[i].IsGenericTypeDefinition && types[i].GetGenericTypeDefinition() == typeof(Nullable<>)))
                     {
@@ -80,34 +67,17 @@ namespace Microsoft.Ccr.Core
             get
             {
                 if (ModeInternal == PortSetMode.SharedPort)
-                {
-                    return new IPort[]
-                    {
-                        SharedPortInternal
-                    };
-                }
-                for (int i = 0; i < PortsTable.Length; i++)
-                {
+                    return new[] { SharedPortInternal };
+
+                for (int i = 0; i < PortsTable.Length; i++) 
                     AllocatePort(i);
-                }
                 return PortsTable;
             }
         }
-
-        public Port<object> SharedPort
-        {
-            get
-            {
-                return SharedPortInternal;
-            }
-        }
-
+        public Port<object> SharedPort => SharedPortInternal;
         public PortSetMode Mode
         {
-            get
-            {
-                return ModeInternal;
-            }
+            get => ModeInternal;
             set
             {
                 ModeInternal = value;
@@ -117,9 +87,7 @@ namespace Microsoft.Ccr.Core
                     return;
                 }
                 if (value == PortSetMode.Default && SharedPortInternal != null)
-                {
                     SharedPortInternal = null;
-                }
             }
         }
 
@@ -127,54 +95,41 @@ namespace Microsoft.Ccr.Core
         {
             if (ModeInternal == PortSetMode.SharedPort)
             {
-                return (T)((object)SharedPortInternal.Test());
+                return (T)SharedPortInternal.Test();
             }
-            if (!(this[typeof(T)] is IPortReceive portReceive))
-            {
+            if (this[typeof(T)] is not IPortReceive portReceive) 
                 throw new PortNotFoundException();
-            }
-            return (T)((object)portReceive.Test());
+            return (T)portReceive.Test();
         }
-
         private IPort AllocatePort(int portIndex)
         {
-            if (ModeInternal == PortSetMode.SharedPort)
-            {
+            if (ModeInternal == PortSetMode.SharedPort) 
                 throw new InvalidOperationException();
-            }
             if (PortsTable[portIndex] == null)
             {
                 lock (this)
                 {
                     if (PortsTable[portIndex] == null)
                     {
-                        Type type = typeof(Port<>).MakeGenericType(new Type[]
-                        {
-                            Types[portIndex]
-                        });
-                        PortsTable[portIndex] = (IPort)Activator.CreateInstance(type);
+                        var port = typeof(Port<>).MakeGenericType(Types[portIndex]);
+                        PortsTable[portIndex] = (IPort)Activator.CreateInstance(port);
                     }
                 }
             }
             return PortsTable[portIndex];
         }
-
         protected Port<TYPE> AllocatePort<TYPE>()
         {
-            if (ModeInternal == PortSetMode.SharedPort)
-            {
-                throw new InvalidOperationException();
-            }
-            Type typeFromHandle = typeof(TYPE);
-            Port<TYPE> result;
+            if (ModeInternal == PortSetMode.SharedPort) throw new InvalidOperationException();
+
+            var typeFromHandle = typeof(TYPE);
             try
             {
-                IPort port = this[typeFromHandle];
-                result = (Port<TYPE>)port;
+                return (Port<TYPE>)this[typeFromHandle];
             }
             catch
             {
-                for (int i = 0; i < PortsTable.Length; i++)
+                for (var i = 0; i < PortsTable.Length; i++)
                 {
                     if (Types[i].IsAssignableFrom(typeFromHandle))
                     {
@@ -182,9 +137,9 @@ namespace Microsoft.Ccr.Core
                         {
                             if (PortsTable[i] == null)
                             {
-                                Port<TYPE> port2 = new Port<TYPE>();
-                                PortsTable[i] = port2;
-                                return port2;
+                                var port = new Port<TYPE>();
+                                PortsTable[i] = port;
+                                return port;
                             }
                             return (Port<TYPE>)PortsTable[i];
                         }
@@ -192,7 +147,6 @@ namespace Microsoft.Ccr.Core
                 }
                 throw new PortNotFoundException();
             }
-            return result;
         }
 
         public IPort this[Type portItemType]
@@ -200,54 +154,39 @@ namespace Microsoft.Ccr.Core
             get
             {
                 for (int i = 0; i < PortsTable.Length; i++)
-                {
-                    if (Types[i] == portItemType)
-                    {
-                        return AllocatePort(i);
-                    }
-                }
+                    if (Types[i] == portItemType) return AllocatePort(i);
+
                 for (int j = 0; j < PortsTable.Length; j++)
-                {
                     if (Types[j].IsAssignableFrom(portItemType))
-                    {
                         return AllocatePort(j);
-                    }
-                }
+
                 return null;
             }
         }
 
-        public static implicit operator Choice(PortSet portSet)
-        {
-            return PortSet.ImplicitChoiceOperator(portSet);
-        }
+        public static implicit operator Choice(PortSet portSet) => ImplicitChoiceOperator(portSet);
 
         public static Choice ImplicitChoiceOperator(IPortSet portSet)
         {
-            if (portSet == null)
+            if (portSet == null) throw new ArgumentNullException(nameof(portSet));
+
+            var ports = portSet.Ports;
+            var branches = new Receiver[ports.Count];
+            int idx = 0;
+            foreach (var port in portSet.Ports)
             {
-                throw new ArgumentNullException("portSet");
-            }
-            ICollection<IPort> ports = portSet.Ports;
-            Receiver[] array = new Receiver[ports.Count];
-            int num = 0;
-            foreach (IPort port in portSet.Ports)
-            {
-                Receiver receiver = new Receiver(false, (IPortReceive)port, null)
+                var receiver = new Receiver(false, (IPortReceive)port, null)
                 {
                     KeepItemInPort = true
                 };
-                array[num++] = receiver;
+                branches[idx++] = receiver;
             }
-            return new Choice(array);
+            return new Choice(branches);
         }
 
         protected Port<object> SharedPortInternal;
-
         protected IPort[] PortsTable;
-
         protected Type[] Types;
-
         protected PortSetMode ModeInternal;
     }
 
