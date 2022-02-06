@@ -16,6 +16,7 @@ namespace MFDLabs.Grid
 {
     public static class GridDeployer
     {
+
         private static string ConstructHealthCheckUserAgent(string url, string healthyText)
             => $"MFDLABS/WebServerHealthCheck+MFDLabs.Grid.Deployer::{url}->{healthyText}::{SystemGlobal.AssemblyVersion}";
 
@@ -43,7 +44,7 @@ namespace MFDLabs.Grid
             return (string)gridServicePath;
         }
 
-        private static bool IsServiceAvailableTcp(string host, int port, int retrycount)
+        private static bool IsServiceAvailableTcp(string host, int port, int retrycount, int? timeout = 1000)
         {
             // busy wait untill our service is ready to accept connections
             var bAvailable = false;
@@ -64,7 +65,7 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
-                    Task.Delay(1000).Wait();
+                    Task.Delay(timeout ?? 1000).Wait();
                 }
             }
 
@@ -78,7 +79,8 @@ namespace MFDLabs.Grid
             out bool aliveButStatusCheckInvalid,
             string healthCheckPath = "/",
             string healthyText = "OK",
-            bool isSsl = false
+            bool isSsl = false,
+            int? timeout = 1000
         )
         {
             aliveButStatusCheckInvalid = false;
@@ -112,14 +114,14 @@ namespace MFDLabs.Grid
                         bAvailable = false;
                         break;
                     }
-                    Task.Delay(1000).Wait();
+                    Task.Delay(timeout ?? 1000).Wait();
                 }
             }
 
             return bAvailable;
         }
 
-        public static bool WebServerIsAvailable(out bool aliveButBadCheck) 
+        public static bool WebServerIsAvailable(out bool aliveButBadCheck, int? timeout = 1000) 
             =>  IsServiceAliveHttp(
                     global::MFDLabs.Grid.Properties.Settings.Default.WebServerLookupHost,
                     80,
@@ -127,7 +129,8 @@ namespace MFDLabs.Grid
                     out aliveButBadCheck,
                     "/checkhealth",
                     global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText,
-                    false
+                    false,
+                    timeout
                 );
 
         public enum WebServerDeploymentStatus
@@ -156,6 +159,7 @@ namespace MFDLabs.Grid
                 Arguments =
                     $"/C \"cd {(global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath)} && " +
                     $"{command}\"",
+                WindowStyle = ProcessWindowStyle.Maximized
             };
 
             if (SystemGlobal.ContextIsAdministrator())
@@ -193,7 +197,7 @@ namespace MFDLabs.Grid
 
         public static int LaunchGridServer(string hostName = "localhost", int port = 53640)
         {
-            if (!IsServiceAvailableTcp(hostName, port, 0))
+            if (!IsServiceAvailableTcp(hostName, port, 0, 150))
             {
                 SystemLogger.Singleton.Info("Grid server was not running on http://{0}:{1}, try to launch it.", hostName, port);
 
@@ -205,7 +209,7 @@ namespace MFDLabs.Grid
                 {
                     FileName = command,
                     Arguments = $"{port} -Console -Verbose",
-                    WindowStyle = ProcessWindowStyle.Maximized
+                    WindowStyle = ProcessWindowStyle.Maximized,
                 };
 
                 if (SystemGlobal.ContextIsAdministrator())
@@ -229,7 +233,7 @@ namespace MFDLabs.Grid
 
         public static void LaunchWebServer(int maxAttempts = 15)
         {
-            if (WebServerIsAvailable(out var aliveButBadCheck))
+            if (WebServerIsAvailable(out var aliveButBadCheck, 0))
             {
                 if (aliveButBadCheck)
                     throw new InvalidOperationException(WebServerUpButBadHealthCheckText);
@@ -263,7 +267,7 @@ namespace MFDLabs.Grid
 
         public static WebServerDeploymentStatus LaunchWebServerSafe(int maxAttempts = 15)
         {
-            if (WebServerIsAvailable(out var aliveButBadCheck))
+            if (WebServerIsAvailable(out var aliveButBadCheck, 0))
             {
                 if (aliveButBadCheck) return WebServerDeploymentStatus.UpButIncorrectHealthCheckText;
                 return WebServerDeploymentStatus.Success;
