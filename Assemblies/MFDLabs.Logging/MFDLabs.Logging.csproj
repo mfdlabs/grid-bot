@@ -5,7 +5,6 @@
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
 
@@ -13,20 +12,6 @@
     <WarningLevel>0</WarningLevel>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
-    <WarningLevel>0</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

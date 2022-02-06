@@ -6,7 +6,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
-    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
+    <Configurations>Debug;Release;DebugGrid;ReleaseGrid;DebugGridDeploy;ReleaseGridDeploy</Configurations>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>MFDLabs.Concurrency.xml</DocumentationFile>
   </PropertyGroup>
@@ -17,7 +17,7 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
     <Optimize>true</Optimize>
@@ -25,12 +25,12 @@
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-
+  
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="System.Web.Services" />
   </ItemGroup>
