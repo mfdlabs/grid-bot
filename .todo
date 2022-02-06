@@ -1,5 +1,0 @@
-TODO: add compatibility for listening to threads
-- Listen for dispatch THREAD_CREATE, THREAD_UPDATE and THREAD_DELETE.
-- Find a way to listen to thread channels/
-
-TODO: Figure out why the client never logs out. There is a task being cancelled somewhere for zero reason.
