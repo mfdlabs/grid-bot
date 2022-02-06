@@ -260,8 +260,8 @@ try {
 
     $sourceArchive = "$($archivePrefix)-$($config).zip"
     $configArchive = "$($archivePrefix)-$($config)Config.zip"
-    $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
-    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
     & Write-Host "Deploying source archive $componentDir*.pdb,*.dll,*.xml to $($sourceArchive)" -ForegroundColor Green
     & Write-Host "Deploying config archive $componentDir*.config to $($configArchive)" -ForegroundColor Green
@@ -281,7 +281,7 @@ try {
             [System.IO.File]::Delete($sourceArchive)
         }
         else {
-            $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config).mfdlabs-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+            $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config).mfdlabs-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
             if (![string]::IsNullOrEmpty($existingSourceArchive)) {
                 & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".mfdlabs-archive", ".zip")
@@ -317,7 +317,7 @@ try {
             [System.IO.File]::Delete($configArchive)
         }
         else {
-            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
             if (![string]::IsNullOrEmpty($existingConfigArchive)) {
                 & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".mfdlabs-config-archive", ".zip")
