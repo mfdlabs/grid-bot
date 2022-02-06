@@ -4,7 +4,8 @@ param (
     [string]$buildKind,
     [string]$buildConfig,
     [bool]$restoreSolution = $true,
-    [bool]$cleanObjAndBinFolders = $false
+    [bool]$cleanObjAndBinFolders = $false,
+    [bool]$buildConcurrently = $false
 )
 
 IF ([string]::IsNullOrEmpty($buildConfig)) {
@@ -71,4 +72,11 @@ if ($restoreSolution) {
 
 & Write-Host "Building solution..." -ForegroundColor Green
 
-& build $fqnSolutionName "/t:$target" /p:Configuration="$buildConfig"
+
+if ($buildConcurrently) {
+    # Use 2 less processes than the current machine's processor count (the machine's core count)
+    [int] $numberOfProcessesToUseInParallel = $env:NUMBER_OF_PROCESSORS - 2;
+    & build $fqnSolutionName "/t:$target" /p:Configuration="$buildConfig" /m:$numberOfProcessesToUseInParallel /p:BuildInParallel=true
+} else {
+    & build $fqnSolutionName "/t:$target" /p:Configuration="$buildConfig"
+}
