@@ -6,7 +6,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Debug;Release;ReleaseGridDeploy;DebugGridDeploy</Configurations>
+    <Configurations>Debug;Release;DebugGrid;ReleaseGrid;DebugGridDeploy;ReleaseGridDeploy</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -15,7 +15,7 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGridDeploy' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;WE_ON_THE_GRID</DefineConstants>
     <Optimize>true</Optimize>
@@ -23,7 +23,7 @@
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGridDeploy' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
