@@ -242,5 +242,8 @@
     <Setting Name="NewScriptExecutionWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="GridServerArbiterQueueUpEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
