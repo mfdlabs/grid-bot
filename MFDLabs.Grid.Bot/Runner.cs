@@ -178,7 +178,10 @@ namespace MFDLabs.Grid.Bot
 
             GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
             GridServerArbiter.SetCounterRegistry(PerfmonCounterRegistryProvider.Registry);
-            GridServerArbiter.Singleton.SetupPool();
+
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterQueueUpEnabled &&
+                !global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
+                GridServerArbiter.Singleton.SetupPool();
 
             SingleInstancedArbiter.SetBinding(defaultHttpBinding);
 

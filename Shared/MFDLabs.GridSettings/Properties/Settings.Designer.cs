@@ -741,5 +741,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((int)(this["NewScriptExecutionWorkQueueRolloutPercentage"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GridServerArbiterQueueUpEnabled {
+            get {
+                return ((bool)(this["GridServerArbiterQueueUpEnabled"]));
+            }
+        }
     }
 }
