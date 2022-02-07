@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.0.1" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
   </ItemGroup>
 
