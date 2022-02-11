@@ -28,7 +28,9 @@ namespace MFDLabs.Configuration.Clients.Vault
             }
             catch (Exception ex)
             {
-                if (ex is AggregateException agg) if (agg.GetBaseException() is not VaultApiException) ConfigurationLogging.Error(ex.ToString());
+                if (ex is AggregateException agg) 
+                    if (agg.GetBaseException() is not VaultApiException) 
+                        ConfigurationLogging.Error(ex.ToString());
 
                 return false;
             }
@@ -110,18 +112,16 @@ namespace MFDLabs.Configuration.Clients.Vault
                         select secret.Data.Data
                     select new Setting
                     {
-                        GroupName = groupName,
                         Name = (string)values["Name"],
-                        Type = (string)values["Type"],
                         Updated = (DateTime)values["Updated"],
                         Value = (string)values["Value"]
                     }).Cast<ISetting>().ToArray();
         }
 
-        public IReadOnlyCollection<IConnectionString> GetAllConnectionStrings(string groupName)
+        public IReadOnlyCollection<ISetting> GetAllConnectionStrings(string groupName)
         {
             if (!_kvV2.PathExists($"{AppConfiguration}/{groupName}", out var paths, BaseMountPoint))
-                return Array.Empty<IConnectionString>();
+                return Array.Empty<ISetting>();
 
             return (from values in
                         from secret in
@@ -130,21 +130,19 @@ namespace MFDLabs.Configuration.Clients.Vault
                             select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
                                 mountPoint: BaseMountPoint).Result
                         select secret.Data.Data
-                    select new ConnectionString
+                    select new Setting
                     {
-                        GroupName = groupName,
                         Name = (string)values["Name"],
                         Updated = (DateTime)values["Updated"],
                         Value = (string)values["Value"]
-                    }).Cast<IConnectionString>().ToArray();
+                    }).Cast<ISetting>().ToArray();
         }
 
-        public void SetProperty(string groupName, string name, string type, string value, DateTime updated)
+        public void SetProperty(string groupName, string name, string value, DateTime updated)
         {
             var values = new Dictionary<string, object>
             {
                 { "Name", name },
-                { "Type", type },
                 { "Value", value },
                 { "Updated", updated }
             };

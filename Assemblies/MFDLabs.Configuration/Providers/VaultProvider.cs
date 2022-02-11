@@ -368,27 +368,20 @@ namespace MFDLabs.Configuration.Providers
         private void SaveProperty(SettingsPropertyValue settingsPropertyValue)
         {
             var updated = DateTime.UtcNow.AddHours(-7);
-            if (IsConnectionString(settingsPropertyValue))
-            {
-            }
 
             try
             {
-                ConfigurationClient.SetProperty(_groupName,
+                ConfigurationClient.SetProperty(
+                    _groupName,
                     settingsPropertyValue.Name,
-                    settingsPropertyValue.Property.PropertyType.FullName,
                     (string) settingsPropertyValue.SerializedValue,
-                    updated);
+                    updated
+                );
             }
             catch (Exception ex)
             {
                 ConfigurationLogging.Error(ex.ToString());
             }
-        }
-
-        private bool IsConnectionString(SettingsPropertyValue settingsPropertyValue)
-        {
-            return _hasConnectionStrings && ConfigurationManager.ConnectionStrings[_groupName + "." + settingsPropertyValue.Name] != null;
         }
 
         private const int MaxRetries = 20;
