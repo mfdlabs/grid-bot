@@ -7,9 +7,11 @@ namespace MFDLabs.Grid.Bot.Extensions
 {
     public static class SocketGuildExtensions
     {
-        public static SocketApplicationCommand CreateApplicationCommand(this SocketGuild client,
+        public static SocketApplicationCommand CreateApplicationCommand(
+            this SocketGuild client,
             ApplicationCommandProperties properties,
-            RequestOptions options = null)
+            RequestOptions options = null
+        )
             => client.CreateApplicationCommandAsync(properties, options).GetAwaiter().GetResult();
 
     }

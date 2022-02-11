@@ -7,9 +7,15 @@ namespace MFDLabs.Grid.Bot.Global
 {
     public static class BotGlobal
     {
+#if DISCORD_SHARDING_ENABLED
+        public static DiscordShardedClient Client { get; private set; }
+
+        public static void Initialize(DiscordShardedClient client) => Client = client;
+#else
         public static DiscordSocketClient Client { get; private set; }
 
         public static void Initialize(DiscordSocketClient client) => Client = client;
+#endif
 
         public static async Task SingletonLaunch()
         {
@@ -25,8 +31,8 @@ namespace MFDLabs.Grid.Bot.Global
             {
                 try
                 {
-                    //await _client.LogoutAsync().ConfigureAwait(false);
                     await Client.StopAsync().ConfigureAwait(false);
+                    //await _client.LogoutAsync().ConfigureAwait(false);
                     SystemLogger.Singleton.Info("Bot successfully logged out and stopped!");
                 }
                 catch

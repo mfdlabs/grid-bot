@@ -135,7 +135,11 @@ namespace MFDLabs.Grid.Bot
             }
 
             BotGlobal.Initialize(
+#if DISCORD_SHARDING_ENABLED
+                new DiscordShardedClient(
+#else
                 new DiscordSocketClient(
+#endif
                     new DiscordSocketConfig
                     {
                         GatewayIntents =
@@ -143,6 +147,9 @@ namespace MFDLabs.Grid.Bot
                             | GatewayIntents.DirectMessages
                             | GatewayIntents.Guilds,
                         LogGatewayIntentWarnings = false,
+#if DISCORD_SHARDING_ENABLED
+                        TotalShards = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShardedClientTotalNumberOfShards,
+#endif
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                         LogLevel = LogSeverity.Debug,
 #endif
@@ -153,11 +160,19 @@ namespace MFDLabs.Grid.Bot
             BotGlobal.Client.Log += OnLogMessage.Invoke;
             BotGlobal.Client.LoggedIn += OnLoggedIn.Invoke;
             BotGlobal.Client.LoggedOut += OnLoggedOut.Invoke;
-            BotGlobal.Client.Ready += OnReady.Invoke;
-            BotGlobal.Client.Connected += OnConnected.Invoke;
             BotGlobal.Client.MessageReceived += OnMessage.Invoke;
-            BotGlobal.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
             BotGlobal.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
+
+#if DISCORD_SHARDING_ENABLED
+            BotGlobal.Client.ShardConnected += OnShardConnected.Invoke;
+            BotGlobal.Client.ShardLatencyUpdated += OnShardLatencyUpdated.Invoke;
+            BotGlobal.Client.ShardReady += OnShardReady.Invoke;
+#else
+            BotGlobal.Client.Connected += OnConnected.Invoke;
+            BotGlobal.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
+            BotGlobal.Client.Ready += OnReady.Invoke;
+#endif
+
 
 #if WE_LOVE_EM_SLASH_COMMANDS
             BotGlobal.Client.SlashCommandExecuted += OnSlashCommand.Invoke;

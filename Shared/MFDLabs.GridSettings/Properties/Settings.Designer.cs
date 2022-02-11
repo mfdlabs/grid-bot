@@ -750,5 +750,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["GridServerArbiterQueueUpEnabled"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int ShardedClientTotalNumberOfShards {
+            get {
+                return ((int)(this["ShardedClientTotalNumberOfShards"]));
+            }
+        }
     }
 }
