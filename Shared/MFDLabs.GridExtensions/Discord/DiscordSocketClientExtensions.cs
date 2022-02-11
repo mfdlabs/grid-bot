@@ -1,4 +1,4 @@
-﻿#if WE_LOVE_EM_SLASH_COMMANDS
+﻿#if WE_LOVE_EM_SLASH_COMMANDS && !DISCORD_SHARDING_ENABLED
 
 using Discord;
 using Discord.WebSocket;
