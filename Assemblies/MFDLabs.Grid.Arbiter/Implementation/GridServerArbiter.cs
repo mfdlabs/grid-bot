@@ -1585,8 +1585,6 @@ namespace MFDLabs.Grid
             public void RenewLease()
             {
                 SystemLogger.Singleton.LifecycleEvent("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
-                var t = DateTime.Now.Subtract(_lease);
-                if (t > _expiration) _expiration = t;
                 ScheduleExpirationCheck();
             }
             public void SubscribeExpirationListener(OnExpired @delegate)
