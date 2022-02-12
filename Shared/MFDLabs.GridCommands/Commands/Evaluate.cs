@@ -14,6 +14,14 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
+    public class Globals
+    {
+        public string[] messageContentArray { get; internal set; }
+        public SocketMessage message { get; internal set; }
+        public string originalCommand { get; internal set; }
+        public string scriptContents { get; internal set; }
+    }
+
     internal sealed class Evaluate : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate CSharp";
@@ -23,6 +31,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public string[] CommandAliases => new[] { "eval", "evaluate" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
+
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
@@ -53,11 +62,23 @@ namespace MFDLabs.Grid.Bot.Commands
                     // ref the current assembly
                     result = await CSharpScript.RunAsync(
                         scriptContents,
-                        ScriptOptions.Default.WithReferences(
-                            Assembly.GetExecutingAssembly()
-                        )
-                        .WithAllowUnsafe(true)
-                        .WithImports("System")
+                        ScriptOptions.Default
+                            .WithReferences(Assembly.GetExecutingAssembly())
+                            .WithAllowUnsafe(true)
+                            .WithImports(
+                                "System",
+                                "System.Linq",
+                                "System.Collections.Generic",
+                                "System.Threading.Tasks",
+                                "Discord",
+                                "Discord.WebSocket",
+                                "MFDLabs.ErrorHandling.Extensions",
+                                "MFDLabs.Grid.Bot.Extensions",
+                                "MFDLabs.Text.Extensions",
+                                "MFDLabs.Diagnostics",
+                                "MFDLabs.Grid"
+                            ),
+                        new Globals { messageContentArray = messageContentArray, message = message, originalCommand = originalCommand, scriptContents = scriptContents }
                     );
                 }
                 catch (CompilationErrorException ex)
