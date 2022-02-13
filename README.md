@@ -13,7 +13,7 @@
 These are projects used by MFDLABS Grid Instances and the Roblox Grid Bot to help aid in development.
 Please track the project here:
 
-- [Public Jira](https://mfdlabs-pub.atlassian.net/browse/GRIDBOT)
+- [Public Jira](https://jira.ops.vmminfra.net/browse/GRIDBOT)
 - [Internal Jira (for staff on-site)](https://jira.mfdlabs.local/browse/GRIDBOT)
 
 If you require access to these Jira projects, please email: [ops+vpn-access-ops@vmminfra.net](mailto:ops+vpn-access-ops@vmminfra.net)
