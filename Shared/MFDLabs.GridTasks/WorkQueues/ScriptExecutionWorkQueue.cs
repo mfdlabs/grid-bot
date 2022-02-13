@@ -407,19 +407,6 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                                 ex.Message
                             );
                         }
-
-#if NETFRAMEWORK
-                        GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
-                            null,
-                            1
-#if DEBUG
-                            ,
-                            5,
-                            "localhost",
-                            false
-#endif
-                        );
-#endif
                     }
                 }
             }
