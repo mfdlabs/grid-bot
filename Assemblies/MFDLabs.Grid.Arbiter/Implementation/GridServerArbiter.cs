@@ -17,7 +17,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using Microsoft.Extensions.Caching.Memory;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
@@ -78,12 +77,27 @@ namespace MFDLabs.Grid
     // so what if we have 2 instances with the same name but on different ports?
     // should we queue them up regardless, or only queue them if it's not persistent
     // seems about right :)
-    public sealed class GridServerArbiter : SingletonBase<GridServerArbiter>
+    public sealed class GridServerArbiter
     {
         #region |Setup|
 
         private static Binding _defaultHttpBinding;
         private static ICounterRegistry _counterRegistry;
+
+        private static GridServerArbiter _instance;
+
+        public static GridServerArbiter Singleton
+        {
+            get
+            {
+                if (_defaultHttpBinding == null)
+                    throw new ApplicationException("The http binding was null, please call SetBinding()");
+
+                if (_instance == null) _instance = new();
+
+                return _instance;
+            }
+        }
 
         public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding ?? throw new ArgumentNullException(nameof(binding));
         public static void SetCounterRegistry(ICounterRegistry counterRegistry) => _counterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
