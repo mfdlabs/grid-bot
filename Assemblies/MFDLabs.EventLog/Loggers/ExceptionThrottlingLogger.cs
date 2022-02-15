@@ -124,6 +124,8 @@ namespace MFDLabs.EventLog
         }
         public void Info(string format, params object[] args) => _logger.Info(format, args);
         public void Info(Func<string> messageGetter) => _logger.Info(messageGetter);
+        public void Log(string format, params object[] args) => _logger.Log(format, args);
+        public void Log(Func<string> messageGetter) => _logger.Log(messageGetter);
         public void Warning(string format, params object[] args)
         {
             if (_isThrottlingEnabledGetter())

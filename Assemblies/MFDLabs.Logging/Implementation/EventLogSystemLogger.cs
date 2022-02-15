@@ -20,7 +20,7 @@ namespace MFDLabs.Logging
     public sealed class EventLogSystemLogger : ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public static ILogger Singleton = new EventLogSystemLogger();
+        public static readonly EventLogSystemLogger Singleton = new();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
@@ -30,8 +30,7 @@ namespace MFDLabs.Logging
         private static readonly string MachineHost = SystemGlobal.GetMachineHost();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly string FileBasePath =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
+        private static readonly string FileBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string FileName =

@@ -18,7 +18,7 @@ namespace MFDLabs.Logging
     public sealed class SystemLogger : ILogger
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public static ILogger Singleton = new SystemLogger();
+        public static readonly SystemLogger Singleton = new();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
