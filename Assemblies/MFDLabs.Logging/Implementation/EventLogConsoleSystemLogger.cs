@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.EventLog;
@@ -16,8 +15,11 @@ namespace MFDLabs.Logging
 {
     [DebuggerDisplay("Global EventLog System Logger")]
     [DebuggerStepThrough]
-    public sealed class EventLogConsoleSystemLogger : SingletonBase<SystemLogger>, ILogger
+    public sealed class EventLogConsoleSystemLogger : ILogger
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        public static ILogger Singleton = new EventLogConsoleSystemLogger();
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string LocalIp = NetworkingGlobal.GetLocalIp();
 
