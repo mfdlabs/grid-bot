@@ -57,10 +57,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj">
-      <Project>{67a6181a-6389-4b08-89dd-64f3e1051c59}</Project>
-      <Name>MFDLabs.Abstractions</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj">
       <Project>{fb3389dd-e0be-430c-8d1b-20544405ad89}</Project>
       <Name>MFDLabs.Concurrency</Name>
