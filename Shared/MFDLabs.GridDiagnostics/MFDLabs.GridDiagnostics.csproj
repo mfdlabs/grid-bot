@@ -16,7 +16,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
