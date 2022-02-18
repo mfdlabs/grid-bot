@@ -102,7 +102,7 @@ IF ($isDeployment) {
 
     # Call the deploy script
     Write-Host "Deploying..." -ForegroundColor Green;
-    $scriptName = "$($SolutionDir)Deploy.ps1";
+    $scriptName = "$($SolutionDir)Scripts\Deploy.ps1";
     if (!(Get-Item -Path $scriptName)) {
         Write-Host "Deploy script $scriptName does not exist" -ForegroundColor Red;
         Exit 1;

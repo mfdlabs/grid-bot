@@ -147,16 +147,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmap", "Roadmap", "{39FD
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{2606CCD7-2831-4E89-9503-D93C47AF19DE}"
 	ProjectSection(SolutionItems) = preProject
-		build-config-integration.bat = build-config-integration.bat
-		build-grid-integration.bat = build-grid-integration.bat
-		Build.ps1 = Build.ps1
-		BuildAndDeploy.ps1 = BuildAndDeploy.ps1
-		BuildConfigIntegration.ps1 = BuildConfigIntegration.ps1
-		BuildGridIntegration.ps1 = BuildGridIntegration.ps1
-		clean.bat = clean.bat
-		DeleteObjBinFolders.ps1 = DeleteObjBinFolders.ps1
-		deploy.bat = deploy.bat
-		Deploy.ps1 = Deploy.ps1
 		Discord.Net.targets = Discord.Net.targets
 		StyleAnalyzer.targets = StyleAnalyzer.targets
 	EndProjectSection
