@@ -1,3 +1,3 @@
 @echo OFF
 
-powershell -ExecutionPolicy Unrestricted "..\Powershell\DeleteObjBinFolders.ps1" -NewLocation "..\"
+powershell -ExecutionPolicy Unrestricted ".\DeleteObjBinFolders.ps1" -NewLocation "..\\"
