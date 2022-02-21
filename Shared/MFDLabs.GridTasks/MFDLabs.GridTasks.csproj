@@ -12,8 +12,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS;DEBUG_LOGGING_IN_PROD</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
