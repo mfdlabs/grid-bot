@@ -20,7 +20,7 @@ using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Instrumentation;
 using MFDLabs.Diagnostics;
 
-namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
+namespace MFDLabs.Grid.Bot.WorkQueues
 {
     public sealed class RenderingWorkQueue : AsyncWorkQueue<SocketTaskRequest>
     {
