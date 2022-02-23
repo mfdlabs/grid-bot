@@ -2,7 +2,7 @@
 using Microsoft.Ccr.Core;
 
 
-namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
+namespace MFDLabs.Grid.Bot.WorkQueues
 {
     internal static class WorkQueueDispatcherQueueRegistry
     {
