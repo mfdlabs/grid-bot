@@ -28,7 +28,7 @@ using MFDLabs.Drawing;
 using HWND = System.IntPtr;
 #endif
 
-namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
+namespace MFDLabs.Grid.Bot.WorkQueues
 {
     public sealed class GridServerScreenshotWorkQueue : AsyncWorkQueue<SocketTaskRequest>
     {
