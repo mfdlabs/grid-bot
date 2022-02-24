@@ -111,11 +111,11 @@ namespace MFDLabs.Grid.Bot.Extensions
             var dmChannel = await BotGlobal.Client.GetDMChannelAsync(user.Id);
             if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
             return await dmChannel?.SendMessageAsync(
-                $"<@{user.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}",
+                text,
                 isTts,
                 embed,
                 options,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
                 messageReference
             );
         }
@@ -134,12 +134,12 @@ namespace MFDLabs.Grid.Bot.Extensions
             if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
             return await dmChannel?.SendFileAsync(
                 fileName,
-                $"<@{user.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}",
+                text,
                 isTts,
                 embed,
                 options,
                 isSpoiler,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
                 messageReference
             );
         }
@@ -160,12 +160,12 @@ namespace MFDLabs.Grid.Bot.Extensions
             return await dmChannel?.SendFileAsync(
                 stream,
                 fileName,
-                $"<@{user.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}",
+                text,
                 isTts,
                 embed,
                 options,
                 isSpoiler,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
                 messageReference
             );
         }

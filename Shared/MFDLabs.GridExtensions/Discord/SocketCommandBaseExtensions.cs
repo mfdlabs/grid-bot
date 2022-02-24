@@ -33,8 +33,6 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null
         )
         {
-            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
-
             if (!command.HasResponded)
             {
                 await command.RespondAsync(
@@ -42,7 +40,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                     embeds,
                     isTts,
                     false,
-                    new AllowedMentions(AllowedMentionTypes.Users),
+                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                     component,
                     embed,
                     options
@@ -55,7 +53,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embeds,
                 isTts,
                 false,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                 component,
                 embed,
                 options
@@ -83,8 +81,6 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null
         )
         {
-            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
-
             if (!command.HasResponded)
             {
                 await command.RespondAsync(
@@ -92,7 +88,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                     embeds,
                     isTts,
                     true,
-                    new AllowedMentions(AllowedMentionTypes.Users),
+                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                     component,
                     embed,
                     options
@@ -106,7 +102,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embeds,
                 isTts,
                 true,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                 component,
                 embed,
                 options
@@ -136,8 +132,6 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null
         )
         {
-            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
-
             return await command.FollowupWithFileAsync(
                 fileStream,
                 fileName,
@@ -145,7 +139,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embeds,
                 isTts,
                 true,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                 components,
                 embed,
                 options
@@ -177,8 +171,6 @@ namespace MFDLabs.Grid.Bot.Extensions
            RequestOptions options = null
         )
         {
-            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
-
             return await command.FollowupWithFileAsync(
                 fileStream,
                 fileName,
@@ -186,7 +178,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embeds,
                 isTts,
                 false,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                 components,
                 embed,
                 options
