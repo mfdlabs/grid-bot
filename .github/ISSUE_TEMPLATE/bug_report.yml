@@ -1,0 +1,72 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug", "requires-review"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    attributes:
+      label: Check Jira or BackLog for an already existing issue.
+      description: Please refer to the Jira Project [GRIDBOT](https://jira.mfdlabs.local/browse/GRIDBOT), [Backlog](https://rblx.backlog-2time.vmminfra.local/ui/roblox/grid-bot/issues), 
+                    and [Confluence](https://confluence.mfdlabs.local/display/GRIDBOT/Change+Log) before reporting issues.
+      options:
+      - label: "I double checked jira, backlog and confluence and couldn't find any useful information."
+        required: true
+  - type: checkboxes
+    attributes:
+      label: Verify Issue Source
+      description: If your issue is related to an exception make sure the error was thrown by the bot or it's dependencies, and not your code or another library. 
+      options:
+      - label: I verified the issue was caused by the bot or it's dependencies.
+        required: true
+  - type: checkboxes
+    attributes:
+      label: Check your branch
+      description: If you are on a branch that is not master, is behind master, or otherwise does not have any new commits, it is most likely an unstable branch and you should not use it
+      options:
+      - label: I double checked that I have an inline-ish branch.
+        required: true
+  - type: textarea
+    id: description
+    attributes: 
+      label: Description
+      description: A brief explination of the bug.
+      placeholder: When I start the bot, it just infinitely starts and stops.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Deployment ID or branch
+      description: What version of the bot are you using, if not applicable please supply the branch in the form of `branch:commit` (push if local, not to master)
+      placeholder: ex. 2022.02.21-20.07.10_fix_discord-gateway-hang_9cbd46e or fix/discord-gateway-hang:9cbd46e
+    validations:
+      required: true
+  - type: input
+    id: working-version
+    attributes:
+      label: Working Deployment(s) or branch(s)
+      description: If this worked on older deployment(s) or different branch(es), please supply them.
+      placeholder: ex. 2.4.0
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes: 
+      label: Logs
+      description: Add applicable logs and/or a stacktrace here.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sample
+      description: Include a (short) code sample that reproduces your issue 100% of time (comments would be great).
+      placeholder: |
+        ```cs
+        My.Code();
+        ```
+    validations:
+      required: false
