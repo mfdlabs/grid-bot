@@ -17,15 +17,14 @@ namespace MFDLabs.Grid.Bot.Utility
             string text = null,
             bool isTts = false,
             Embed embed = null,
-            RequestOptions options = null,
-            MessageReference messageReference = null)
-            => await message.Channel.SendMessageAsync(
-                    $"<@{message.Author.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}",
+            RequestOptions options = null
+        ) => await message.Channel.SendMessageAsync(
+                    text,
                     isTts,
                     embed,
                     options,
-                    new AllowedMentions(AllowedMentionTypes.Users),
-                    messageReference
+                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
+                    new MessageReference(message.Id)
                 );
 
         public static async Task RespondEphemeralAsync(
@@ -39,8 +38,6 @@ namespace MFDLabs.Grid.Bot.Utility
             RequestOptions options = null
         )
         {
-            text = pingUser ? $"<@{command.User.Id}>{(!text.IsNullOrEmpty() ? ", " : "")}{text}" : text;
-
             if (!command.HasResponded)
             {
                 await command.RespondAsync(
@@ -48,7 +45,7 @@ namespace MFDLabs.Grid.Bot.Utility
                     embeds,
                     isTts,
                     true,
-                    new AllowedMentions(AllowedMentionTypes.Users),
+                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                     component,
                     embed,
                     options
@@ -61,7 +58,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 embeds,
                 isTts,
                 true,
-                new AllowedMentions(AllowedMentionTypes.Users),
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
                 component,
                 embed,
                 options
