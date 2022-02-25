@@ -101,7 +101,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $false" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $true" />
   </Target>
 
 </Project>
