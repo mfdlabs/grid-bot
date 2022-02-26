@@ -40,7 +40,7 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID;WE_LOVE_EM_SLASH_COMMANDS;DEBUG_LOGGING_IN_PROD</DefineConstants>
+    <DefineConstants>TRACE;WE_ON_THE_GRID;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <WarningLevel>0</WarningLevel>

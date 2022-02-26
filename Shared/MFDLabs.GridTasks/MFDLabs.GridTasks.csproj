@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS;DEBUG_LOGGING_IN_PROD</DefineConstants>
+    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
