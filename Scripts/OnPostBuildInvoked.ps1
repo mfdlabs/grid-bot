@@ -14,7 +14,8 @@ param (
     [string] $TargetExt,
     [string] $SolutionDir,
     [string] $ProjectName,
-    [string] $TargetFramework
+    [string] $TargetFramework,
+	[bool] $DeleteDebugSymbols = $true
 )
 
 $isDebug = $ConfigurationName.StartsWith("Debug");
@@ -91,7 +92,7 @@ IF ($isDeployment) {
     Write-Host "Deployment configuration: $deploymentConfiguration" -ForegroundColor Green;
 
     # Determine if we are deploying a debug or release build, if release delete all pdb files
-    if (!$isDebug) {
+    if (!$isDebug -and $DeleteDebugSymbols) {
         Write-Host "Removing pdb files" -ForegroundColor Green;
         $outPath = "$($ProjectDir)$($OutDir)";
 

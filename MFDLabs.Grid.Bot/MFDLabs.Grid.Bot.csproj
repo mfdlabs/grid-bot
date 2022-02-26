@@ -16,8 +16,8 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <WarningLevel>0</WarningLevel>
     <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -28,7 +28,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
+    <DebugType>pdbonly</DebugType>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
@@ -42,7 +42,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;WE_ON_THE_GRID;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
+    <DebugType>pdbonly</DebugType>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
@@ -100,7 +100,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework)" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $true" />
   </Target>
 
 </Project>
