@@ -14,6 +14,8 @@ namespace MFDLabs.EventLog
             }
         }
 
+        public void Log(string format, params object[] args) { }
+        public void Log(Func<string> messageGetter) { }
         public void Debug(string format, params object[] args) { }
         public void Debug(Func<string> messageGetter) { }
         public void Error(Exception ex) { }

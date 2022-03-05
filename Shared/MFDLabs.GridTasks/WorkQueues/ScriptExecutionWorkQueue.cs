@@ -21,7 +21,7 @@ using System.Linq;
 using MFDLabs.Networking;
 using MFDLabs.Grid.ComputeCloud;
 
-namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
+namespace MFDLabs.Grid.Bot.WorkQueues
 {
     public sealed class ScriptExecutionWorkQueue : AsyncWorkQueue<SocketTaskRequest>
     {
@@ -407,19 +407,6 @@ namespace MFDLabs.Grid.Bot.Tasks.WorkQueues
                                 ex.Message
                             );
                         }
-
-#if NETFRAMEWORK
-                        GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
-                            null,
-                            1
-#if DEBUG
-                            ,
-                            5,
-                            "localhost",
-                            false
-#endif
-                        );
-#endif
                     }
                 }
             }

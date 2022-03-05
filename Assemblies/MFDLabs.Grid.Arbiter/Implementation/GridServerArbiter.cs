@@ -1,7 +1,9 @@
 ﻿/*
 File name: GridServerArbiter.cs
-Written By: Nikita Petko, Jakob Valara, Alex Bkordan, Elias Teleski, @networking-owk
+Written By: @networking-owk
 Description: A helper to arbiter grid server instances to avoid single instanced crash exploits
+
+Copyright MFDLABS 2001-2022. All rights reserved.
 */
 
 using System;
@@ -15,7 +17,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using Microsoft.Extensions.Caching.Memory;
-using MFDLabs.Abstractions;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Instrumentation;
@@ -30,6 +31,44 @@ using MFDLabs.ErrorHandling.Extensions;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
+/*
+Documentation: 
+
+Pooling:
+    If an instance is marked as Poolable, that means the arbiter can use that instance for random compute,
+    say we are trying to execute a BatchJobEx, but we don't know what instance we want to do so, we will call
+    on the methods that don't have the name parameter, this will call on GetOrCreateAvailableInstance and attempt
+    to grab any available instance that is poolable, including persistent instances.
+
+Grid Server Instances:
+    Persistent -> Persistent instances are created once and server their purpose until the user requests a closure explicitly,
+                  these instances require a name, and optionally can be pooled.
+    Regular    ->
+                  Single Use -> These instances serve a single purpose and are then destroyed after that work is complete.
+                  Leased     -> These instances serve any action until their lease expires. Calling RenewLease will renew it's
+                                saved lease timespan it was given on instantiation.
+
+Instrumentation:
+    Instrumentation consists of performance monitors for the arbiter itself, the arbiter's port allocation and the arbiter's instances.
+    These will track an array of data, such as success and failures counts.
+
+Port Allocation:
+    Port allocation is fully managed in memory, and will check if:
+        1. A port was recently created.
+        2. A service on the machine is holding the port.
+        3. The port is within it's range.
+    Ports are randomly generated between the InclusiveStartPort and ExclusiveEndPort constants.
+    Ports will be given a maximum attempts of MaximumAttemptsToFindPort to find a port that is available.
+
+SOAP Methods:
+    This supports all SOAP Methods in RCCService.wsdl and ComputeCloudServiceV2.wsdl
+
+Associated Jira Tickets:
+    GRIDBOT-7
+    GRIDBOT-10
+    GRIDBOT-12
+*/
+
 namespace MFDLabs.Grid
 {
     // In here check for SingleInstancedGridServer
@@ -38,12 +77,27 @@ namespace MFDLabs.Grid
     // so what if we have 2 instances with the same name but on different ports?
     // should we queue them up regardless, or only queue them if it's not persistent
     // seems about right :)
-    public sealed class GridServerArbiter : SingletonBase<GridServerArbiter>
+    public sealed class GridServerArbiter
     {
         #region |Setup|
 
         private static Binding _defaultHttpBinding;
         private static ICounterRegistry _counterRegistry;
+
+        private static GridServerArbiter _instance;
+
+        public static GridServerArbiter Singleton
+        {
+            get
+            {
+                if (_defaultHttpBinding == null)
+                    throw new ApplicationException("The http binding was null, please call SetBinding()");
+
+                if (_instance == null) _instance = new();
+
+                return _instance;
+            }
+        }
 
         public static void SetDefaultHttpBinding(Binding binding) => _defaultHttpBinding = binding ?? throw new ArgumentNullException(nameof(binding));
         public static void SetCounterRegistry(ICounterRegistry counterRegistry) => _counterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
@@ -1519,7 +1573,7 @@ namespace MFDLabs.Grid
             private readonly IRandom _rng = RandomFactory.GetDefaultRandom();
             private bool _disposed;
             private OnExpired _onExpiredListeners = new(_ => { });
-            private DateTime _expiration;
+            private readonly DateTime _expiration;
 
             #endregion |Private Members|
 

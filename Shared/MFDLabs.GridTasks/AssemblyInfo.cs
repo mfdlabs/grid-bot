@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: CompilationRelaxations(8)]
 #endif
 [assembly: AssemblyTitle("MFDLabs.GridTasks")]
-[assembly: AssemblyDescription("Shared Tasks for the MFDLABS.GRID.BOT")]
+[assembly: AssemblyDescription("Shared Tasks and work queues for the MFDLABS.GRID.BOT")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
 #else

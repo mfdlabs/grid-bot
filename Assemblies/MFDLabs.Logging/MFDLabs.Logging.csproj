@@ -10,12 +10,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
     <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
     <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
     <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj" />

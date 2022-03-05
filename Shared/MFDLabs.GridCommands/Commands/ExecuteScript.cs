@@ -4,7 +4,7 @@ using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Models;
-using MFDLabs.Grid.Bot.Tasks.WorkQueues;
+using MFDLabs.Grid.Bot.WorkQueues;
 
 namespace MFDLabs.Grid.Bot.Commands
 {

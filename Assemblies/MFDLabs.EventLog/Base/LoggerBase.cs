@@ -41,6 +41,8 @@ namespace MFDLabs.EventLog
             return builder.ToString();
         }
         protected abstract void Log(LogLevel logLevel, string format, params object[] args);
+        public void Log(string format, params object[] args) => LogIfNeeded(LogLevel.Information, format, args);
+        public void Log(Func<string> messageGetter) => LogIfNeededLazy(LogLevel.Information, messageGetter);
         public void Debug(string format, params object[] args) { }
         public void Debug(Func<string> messageGetter) { }
         public void Error(Exception ex) => LogIfNeededLazy(LogLevel.Error, ex.ToString);

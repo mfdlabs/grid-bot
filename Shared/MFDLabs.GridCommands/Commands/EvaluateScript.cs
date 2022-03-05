@@ -54,8 +54,25 @@ namespace MFDLabs.Grid.Bot.Commands
                 try
                 {
                     // ref the current assembly
-                    result = await CSharpScript.RunAsync($"#load \"{fullScriptName}\"",
-                        ScriptOptions.Default.WithReferences(Assembly.GetExecutingAssembly()));
+                    result = await CSharpScript.RunAsync(
+                        $"#load \"{fullScriptName}\"",
+                        ScriptOptions.Default
+                            .WithReferences(Assembly.GetExecutingAssembly())
+                            .WithImports(
+                                "System",
+                                "System.Linq",
+                                "System.Collections.Generic",
+                                "System.Threading.Tasks",
+                                "Discord",
+                                "Discord.WebSocket",
+                                "MFDLabs.ErrorHandling.Extensions",
+                                "MFDLabs.Grid.Bot.Extensions",
+                                "MFDLabs.Text.Extensions",
+                                "MFDLabs.Diagnostics",
+                                "MFDLabs.Grid"
+                            ),
+                        new Globals { messageContentArray = messageContentArray, message = message, originalCommand = originalCommand }
+                    );
                 }
                 catch (CompilationErrorException ex)
                 {

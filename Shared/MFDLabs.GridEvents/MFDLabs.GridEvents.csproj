@@ -10,8 +10,9 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
 
@@ -19,13 +20,9 @@
     <DefineConstants>TRACE;DEBUG;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
     <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />

@@ -7,6 +7,8 @@ namespace MFDLabs.EventLog
         Func<LogLevel> MaxLogLevel { get; set; }
         bool LogThreadId { get; set; }
 
+        void Log(string format, params object[] args);
+        void Log(Func<string> messageGetter);
         void Debug(string format, params object[] args);
         void Debug(Func<string> messageGetter);
         void Error(Exception ex);

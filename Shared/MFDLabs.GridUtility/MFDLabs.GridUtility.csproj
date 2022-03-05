@@ -12,8 +12,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -25,7 +25,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />

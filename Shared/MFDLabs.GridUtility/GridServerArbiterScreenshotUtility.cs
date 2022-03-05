@@ -139,6 +139,16 @@ namespace MFDLabs.Grid.Bot.Utility
 
             SavedInstances.TryRemove(instanceKey, out _);
             ScriptReferenceLookupTable.TryRemove(instanceKey, out _);
+            GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
+                null,
+                1
+#if DEBUG
+                ,
+                5,
+                "localhost",
+                false
+#endif
+            );
         }
 
         private static bool CheckIfHasIds(this SocketMessage self, out ICollection<int> d)
@@ -213,9 +223,9 @@ namespace MFDLabs.Grid.Bot.Utility
                 .WithTitle("Your Grid Server Instances");
 
             var text = "";
-            
+
             foreach (var id in ids)
-            { 
+            {
                 var (messageId, jumpUrl) = message.GetInstanceReferenceUrl(id);
                 builder.AddField($"Instance ID {id}", $"[{messageId}]({jumpUrl})", true);
             }

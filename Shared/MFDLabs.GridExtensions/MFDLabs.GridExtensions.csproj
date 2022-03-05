@@ -11,8 +11,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -25,7 +25,6 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Abstractions\MFDLabs.Abstractions.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
     <ProjectReference Include="..\..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />

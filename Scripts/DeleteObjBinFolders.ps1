@@ -1,5 +1,11 @@
 # PowerShell script that recursively deletes all 'bin' and 'obj' (or any other specified) folders inside current folder
 
+param (
+	[string] $NewLocation
+)
+
+Set-Location $NewLocation
+
 $CurrentPath = (Get-Location -PSProvider FileSystem).ProviderPath
 
 # recursively get all folders matching given includes, except ignored folders
