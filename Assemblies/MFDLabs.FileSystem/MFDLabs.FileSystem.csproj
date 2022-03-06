@@ -14,4 +14,8 @@
         <DebugSymbols>true</DebugSymbols>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj" />
+    </ItemGroup>
+
 </Project>
