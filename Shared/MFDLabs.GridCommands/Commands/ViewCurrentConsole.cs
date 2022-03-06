@@ -1,11 +1,11 @@
 ﻿#if NETFRAMEWORK
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Diagnostics;
 using MFDLabs.Drawing;
+using MFDLabs.FileSystem;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.NativeWin32;
@@ -50,7 +50,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             TaskHelper.SetTimeout(() =>
             {
-                File.Delete("ServerShot.png");
+                FilesHelper.PollDeletionOfFile("ServerShot.png");
             }, TimeSpan.FromSeconds(2));
         }
     }

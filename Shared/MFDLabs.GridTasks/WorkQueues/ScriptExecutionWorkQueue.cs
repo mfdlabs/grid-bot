@@ -1,25 +1,26 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
-using System.ServiceModel;
+using System.Linq;
 using System.Text;
-using Microsoft.Ccr.Core;
+using System.Diagnostics;
+using System.ServiceModel;
+using System.Collections.Concurrent;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Ccr.Core;
+using MFDLabs.Logging;
+using MFDLabs.FileSystem;
+using MFDLabs.Networking;
 using MFDLabs.Concurrency;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Models;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Instrumentation;
-using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Linq;
-using MFDLabs.Networking;
+using MFDLabs.Grid.Bot.Models;
+using MFDLabs.Instrumentation;
+using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.ComputeCloud;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.ErrorHandling.Extensions;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 namespace MFDLabs.Grid.Bot.WorkQueues
 {
@@ -375,7 +376,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         }
 
 #if NETFRAMEWORK
-                        message.Reply($"This instance will expire at <t:{expirationTime}:T>");
+                        message.Reply($"Executed script with no return! This instance will expire at <t:{expirationTime}:T>");
 #else
                         message.Reply("Executed script with no return!");
 #endif
@@ -410,12 +411,18 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             SystemLogger.Singleton.LifecycleEvent(
                                 "Trying delete the script '{0}' at path '{1}'",
                                 scriptId,
-                                scriptName);
-                            File.Delete(scriptName);
-                            SystemLogger.Singleton.LifecycleEvent(
-                                "Successfully deleted the script '{0}' at path '{1}'!",
-                                scriptId,
-                                scriptName);
+                                scriptName
+                            );
+                            FilesHelper.PollDeletionOfFile(
+                                scriptName,
+                                10,
+                                ex => SystemLogger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
+                                () => SystemLogger.Singleton.LifecycleEvent(
+                                    "Successfully deleted the script '{0}' at path '{1}'!",
+                                        scriptId,
+                                        scriptName
+                                    )
+                            );
                         }
                         catch (Exception ex)
                         {

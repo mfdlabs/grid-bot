@@ -1,16 +1,17 @@
 ﻿#if NETFRAMEWORK
 
 using System;
+using System.IO;
+using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using Discord.WebSocket;
-using System.Linq;
-using Discord;
-using System.IO;
-using System.Diagnostics;
-using MFDLabs.Drawing;
-using MFDLabs.Reflection.Extensions;
 using System.Runtime.InteropServices;
+using Discord;
+using Discord.WebSocket;
+using MFDLabs.Drawing;
+using MFDLabs.FileSystem;
+using MFDLabs.Reflection.Extensions;
 
 using HWND = System.IntPtr;
 
@@ -196,7 +197,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             finally
             {
-                File.Delete(tempFileName);
+                FilesHelper.PollDeletionOfFile(tempFileName);
             }
         }
 
