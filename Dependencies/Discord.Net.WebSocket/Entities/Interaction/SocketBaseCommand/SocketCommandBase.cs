@@ -1,4 +1,3 @@
-using Discord.Net.Rest;
 using Discord.Rest;
 using System;
 using System.Collections.Generic;
@@ -28,16 +27,17 @@ namespace Discord.WebSocket
             => Data.Id;
 
         /// <summary>
-        ///     The data associated with this interaction.
+        ///     Gets the data associated with this interaction.
         /// </summary>
         internal new SocketCommandBaseData Data { get; }
 
+        /// <inheritdoc/>
         public override bool HasResponded { get; internal set; }
 
         private object _lock = new object();
 
-        internal SocketCommandBase(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
-            : base(client, model.Id, channel)
+        internal SocketCommandBase(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
+            : base(client, model.Id, channel, user)
         {
             var dataModel = model.Data.IsSpecified
                 ? (DataModel)model.Data.Value
@@ -50,9 +50,9 @@ namespace Discord.WebSocket
             Data = SocketCommandBaseData.Create(client, dataModel, model.Id, guildId);
         }
 
-        internal new static SocketInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
+        internal new static SocketInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
         {
-            var entity = new SocketCommandBase(client, model, channel);
+            var entity = new SocketCommandBase(client, model, channel, user);
             entity.Update(model);
             return entity;
         }
@@ -133,6 +133,42 @@ namespace Discord.WebSocket
 
             await InteractionHelper.SendInteractionResponseAsync(Discord, response, this, Channel, options).ConfigureAwait(false);
             HasResponded = true;
+        }
+
+        /// <inheritdoc/>
+        public override async Task RespondWithModalAsync(Modal modal, RequestOptions options = null)
+        {
+            if (!IsValidToken)
+                throw new InvalidOperationException("Interaction token is no longer valid");
+
+            if (!InteractionHelper.CanSendResponse(this))
+                throw new TimeoutException($"Cannot respond to an interaction after {InteractionHelper.ResponseTimeLimit} seconds!");
+
+            var response = new API.InteractionResponse
+            {
+                Type = InteractionResponseType.Modal,
+                Data = new API.InteractionCallbackData
+                {
+                    CustomId = modal.CustomId,
+                    Title = modal.Title,
+                    Components = modal.Component.Components.Select(x => new Discord.API.ActionRowComponent(x)).ToArray()
+                }
+            };
+
+            lock (_lock)
+            {
+                if (HasResponded)
+                {
+                    throw new InvalidOperationException("Cannot respond twice to the same interaction");
+                }
+            }
+
+            await InteractionHelper.SendInteractionResponseAsync(Discord, response, this, Channel, options).ConfigureAwait(false);
+
+            lock (_lock)
+            {
+                HasResponded = true;
+            }
         }
 
         public override async Task RespondWithFilesAsync(

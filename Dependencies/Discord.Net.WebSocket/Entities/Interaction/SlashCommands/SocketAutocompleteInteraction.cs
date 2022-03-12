@@ -14,15 +14,17 @@ namespace Discord.WebSocket
     public class SocketAutocompleteInteraction : SocketInteraction, IAutocompleteInteraction, IDiscordInteraction
     {
         /// <summary>
-        ///     The autocomplete data of this interaction.
+        ///     Gets the autocomplete data of this interaction.
         /// </summary>
         public new SocketAutocompleteInteractionData Data { get; }
 
+        /// <inheritdoc/>
         public override bool HasResponded { get; internal set; }
+
         private object _lock = new object();
 
-        internal SocketAutocompleteInteraction(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
-            : base(client, model.Id, channel)
+        internal SocketAutocompleteInteraction(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
+            : base(client, model.Id, channel, user)
         {
             var dataModel = model.Data.IsSpecified
                 ? (DataModel)model.Data.Value
@@ -32,9 +34,9 @@ namespace Discord.WebSocket
                 Data = new SocketAutocompleteInteractionData(dataModel);
         }
 
-        internal new static SocketAutocompleteInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
+        internal new static SocketAutocompleteInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
         {
-            var entity = new SocketAutocompleteInteraction(client, model, channel);
+            var entity = new SocketAutocompleteInteraction(client, model, channel, user);
             entity.Update(model);
             return entity;
         }
@@ -99,6 +101,10 @@ namespace Discord.WebSocket
             => throw new NotSupportedException("Autocomplete interactions don't support this method!");
         public override Task RespondWithFilesAsync(IEnumerable<FileAttachment> attachments, string text = null, Embed[] embeds = null, bool isTTS = false, bool ephemeral = false, AllowedMentions allowedMentions = null, MessageComponent components = null, Embed embed = null, RequestOptions options = null)
             => throw new NotSupportedException("Autocomplete interactions don't support this method!");
+
+        /// <inheritdoc/>
+        public override Task RespondWithModalAsync(Modal modal, RequestOptions requestOptions = null)
+            => throw new NotSupportedException("Autocomplete interactions cannot have normal responces!");
 
         //IAutocompleteInteraction
         /// <inheritdoc/>

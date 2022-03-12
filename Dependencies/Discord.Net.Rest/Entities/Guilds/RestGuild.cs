@@ -763,11 +763,6 @@ namespace Discord.Rest
             return null;
         }
 
-        /// <inheritdoc />
-        public Task<RestRole> CreateRoleAsync(string name, GuildPermissions? permissions = default(GuildPermissions?), Color? color = default(Color?),
-            bool isHoisted = false, RequestOptions options = null)
-            => CreateRoleAsync(name, permissions, color, isHoisted, false, options);
-
         /// <summary>
         ///     Creates a new role with the provided name.
         /// </summary>
@@ -1167,6 +1162,7 @@ namespace Discord.Rest
         /// </param>
         /// <param name="speakers">A collection of speakers for the event.</param>
         /// <param name="location">The location of the event; links are supported</param>
+        /// <param name="coverImage">The optional banner image for the event.</param>
         /// <param name="options">The options to be used when sending the request.</param>
         /// <returns>
         ///     A task that represents the asynchronous create operation.
@@ -1180,8 +1176,9 @@ namespace Discord.Rest
             DateTimeOffset? endTime = null,
             ulong? channelId = null,
             string location = null,
+            Image? coverImage = null,
             RequestOptions options = null)
-            => GuildHelper.CreateGuildEventAsync(Discord, this, name, privacyLevel, startTime, type, description, endTime, channelId, location, options);
+            => GuildHelper.CreateGuildEventAsync(Discord, this, name, privacyLevel, startTime, type, description, endTime, channelId, location, coverImage, options);
 
         #endregion
 
@@ -1198,8 +1195,8 @@ namespace Discord.Rest
         IReadOnlyCollection<ICustomSticker> IGuild.Stickers => Stickers;
 
         /// <inheritdoc />
-        async Task<IGuildScheduledEvent> IGuild.CreateEventAsync(string name, DateTimeOffset startTime, GuildScheduledEventType type, GuildScheduledEventPrivacyLevel privacyLevel, string description, DateTimeOffset? endTime, ulong? channelId, string location, RequestOptions options)
-            => await CreateEventAsync(name, startTime, type, privacyLevel, description, endTime, channelId, location, options).ConfigureAwait(false);
+        async Task<IGuildScheduledEvent> IGuild.CreateEventAsync(string name, DateTimeOffset startTime, GuildScheduledEventType type, GuildScheduledEventPrivacyLevel privacyLevel, string description, DateTimeOffset? endTime, ulong? channelId, string location, Image? coverImage, RequestOptions options)
+            => await CreateEventAsync(name, startTime, type, privacyLevel, description, endTime, channelId, location, coverImage, options).ConfigureAwait(false);
 
         /// <inheritdoc />
         async Task<IGuildScheduledEvent> IGuild.GetEventAsync(ulong id, RequestOptions options)
