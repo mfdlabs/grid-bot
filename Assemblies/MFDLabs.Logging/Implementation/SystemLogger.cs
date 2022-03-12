@@ -32,7 +32,7 @@ namespace MFDLabs.Logging
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
         
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly string FileName =
+        public static readonly string FileName =
 #if DEBUG
                         "dev_" +
 #endif
