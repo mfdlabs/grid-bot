@@ -55,6 +55,9 @@ namespace MFDLabs.Grid.Bot.Commands
                         return;
                     }
 
+                    if (optionalMessage.IsNullOrEmpty())
+                        optionalMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = false;
 
                     global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
