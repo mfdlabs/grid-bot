@@ -20,6 +20,11 @@ namespace Discord.Interactions
         }
     }
 
+    internal class DefaultAttachmentConverter<T> : DefaultEntityTypeConverter<T> where T : class, IAttachment
+    {
+        public override ApplicationCommandOptionType GetDiscordType() => ApplicationCommandOptionType.Attachment;
+    }
+
     internal class DefaultRoleConverter<T> : DefaultEntityTypeConverter<T> where T : class, IRole
     {
         public override ApplicationCommandOptionType GetDiscordType ( ) => ApplicationCommandOptionType.Role;
@@ -72,7 +77,8 @@ namespace Discord.Interactions
 
         public override void Write (ApplicationCommandOptionProperties properties, IParameterInfo parameter)
         {
-            properties.ChannelTypes = _channelTypes;
+            if (_channelTypes is not null)
+                properties.ChannelTypes = _channelTypes;
         }
     }
 

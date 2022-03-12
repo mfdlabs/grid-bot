@@ -12,26 +12,35 @@ namespace Discord.Rest
     /// </summary>
     public class RestMessageComponentData : IComponentInteractionData, IDiscordInteractionData
     {
-        /// <summary>
-        ///     Gets the components Custom Id that was clicked.
-        /// </summary>
+        /// <inheritdoc/>
         public string CustomId { get; }
 
-        /// <summary>
-        ///     Gets the type of the component clicked.
-        /// </summary>
+        /// <inheritdoc/>
         public ComponentType Type { get; }
 
-        /// <summary>
-        ///     Gets the value(s) of a <see cref="SelectMenuComponent"/> interaction response.
-        /// </summary>
+        /// <inheritdoc/>
         public IReadOnlyCollection<string> Values { get; }
+
+        /// <inheritdoc/>
+        public string Value { get; }
 
         internal RestMessageComponentData(Model model)
         {
             CustomId = model.CustomId;
             Type = model.ComponentType;
             Values = model.Values.GetValueOrDefault();
+        }
+
+        internal RestMessageComponentData(IMessageComponent component)
+        {
+            CustomId = component.CustomId;
+            Type = component.Type;
+
+            if (component is API.TextInputComponent textInput)
+                Value = textInput.Value.Value;
+
+            if (component is API.SelectMenuComponent select)
+                Values = select.Values.Value;
         }
     }
 }

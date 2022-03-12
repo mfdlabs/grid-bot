@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Model = Discord.API.Interaction;
 using DataModel = Discord.API.ApplicationCommandInteractionData;
 using Newtonsoft.Json;
+using Discord.Net;
 
 namespace Discord.Rest
 {
@@ -42,7 +43,7 @@ namespace Discord.Rest
         public DateTimeOffset CreatedAt { get; private set; }
 
         /// <summary>
-        ///     <see langword="true"/> if the token is valid for replying to, otherwise <see langword="false"/>.
+        ///     Gets whether or not the token used to respond to this interaction is valid.
         /// </summary>
         public bool IsValidToken
             => InteractionHelper.CanRespondOrFollowup(this);
@@ -59,6 +60,9 @@ namespace Discord.Rest
 
         /// <inheritdoc/>
         public bool HasResponded { get; protected set; }
+
+        /// <inheritdoc/>
+        public bool IsDMInteraction { get; private set; }
 
         internal RestInteraction(BaseDiscordClient discord, ulong id)
             : base(discord, id)
@@ -99,11 +103,16 @@ namespace Discord.Rest
             if (model.Type == InteractionType.ApplicationCommandAutocomplete)
                 return await RestAutocompleteInteraction.CreateAsync(client, model).ConfigureAwait(false);
 
+            if (model.Type == InteractionType.ModalSubmit)
+                return await RestModal.CreateAsync(client, model).ConfigureAwait(false);
+
             return null;
         }
 
         internal virtual async Task UpdateAsync(DiscordRestClient discord, Model model)
         {
+            IsDMInteraction = !model.GuildId.IsSpecified;
+
             Data = model.Data.IsSpecified
                 ? model.Data.Value
                 : null;
@@ -130,7 +139,11 @@ namespace Discord.Rest
 
             if(Channel == null && model.ChannelId.IsSpecified)
             {
-                Channel = (IRestMessageChannel)await discord.GetChannelAsync(model.ChannelId.Value);
+                try
+                {
+                    Channel = (IRestMessageChannel)await discord.GetChannelAsync(model.ChannelId.Value);
+                }
+                catch(HttpException x) when(x.DiscordCode == DiscordErrorCode.MissingPermissions) { } // ignore
             }
 
             UserLocale = model.UserLocale.IsSpecified
@@ -175,6 +188,9 @@ namespace Discord.Rest
             var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, Token, func, options);
             return RestInteractionMessage.Create(Discord, model, Token, Channel);
         }
+        /// <inheritdoc/>
+        public abstract string RespondWithModal(Modal modal, RequestOptions options = null);
+        
         /// <inheritdoc/>
         public abstract string Respond(string text = null, Embed[] embeds = null, bool isTTS = false, bool ephemeral = false, AllowedMentions allowedMentions = null, MessageComponent components = null, Embed embed = null, RequestOptions options = null);
 
@@ -288,6 +304,9 @@ namespace Discord.Rest
         /// <inheritdoc/>
         Task IDiscordInteraction.DeferAsync(bool ephemeral, RequestOptions options)
             => Task.FromResult(Defer(ephemeral, options));
+        /// <inheritdoc/>
+        Task IDiscordInteraction.RespondWithModalAsync(Modal modal, RequestOptions options)
+            => Task.FromResult(RespondWithModal(modal, options));
         /// <inheritdoc/>
         async Task<IUserMessage> IDiscordInteraction.FollowupAsync(string text, Embed[] embeds, bool isTTS, bool ephemeral, AllowedMentions allowedMentions,
             MessageComponent components, Embed embed, RequestOptions options)

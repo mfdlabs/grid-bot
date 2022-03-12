@@ -178,7 +178,6 @@ namespace Discord.WebSocket
                     await _shards[i].LogoutAsync();
             }
 
-            CurrentUser = null;
             if (_automaticShards)
             {
                 _shardIds = new int[0];
@@ -468,6 +467,7 @@ namespace Discord.WebSocket
             client.UserCommandExecuted += (arg) => _userCommandExecuted.InvokeAsync(arg);
             client.MessageCommandExecuted += (arg) => _messageCommandExecuted.InvokeAsync(arg);
             client.AutocompleteExecuted += (arg) => _autocompleteExecuted.InvokeAsync(arg);
+            client.ModalSubmitted += (arg) => _modalSubmitted.InvokeAsync(arg);
 
             client.ThreadUpdated += (thread1, thread2) => _threadUpdated.InvokeAsync(thread1, thread2);
             client.ThreadCreated += (thread) => _threadCreated.InvokeAsync(thread);
@@ -532,8 +532,15 @@ namespace Discord.WebSocket
             => await CreateGuildAsync(name, region, jpegIcon).ConfigureAwait(false);
 
         /// <inheritdoc />
-        Task<IUser> IDiscordClient.GetUserAsync(ulong id, CacheMode mode, RequestOptions options)
-            => Task.FromResult<IUser>(GetUser(id));
+        async Task<IUser> IDiscordClient.GetUserAsync(ulong id, CacheMode mode, RequestOptions options)
+        {
+            var user = GetUser(id);
+            if (user is not null || mode == CacheMode.CacheOnly)
+                return user;
+
+            return await Rest.GetUserAsync(id, options).ConfigureAwait(false);
+        }
+
         /// <inheritdoc />
         Task<IUser> IDiscordClient.GetUserAsync(string username, string discriminator, RequestOptions options)
             => Task.FromResult<IUser>(GetUser(username, discriminator));
