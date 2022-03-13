@@ -5,6 +5,10 @@ using MFDLabs.Logging;
 using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
 
+#if !DEBUG
+using MFDLabs.Diagnostics;
+#endif
+
 namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     public static class PerformanceServer
