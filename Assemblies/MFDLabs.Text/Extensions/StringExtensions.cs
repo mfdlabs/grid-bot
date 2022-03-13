@@ -42,6 +42,7 @@ namespace MFDLabs.Text.Extensions
             if (match != null && match.Groups.Count == 3) return match.Groups[1].Value;
             return null; // Return the value here again?
         }
+        public static string ReplaceFirst(this string text, string search, string replace) => TextGlobal.ReplaceFirst(text, search, replace);
         /*public static string Replace(this string s, string oldValue, string newValue) => s.Replace(oldValue, newValue);
         public static string Replace(this string s, char oldChar, char newChar) => s.Replace(oldChar, newChar);*/
     }
