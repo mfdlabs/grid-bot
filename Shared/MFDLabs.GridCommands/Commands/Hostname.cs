@@ -25,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 $"The hostname for this instance is: `{SystemGlobal.GetMachineHost()}`\n" +
                 $"The machine ID for this machine is: `{SystemGlobal.GetMachineId()}`\n" +
                 $"The IP address for this machine is: `{NetworkingGlobal.GetLocalIp()}`\n" +
-                "Please paste this into the `Host Name` field in grid-bot-support templates to that the internal team can easily identify this instance."
+                "Please paste this into the `Host Name` field in grid-bot-support templates so that the internal team can easily identify this instance."
             );
         }
     }
