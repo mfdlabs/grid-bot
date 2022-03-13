@@ -226,6 +226,7 @@ namespace MFDLabs.Networking
             return false;
         }
 
+
         public static long GetLocalIpAsInt() => GetLocalIp().ToIntIpAddress();
         public static long ToInt(string ip)
         {
