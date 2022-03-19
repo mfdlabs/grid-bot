@@ -1,17 +1,18 @@
 ﻿#if NETFRAMEWORK
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling.Extensions;
-using MFDLabs.EventLog;
-using MFDLabs.Logging.Diagnostics;
-using MFDLabs.Networking;
+using System.Diagnostics;
 using MFDLabs.Text;
-using MFDLabs.Text.Extensions;
+using MFDLabs.EventLog;
+using MFDLabs.Threading;
 using MFDLabs.FileSystem;
+using MFDLabs.Networking;
+using MFDLabs.Diagnostics;
+using MFDLabs.Text.Extensions;
+using MFDLabs.Logging.Diagnostics;
+using MFDLabs.ErrorHandling.Extensions;
 
 namespace MFDLabs.Logging
 {
@@ -28,6 +29,10 @@ namespace MFDLabs.Logging
         private static readonly string MachineId = SystemGlobal.GetMachineId();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string MachineHost = SystemGlobal.GetMachineHost();
+
+        // Concurrent Section
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly Interleaver Interleaver = new(new PatchedDispatcherQueue("EventLog System Logger Message Queue", new(0, "EventLog System Logger Message Queue Dispatcher")));
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string FileBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
@@ -49,7 +54,7 @@ namespace MFDLabs.Logging
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private System.Diagnostics.EventLog _eventLog;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int _eventId;
+        private Atomic _eventId;
 
         [DebuggerHidden]
         [DebuggerStepThrough]
@@ -105,6 +110,23 @@ namespace MFDLabs.Logging
         }
 
         [DebuggerStepThrough]
+        private void QueueLog(bool isExlusive, EventLogEntryType et, LogLevel ll, string logType, string format, params object[] args)
+        {
+            if (isExlusive)
+                Interleaver.DoExclusive(() =>
+                {
+                    LogToEventLog(et, ll, logType, format, args);
+                    LogLocally(ll, logType, format, args);
+                });
+            else
+                Interleaver.DoConcurrent(() =>
+                {
+                    LogToEventLog(et, ll, logType, format, args);
+                    LogLocally(ll, logType, format, args);
+                });
+        }
+
+        [DebuggerStepThrough]
         public void TryClearLocalLog(bool overrideEnv = false, bool wasForGlobalEventLifeTimeClosure = false)
         {
             if (!_canLog) return;
@@ -138,123 +160,39 @@ namespace MFDLabs.Logging
         }
 
         [DebuggerStepThrough]
-        public void Log(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
-            LogLocally(LogLevel.None, "LOG", format, args);
-        }
-
+        public void Log(string format, params object[] args) => QueueLog(false, EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
         [DebuggerStepThrough]
-        public void Log(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
-            LogLocally(LogLevel.None, "LOG", messageGetter());
-        }
-
+        public void Log(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
         [DebuggerStepThrough]
-        public void Warning(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", format, args);
-            LogLocally(LogLevel.Warning, "WARNING", format, args);
-        }
-
+        public void Warning(string format, params object[] args) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Warning, "WARN", format, args);
         [DebuggerStepThrough]
-        public void Warning(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Warning, "WARNING", messageGetter());
-            LogLocally(LogLevel.Warning, "WARNING", messageGetter());
-        }
-
+        public void Warning(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Warning, "Warn", messageGetter());
         [DebuggerStepThrough]
-        public void Trace(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
-            LogLocally(LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
-        }
-
+        public void Trace(string format, params object[] args) => QueueLog(false, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
         [DebuggerStepThrough]
-        public void Trace(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
-            LogLocally(LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
-        }
-
+        public void Trace(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
         [DebuggerStepThrough]
-        public void Debug(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
-            LogLocally(LogLevel.Verbose, "DEBUG", format, args);
-        }
-
+        public void Debug(string format, params object[] args) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
         [DebuggerStepThrough]
-        public void Debug(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
-            LogLocally(LogLevel.Verbose, "DEBUG", messageGetter());
-        }
-
+        public void Debug(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
         [DebuggerStepThrough]
-        public void Info(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
-            LogLocally(LogLevel.Information, "INFO", format, args);
-        }
-
+        public void Info(string format, params object[] args) => QueueLog(false, EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
         [DebuggerStepThrough]
-        public void Info(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
-            LogLocally(LogLevel.Information, "INFO", messageGetter());
-        }
-
+        public void Info(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
         [DebuggerStepThrough]
-        public void Error(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
-            LogLocally(LogLevel.Error, "ERROR", format, args);
-        }
-
+        public void Error(string format, params object[] args) => QueueLog(true, EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
         [DebuggerStepThrough]
-        public void Error(Exception ex)
-        {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
-            LogLocally(LogLevel.Error, "ERROR", ex.ToDetailedString());
-        }
-
+        public void Error(Exception ex) => QueueLog(true, EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
         [DebuggerStepThrough]
-        public void Error(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
-            LogLocally(LogLevel.Error, "ERROR", messageGetter());
-        }
-
+        public void Error(Func<string> messageGetter) => QueueLog(true, EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
         [DebuggerStepThrough]
-        public void Verbose(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
-            LogLocally(LogLevel.Verbose, "VERBOSE", format, args);
-        }
-
+        public void Verbose(string format, params object[] args) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
         [DebuggerStepThrough]
-        public void Verbose(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
-            LogLocally(LogLevel.Verbose, "VERBOSE", messageGetter());
-        }
-
+        public void Verbose(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
         [DebuggerStepThrough]
-        public void LifecycleEvent(string format, params object[] args)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
-            LogLocally(LogLevel.None, "LC-EVENT", format, args);
-        }
-
+        public void LifecycleEvent(string format, params object[] args) => QueueLog(false, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
         [DebuggerStepThrough]
-        public void LifecycleEvent(Func<string> messageGetter)
-        {
-            LogToEventLog(EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
-            LogLocally(LogLevel.None, "LC-EVENT", messageGetter());
-        }
+        public void LifecycleEvent(Func<string> messageGetter) => QueueLog(false, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
 
         [DebuggerStepThrough]
         private void LogToEventLog(EventLogEntryType entryType, LogLevel level, string logType, string format, params object[] args)
