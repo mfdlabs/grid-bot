@@ -4,13 +4,20 @@ using System.Threading;
 using System.Diagnostics;
 using MFDLabs.Text;
 using MFDLabs.EventLog;
-using MFDLabs.Threading;
 using MFDLabs.FileSystem;
 using MFDLabs.Networking;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Logging.Diagnostics;
 using MFDLabs.ErrorHandling.Extensions;
+
+#if NETFRAMEWORK
+using MFDLabs.Threading;
+#endif
+
+#if CONCURRENT_LOGGING_ENABLED
+using Microsoft.Ccr.Core;
+#endif
 
 namespace MFDLabs.Logging
 {
@@ -42,13 +49,31 @@ namespace MFDLabs.Logging
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string MachineHost = SystemGlobal.GetMachineHost();
 
+#if CONCURRENT_LOGGING_ENABLED
         // Concurrent Section
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly Interleaver Interleaver = new(new PatchedDispatcherQueue("EventLog System Logger Message Queue", new(0, "EventLog System Logger Message Queue Dispatcher")));
+        private static readonly Port<Action> MessageQueue;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly DispatcherQueue DispatcherQueue;
+
+        [DebuggerStepThrough]
+        static EventLogConsoleSystemLogger()
+        {
+            MessageQueue = new();
+            DispatcherQueue = new PatchedDispatcherQueue("EventLog Console System Logger Message Queue", new(0, "EventLog Console System Logger Message Queue Dispatcher"));
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+            Arbiter.Activate(DispatcherQueue, Arbiter.Receive(true, MessageQueue, a => a()));
+        }
+
+        [DebuggerStepThrough]
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            DispatcherQueue?.Dispose();
+        }
+#endif
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly string FileBasePath =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MFDLABS", "Logs");
+        private static readonly string FileBasePath = Path.Combine(@"C:\", "MFDLABS", "Logs");
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public static readonly string FileName =
@@ -56,12 +81,9 @@ namespace MFDLabs.Logging
             "dev_" +
 #endif
             $"{SystemGlobal.AssemblyVersion}_{DateTimeGlobal.GetFileSafeUtcNowAsIso()}_{SystemGlobal.CurrentProcess.Id:X}_last.log";
-        
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private FileSystemHelper.LockedFileStream _lockedFileStream;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly object LogSync = new object();
+        private FileSystemHelper.LockedFileStream _lockedFileStream;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static bool _canLog = true;
@@ -75,6 +97,9 @@ namespace MFDLabs.Logging
         [DebuggerHidden]
         [DebuggerStepThrough]
         public void Initialize(System.Diagnostics.EventLog eventLog) => _eventLog = eventLog;
+        [DebuggerHidden]
+        [DebuggerStepThrough]
+        public bool HasEventLog() => _eventLog != null;
 #endif
 
         public Func<LogLevel> MaxLogLevel { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } =
@@ -106,12 +131,11 @@ namespace MFDLabs.Logging
                 $"[{(global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName)}]" +
                 $"[{logType.ToUpper()}] {format}\n";
 
-            return args is {Length: > 0} ? string.Format(internalMessage, args) : internalMessage;
+            return args is { Length: > 0 } ? string.Format(internalMessage, args) : internalMessage;
         }
 
         [DebuggerStepThrough]
         private void QueueLog(
-            bool isExlusive,
             ConsoleColor cs,
 #if NETFRAMEWORK
             EventLogEntryType et,
@@ -124,24 +148,26 @@ namespace MFDLabs.Logging
             params object[] args
         )
         {
-            if (isExlusive)
-                Interleaver.DoExclusive(() =>
+#if CONCURRENT_LOGGING_ENABLED
+            MessageQueue.Post(() =>
+            {
+                try
                 {
 #if NETFRAMEWORK
                     LogToEventLog(et, ll, logType, format, args);
 #endif
                     LogColorString(cs, ll, logType, format, args);
                     LogLocally(ll, logType, format, args);
-                });
-            else
-                Interleaver.DoConcurrent(() =>
-                {
+                }
+                catch { }
+            });
+#else
 #if NETFRAMEWORK
-                    LogToEventLog(et, ll, logType, format, args);
+            LogToEventLog(et, ll, logType, format, args);
 #endif
-                    LogColorString(cs, ll, logType, format, args);
-                    LogLocally(ll, logType, format, args);
-                });
+            LogColorString(cs, ll, logType, format, args);
+            LogLocally(ll, logType, format, args);
+#endif
         }
 
         [DebuggerStepThrough]
@@ -149,9 +175,9 @@ namespace MFDLabs.Logging
         {
             if (!_canLog) return;
             if (level > MaxLogLevel()) return;
-            
+
             _lockedFileStream ??= new(Path.Combine(FileBasePath, FileName));
-            
+
             var str = ConstructLoggerMessage(logType, format, args);
 
             try { _lockedFileStream.AppendText(str); }
@@ -186,7 +212,7 @@ namespace MFDLabs.Logging
 
             _lockedFileStream.Dispose();
             _lockedFileStream = null;
-            
+
             _canLog = wasForGlobalEventLifeTimeClosure != true;
 
             if (!Directory.Exists(FileBasePath)) return;
@@ -196,39 +222,39 @@ namespace MFDLabs.Logging
         }
 
         [DebuggerStepThrough]
-        public void Log(string format, params object[] args) => QueueLog(false, ConsoleColor.White, EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
+        public void Log(string format, params object[] args) => QueueLog(ConsoleColor.White, EventLogEntryType.Information, LogLevel.None, "LOG", format, args);
         [DebuggerStepThrough]
-        public void Log(Func<string> messageGetter) => QueueLog(false, ConsoleColor.White, EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
+        public void Log(Func<string> messageGetter) => QueueLog(ConsoleColor.White, EventLogEntryType.Information, LogLevel.None, "LOG", messageGetter());
         [DebuggerStepThrough]
-        public void Warning(string format, params object[] args) => QueueLog(false, ConsoleColor.Yellow, EventLogEntryType.Warning, LogLevel.Warning, "WARN", format, args);
+        public void Warning(string format, params object[] args) => QueueLog(ConsoleColor.Yellow, EventLogEntryType.Warning, LogLevel.Warning, "WARN", format, args);
         [DebuggerStepThrough]
-        public void Warning(Func<string> messageGetter) => QueueLog(false, ConsoleColor.Yellow, EventLogEntryType.Warning, LogLevel.Warning, "Warn", messageGetter());
+        public void Warning(Func<string> messageGetter) => QueueLog(ConsoleColor.Yellow, EventLogEntryType.Warning, LogLevel.Warning, "Warn", messageGetter());
         [DebuggerStepThrough]
-        public void Trace(string format, params object[] args) => QueueLog(false, ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
+        public void Trace(string format, params object[] args) => QueueLog(ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(format).ToDetailedString(), args);
         [DebuggerStepThrough]
-        public void Trace(Func<string> messageGetter) => QueueLog(false, ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
+        public void Trace(Func<string> messageGetter) => QueueLog(ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "TRACE", new Exception(messageGetter()).ToDetailedString());
         [DebuggerStepThrough]
-        public void Debug(string format, params object[] args) => QueueLog(false, ConsoleColor.Magenta, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
+        public void Debug(string format, params object[] args) => QueueLog(ConsoleColor.Magenta, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", format, args);
         [DebuggerStepThrough]
-        public void Debug(Func<string> messageGetter) => QueueLog(false, ConsoleColor.Magenta, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
+        public void Debug(Func<string> messageGetter) => QueueLog(ConsoleColor.Magenta, EventLogEntryType.Warning, LogLevel.Verbose, "DEBUG", messageGetter());
         [DebuggerStepThrough]
-        public void Info(string format, params object[] args) => QueueLog(false, ConsoleColor.White, EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
+        public void Info(string format, params object[] args) => QueueLog(ConsoleColor.White, EventLogEntryType.Information, LogLevel.Information, "INFO", format, args);
         [DebuggerStepThrough]
-        public void Info(Func<string> messageGetter) => QueueLog(false, ConsoleColor.White, EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
+        public void Info(Func<string> messageGetter) => QueueLog(ConsoleColor.White, EventLogEntryType.Information, LogLevel.Information, "INFO", messageGetter());
         [DebuggerStepThrough]
-        public void Error(string format, params object[] args) => QueueLog(true, ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
+        public void Error(string format, params object[] args) => QueueLog(ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", format, args);
         [DebuggerStepThrough]
-        public void Error(Exception ex) => QueueLog(true, ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
+        public void Error(Exception ex) => QueueLog(ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", ex.ToDetailedString());
         [DebuggerStepThrough]
-        public void Error(Func<string> messageGetter) => QueueLog(true, ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
+        public void Error(Func<string> messageGetter) => QueueLog(ConsoleColor.Red, EventLogEntryType.Error, LogLevel.Error, "ERROR", messageGetter());
         [DebuggerStepThrough]
-        public void Verbose(string format, params object[] args) => QueueLog(false, ConsoleColor.Cyan, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
+        public void Verbose(string format, params object[] args) => QueueLog(ConsoleColor.Cyan, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", format, args);
         [DebuggerStepThrough]
-        public void Verbose(Func<string> messageGetter) => QueueLog(false, ConsoleColor.Cyan, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
+        public void Verbose(Func<string> messageGetter) => QueueLog(ConsoleColor.Cyan, EventLogEntryType.Warning, LogLevel.Verbose, "VERBOSE", messageGetter());
         [DebuggerStepThrough]
-        public void LifecycleEvent(string format, params object[] args) => QueueLog(false, ConsoleColor.Green, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
+        public void LifecycleEvent(string format, params object[] args) => QueueLog(ConsoleColor.Green, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", format, args);
         [DebuggerStepThrough]
-        public void LifecycleEvent(Func<string> messageGetter) => QueueLog(false, ConsoleColor.Green, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
+        public void LifecycleEvent(Func<string> messageGetter) => QueueLog(ConsoleColor.Green, EventLogEntryType.Information, LogLevel.None, "LC-EVENT", messageGetter());
 
         [DebuggerStepThrough]
         private void LogColorString(ConsoleColor color, LogLevel level, string logType, string format,
@@ -236,35 +262,31 @@ namespace MFDLabs.Logging
         {
             if (!_canLog) return;
             if (level > MaxLogLevel()) return;
-            
+
             // A lock is required here to truly make it thread safe.
-            lock (LogSync)
+            lock (LoggingSystem.LogSync)
             {
                 var threadId = Thread.CurrentThread.ManagedThreadId.ToString("x");
                 var countNCharsToReplace = 4 - threadId.Length;
 
                 ConsoleGlobal.WriteContentStr(DateTimeGlobal.GetUtcNowAsIso());
-                ConsoleGlobal.WriteContentStr(
-                    LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
+                ConsoleGlobal.WriteContentStr(LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7"));
                 ConsoleGlobal.WriteContentStr(SystemGlobal.CurrentProcess.Id.ToString("x"));
-                ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace,
-                    TextGlobal.StringDirection.Left));
-                ConsoleGlobal.WriteContentStr(
-                    $"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
+                ConsoleGlobal.WriteContentStr(threadId.Fill('0', countNCharsToReplace, TextGlobal.StringDirection.Left));
+                ConsoleGlobal.WriteContentStr($"{SystemGlobal.CurrentPlatform}-{SystemGlobal.CurrentDeviceArch.ToLower()}");
                 ConsoleGlobal.WriteContentStr(SystemGlobal.Version);
                 ConsoleGlobal.WriteContentStr(SystemGlobal.AssemblyVersion);
 #if DEBUG
                 ConsoleGlobal.WriteContentStr("Debug");
 #else
-                        ConsoleGlobal.WriteContentStr("Release");
+                ConsoleGlobal.WriteContentStr("Release");
 #endif
                 ConsoleGlobal.WriteContentStr(LocalIp);
                 ConsoleGlobal.WriteContentStr(MachineId);
                 ConsoleGlobal.WriteContentStr(MachineHost);
-                ConsoleGlobal.WriteContentStr(ConsoleColor.White,
-                    global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
+                ConsoleGlobal.WriteContentStr(ConsoleColor.White, global::MFDLabs.Logging.Properties.Settings.Default.LoggingUtilDataName);
                 ConsoleGlobal.WriteContentStr(color, logType.ToUpper());
-                var message = args is {Length: > 0}
+                var message = args is { Length: > 0 }
                     ? string.Format($" {format}\n", args)
                     : $" {format}\n";
                 ConsoleGlobal.WriteColoredContent(color, message);
@@ -275,20 +297,22 @@ namespace MFDLabs.Logging
         [DebuggerStepThrough]
         private void LogToEventLog(EventLogEntryType entryType, LogLevel level, string logType, string format, params object[] args)
         {
+            try
+            {
+                if (_eventLog == null) return;
 
-            
-            if (_eventLog == null) return;
+                if (!_canLog) return;
+                if (level > MaxLogLevel()) return;
+                _eventId++;
 
-            if (!_canLog) return;
-            if (level > MaxLogLevel()) return;
-            _eventId++;
+                var message = ConstructLoggerMessage(logType, format, args);
 
-            var message = ConstructLoggerMessage(logType, format, args);
+                var category = GetEventCategory(logType);
 
-            var category = GetEventCategory(logType);
+                _eventLog.WriteEntry(message, entryType, _eventId, category);
+            }
+            catch { }
 
-            _eventLog.WriteEntry(message, entryType, _eventId, category);
-            
         }
 
         private static short GetEventCategory(string logType)
