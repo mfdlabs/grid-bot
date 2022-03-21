@@ -282,7 +282,8 @@ SLEEP:
             proc.StartInfo.FileName = "powershell.exe";
             proc.StartInfo.Arguments = $"-ExecutionPolicy Unrestricted -Command \"Start-Process '{primaryExe}' -WindowStyle Maximized\"";
             proc.StartInfo.WorkingDirectory = versionDeploymentPath;
-            proc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+			proc.StartInfo.UseShellExecute = true;
+            proc.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
             if (SystemGlobal.ContextIsAdministrator())
                 proc.StartInfo.Verb = "runas";
             proc.Start();
