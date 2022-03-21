@@ -73,7 +73,7 @@ namespace MFDLabs.Instrumentation
 
                 if (values != null && values.Contains("json"))
                 {
-                    var result = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { data = counters.Select(k => new { category = k.Key.Category, name = k.Key.Name, instance = k.Key.Name, value = k.Value }) }));
+                    var result = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { data = counters.Select(k => new { category = k.Key.Category, name = k.Key.Name, instance = k.Key.Instance, value = k.Value }) }));
 
                     context.Response.StatusCode = 200;
                     context.Response.ContentType = "application/json";
