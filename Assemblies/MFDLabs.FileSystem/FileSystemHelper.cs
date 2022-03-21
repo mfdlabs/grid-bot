@@ -13,9 +13,6 @@ namespace MFDLabs.FileSystem
             
             public LockedFileStream(string path, Encoding encoding = null)
             {
-                //if (!File.Exists(path))
-                //    CreateFileRecursive(path);
-                
                 encoding ??= Encoding.Default;
                 _lock = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
                 _writer = new(_lock, encoding);
@@ -45,7 +42,7 @@ namespace MFDLabs.FileSystem
 
             if (directory == null) return false;
 
-            if (!Directory.Exists((directory))) Directory.CreateDirectory(directory);
+            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
             File.Create(filePath);
 

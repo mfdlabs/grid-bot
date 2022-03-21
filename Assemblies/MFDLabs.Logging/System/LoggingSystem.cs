@@ -5,6 +5,10 @@ namespace MFDLabs.Logging.Diagnostics
 {
     public static class LoggingSystem
     {
+        /// <summary>
+        /// Shared log Sync so that we can block on each thread.
+        /// </summary>
+        internal static readonly object LogSync = new();
         public static Stopwatch GlobalLifetimeWatch { get; } = Stopwatch.StartNew();
 
         public static void EndLifetimeWatch()
