@@ -113,5 +113,5 @@ IF ($isDeployment) {
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false
+    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $false -preRelease $false
 }
