@@ -25,7 +25,10 @@ namespace MFDLabs.Grid.Bot.Commands
             var currentDirectoryName = Path.GetFileName(currentDirectory);
 
             // Reply with the deployment ID.
-            await message.ReplyAsync($"The deployment ID for this instance is: `{currentDirectoryName}`\nPlease paste this into the `Deployment ID` field in grid-bot-support templates to that the internal team can easily identify this instance.");
+            await message.ReplyAsync(
+                $"The deployment ID for this instance is: `{currentDirectoryName}`\n" + 
+                "Please paste this into the `Deployment ID` field in grid-bot-support templates so that the internal team can easily identify this instance."
+            );
         }
     }
 }

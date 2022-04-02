@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.ServiceModel;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Analytics.Google;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Events;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Grid.Bot.Properties;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
+using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.Bot.Events;
+using MFDLabs.Grid.Bot.Global;
+using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Analytics.Google;
+using MFDLabs.Grid.Bot.Properties;
+using MFDLabs.Grid.Bot.Registries;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 namespace MFDLabs.Grid.Bot
 {
@@ -199,6 +200,8 @@ namespace MFDLabs.Grid.Bot
                 GridServerArbiter.Singleton.SetupPool();
 
             SingleInstancedArbiter.SetBinding(defaultHttpBinding);
+
+            ThreadPool.QueueUserWorkItem(ShutdownUdpReceiver.Receive);
 
             if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();

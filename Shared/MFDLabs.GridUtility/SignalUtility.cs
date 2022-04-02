@@ -23,6 +23,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
+				ShutdownUdpReceiver.Stop();
                 if (killBot)
                     await BotGlobal.TryLogout();
                 GridProcessHelper.KillAllGridServersSafe();
@@ -43,6 +44,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
+				ShutdownUdpReceiver.Stop();
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                     GridServerArbiter.Singleton.KillAllOpenInstances();
                 if (killBot)
