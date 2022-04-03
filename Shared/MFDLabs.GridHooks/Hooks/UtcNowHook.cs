@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using System.Globalization;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;

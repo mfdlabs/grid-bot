@@ -2,6 +2,8 @@
     Name: ConsoleHookRegistry.cs
     Written By: Alex Bkordan
     Description: C# Runtime parser for a console hook registry (hooking onto key presses)
+	
+	Copyright MFDLABS Corporation. All rights reserved.
 */
 
 using System;

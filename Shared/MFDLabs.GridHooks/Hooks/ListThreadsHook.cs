@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Diagnostics;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 

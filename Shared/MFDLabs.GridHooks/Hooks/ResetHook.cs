@@ -1,4 +1,6 @@
-﻿using MFDLabs.Grid.Bot.Interfaces;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Utility;
 
 namespace MFDLabs.Grid.Bot.Hooks

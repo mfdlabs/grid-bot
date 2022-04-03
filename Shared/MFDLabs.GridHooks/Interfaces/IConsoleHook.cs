@@ -1,4 +1,6 @@
-﻿namespace MFDLabs.Grid.Bot.Interfaces
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+namespace MFDLabs.Grid.Bot.Interfaces
 {
     public interface IConsoleHook
     {

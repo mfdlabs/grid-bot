@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using MFDLabs.Grid.Bot.Interfaces;
 
 namespace MFDLabs.Grid.Bot.Hooks
