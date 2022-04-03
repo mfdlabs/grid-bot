@@ -1,4 +1,6 @@
-﻿using Discord.WebSocket;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using Discord.WebSocket;
 
 namespace MFDLabs.Grid.Bot.Models
 {

@@ -1,4 +1,6 @@
-﻿using MFDLabs.Concurrency;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using MFDLabs.Concurrency;
 using Microsoft.Ccr.Core;
 
 
