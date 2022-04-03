@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;

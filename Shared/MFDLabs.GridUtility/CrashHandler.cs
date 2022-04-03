@@ -1,4 +1,6 @@
-﻿namespace MFDLabs.Grid.Bot.Utility
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+namespace MFDLabs.Grid.Bot.Utility
 {
     public static class CrashHandler
     {

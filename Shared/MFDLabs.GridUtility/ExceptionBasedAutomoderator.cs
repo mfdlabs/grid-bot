@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using Discord;

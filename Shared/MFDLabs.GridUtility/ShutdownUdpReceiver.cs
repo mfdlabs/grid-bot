@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using Discord;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
