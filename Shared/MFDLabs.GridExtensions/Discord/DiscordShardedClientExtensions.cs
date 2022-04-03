@@ -1,4 +1,6 @@
-﻿#if WE_LOVE_EM_SLASH_COMMANDS && DISCORD_SHARDING_ENABLED
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+#if WE_LOVE_EM_SLASH_COMMANDS && DISCORD_SHARDING_ENABLED
 
 using System.Threading.Tasks;
 using Discord;

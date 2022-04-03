@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Collections.Generic;
 using System.IO;
 using Discord;
 using Discord.Rest;

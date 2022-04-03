@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
