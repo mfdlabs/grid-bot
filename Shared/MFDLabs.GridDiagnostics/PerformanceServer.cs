@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Linq;
 using System.Net;
 using System.Collections.Generic;
 using MFDLabs.Logging;

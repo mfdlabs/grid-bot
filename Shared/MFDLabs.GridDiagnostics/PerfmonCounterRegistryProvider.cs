@@ -1,4 +1,6 @@
-﻿using MFDLabs.Instrumentation;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using MFDLabs.Instrumentation;
 
 namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
