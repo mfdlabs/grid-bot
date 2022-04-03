@@ -1,4 +1,6 @@
-﻿using Discord.WebSocket;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using Discord.WebSocket;
 
 // WE_LOVE_THE_GRID_CONFIG -> Guild Based configuration, experimental, only debug builds have it
 

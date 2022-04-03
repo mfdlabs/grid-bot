@@ -1,4 +1,6 @@
-﻿#if WE_ON_THE_GRID || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+#if WE_ON_THE_GRID || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
 using System.Configuration;
 using MFDLabs.Configuration.Providers;
 #endif
