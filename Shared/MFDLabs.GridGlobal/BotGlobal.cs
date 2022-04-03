@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Logging;
