@@ -1,4 +1,6 @@
-﻿#if WE_LOVE_EM_SLASH_COMMANDS && SLASH_COMMANDS_USE_HELP_COMMAND
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+#if WE_LOVE_EM_SLASH_COMMANDS && SLASH_COMMANDS_USE_HELP_COMMAND
 
 using System;
 using System.Threading.Tasks;

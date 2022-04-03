@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

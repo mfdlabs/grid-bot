@@ -1,4 +1,6 @@
-﻿#if NETFRAMEWORK
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+#if NETFRAMEWORK
 
 using System;
 using System.Threading.Tasks;

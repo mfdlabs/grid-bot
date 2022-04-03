@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;

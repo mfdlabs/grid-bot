@@ -1,4 +1,6 @@
-﻿/*
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+/*
 
 TODO: We want a Vault and a ConsulKV (lol.) system in here?
 It may or may not help, it depends on if you told them to set prop on prop change.

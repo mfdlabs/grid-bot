@@ -2,6 +2,8 @@
     Name: CommandRegistry.cs
     Written By: Alex Bkordan
     Description: C# Runtime parser for a command registry
+	
+	Copyright MFDLABS Corporation. All rights reserved.
 */
 
 // Jakob: TODO, Load these commands from a different assembly so they can be changed at runtime?

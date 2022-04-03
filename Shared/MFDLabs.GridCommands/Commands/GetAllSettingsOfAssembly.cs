@@ -1,4 +1,6 @@
-﻿/*
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+/*
 
 WARNING:
 

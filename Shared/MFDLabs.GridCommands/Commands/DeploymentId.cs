@@ -1,3 +1,5 @@
+/* Copyright MFDLABS Corporation. All rights reserved. */
+
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
