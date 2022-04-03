@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Threading.Tasks;
 using MFDLabs.Logging;
 
 #if DISCORD_SHARDING_ENABLED

@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System;
 using System.Threading.Tasks;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD

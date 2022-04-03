@@ -1,4 +1,6 @@
-﻿#if WE_LOVE_EM_SLASH_COMMANDS
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+#if WE_LOVE_EM_SLASH_COMMANDS
 
 using Microsoft.Ccr.Core;
 using Discord.WebSocket;

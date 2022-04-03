@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Threading.Tasks;
 using Discord;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Registries;

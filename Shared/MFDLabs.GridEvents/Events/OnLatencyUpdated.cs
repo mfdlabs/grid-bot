@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Threading.Tasks;
 using MFDLabs.Analytics.Google;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD

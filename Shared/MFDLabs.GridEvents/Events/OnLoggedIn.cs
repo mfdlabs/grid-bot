@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿/* Copyright MFDLABS Corporation. All rights reserved. */
+
+using System.Threading.Tasks;
 using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
