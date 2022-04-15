@@ -66,7 +66,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                 try
                 {
-                    await message.Author.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please contact <@{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID)}>");
+                    await message.Author.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
                 }
                 catch
                 {

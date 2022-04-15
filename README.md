@@ -38,18 +38,8 @@ This will help the primary members of the Web Team to identify issues that arise
 
 # Code Owners
 
-[@MFDLABS-ROBLOX/BACKEND-SYSTEMS](https://codeowners.git.mfdlabs.local/ui/@mfdlabs-roblox/backend-systems)
 [@MFDLABS/WHO-OWNS-THIS-SECTOR](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/who-owns-this-sector)
-[@MFDLABS/BADLION](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/badlion)
-[@MFDLABS/GRID](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/grid)
-[@MFDLABS/METRICS](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/metrics)
-[@MFDLABS/NETWORKING-OWK](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/networking-owk)
-[@MFDLABS/GRAPHICS](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/graphics)
-[@MFDLABS/ROBOTICS](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/robotics)
-[@MFDLABS/IDIOTS](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/idiots)
-[@MFDLABS/TECH](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/tech)
-[@MFDLABS/WEB](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/web)
-
+[@MFDLABS/GRID-TEAM](https://codeowners.git.mfdlabs.local/ui/@mfdlabs/grid)
 
 ---
 

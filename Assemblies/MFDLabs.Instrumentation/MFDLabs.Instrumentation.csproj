@@ -18,6 +18,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
     <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
   </ItemGroup>
 

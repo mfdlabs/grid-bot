@@ -21,6 +21,8 @@ namespace MFDLabs.Text.Extensions
         public static string Join<T>(this IEnumerable<T> arr, string seperator) => string.Join(seperator, arr);
         public static string Join<T>(this IEnumerable<T> arr, char seperator) => arr.Join(seperator.ToString());
         public static string ToJson<T>(this T self) => TextGlobal.SerializeJsonWithEnumConverter(self);
+        public static Match Match(this string s, string pattern, RegexOptions options = RegexOptions.None) => Regex.Match(s, pattern, options);
+        public static bool IsMatch(this string s, string pattern, RegexOptions options = RegexOptions.None) => Regex.IsMatch(s, pattern, options);
         public static string MakeFileSafeString(this string s) => Regex.Replace(s, @"[^a-z0-9_-]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         /// <summary>
         /// Thanks @Auxority#5441 for the Regex
@@ -42,6 +44,7 @@ namespace MFDLabs.Text.Extensions
             if (match != null && match.Groups.Count == 3) return match.Groups[1].Value;
             return null; // Return the value here again?
         }
+        public static string ReplaceFirst(this string text, string search, string replace) => TextGlobal.ReplaceFirst(text, search, replace);
         /*public static string Replace(this string s, string oldValue, string newValue) => s.Replace(oldValue, newValue);
         public static string Replace(this string s, char oldChar, char newChar) => s.Replace(oldChar, newChar);*/
     }

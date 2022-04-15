@@ -1,0 +1,100 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <LangVersion>10</LangVersion>
+    <Configurations>Debug;Release;DebugDeploy;ReleaseDeploy;DebugGrid;ReleaseGrid;DebugGridDeploy;ReleaseGridDeploy</Configurations>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <WarningLevel>0</WarningLevel>
+    <DefineConstants>TRACE;</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>TRACE;DEBUG;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDeploy' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugDeploy' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WE_ON_THE_GRID;</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Deploy\**" />
+    <EmbeddedResource Remove="Deploy\**" />
+    <None Remove="Deploy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.Wcf\MFDLabs.Wcf.csproj" />
+    <ProjectReference Include="..\Dependencies\Octokit\Octokit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $true" />
+  </Target>
+
+</Project>

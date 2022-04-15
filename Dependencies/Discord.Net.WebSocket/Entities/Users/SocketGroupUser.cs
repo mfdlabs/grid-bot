@@ -19,7 +19,7 @@ namespace Discord.WebSocket
         /// </returns>
         public SocketGroupChannel Channel { get; }
         /// <inheritdoc />
-        internal override SocketGlobalUser GlobalUser { get; }
+        internal override SocketGlobalUser GlobalUser { get; set; }
 
         /// <inheritdoc />
         public override bool IsBot { get { return GlobalUser.IsBot; } internal set { GlobalUser.IsBot = value; } }
@@ -69,6 +69,8 @@ namespace Discord.WebSocket
         string IVoiceState.VoiceSessionId => null;
         /// <inheritdoc />
         bool IVoiceState.IsStreaming => false;
+        /// <inheritdoc />
+        bool IVoiceState.IsVideoing => false;
         /// <inheritdoc />
         DateTimeOffset? IVoiceState.RequestToSpeakTimestamp => null;
         #endregion

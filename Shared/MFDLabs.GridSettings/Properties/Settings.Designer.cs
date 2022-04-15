@@ -759,5 +759,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((int)(this["ShardedClientTotalNumberOfShards"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.0/8,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12")]
+        public string WhitelistedCounterServerCidrs {
+            get {
+                return ((string)(this["WhitelistedCounterServerCidrs"]));
+            }
+        }
     }
 }
