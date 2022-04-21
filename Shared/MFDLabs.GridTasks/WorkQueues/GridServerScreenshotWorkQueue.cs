@@ -1,29 +1,29 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.IO;
 using System.Text;
-using Microsoft.Ccr.Core;
+using System.Diagnostics;
+using System.Collections.Concurrent;
 using Discord;
+using Discord.WebSocket;
+using Microsoft.Ccr.Core;
+using MFDLabs.Logging;
+using MFDLabs.FileSystem;
+using MFDLabs.Diagnostics;
 using MFDLabs.Concurrency;
 using MFDLabs.Grid.Bot.Models;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Instrumentation;
-using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.ErrorHandling.Extensions;
-using MFDLabs.Logging;
-using System.IO;
-using MFDLabs.Diagnostics;
-using System.Diagnostics;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 
 #if NETFRAMEWORK
 using System.Linq;
 using System.Runtime.InteropServices;
-using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Drawing;
 using MFDLabs.Threading;
 using MFDLabs.Networking;
-using MFDLabs.Drawing;
-
+using MFDLabs.Grid.Bot.Utility;
 
 using HWND = System.IntPtr;
 #endif
@@ -160,7 +160,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             }
             finally
             {
-                File.Delete(tempPath);
+                FilesHelper.PollDeletionOfFile(tempPath);
             }
         }
 
@@ -247,9 +247,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:
-                        var expiration = instance.Expiration;
-                        var timeStamp = new DateTimeOffset(expiration).ToUnixTimeSeconds();
-                        message.ReplyWithFile(stream, fileName, $"This instance will expire at <t:{timeStamp}:T>");
+                        message.ReplyWithFile(stream, fileName);
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.DisposedInstance:

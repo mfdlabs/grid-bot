@@ -10,16 +10,14 @@ namespace Discord.WebSocket
     /// <summary>
     ///     Represents a thread user received over the gateway.
     /// </summary>
-    public class SocketThreadUser : SocketUser, IGuildUser
+    public class SocketThreadUser : SocketUser, IThreadUser, IGuildUser
     {
         /// <summary>
         ///     Gets the <see cref="SocketThreadChannel"/> this user is in.
         /// </summary>
         public SocketThreadChannel Thread { get; private set; }
 
-        /// <summary>
-        ///     Gets the timestamp for when this user joined this thread.
-        /// </summary>
+        /// <inheritdoc/>
         public DateTimeOffset ThreadJoinedAt { get; private set; }
 
         /// <summary>
@@ -30,6 +28,10 @@ namespace Discord.WebSocket
         /// <inheritdoc/>
         public DateTimeOffset? JoinedAt
             => GuildUser.JoinedAt;
+
+        /// <inheritdoc/>
+        public string DisplayName
+            => GuildUser.Nickname ?? GuildUser.Username;
 
         /// <inheritdoc/>
         public string Nickname
@@ -56,6 +58,9 @@ namespace Discord.WebSocket
             get => GuildUser.AvatarId;
             internal set => GuildUser.AvatarId = value;
         }
+        /// <inheritdoc/>
+        public string DisplayAvatarId => GuildAvatarId ?? AvatarId;
+
         /// <inheritdoc/>
         public string GuildAvatarId
             => GuildUser.GuildAvatarId;
@@ -118,6 +123,10 @@ namespace Discord.WebSocket
             => GuildUser.IsStreaming;
 
         /// <inheritdoc/>
+        public bool IsVideoing
+            => GuildUser.IsVideoing;
+
+        /// <inheritdoc/>
         public DateTimeOffset? RequestToSpeakTimestamp
             => GuildUser.RequestToSpeakTimestamp;
 
@@ -135,6 +144,17 @@ namespace Discord.WebSocket
         {
             var entity = new SocketThreadUser(guild, thread, member, model.UserId.Value);
             entity.Update(model);
+            return entity;
+        }
+
+        internal static SocketThreadUser Create(SocketGuild guild, SocketThreadChannel thread, SocketGuildUser owner)
+        {
+            // this is used for creating the owner of the thread.
+            var entity = new SocketThreadUser(guild, thread, owner, owner.Id);
+            entity.Update(new Model
+            {
+                JoinTimestamp = thread.CreatedAt,
+            });
             return entity;
         }
 
@@ -180,8 +200,12 @@ namespace Discord.WebSocket
 
         /// <inheritdoc/>
         public Task RemoveTimeOutAsync(RequestOptions options = null) => GuildUser.RemoveTimeOutAsync(options);
+
         /// <inheritdoc/>
-        GuildPermissions IGuildUser.GuildPermissions => GuildUser.GuildPermissions;
+        IThreadChannel IThreadUser.Thread => Thread;
+
+        /// <inheritdoc/>
+        IGuild IThreadUser.Guild => Guild;
 
         /// <inheritdoc/>
         IGuild IGuildUser.Guild => Guild;
@@ -190,11 +214,18 @@ namespace Discord.WebSocket
         ulong IGuildUser.GuildId => Guild.Id;
 
         /// <inheritdoc/>
+        GuildPermissions IGuildUser.GuildPermissions => GuildUser.GuildPermissions;
+
+        /// <inheritdoc/>
         IReadOnlyCollection<ulong> IGuildUser.RoleIds => GuildUser.Roles.Select(x => x.Id).ToImmutableArray();
 
+        /// <inheritdoc />
+        string IGuildUser.GetDisplayAvatarUrl(ImageFormat format, ushort size) => GuildUser.GetDisplayAvatarUrl(format, size);
+
+        /// <inheritdoc />
         string IGuildUser.GetGuildAvatarUrl(ImageFormat format, ushort size) => GuildUser.GetGuildAvatarUrl(format, size);
 
-        internal override SocketGlobalUser GlobalUser => GuildUser.GlobalUser;
+        internal override SocketGlobalUser GlobalUser { get => GuildUser.GlobalUser; set => GuildUser.GlobalUser = value; }
 
         internal override SocketPresence Presence { get => GuildUser.Presence; set => GuildUser.Presence = value; }
 

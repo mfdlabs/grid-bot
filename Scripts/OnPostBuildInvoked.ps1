@@ -14,7 +14,9 @@ param (
     [string] $TargetExt,
     [string] $SolutionDir,
     [string] $ProjectName,
-    [string] $TargetFramework
+    [string] $TargetFramework,
+    [string] $DeployScriptOverride,
+    [bool] $DeleteDebugSymbols = $true
 )
 
 $isDebug = $ConfigurationName.StartsWith("Debug");
@@ -46,8 +48,9 @@ IF (Test-Path $runtimeScriptsDir) {
 }
 
 # Copy the runtime-scripts
-Copy-Item -Path "$($ProjectDir)RuntimeScripts" -Destination $runtimeScriptsDir -Recurse -Force
-
+IF (Test-Path "$($ProjectDir)RuntimeScripts") {
+    Copy-Item -Path "$($ProjectDir)RuntimeScripts" -Destination $runtimeScriptsDir -Recurse -Force
+}
 
 # Delete the old Lua scripts and copy the new Lua scripts
 $luaScriptsDir = "$($ProjectDir)$($OutDir)Lua";
@@ -57,8 +60,9 @@ IF (Test-Path $luaScriptsDir) {
 }
 
 # Copy the Lua scripts
-Copy-Item -Path "$($ProjectDir)Lua" -Destination $luaScriptsDir -Recurse -Force
-
+IF (Test-Path "$($ProjectDir)Lua") {
+    Copy-Item -Path "$($ProjectDir)Lua" -Destination $luaScriptsDir -Recurse -Force
+}
 
 # Delete all translation scripts at the output
 $translationScriptsDirectories = @(
@@ -91,7 +95,7 @@ IF ($isDeployment) {
     Write-Host "Deployment configuration: $deploymentConfiguration" -ForegroundColor Green;
 
     # Determine if we are deploying a debug or release build, if release delete all pdb files
-    if (!$isDebug) {
+    if (!$isDebug -and $DeleteDebugSymbols) {
         Write-Host "Removing pdb files" -ForegroundColor Green;
         $outPath = "$($ProjectDir)$($OutDir)";
 
@@ -102,12 +106,12 @@ IF ($isDeployment) {
 
     # Call the deploy script
     Write-Host "Deploying..." -ForegroundColor Green;
-    $scriptName = "$($SolutionDir)Scripts\Deploy.ps1";
+    $scriptName = IF ($DeployScriptOverride) { $DeployScriptOverride } ELSE { "$($SolutionDir)Scripts\Deploy.ps1" };
     if (!(Get-Item -Path $scriptName)) {
         Write-Host "Deploy script $scriptName does not exist" -ForegroundColor Red;
         Exit 1;
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false
+    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $false -preRelease $false
 }

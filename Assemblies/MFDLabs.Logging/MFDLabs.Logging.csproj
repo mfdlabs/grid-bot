@@ -10,17 +10,19 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Dependencies\Microsoft.Ccr.Core\Microsoft.Ccr.Core.csproj" />
     <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
     <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
     <ProjectReference Include="..\MFDLabs.EventLog\MFDLabs.EventLog.csproj" />
     <ProjectReference Include="..\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
     <ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
     <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
+    <ProjectReference Include="..\MFDLabs.Threading\MFDLabs.Threading.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">

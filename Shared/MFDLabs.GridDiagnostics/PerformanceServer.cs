@@ -1,15 +1,27 @@
-﻿using System.Net;
-using MFDLabs.Diagnostics;
-using MFDLabs.Instrumentation;
+﻿using System.Linq;
+using System.Net;
+using System.Collections.Generic;
 using MFDLabs.Logging;
+using MFDLabs.Instrumentation;
+using MFDLabs.Text.Extensions;
+
+#if !DEBUG
+using MFDLabs.Diagnostics;
+#endif
 
 namespace MFDLabs.Grid.Bot.PerformanceMonitors
 {
     public static class PerformanceServer
     {
+        private static IEnumerable<string> WhitelistedCounterServerCidrs =>
+            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.WhitelistedCounterServerCidrs.Split(',')
+             where !id.IsNullOrEmpty()
+             select id).ToArray();
+
         private static readonly CounterHttpServer Server = new(
             PerfmonCounterRegistryProvider.Registry,
             global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
+            WhitelistedCounterServerCidrs,
             ex =>
             {
                 if (ex is not HttpListenerException {ErrorCode: 0x3E3})

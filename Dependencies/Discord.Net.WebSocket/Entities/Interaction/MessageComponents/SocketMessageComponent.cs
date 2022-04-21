@@ -28,8 +28,8 @@ namespace Discord.WebSocket
         private object _lock = new object();
         public override bool HasResponded { get; internal set; } = false;
 
-        internal SocketMessageComponent(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
-            : base(client, model.Id, channel)
+        internal SocketMessageComponent(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
+            : base(client, model.Id, channel, user)
         {
             var dataModel = model.Data.IsSpecified
                 ? (DataModel)model.Data.Value
@@ -38,9 +38,9 @@ namespace Discord.WebSocket
             Data = new SocketMessageComponentData(dataModel);
         }
 
-        internal new static SocketMessageComponent Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
+        internal new static SocketMessageComponent Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
         {
-            var entity = new SocketMessageComponent(client, model, channel);
+            var entity = new SocketMessageComponent(client, model, channel, user);
             entity.Update(model);
             return entity;
         }
@@ -438,6 +438,41 @@ namespace Discord.WebSocket
             HasResponded = true;
         }
 
+        /// <inheritdoc/>
+        public override async Task RespondWithModalAsync(Modal modal, RequestOptions options = null)
+        {
+            if (!IsValidToken)
+                throw new InvalidOperationException("Interaction token is no longer valid");
+
+            if (!InteractionHelper.CanSendResponse(this))
+                throw new TimeoutException($"Cannot respond to an interaction after {InteractionHelper.ResponseTimeLimit} seconds!");
+
+            var response = new API.InteractionResponse
+            {
+                Type = InteractionResponseType.Modal,
+                Data = new API.InteractionCallbackData
+                {
+                    CustomId = modal.CustomId,
+                    Title = modal.Title,
+                    Components = modal.Component.Components.Select(x => new Discord.API.ActionRowComponent(x)).ToArray()
+                }
+            };
+
+            lock (_lock)
+            {
+                if (HasResponded)
+                {
+                    throw new InvalidOperationException("Cannot respond twice to the same interaction");
+                }
+            }
+
+            await InteractionHelper.SendInteractionResponseAsync(Discord, response, this, Channel, options).ConfigureAwait(false);
+
+            lock (_lock)
+            {
+                HasResponded = true;
+            }
+        }
         //IComponentInteraction
         /// <inheritdoc/>
         IComponentInteractionData IComponentInteraction.Data => Data;

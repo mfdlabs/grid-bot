@@ -1,6 +1,10 @@
+using Discord.API;
+using Discord.Net.Rest;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace Discord.Net
 {
@@ -25,7 +29,7 @@ namespace Discord.Net
         public DateTimeOffset? Reset { get; }
 
         /// <inheritdoc/>
-        public TimeSpan? ResetAfter { get; }
+        public TimeSpan? ResetAfter { get; private set; }
 
         /// <inheritdoc/>
         public string Bucket { get; }
@@ -55,6 +59,20 @@ namespace Discord.Net
             Bucket = headers.TryGetValue("X-RateLimit-Bucket", out temp) ? temp : null;
             Lag = headers.TryGetValue("Date", out temp) &&
                 DateTimeOffset.TryParse(temp, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? DateTimeOffset.UtcNow - date : (TimeSpan?)null;
+        }
+
+        internal Ratelimit ReadRatelimitPayload(Stream response)
+        {
+            if (response != null && response.Length != 0)
+            {
+                using (TextReader text = new StreamReader(response))
+                using (JsonReader reader = new JsonTextReader(text))
+                {
+                    return Discord.Rest.DiscordRestClient.Serializer.Deserialize<Ratelimit>(reader);
+                }
+            }
+
+            return null;
         }
     }
 }

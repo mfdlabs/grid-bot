@@ -34,8 +34,7 @@ namespace Discord.WebSocket
         public override bool IsWebhook => true;
         /// <inheritdoc />
         internal override SocketPresence Presence { get { return new SocketPresence(UserStatus.Offline, null, null); } set { } }
-        internal override SocketGlobalUser GlobalUser =>
-            throw new NotSupportedException();
+        internal override SocketGlobalUser GlobalUser { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         internal SocketWebhookUser(SocketGuild guild, ulong id, ulong webhookId)
             : base(guild.Discord, id)
@@ -64,9 +63,15 @@ namespace Discord.WebSocket
         /// <inheritdoc />
         DateTimeOffset? IGuildUser.JoinedAt => null;
         /// <inheritdoc />
+        string IGuildUser.DisplayName => null;
+        /// <inheritdoc />
         string IGuildUser.Nickname => null;
         /// <inheritdoc />
+        string IGuildUser.DisplayAvatarId => null;
+        /// <inheritdoc />
         string IGuildUser.GuildAvatarId => null;
+        /// <inheritdoc />
+        string IGuildUser.GetDisplayAvatarUrl(ImageFormat format, ushort size) => null;
         /// <inheritdoc />
         string IGuildUser.GetGuildAvatarUrl(ImageFormat format, ushort size) => null;
         /// <inheritdoc />
@@ -158,6 +163,8 @@ namespace Discord.WebSocket
         string IVoiceState.VoiceSessionId => null;
         /// <inheritdoc />
         bool IVoiceState.IsStreaming => false;
+        /// <inheritdoc />
+        bool IVoiceState.IsVideoing => false;
         /// <inheritdoc />
         DateTimeOffset? IVoiceState.RequestToSpeakTimestamp => null;
         #endregion

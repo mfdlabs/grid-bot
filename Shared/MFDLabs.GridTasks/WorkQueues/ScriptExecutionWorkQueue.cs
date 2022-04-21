@@ -9,6 +9,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Ccr.Core;
 using MFDLabs.Logging;
+using MFDLabs.FileSystem;
 using MFDLabs.Networking;
 using MFDLabs.Concurrency;
 using MFDLabs.Diagnostics;
@@ -322,6 +323,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
 #if NETFRAMEWORK
                     var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
+                    var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
 #endif
 
                     try
@@ -334,9 +336,11 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         instance.Lock();
 
                         message.CreateGridServerInstanceReference(ref instance);
+
 #else
                         var result = LuaUtility.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
 #endif
+
 
                         if (!result.IsNullOrEmpty())
                         {
@@ -345,11 +349,20 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                 _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
                                 message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)),
                                     "execute-result.txt",
-                                    "Executed script with return:");
+#if NETFRAMEWORK
+                                $"This instance will expire at <t:{expirationTime}:T>"
+#else
+                                "Executed script with return:"
+#endif
+                                );
                                 return;
                             }
                             message.Reply(
+#if NETFRAMEWORK
+                                $"This instance will expire at <t:{expirationTime}:T>",
+#else
                                 "Executed script with return:",
+#endif
                                 embed: new EmbedBuilder()
                                 .WithTitle("Return value")
                                 .WithDescription($"```\n{result}\n```")
@@ -361,7 +374,12 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                             return;
                         }
+
+#if NETFRAMEWORK
+                        message.Reply($"Executed script with no return! This instance will expire at <t:{expirationTime}:T>");
+#else
                         message.Reply("Executed script with no return!");
+#endif
 
 
                     }
@@ -379,7 +397,10 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         // We assume that it didn't actually track screenshots here.
                         instance.Lock();
                         message.CreateGridServerInstanceReference(ref instance);
+
+                        message.Reply($"This instance will expire at <t:{expirationTime}:T>");
 #endif
+
 
                         if (ex is not IOException) throw; // rethrow.
                     }
@@ -390,12 +411,18 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             SystemLogger.Singleton.LifecycleEvent(
                                 "Trying delete the script '{0}' at path '{1}'",
                                 scriptId,
-                                scriptName);
-                            File.Delete(scriptName);
-                            SystemLogger.Singleton.LifecycleEvent(
-                                "Successfully deleted the script '{0}' at path '{1}'!",
-                                scriptId,
-                                scriptName);
+                                scriptName
+                            );
+                            FilesHelper.PollDeletionOfFile(
+                                scriptName,
+                                10,
+                                ex => SystemLogger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
+                                () => SystemLogger.Singleton.LifecycleEvent(
+                                    "Successfully deleted the script '{0}' at path '{1}'!",
+                                        scriptId,
+                                        scriptName
+                                    )
+                            );
                         }
                         catch (Exception ex)
                         {

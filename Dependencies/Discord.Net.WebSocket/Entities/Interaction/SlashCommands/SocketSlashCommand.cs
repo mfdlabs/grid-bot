@@ -9,12 +9,12 @@ namespace Discord.WebSocket
     public class SocketSlashCommand : SocketCommandBase, ISlashCommandInteraction, IDiscordInteraction
     {
         /// <summary>
-        ///     The data associated with this interaction.
+        ///     Gets the data associated with this interaction.
         /// </summary>
         public new SocketSlashCommandData Data { get; }
 
-        internal SocketSlashCommand(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
-            : base(client, model, channel)
+        internal SocketSlashCommand(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
+            : base(client, model, channel, user)
         {
             var dataModel = model.Data.IsSpecified
                 ? (DataModel)model.Data.Value
@@ -27,9 +27,9 @@ namespace Discord.WebSocket
             Data = SocketSlashCommandData.Create(client, dataModel, guildId);
         }
 
-        internal new static SocketInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel)
+        internal new static SocketInteraction Create(DiscordSocketClient client, Model model, ISocketMessageChannel channel, SocketUser user)
         {
-            var entity = new SocketSlashCommand(client, model, channel);
+            var entity = new SocketSlashCommand(client, model, channel, user);
             entity.Update(model);
             return entity;
         }
