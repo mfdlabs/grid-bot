@@ -1,4 +1,4 @@
-# `build` is used to build the Go binary but not build the Docker image.
+# `build-dev` is used to build the Go binary but not build the Docker image.
 build-dev:
 	# build via go
 	go build -v -o bin/debug/grid-bot ./...
