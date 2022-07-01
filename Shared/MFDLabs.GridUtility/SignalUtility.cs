@@ -29,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 GridProcessHelper.KillAllGridServersSafe();
                 GridProcessHelper.KillServerSafe();
                 LoggingSystem.EndLifetimeWatch();
-                SystemLogger.Singleton.TryClearLocalLog(false, true);
+                Logger.TryClearLocalLog(false);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
         }
@@ -50,7 +50,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (killBot)
                     await BotGlobal.TryLogout();
                 LoggingSystem.EndLifetimeWatch();
-                SystemLogger.Singleton.TryClearLocalLog(false, true);
+                Logger.TryClearLocalLog(true);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
         }
@@ -66,7 +66,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 if (killBot)
                     await BotGlobal.TryLogout();
-                SystemLogger.Singleton.TryClearLocalLog(true);
+                Logger.TryClearLocalLog(true);
                 LoggingSystem.RestartLifetimeWatch();
                 await BotGlobal.SingletonLaunch();
 

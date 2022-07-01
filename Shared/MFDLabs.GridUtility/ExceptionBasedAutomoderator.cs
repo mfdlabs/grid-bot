@@ -65,28 +65,28 @@ namespace MFDLabs.Grid.Bot.Utility
 
             if (exceptionCounterExpires < DateTime.Now)
             {
-                SystemLogger.Singleton.Warning("User {0}'s exception monitor has expired at count {1}", user.Id, exceptionCounter);
+                Logger.Singleton.Warning("User {0}'s exception monitor has expired at count {1}", user.Id, exceptionCounter);
 
                 if (exceptionCounter == 0)
                 {
-                    SystemLogger.Singleton.Info("They had an exception counter of 0, so they were just created, return false");
+                    Logger.Singleton.Info("They had an exception counter of 0, so they were just created, return false");
                     return false;
                 }
 
                 // Exlusive in case another thread had hit them just in the nick of time :/
                 if (exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist)
                 {
-                    SystemLogger.Singleton.Warning("Their exception counter exceeded the maximum before blacklist, return true");
+                    Logger.Singleton.Warning("Their exception counter exceeded the maximum before blacklist, return true");
                     return true;
                 }
 
-                SystemLogger.Singleton.Info("The user didn't exceed the maximum before blacklist, reset their track.");
+                Logger.Singleton.Info("The user didn't exceed the maximum before blacklist, reset their track.");
                 user.UpdateOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
                 return false;
             }
 
-            SystemLogger.Singleton.Info("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
+            Logger.Singleton.Info("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
 
 
             return exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
@@ -98,7 +98,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             if (user.DetermineIfUserHasExceededExceptionLimit())
             {
-                SystemLogger.Singleton.Warning("The user exceeded their exception limit, blacklist them now.");
+                Logger.Singleton.Warning("The user exceeded their exception limit, blacklist them now.");
                 user.Blacklist();
                 return true;
             }
@@ -112,7 +112,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             if (user.CheckIfUserShouldBeBlacklisted()) return;
 
-            SystemLogger.Singleton.Verbose("User {0} has not exceeded the exception limit, increment their count atomically.", user.Id);
+            Logger.Singleton.Verbose("User {0} has not exceeded the exception limit, increment their count atomically.", user.Id);
 
             user.UpdateOrCreateTrack(null, null, true);
         }

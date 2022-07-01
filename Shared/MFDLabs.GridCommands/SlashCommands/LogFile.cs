@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
             using (await command.DeferEphemeralAsync())
             {
                 await command.RespondEphemeralAsync(
-                    $"The log file name for this instance is: `{SystemLogger.FileName}`\n" + 
+                    $"The log file name for this instance is: `{Logger.Singleton.FileName}`\n" + 
                     "Please paste this into the `Log File Name` field in grid-bot-support templates so that the internal team can easily identify this instance's log files."
                 );
             }

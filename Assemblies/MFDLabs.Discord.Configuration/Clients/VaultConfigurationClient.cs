@@ -77,7 +77,7 @@ namespace MFDLabs.Discord.Configuration
 
             
             _vaultClientRefreshTimer.Change(-1, -1);
-            SystemLogger.Singleton.Info("Renewing vault client's token, '{0}...'", _tokenStr);
+            Logger.Singleton.Info("Renewing vault client's token, '{0}...'", _tokenStr);
             _token.RenewSelfAsync().Wait();
             _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }
@@ -94,9 +94,9 @@ namespace MFDLabs.Discord.Configuration
                 catch (Exception ex)
                 {
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-                    SystemLogger.Singleton.Error(ex);
+                    Logger.Singleton.Error(ex);
 #else
-                    SystemLogger.Singleton.Warning(ex.Message);
+                    Logger.Singleton.Warning(ex.Message);
 #endif
                     Thread.Sleep(i * 100);
                 }

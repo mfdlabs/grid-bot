@@ -1,8 +1,9 @@
-﻿namespace MFDLabs.EventLog
+﻿namespace MFDLabs.Logging
 {
     public enum LogLevel
     {
         None,
+        LifecycleEvent,
         Error,
         Warning,
         Information,

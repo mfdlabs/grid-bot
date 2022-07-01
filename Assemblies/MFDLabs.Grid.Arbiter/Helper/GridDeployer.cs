@@ -23,7 +23,7 @@ namespace MFDLabs.Grid
 
         private static string GetGridServerLaunchPath()
         {
-            SystemLogger.Singleton.Info("Trying to get the grid server's path...");
+            Logger.Singleton.Info("Trying to get the grid server's path...");
 
 #if NETFRAMEWORK
             var gridServicePath = Registry.GetValue(
@@ -37,7 +37,7 @@ namespace MFDLabs.Grid
 
             if (gridServicePath == null)
             {
-                SystemLogger.Singleton.Error("The grid server is not installed on this machine.");
+                Logger.Singleton.Error("The grid server is not installed on this machine.");
                 throw new InvalidOperationException(CouldNotFindGridServer);
             }
 
@@ -180,11 +180,11 @@ namespace MFDLabs.Grid
             if (global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath.IsNullOrEmpty())
                 throw new InvalidOperationException("Cannot open web server if the workspace is not set!");
 
-            SystemLogger.Singleton.Info("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
+            Logger.Singleton.Info("Checking the existance of the web server at '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
 
             if (!Directory.Exists(global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath))
             {
-                SystemLogger.Singleton.Error("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
+                Logger.Singleton.Error("Unable to launch the web server because it could not be found at the path: '{0}'", global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath);
                 throw new InvalidOperationException(CouldNotFindWebServer);
             }
         }
@@ -199,7 +199,7 @@ namespace MFDLabs.Grid
         {
             if (!IsServiceAvailableTcp(hostName, port, 0, 150))
             {
-                SystemLogger.Singleton.Info("Grid server was not running on http://{0}:{1}, try to launch it.", hostName, port);
+                Logger.Singleton.Info("Grid server was not running on http://{0}:{1}, try to launch it.", hostName, port);
 
                 var path = GetGridServerLaunchPath();
 
@@ -241,13 +241,13 @@ namespace MFDLabs.Grid
                 return;
             }
 
-            SystemLogger.Singleton.Info("Trying to launch web server...");
+            Logger.Singleton.Info("Trying to launch web server...");
 
             CheckWorkspace();
 
             for (int attempt = 0; attempt < maxAttempts; ++attempt)
             {
-                SystemLogger.Singleton.Info("Trying to contact web server at attempt No. {0}", attempt);
+                Logger.Singleton.Info("Trying to contact web server at attempt No. {0}", attempt);
 
                 if (WebServerIsAvailable(out aliveButBadCheck))
                 {
@@ -273,13 +273,13 @@ namespace MFDLabs.Grid
                 return WebServerDeploymentStatus.Success;
             }
 
-            SystemLogger.Singleton.Info("Trying to launch web server...");
+            Logger.Singleton.Info("Trying to launch web server...");
 
             CheckWorkspace();
 
             for (int attempt = 0; attempt < maxAttempts; ++attempt)
             {
-                SystemLogger.Singleton.Info("Trying to contact web server at attempt No. {0}", attempt);
+                Logger.Singleton.Info("Trying to contact web server at attempt No. {0}", attempt);
 
                 if (WebServerIsAvailable(out aliveButBadCheck))
                 {

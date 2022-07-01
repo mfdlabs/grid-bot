@@ -12,7 +12,7 @@ namespace MFDLabs.Logging.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,10 +25,10 @@ namespace MFDLabs.Logging.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("bot")]
-        public string LoggingUtilDataName {
+        [global::System.Configuration.DefaultSettingValueAttribute("server")]
+        public string DefaultLoggerName {
             get {
-                return ((string)(this["LoggingUtilDataName"]));
+                return ((string)(this["DefaultLoggerName"]));
             }
         }
         
@@ -44,9 +44,54 @@ namespace MFDLabs.Logging.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Verbose")]
-        public global::MFDLabs.EventLog.LogLevel MaxLogLevel {
+        public global::MFDLabs.Logging.LogLevel DefaultLogLevel {
             get {
-                return ((global::MFDLabs.EventLog.LogLevel)(this["MaxLogLevel"]));
+                return ((global::MFDLabs.Logging.LogLevel)(this["DefaultLogLevel"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultLoggerLogToFileSystem {
+            get {
+                return ((bool)(this["DefaultLoggerLogToFileSystem"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultLoggerLogToConsole {
+            get {
+                return ((bool)(this["DefaultLoggerLogToConsole"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultLoggerCutLogPrefix {
+            get {
+                return ((bool)(this["DefaultLoggerCutLogPrefix"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultLoggerLogThreadId {
+            get {
+                return ((bool)(this["DefaultLoggerLogThreadId"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DefaultLoggerLogWithColor {
+            get {
+                return ((bool)(this["DefaultLoggerLogWithColor"]));
             }
         }
     }

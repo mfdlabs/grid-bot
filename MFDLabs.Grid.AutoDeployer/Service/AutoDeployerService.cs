@@ -20,21 +20,20 @@ using MFDLabs.Text.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
 
-
 namespace MFDLabs.Grid.AutoDeployer.Service
 {
     internal sealed class AutoDeployerService
     {
         // language=regex
         /// <summary>
-        /// <c>/(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))-?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?/g</c>
+        /// <c>/(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?/g</c>
         /// <br/>
         /// <br/>
         /// https://regexr.com/6hqa4 <br/>
         /// https://regex101.com/r/og6X9j/1 <br/>
         /// <br/>
         /// Matches the following format:<br/>
-        /// yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}-{targetFramework}-{configuration}<br/>
+        /// yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}_{targetFramework}-{configuration}<br/>
         ///<br/>
         /// Group 1: Matches default deployment format: yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}<br/>
         /// 		 Where {branch} is any a-zA-Z0-9 or the `-` character.<br/>
@@ -63,17 +62,18 @@ namespace MFDLabs.Grid.AutoDeployer.Service
         ///<br/>
         /// NOTICE: For .NET Regex, the original match is capture group no.1, so group number 12 would 13 in .NET<br/>
         /// </summary>
-        private const string DeploymentIdRegex = @"(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))-?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?";
+        private const string DeploymentIdRegex = @"(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?";
 
         // language=regex
         /// <summary>
         /// \[(?i)(volatile)\]
         /// <br/>
-        /// Matches the following string and it's variants: [DEPLOY]
+        /// Matches the following string and its variants: [DEPLOY]
         /// </summary>
         private const string ShouldDeployPreReleaseSearchString = @"\[(?i)(deploy)\]";
         private const string UserAgent = "mfdlabs-github-api-client";
-
+        private const string DeploymentMarkerFilename = ".mfdlabs-deployment-marker";
+        
         private static User _githubUser;
         private static GitHubClient _gitHubClient;
         private static RegistryKey _versioningRegKey;
@@ -97,24 +97,18 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         public static void Stop(object s, EventArgs e)
         {
-            EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Stopping...");
+            EventLogLogger.Singleton.LifecycleEvent("Stopping...");
             _isRunning = false;
             _versioningRegKey?.Dispose();
         }
 
         public static void Start(object s, EventArgs e)
         {
-            try
-            {
-                Work();
-            }
-            catch (ArgumentException ex) { EventLogConsoleSystemLogger.Singleton.Error(ex); Environment.Exit(1); }
-            catch (Exception ex)
-            {
-                SystemLogger.Singleton.Error(ex.Message);
-            }
+            try { Work(); }
+            catch (ArgumentException ex) { Logger.Singleton.Error(ex.Message); Environment.Exit(1); }
+            catch (Exception ex) { Logger.Singleton.Error(ex); Environment.Exit(1); }
         }
-
+        
         private static void Work()
         {
             _versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
@@ -125,10 +119,12 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _primaryDeploymentExecutable = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPrimaryExecutableName;
             _pollingInterval = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.PollingInterval;
 
-            EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Starting...");
+            EventLogLogger.Singleton.LifecycleEvent("Starting...");
 
+#if !DEBUG
             if (_pollingInterval < TimeSpan.FromSeconds(30))
                 throw new ArgumentException("The Polling interval cannot be less than 30 seconds.");
+#endif
 
             if (_deploymentPath.IsNullOrEmpty())
                 throw new ArgumentException("The Deployment Path cannot be null or empty.");
@@ -155,7 +151,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _cachedVersion = _versioningRegKey?.GetValue(_versioningRegVersionKeyName, null) as string;
 
             if (_cachedVersion != null)
-                EventLogConsoleSystemLogger.Singleton.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+                EventLogLogger.Singleton.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
 
             _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken;
             var gheUrl = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
@@ -174,7 +170,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
             _githubUser = _gitHubClient.User.Current().Result;
 
-            EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Authenticated to '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubClient.BaseAddress, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
+            EventLogLogger.Singleton.LifecycleEvent("Authenticated to '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubClient.BaseAddress, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
 
             _isRunning = true;
 
@@ -201,18 +197,18 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     if (r.Assets.Count != 4)
                     {
                         SkipVersion(r.TagName);
-                        EventLogConsoleSystemLogger.Singleton.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
+                        EventLogLogger.Singleton.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
                         goto SLEEP;
                     }
 
-                    var regex = $@"{r.TagName}-?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
+                    var regex = $@"{r.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
 
                     foreach (var a in r.Assets)
                     {
                         if (!a.Name.IsMatch(regex))
                         {
                             SkipVersion(r.TagName);
-                            EventLogConsoleSystemLogger.Singleton.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
+                            EventLogLogger.Singleton.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
                             goto SLEEP;
                         }
                     }
@@ -221,7 +217,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     if (ProcessHelper.GetProcessByName(_primaryDeploymentExecutable.ToLower().Replace(".exe", ""), out _))
                     {
                         InvokeMaintenanceCommandOnPreviousExe(r.TagName);
-                        EventLogConsoleSystemLogger.Singleton.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
+                        EventLogLogger.Singleton.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
                         Thread.Sleep(TimeSpan.FromSeconds(15));
                     }
 #endif
@@ -248,7 +244,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     {
                         SkipVersion(r.TagName);
                         FilesHelper.PollDeletionOfFileBlocking(versionDeploymentPath);
-                        EventLogConsoleSystemLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
+                        EventLogLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
                         goto SLEEP;
                     }
 
@@ -293,7 +289,7 @@ SLEEP:
         {
             if (!ProcessHelper.GetProcessByName(name.ToLower().Replace(".exe", ""), out var pr))
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
+                Logger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
                 return;
             }
 
@@ -304,13 +300,13 @@ SLEEP:
 
                 )
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
+                Logger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
                 return;
             }
 
             KillAllProcessByName(name);
 
-            SystemLogger.Singleton.Info("Successfully closed process '{0}'.", name);
+            Logger.Singleton.Info("Successfully closed process '{0}'.", name);
         }
 
         private static void KillAllProcessByName(string name)
@@ -355,7 +351,7 @@ SLEEP:
             foreach (var asset in assets)
             {
                 var fqp = Path.Combine(_deploymentPath, asset.Name);
-                EventLogConsoleSystemLogger.Singleton.Debug("Deleting asset '{0}' from '{1}'", asset.Name, _deploymentPath);
+                EventLogLogger.Singleton.Debug("Deleting asset '{0}' from '{1}'", asset.Name, _deploymentPath);
                 FilesHelper.PollDeletionOfFileBlocking(fqp, 10);
             }
         }
@@ -366,16 +362,16 @@ SLEEP:
                 _deploymentPath,
                 (
                     from f in release.Assets
-                    where f.Name.IsMatch($@"{release.TagName}-?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1")
+                    where f.Name.IsMatch($@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1")
                     select f
-                ).FirstOrDefault().Name
+                ).FirstOrDefault()?.Name
             );
 
             versionDeploymentPath = unpackerFile.Replace(".Unpacker.ps1", "");
 
             if (!File.Exists(unpackerFile))
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Unkown unpacker script: {0}. Skipping version...", unpackerFile);
+                EventLogLogger.Singleton.Error("Unkown unpacker script: {0}. Skipping version...", unpackerFile);
                 return false;
             }
 
@@ -391,13 +387,13 @@ SLEEP:
 
             if (proc.ExitCode != 0)
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Unpacker script '{0}' failed with exit code '{1}'. Skipping version...", unpackerFile, proc.ExitCode);
+                EventLogLogger.Singleton.Error("Unpacker script '{0}' failed with exit code '{1}'. Skipping version...", unpackerFile, proc.ExitCode);
                 return false;
             }
 
             if (!Directory.Exists(versionDeploymentPath))
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Unpacker script '{0}' failed: The output deployment was not created at '{1}'. Skipping version...", unpackerFile, versionDeploymentPath);
+                EventLogLogger.Singleton.Error("Unpacker script '{0}' failed: The output deployment was not created at '{1}'. Skipping version...", unpackerFile, versionDeploymentPath);
                 return false;
             }
 
@@ -406,7 +402,7 @@ SLEEP:
 
         private static void DownloadArtifact(string uri, string outputPath)
         {
-            EventLogConsoleSystemLogger.Singleton.Debug("Downloading artifact '{0}' to '{1}'", uri, outputPath);
+            EventLogLogger.Singleton.Debug("Downloading artifact '{0}' to '{1}'", uri, outputPath);
 
             using var webClient = new WebClient();
             webClient.Headers.Add("User-Agent", UserAgent);
@@ -438,12 +434,12 @@ SLEEP:
             {
                 if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 {
-                    EventLogConsoleSystemLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
+                    EventLogLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
                     return false;
                 }
             }
 
-            EventLogConsoleSystemLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease);
+            EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease);
 
             return true;
         }
@@ -463,7 +459,7 @@ SLEEP:
 
             if (!directoryMatches.Any())
             {
-                EventLogConsoleSystemLogger.Singleton.Warning("Not overwriting registry version as there was no deployments found at path '{0}'.", _deploymentPath);
+                EventLogLogger.Singleton.Warning("Not overwriting registry version as there was no deployments found at path '{0}'.", _deploymentPath);
                 return;
             }
 
@@ -484,7 +480,7 @@ SLEEP:
             {
                 _cachedVersion = currentDeployment.Groups[1].Value;
 
-                EventLogConsoleSystemLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
+                EventLogLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
 
                 WriteVersionToRegistry();
 
@@ -517,14 +513,11 @@ SLEEP:
         {
             var deploymentPath = _deploymentPath;
 
-
-            var markerFileName = Path.Combine(deploymentPath, ".mfdlabs-deployment-marker");
+            var markerFileName = Path.Combine(deploymentPath, DeploymentMarkerFilename);
 
             if (Directory.Exists(deploymentPath))
             {
                 // There is normally a file in here that marks this as reserved to this tool.
-                // Named .mfdlabs-deployment-marker
-
                 if (File.Exists(markerFileName)) return;
             }
 
@@ -532,19 +525,19 @@ SLEEP:
 
             if (FilesHelper.IsSubDir(winDir, deploymentPath))
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Cannot create deployment directory as it is reserved by Windows.");
+                EventLogLogger.Singleton.Error("Cannot create deployment directory as it is reserved by Windows.");
                 Environment.Exit(1);
             }
 
             if (File.Exists(deploymentPath))
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Unable to determine deployment directory, it exists already and is a file.");
+                EventLogLogger.Singleton.Error("Unable to determine deployment directory, it exists already and is a file.");
                 Environment.Exit(1);
             }
 
             if (!global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.CreateDeploymentPathIfNotExists)
             {
-                EventLogConsoleSystemLogger.Singleton.Error("Unable to determine deployment directory, it does not exist and the setting CreateDeploymentPathIfNotExists is false.");
+                EventLogLogger.Singleton.Error("Unable to determine deployment directory, it does not exist and the setting CreateDeploymentPathIfNotExists is false.");
                 Environment.Exit(1);
             }
 
@@ -552,6 +545,6 @@ SLEEP:
             File.WriteAllText(markerFileName, "");
         }
 
-        private static void BackgroundWork(Action action) => Task.Factory.StartNew(() => { try { action(); } catch (Exception ex) { EventLogConsoleSystemLogger.Singleton.Error(ex.Message); } });
+        private static void BackgroundWork(Action action) => Task.Factory.StartNew(() => { try { action(); } catch (Exception ex) { EventLogLogger.Singleton.Error(ex); } });
     }
 }

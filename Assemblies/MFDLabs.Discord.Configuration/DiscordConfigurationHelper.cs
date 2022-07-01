@@ -100,22 +100,22 @@ namespace MFDLabs.Discord.Configuration
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
 
                 switch (ex)
                 {
                     case ArgumentNullException or ArgumentException:
-                        SystemLogger.Singleton.Warning("There was an argument exception with your setting value " +
+                        Logger.Singleton.Warning("There was an argument exception with your setting value " +
                                                        $"when trying to cast it to '{type.FullName}', {ex.Message}.");
                         return default;
                     case InvalidCastException:
                     case FormatException:
                     case OverflowException:
-                        SystemLogger.Singleton.Warning("The typeof your setting value could not be casted to the " +
+                        Logger.Singleton.Warning("The typeof your setting value could not be casted to the " +
                                                        $"type of the real setting value, which is  '{type.FullName}', please try again.");
                         return default;
                     default:
-                        SystemLogger.Singleton.Warning($"An unknown exception occurred when trying to update the setting '{settingName}'.");
+                        Logger.Singleton.Warning($"An unknown exception occurred when trying to update the setting '{settingName}'.");
 
                         return default;
                 }

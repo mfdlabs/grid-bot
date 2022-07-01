@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace MFDLabs.EventLog
+namespace MFDLabs.Logging
 {
     public class ExceptionThrottlingLogger : ILogger
     {

@@ -65,7 +65,7 @@ namespace MFDLabs.Concurrency
             var choice = Arbiter.Choice(
                 itemHandlerResult,
                 (success) => completionTask(),
-                SystemLogger.Singleton.Error
+                Logger.Singleton.Error
             );
             Arbiter.Activate(_dispatcherQueue, choice);
         }

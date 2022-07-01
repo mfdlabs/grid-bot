@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.EventLog
+namespace MFDLabs.Logging
 {
     public class NoOpLogger : ILogger
     {

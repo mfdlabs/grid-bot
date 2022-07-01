@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using MFDLabs.Text.Extensions;
 
-namespace MFDLabs.EventLog
+namespace MFDLabs.Logging
 {
     public abstract class LoggerBase : ILogger
     {
@@ -35,7 +35,7 @@ namespace MFDLabs.EventLog
             if (!LogMethodName && !LogClassAndMethodName) return builder.ToString();
             var method = new StackFrame(3, true).GetMethod();
             var fullyQualifiedMethodName = "";
-            if (LogClassAndMethodName) 
+            if (LogClassAndMethodName)
                 fullyQualifiedMethodName = (method != null && method.DeclaringType != null) ? (method.DeclaringType.Name + ".") : "";
             builder.AppendFormat("[{0}{1}] ", fullyQualifiedMethodName, method?.Name ?? "<Unknown method>");
             return builder.ToString();
@@ -96,7 +96,9 @@ namespace MFDLabs.EventLog
             }
         }
         private void LogWithDiagnosticsIfNecessary(LogLevel level, string message, params object[] args) => Log(level, message, args);
-        public static void LogSafely(Action logLineAction) { try { logLineAction(); }
+        public static void LogSafely(Action logLineAction)
+        {
+            try { logLineAction(); }
             catch
             {
                 // ignored
