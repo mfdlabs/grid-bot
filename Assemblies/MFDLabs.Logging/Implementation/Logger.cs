@@ -14,6 +14,10 @@ using MFDLabs.ErrorHandling.Extensions;
 using Microsoft.Ccr.Core;
 #endif
 
+#if NETFRAMEWORK
+using PInvoke;
+#endif
+
 namespace MFDLabs.Logging
 {
     public enum LogColor
@@ -43,6 +47,10 @@ namespace MFDLabs.Logging
                 AutoFlush = true
             };
             Console.SetOut(stdoutStream);
+
+#if NETFRAMEWORK
+            ProcessHelper.TryEnableAnsiCodesForHandle(Kernel32.StdHandle.STD_OUTPUT_HANDLE);
+#endif
         }
 
         //////////////////////////////////////////////////////////////////////////////

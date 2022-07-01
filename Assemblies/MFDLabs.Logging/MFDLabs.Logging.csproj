@@ -24,6 +24,7 @@
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="System.Configuration" />
+    <PackageReference Include="PInvoke.Kernel32" Version="0.7.124" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
