@@ -266,11 +266,12 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $branch, [str
     $url = "https://$gitBaseUrl/repos/$owner/$repoName/releases"
 
     $payload = @{
-        "tag_name"         = $tag
-        "target_commitish" = $branch
-        "name"             = IF ($preRelease -eq $true -and $allowPreReleaseGridDeployment -eq $true) { "$tag [DEPLOY]" } ELSE { $tag }
-        "draft"            = $true
-        "prerelease"       = $preRelease
+        "tag_name"               = $tag
+        "target_commitish"       = $branch
+        "name"                   = IF ($preRelease -eq $true -and $allowPreReleaseGridDeployment -eq $true) { "$tag [DEPLOY]" } ELSE { $tag }
+        "draft"                  = $true
+        "prerelease"             = $preRelease
+        "generate_release_notes" = $true
     }
 
     $jsonEncodedPayload = ConvertTo-Json -InputObject $payload
@@ -315,23 +316,13 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $branch, [str
 
         $url = $uploadUrl + "?name=$fileName"
 
-        # read the file into a byte array
-        $fileBytes = [System.IO.File]::ReadAllText($file)
+        $bytes = [System.IO.File]::ReadAllBytes($file)
 
-        $response = try {
-            Invoke-WebRequest -Uri $url -Method POST -Body $fileBytes -Headers @{
-                "Authorization" = "token $env:GITHUB_TOKEN"
-                "Content-Type"  = "application/octet-stream"
-            } 
-        }
-        catch [System.Net.WebException] {
-            $_.Exception.Response
-        }
-
-        if ($response.StatusCode -ne 201) {
-            Write-Output "Failed to upload file $file, because $($response.StatusCode)"
-            continue
-        }
+        Invoke-RestMethod -Method PUT -Uri $url -Headers @{
+            "Authorization" = "token $env:GITHUB_TOKEN"
+            "Accept"        = "application/vnd.github.v3+json"
+            "Content-Type"  = "application/octet-stream"
+        } -Body $bytes
     }
 
     # Step 4
