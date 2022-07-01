@@ -16,8 +16,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Discord.Net.WebSocket" Version="3.7.2" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
-      <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
       <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
     </ItemGroup>
 
