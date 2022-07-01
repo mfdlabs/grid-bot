@@ -18,7 +18,11 @@ namespace MFDLabs.FileSystem
                 _writer = new(_lock, encoding);
             }
 
-            public void AppendText(string text) => _writer.Write(text);
+            public void AppendText(string text)
+            {
+                _writer.Write(text);
+                _writer.Flush();
+            }
 
             public void Dispose()
             {
