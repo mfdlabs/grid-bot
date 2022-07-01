@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Octokit" Version="0.51.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
@@ -51,7 +52,6 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Wcf\MFDLabs.Wcf.csproj" />
-    <ProjectReference Include="..\Dependencies\Octokit\Octokit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
