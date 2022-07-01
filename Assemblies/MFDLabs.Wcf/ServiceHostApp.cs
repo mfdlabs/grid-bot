@@ -60,10 +60,6 @@ namespace MFDLabs.Wcf
 
         protected override void OnStart(string[] args)
         {
-            if (!EventLogConsoleSystemLogger.Singleton.HasEventLog())
-                if (EventLog != null)
-                    EventLogConsoleSystemLogger.Singleton.Initialize(EventLog);
-
             CloseServiceHost();
 
             if (singleton != null)
@@ -125,6 +121,9 @@ namespace MFDLabs.Wcf
         /// <param name="statsTask">A task to perform when the user presses a key</param>
         public void Process(string[] args, Action statsTask)
         {
+            if (EventLog != null)
+                EventLogLogger.Singleton.SetEventLog(EventLog);
+
             if (args.Length > 0)
             {
                 try
@@ -132,12 +131,12 @@ namespace MFDLabs.Wcf
                     string option = args[0].Substring(1).ToLower();
                     if (option == "console")
                     {
-                        EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Starting {0}...", typeof(TServiceClass));
+                        EventLogLogger.Singleton.LifecycleEvent("Starting {0}...", typeof(TServiceClass));
                         OnStart(args);
 
-                        EventLogConsoleSystemLogger.Singleton.Warning("Service started. Press any key to {0}.", statsTask == null ? "exit" : "get stats");
-                        SystemLogger.Singleton.Log("Press {0} to force a full Garbage Collection cycle", ConsoleKey.G);
-                        SystemLogger.Singleton.Log("Press {0} to close sockets or {1} to exit process", ConsoleKey.Q, ConsoleKey.Escape);
+                        EventLogLogger.Singleton.Warning("Service started. Press any key to {0}.", statsTask == null ? "exit" : "get stats");
+                        Logger.Singleton.Log("Press {0} to force a full Garbage Collection cycle", ConsoleKey.G);
+                        Logger.Singleton.Log("Press {0} to close sockets or {1} to exit process", ConsoleKey.Q, ConsoleKey.Escape);
 
                         while (true)
                         {
@@ -146,17 +145,17 @@ namespace MFDLabs.Wcf
                                 break;
                             else if (key == ConsoleKey.G)
                             {
-                                EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Initiating GC cycle...");
+                                EventLogLogger.Singleton.LifecycleEvent("Initiating GC cycle...");
                                 GC.Collect(3, GCCollectionMode.Forced);
-                                EventLogConsoleSystemLogger.Singleton.Log("Finished GC Cycle!");
+                                EventLogLogger.Singleton.Log("Finished GC Cycle!");
                             }
                             else if (key == ConsoleKey.Q)
                             {
                                 //Close Sockets but keep the process alive
-                                EventLogConsoleSystemLogger.Singleton.LifecycleEvent("Closing sockets...");
+                                EventLogLogger.Singleton.LifecycleEvent("Closing sockets...");
                                 CloseServiceHost();
-                                EventLogConsoleSystemLogger.Singleton.Log("Sucessfully closed all sockets!");
-                                EventLogConsoleSystemLogger.Singleton.Log("Press {0} to exit process", ConsoleKey.Escape);
+                                EventLogLogger.Singleton.Log("Sucessfully closed all sockets!");
+                                EventLogLogger.Singleton.Log("Press {0} to exit process", ConsoleKey.Escape);
                             }
                             else
                             {
@@ -179,7 +178,7 @@ namespace MFDLabs.Wcf
 
                         installer.Install(savedState);
                         installer.Commit(savedState);
-                        EventLogConsoleSystemLogger.Singleton.Info("Service Installed!");
+                        EventLogLogger.Singleton.Info("Service Installed!");
                     }
                     else if (option == "uninstall")
                     {
@@ -196,7 +195,7 @@ namespace MFDLabs.Wcf
                 }
                 catch (Exception e)
                 {
-                    EventLogConsoleSystemLogger.Singleton.Error(e);
+                    EventLogLogger.Singleton.Error(e);
                 }
             }
             else
