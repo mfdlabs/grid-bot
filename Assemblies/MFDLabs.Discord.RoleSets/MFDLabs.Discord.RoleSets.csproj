@@ -13,10 +13,13 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  
+
   <ItemGroup>
-	<ProjectReference Include="..\..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj" />
-	<ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
+    <PackageReference Include="Discord.Net.Core" Version="3.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
   </ItemGroup>
 
 </Project>

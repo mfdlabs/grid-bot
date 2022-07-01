@@ -23,11 +23,13 @@
     <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.Core" Version="3.7.2" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.7.2" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
-    <ProjectReference Include="..\..\Dependencies\Discord.Net.Core\Discord.Net.Core.csproj" />
-    <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
   </ItemGroup>
 
