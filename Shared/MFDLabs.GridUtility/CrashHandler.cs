@@ -28,7 +28,7 @@
                 }
                 catch (global::System.Exception e)
                 {
-                    System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure, e.Message);
+                    System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure, e.ToString());
                 }
             });
         }

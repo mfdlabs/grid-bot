@@ -25,14 +25,14 @@ namespace MFDLabs.Grid
         {
             var sw = Stopwatch.StartNew();
             if (onlyWebServer)
-                SystemLogger.Singleton.Log("Try open Web Server");
+                Logger.Singleton.Log("Try open Web Server");
             switch (onlyGridServer)
             {
                 case true:
-                    SystemLogger.Singleton.Log("Try open Grid Server");
+                    Logger.Singleton.Log("Try open Grid Server");
                     break;
                 case false when !onlyWebServer:
-                    SystemLogger.Singleton.Log("Try open Grid and Web Server");
+                    Logger.Singleton.Log("Try open Grid and Web Server");
                     break;
             }
 
@@ -42,14 +42,14 @@ namespace MFDLabs.Grid
                 if (onlyGridServer) procId = GridDeployer.LaunchGridServer("localhost", gridServerPort != 0 ? gridServerPort : 53640);
                 if (onlyWebServer) GridDeployer.LaunchWebServer(15);
 
-                SystemLogger.Singleton.Info(
+                Logger.Singleton.Info(
                     "Successfully opened '{0}' Server via Memory Roblox Grid Server Deployer",
                     onlyWebServer ? "Web" : onlyGridServer ? "Grid" : "Web and Grid"
                 );
             }
             finally
             {
-                SystemLogger.Singleton.Debug(
+                Logger.Singleton.Debug(
                     "Took {0}s to open Grid Server via Memory Roblox Grid Server Deployer",
                     sw.Elapsed.TotalSeconds.ToString("f7")
                 );
@@ -153,7 +153,7 @@ namespace MFDLabs.Grid
         {
             if (!ProcessHelper.GetProcessById(pid, out var pr))
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is not running, ignoring...", pid);
+                Logger.Singleton.Warning("The process '{0}' is not running, ignoring...", pid);
                 return false;
             }
 
@@ -163,13 +163,13 @@ namespace MFDLabs.Grid
 #endif
                 )
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", pid);
+                Logger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", pid);
                 return false;
             }
 
             KillProcessByPid(pid);
 
-            SystemLogger.Singleton.Info("Successfully closed process '{0}'.", pid);
+            Logger.Singleton.Info("Successfully closed process '{0}'.", pid);
             return true;
         }
 
@@ -177,7 +177,7 @@ namespace MFDLabs.Grid
         {
             if (!ProcessHelper.GetProcessByName(name.ToLower().Replace(".exe", ""), out var pr))
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
+                Logger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
                 return;
             }
 
@@ -188,13 +188,13 @@ namespace MFDLabs.Grid
 
                 )
             {
-                SystemLogger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
+                Logger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
                 return;
             }
 
             KillAllProcessByName(name);
 
-            SystemLogger.Singleton.Info("Successfully closed process '{0}'.", name);
+            Logger.Singleton.Info("Successfully closed process '{0}'.", name);
         }
 
         /// <summary>
@@ -202,11 +202,11 @@ namespace MFDLabs.Grid
         /// </summary>
         public static bool KillServerSafe()
         {
-            SystemLogger.Singleton.Log("Trying to close Backend server.");
+            Logger.Singleton.Log("Trying to close Backend server.");
 
             if (!ProcessHelper.GetProcessByWindowTitle(GlobalServerJobSignature, out var server) && !ProcessHelper.GetProcessByWindowTitle(GlobalQuickServerJobSignature, out server))
             {
-                SystemLogger.Singleton.Warning("Backend server is not running, ignoring...");
+                Logger.Singleton.Warning("Backend server is not running, ignoring...");
                 return false;
             }
 
@@ -217,13 +217,13 @@ namespace MFDLabs.Grid
                 )
             {
                 // This is quite useless I think
-                SystemLogger.Singleton.Warning("Backend server is running on a higher context than the current process, ignoring...");
+                Logger.Singleton.Warning("Backend server is running on a higher context than the current process, ignoring...");
                 return false;
             }
 
             KillProcessByPidSafe(server.Id);
 
-            SystemLogger.Singleton.Info("Successfully closed backend Server.");
+            Logger.Singleton.Info("Successfully closed backend Server.");
             return true;
         }
 
@@ -232,11 +232,11 @@ namespace MFDLabs.Grid
         /// </summary>
         public static bool KillAllGridServersSafe()
         {
-            SystemLogger.Singleton.Log("Trying to close all open grid server instances.");
+            Logger.Singleton.Log("Trying to close all open grid server instances.");
 
             if (!ProcessHelper.GetProcessByName(GridServerSignature, out var server))
             {
-                SystemLogger.Singleton.Warning("There are no grid servers running, ignoring...");
+                Logger.Singleton.Warning("There are no grid servers running, ignoring...");
                 return false;
             }
 
@@ -246,13 +246,13 @@ namespace MFDLabs.Grid
 #endif
                 )
             {
-                SystemLogger.Singleton.Warning("The grid server we caught is running on a different context than us, ignoring...");
+                Logger.Singleton.Warning("The grid server we caught is running on a different context than us, ignoring...");
                 return false;
             }
 
             KillAllProcessByNameSafe(GridServerSignatureExe);
 
-            SystemLogger.Singleton.Info("Successfully closed all grid server instances.");
+            Logger.Singleton.Info("Successfully closed all grid server instances.");
 
             return true;
         }

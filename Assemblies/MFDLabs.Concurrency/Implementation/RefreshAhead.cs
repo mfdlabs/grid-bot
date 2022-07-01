@@ -84,7 +84,7 @@ namespace MFDLabs.Concurrency
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(ex);
+                Logger.Singleton.Error(ex);
             }
         }
         private void Refresh(Action<PortSet<T, Exception>> refreshDelegate)
@@ -108,7 +108,7 @@ namespace MFDLabs.Concurrency
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(ex);
+                Logger.Singleton.Error(ex);
             }
         }
 

@@ -10,12 +10,15 @@ namespace MFDLabs.Grid.AutoDeployer
         {
             var app = new ServiceHostApp<AutoDeployerService>();
             app.EventLog.Source = "MFDLabs.Grid.AutoDeployer";
+            app.EventLog.Log = "MFDLabs.Grid.AutoDeployer";
 
             Console.CancelKeyPress += (sender, e) => app.Stop();
 
             app.HostOpening += AutoDeployerService.Start;
             app.HostClosing += AutoDeployerService.Stop;
             app.Process(args);
+
+            Environment.Exit(0);
         }
     }
 }

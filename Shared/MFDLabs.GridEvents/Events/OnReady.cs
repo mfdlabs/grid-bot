@@ -25,7 +25,7 @@ namespace MFDLabs.Grid.Bot.Events
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                 CommandRegistry.RegisterOnce();
 
-            SystemLogger.Singleton.Debug(
+            Logger.Singleton.Debug(
                 "Shard '{0}' ready as '{0}#{1}'",
                 shard.ShardId,
                 BotGlobal.Client.CurrentUser.Username,
@@ -66,7 +66,7 @@ namespace MFDLabs.Grid.Bot.Events
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                 CommandRegistry.RegisterOnce();
 
-            SystemLogger.Singleton.Debug(
+            Logger.Singleton.Debug(
                 "Bot ready as '{0}#{1}'",
                 BotGlobal.Client.CurrentUser.Username,
                 BotGlobal.Client.CurrentUser.Discriminator

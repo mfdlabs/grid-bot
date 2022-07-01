@@ -34,7 +34,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (assemblyName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null assembly name, aborting.");
+                Logger.Singleton.Warning("Null assembly name, aborting.");
                 await message.ReplyAsync("The first parameter of the command was null, " +
                                          "expected the \"AssemblyName\" to be not null or not empty.");
                 return;
@@ -44,7 +44,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingsGroupName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null setting group name, aborting.");
+                Logger.Singleton.Warning("Null setting group name, aborting.");
                 await message.ReplyAsync("The second parameter of the command was null, " +
                                          "expected the \"SettingsGroupName\" to be not null or not empty.");
                 return;
@@ -58,14 +58,14 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (FileNotFoundException)
             {
-                SystemLogger.Singleton.Warning("Could not find the assembly '{0}', aborting.", assemblyName);
+                Logger.Singleton.Warning("Could not find the assembly '{0}', aborting.", assemblyName);
                 await message.ReplyAsync($"Could not find the assembly by the name of " +
                                          $"'{assemblyName}'. Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
                 return;
             }
             catch (TypeLoadException)
             {
-                SystemLogger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.", settingsGroupName, assemblyName);
+                Logger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.", settingsGroupName, assemblyName);
                 await message.ReplyAsync($"Could not find the type by the name of " +
                                          $"'{settingsGroupName}' in the assembly '{assemblyName}'. " +
                                          $"Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
@@ -74,7 +74,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (remoteSettings.BaseType != typeof(ApplicationSettingsBase))
             {
-                SystemLogger.Singleton.Warning("The type '{0}' in the assembly '{1}' " +
+                Logger.Singleton.Warning("The type '{0}' in the assembly '{1}' " +
                                                "did not extend the type '{2}', aborting.",
                     remoteSettings.FullName,
                     remoteSettings.Assembly.FullName,
@@ -90,7 +90,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingsInstance == null)
             {
-                SystemLogger.Singleton.Warning(
+                Logger.Singleton.Warning(
                     "The property 'Default' on the type '{0}' in the assembly '{1}' was null, aborting.",
                     remoteSettings.FullName,
                     remoteSettings.Assembly.FullName);
@@ -106,7 +106,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null Setting name, aborting.");
+                Logger.Singleton.Warning("Null Setting name, aborting.");
                 await message.ReplyAsync("The third parameter of the command was null, " +
                                          "expected the \"SettingName\" to be not null or not empty.");
                 return;
@@ -120,7 +120,7 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
-                    SystemLogger.Singleton.Warning("The environment does not allow nulls.");
+                    Logger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is " +
                                              "disabled, please supply a 'non-nullable' value.");
                     return;
@@ -139,7 +139,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (indexer == null)
             {
-                SystemLogger.Singleton.Warning("The indexer for the property '{0}' on the" +
+                Logger.Singleton.Warning("The indexer for the property '{0}' on the" +
                                                " type '{1}' in the assembly '{2}' was null, aborting.",
                     settingName,
                     remoteSettings.FullName,
@@ -158,14 +158,14 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 if (tEx.InnerException is SettingsPropertyNotFoundException ex)
                 {
-                    SystemLogger.Singleton.Warning(ex.Message);
+                    Logger.Singleton.Warning(ex.Message);
                     await message.ReplyAsync($"Could not find the setting '{settingName}' " +
                                              $"in the setting group '{remoteSettings.FullName}' in " +
                                              $"the assembly '{remoteSettings.Assembly.GetName().Name}'");
                     return;
                 }
 
-                SystemLogger.Singleton.Warning(tEx.Message);
+                Logger.Singleton.Warning(tEx.Message);
                 await message.ReplyAsync("Unknown exception occurred when updating setting.");
                 return;
             }
@@ -196,7 +196,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
 
                 if (ex is ArgumentNullException || ex is ArgumentException)
                 {
@@ -223,7 +223,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (SettingsPropertyIsReadOnlyException ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
                 await message.ReplyAsync(ex.Message);
                 return;
             }
@@ -232,7 +232,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (saveInvoker == null)
             {
-                SystemLogger.Singleton.Warning("The 'Save' method on the type '{0}' in the assembly '{1}'" +
+                Logger.Singleton.Warning("The 'Save' method on the type '{0}' in the assembly '{1}'" +
                                                " was not present, aborting.",
                     remoteSettings.FullName,
                     remoteSettings.Assembly.FullName);
@@ -243,7 +243,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
 
             saveInvoker.Invoke(settingInstanceValue, null);
-            SystemLogger.Singleton.LifecycleEvent("Successfully set the setting '{0}' to the value of '{1}' " +
+            Logger.Singleton.LifecycleEvent("Successfully set the setting '{0}' to the value of '{1}' " +
                                                   "in the settings group '{2}' in the assembly '{3}'.",
                 settingName,
                 // ReSharper disable once PossibleInvalidOperationException
