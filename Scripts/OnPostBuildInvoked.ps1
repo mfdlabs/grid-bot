@@ -16,7 +16,8 @@ param (
     [string] $ProjectName,
     [string] $TargetFramework,
     [string] $DeployScriptOverride,
-    [bool] $DeleteDebugSymbols = $true
+    [bool] $DeleteDebugSymbols = $true,
+	[bool] $WriteNewGitHubRelease = $true
 )
 
 $isDebug = $ConfigurationName.StartsWith("Debug");
@@ -113,5 +114,5 @@ IF ($isDeployment) {
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $false -preRelease $false
+    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $WriteNewGitHubRelease -preRelease $isDebug
 }
