@@ -15,11 +15,11 @@
   
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="OpenTracing" Version="0.12.1" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
-	<ProjectReference Include="..\..\Dependencies\OpenTracing\OpenTracing.csproj" />
   </ItemGroup>
 
 </Project>
