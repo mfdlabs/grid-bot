@@ -185,7 +185,7 @@ function ReadGitRepoName([string] $from, [string] $remoteName) {
     return $gitRemoteParts[2]
 }
 
-function PublishGitRelease([string] $from, [string] $tag, [string] $branch, [string] $remoteName, [string[]] $files, [bool] $preRelease = $false, [bool] $allowPreReleaseGridDeployment = $false, [string] $gitBaseUrl = "api.github.com") {
+function PublishGitRelease([string] $from, [string] $tag, [string] $name, [string] $branch, [string] $remoteName, [string[]] $files, [bool] $preRelease = $false, [bool] $allowPreReleaseGridDeployment = $false, [string] $gitBaseUrl = "api.github.com") {
     # If the environment variable GITHUB_TOKEN is not set, then we can't publish, just warn and return
     if ($null -eq $env:GITHUB_TOKEN) {
         Write-Host "GITHUB_TOKEN environment variable is not set, skipping publish" -ForegroundColor Yellow
@@ -265,10 +265,12 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $branch, [str
 
     $url = "https://$gitBaseUrl/repos/$owner/$repoName/releases"
 
+    $name = if ($null -ne $name -and "" -ne $name) { $name } else { $tag }
+
     $payload = @{
         "tag_name"               = $tag
         "target_commitish"       = $branch
-        "name"                   = IF ($preRelease -eq $true -and $allowPreReleaseGridDeployment -eq $true) { "$tag [DEPLOY]" } ELSE { $tag }
+        "name"                   = IF ($preRelease -eq $true -and $allowPreReleaseGridDeployment -eq $true) { "$name [DEPLOY]" } ELSE { $name }
         "draft"                  = $true
         "prerelease"             = $preRelease
         "generate_release_notes" = $true
