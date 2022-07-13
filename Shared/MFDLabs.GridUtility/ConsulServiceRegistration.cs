@@ -118,7 +118,8 @@ namespace MFDLabs.Grid.Bot.Utility
                     Interval = interval,
                     Method = method,
                     Body = body,
-                    Header = header
+                    Header = header,
+                    Notes = notes
                 };
 
                 _consulClient.Agent.CheckRegister(check).Wait();

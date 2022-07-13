@@ -413,8 +413,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                 scriptId,
                                 scriptName
                             );
-                            FilesHelper.PollDeletionOfFile(
-                                scriptName,
+                            scriptName.PollDeletion(
                                 10,
                                 ex => Logger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
                                 () => Logger.Singleton.LifecycleEvent(
