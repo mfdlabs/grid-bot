@@ -8,6 +8,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Threading.Extensions;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {
@@ -220,8 +221,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embed,
                 options
             )
-            .GetAwaiter()
-            .GetResult();
+            .Sync();
 
         public static RestFollowupMessage RespondWithFileEphemeralPing(
             this SocketCommandBase command,
@@ -243,8 +243,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                 embed,
                 options
             )
-            .GetAwaiter()
-            .GetResult();
+            .Sync();
 
         public static RestFollowupMessage RespondWithFilePublic(
            this SocketCommandBase command,
@@ -268,8 +267,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                embed,
                options
            )
-           .GetAwaiter()
-           .GetResult();
+           .Sync();
 
         public static RestFollowupMessage RespondWithFilePublicPing(
            this SocketCommandBase command,
@@ -291,8 +289,7 @@ namespace MFDLabs.Grid.Bot.Extensions
                embed,
                options
            )
-           .GetAwaiter()
-           .GetResult();
+           .Sync();
 
         public static void RespondEphemeral(
             this SocketCommandBase command,
@@ -303,7 +300,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondEphemeralAsync(text, pingUser, embeds, isTts, component, embed, options).GetAwaiter().GetResult();
+        ) => command.RespondEphemeralAsync(text, pingUser, embeds, isTts, component, embed, options).Sync();
 
         public static void RespondEphemeralPing(
             this SocketCommandBase command,
@@ -313,7 +310,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).GetAwaiter().GetResult();
+        ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).Sync();
 
         public static void RespondPublic(
             this SocketCommandBase command,
@@ -324,7 +321,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).GetAwaiter().GetResult();
+        ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).Sync();
 
         public static void RespondPublicPing(
             this SocketCommandBase command,
@@ -334,7 +331,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondPublicPingAsync(text, embeds, isTts, component, embed, options).GetAwaiter().GetResult();
+        ) => command.RespondPublicPingAsync(text, embeds, isTts, component, embed, options).Sync();
 
         public static async Task<bool> RejectIfNotAdminAsync(this SocketCommandBase cmd)
             => await AdminUtility.RejectIfNotAdminAsync(cmd);
@@ -343,11 +340,11 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static async Task<bool> RejectIfNotOwnerAsync(this SocketCommandBase cmd)
             => await AdminUtility.RejectIfNotOwnerAsync(cmd);
         public static bool RejectIfNotPrivilaged(this SocketCommandBase cmd)
-            => cmd.RejectIfNotPrivilagedAsync().GetAwaiter().GetResult();
+            => cmd.RejectIfNotPrivilagedAsync().Sync();
         public static bool RejectIfNotAdmin(this SocketCommandBase cmd)
-            => cmd.RejectIfNotAdminAsync().GetAwaiter().GetResult();
+            => cmd.RejectIfNotAdminAsync().Sync();
         public static bool RejectIfNotOwner(this SocketCommandBase cmd)
-            => cmd.RejectIfNotOwnerAsync().GetAwaiter().GetResult();
+            => cmd.RejectIfNotOwnerAsync().Sync();
 
         internal class DiscardDisposable : IDisposable
         {
@@ -363,7 +360,7 @@ namespace MFDLabs.Grid.Bot.Extensions
         }
 
         public static IDisposable DeferEphemeral(this SocketCommandBase command, RequestOptions options = null)
-            => command.DeferEphemeralAsync(options).GetAwaiter().GetResult();
+            => command.DeferEphemeralAsync(options).Sync();
 
         public static async Task<IDisposable> DeferPublicAsync(this SocketCommandBase command, RequestOptions options = null)
         {
@@ -372,7 +369,7 @@ namespace MFDLabs.Grid.Bot.Extensions
         }
 
         public static IDisposable DeferPublic(this SocketCommandBase command, RequestOptions options = null)
-            => command.DeferPublicAsync(options).GetAwaiter().GetResult();
+            => command.DeferPublicAsync(options).Sync();
     }
 }
 

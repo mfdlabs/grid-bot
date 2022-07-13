@@ -160,7 +160,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             }
             finally
             {
-                FilesHelper.PollDeletionOfFile(tempPath);
+                tempPath.PollDeletion();
             }
         }
 

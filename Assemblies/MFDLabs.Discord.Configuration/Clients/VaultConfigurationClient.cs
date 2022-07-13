@@ -4,13 +4,14 @@ using System.Configuration;
 using System.Linq;
 using System.Threading;
 using Discord.WebSocket;
+using MFDLabs.Logging;
+using MFDLabs.Threading.Extensions;
 using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
 using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
 using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
-using MFDLabs.Logging;
 
 namespace MFDLabs.Discord.Configuration
 {
@@ -21,7 +22,7 @@ namespace MFDLabs.Discord.Configuration
             value = default;
             try
             {
-                value = kv.ReadSecretAsync<T>(path, null, mountPoint).Result.Data.Data;
+                value = kv.ReadSecretAsync<T>(path, null, mountPoint).Sync().Data.Data;
                 return true;
             }
             catch
@@ -68,11 +69,11 @@ namespace MFDLabs.Discord.Configuration
         
         private void RefreshToken(object s)
         {
-            _tokenStr ??= _token.LookupSelfAsync()
+            _tokenStr ??= _token.LookupSelfAsync().Sync()
 #if !NETFRAMEWORK && !NETSTANDARD2_0
-                .Result.Data.Id[..6];
+                .Data.Id[..6];
 #else
-                .Result.Data.Id.Substring(0, 6);
+                .Data.Id.Substring(0, 6);
 #endif
 
             
@@ -165,9 +166,10 @@ namespace MFDLabs.Discord.Configuration
             if (!_kvV2.SecretExists<IDictionary<string, object>>(path, out var d, SecretsEngineBasePath))
                 SetupDefaultConfiguration(message, groupName);
 
-            d ??= _kvV2.ReadSecretAsync<IDictionary<string, object>>(path,
-                    mountPoint: SecretsEngineBasePath)
-                .Result.Data.Data;
+            d ??= _kvV2.ReadSecretAsync<IDictionary<string, object>>(
+				path, 
+				mountPoint: SecretsEngineBasePath
+			).Sync().Data.Data;
 
             return d;
         }
@@ -184,9 +186,10 @@ namespace MFDLabs.Discord.Configuration
             if (!_kvV2.SecretExists(path, out d, SecretsEngineBasePath))
                 SetupDefaultConfiguration(message, groupName);
 
-            d ??= _kvV2.ReadSecretAsync<IDictionary<string, object>>(path,
-                    mountPoint: SecretsEngineBasePath)
-                .Result.Data.Data;
+            d ??= _kvV2.ReadSecretAsync<IDictionary<string, object>>(
+				path, 
+				mountPoint: SecretsEngineBasePath
+			).Sync().Data.Data;
 
             d = d.Where(k => !k.Key.StartsWith(MetaValuePrefix)).ToDictionary(k => k.Key, v => v.Value);
 
