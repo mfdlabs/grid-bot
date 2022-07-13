@@ -1,16 +1,74 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using MFDLabs.Sentinels;
 
 namespace MFDLabs.FileSystem
 {
-    public static class FilesHelper
+    public static class FilesSystemHelper
     {
         private static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(2.5);
         private static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(10);
 
-        public static bool IsValidPath(string path, bool allowRelativePaths = false)
+        public static bool IsFilePath(this string s) => s.IndexOfAny(Path.GetInvalidPathChars()) == -1;
+
+        public static bool IsDirectoryWritable(this string dirPath, bool throwIfFails = false)
+        {
+            try
+            {
+                using (var fs = File.Create(
+                    Path.Combine(
+                        dirPath,
+                        Path.GetRandomFileName()
+                    ),
+                    1,
+                    FileOptions.DeleteOnClose)
+                )
+                { }
+                return true;
+            }
+            catch
+            {
+                if (throwIfFails)
+                    throw;
+                else
+                    return false;
+            }
+        }
+
+        public static bool CreateFileRecursive(string filePath)
+        {
+            if (!filePath.IsFilePath()) return false;
+
+            if (File.Exists(filePath)) return true;
+
+            var directory = Path.GetDirectoryName(filePath);
+
+            if (directory == null) return false;
+
+            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+            File.Create(filePath);
+
+            return true;
+        }
+
+        public static bool AppendAllTextToFileRecursive(string filePath, string text, Encoding encoding = null)
+        {
+            encoding ??= Encoding.Default;
+
+            if (!File.Exists(filePath))
+                if (!CreateFileRecursive(filePath))
+                    return false;
+
+
+            File.AppendAllText(filePath, text, encoding);
+
+            return true;
+        }
+
+        public static bool IsValidPath(this string path, bool allowRelativePaths = false)
         {
             try
             {
@@ -28,7 +86,7 @@ namespace MFDLabs.FileSystem
             }
         }
 
-        public static bool IsSubDir(string parentPath, string childPath)
+        public static bool IsSubDir(this string parentPath, string childPath)
         {
             var parentUri = new Uri(parentPath);
             var childUri = new DirectoryInfo(childPath).Parent;
@@ -41,27 +99,33 @@ namespace MFDLabs.FileSystem
             return false;
         }
 
-        public static void PollDeletionOfFile(string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
-            => ThreadPool.QueueUserWorkItem(s => PollDeletionOfFileBlocking(path, maxAttempts, onFailure, onSuccess));
-        public static void PollDeletionOfFile(string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)
-            => ThreadPool.QueueUserWorkItem(s => PollDeletionOfFileBlocking(path, maxAttempts, onFailure, onSuccess, baseDelay, maxDelay, jitter));
-        public static void PollDeletionOfFileBlocking(string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
-            => PollDeletionOfFileBlocking(path, maxAttempts, onFailure, onSuccess, BaseDelay, MaxDelay);
-        public static void PollDeletionOfFileBlocking(string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)
+        public static void PollDeletion(this string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
+            => ThreadPool.QueueUserWorkItem(s => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess));
+        public static void PollDeletion(this string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)
+            => ThreadPool.QueueUserWorkItem(s => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess, baseDelay, maxDelay, jitter));
+        public static void PollDeletionBlocking(this string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
+            => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess, BaseDelay, MaxDelay);
+        public static void PollDeletionBlocking(this string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)
         {
             if (maxAttempts <= 0) throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+            if (maxAttempts > 255) throw new ArgumentOutOfRangeException(nameof(maxAttempts));
 
-            for (int i = 1; i <= maxAttempts; i++)
+            var maximumAttempts = (byte)maxAttempts;
+
+            for (byte i = 1; i <= maximumAttempts; i++)
             {
                 try
                 {
-                    File.Delete(path);
+                    if (File.Exists(path))
+                        File.Delete(path);
+                    else if (Directory.Exists(path))
+                        Directory.Delete(path, true);
                     onSuccess?.Invoke();
                     return;
                 }
                 catch (Exception ex) { onFailure?.Invoke(ex); }
 
-                Thread.Sleep(ExponentialBackoff.CalculateBackoff((byte)i, (byte)maxAttempts, baseDelay, maxDelay, jitter));
+                Thread.Sleep(ExponentialBackoff.CalculateBackoff(i, maximumAttempts, baseDelay, maxDelay, jitter));
             }
 
             onFailure?.Invoke(new TimeoutException($"Unable to delete the file '{path}' within the max attempts of {maxAttempts}"));
