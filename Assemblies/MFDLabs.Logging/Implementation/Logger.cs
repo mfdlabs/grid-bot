@@ -138,7 +138,7 @@ namespace MFDLabs.Logging
         private bool _logThreadId = false;
         private bool _logWithColor = false;
 
-        private FileSystemHelper.LockedFileStream _lockedFileWriteStream = null;
+        private LockedFileStream _lockedFileWriteStream = null;
         private string _fileName = null;
         private string _fullyQualifiedFileName = null;
 
@@ -241,7 +241,9 @@ namespace MFDLabs.Logging
 
         protected virtual string _constructLoggerMessage(LogLevel logLevel, string format, params object[] args)
         {
-            var formattedMessage = string.Format(format, args);
+            var formattedMessage = args is { Length: 0 }
+                ? format
+                : string.Format(format, args);
 
             if (_cutLogPrefix)
                 return string.Format(
@@ -266,7 +268,9 @@ namespace MFDLabs.Logging
 
         protected virtual string _constructColoredLoggerMessage(LogLevel logLevel, LogColor color, string format, params object[] args)
         {
-            var formattedMessage = string.Format(format, args);
+            var formattedMessage = args is { Length: 0 } 
+                ? format 
+                : string.Format(format, args);
 
             if (_cutLogPrefix)
                 return string.Format(
@@ -307,7 +311,7 @@ namespace MFDLabs.Logging
             {
                 try
                 {
-                    _lockedFileWriteStream?.AppendText(_constructLoggerMessage(logLevel, format, args));
+                    _lockedFileWriteStream?.Write(_constructLoggerMessage(logLevel, format, args));
                 }
                 catch (Exception ex)
                 {
@@ -341,10 +345,22 @@ namespace MFDLabs.Logging
 #if CONCURRENT_LOGGING_ENABLED
             _messageQueue.Post(() =>
             {
-                try { _log(logLevel, color, format, args); } catch { }
+                try { _log(logLevel, color, format, args); }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Warning("Error while performing log: {0}", ex.ToDetailedString());
+#endif
+                }
             });
 #else
-            try { _log(logLevel, color, format, args); } catch { }
+            try { _log(logLevel, color, format, args); }
+            catch (Exception ex)
+            {
+#if DEBUG
+                Warning("Error while performing log: {0}", ex);
+#endif
+            }
 #endif
         }
 
@@ -817,7 +833,11 @@ namespace MFDLabs.Logging
 
             if (!_checkLogLevel(LogLevel.Verbose)) return;
 
-            _queueOrLogInternal(LogLevel.Verbose, LogColor.BrightMagenta, new Exception(string.Format(format, args)).ToDetailedString());
+            var formattedMessage = args is { Length: 0 }
+                ? format
+                : string.Format(format, args);
+
+            _queueOrLogInternal(LogLevel.Verbose, LogColor.BrightMagenta, new Exception(formattedMessage).ToDetailedString());
         }
         public void Trace(Func<string> messageGetter)
         {

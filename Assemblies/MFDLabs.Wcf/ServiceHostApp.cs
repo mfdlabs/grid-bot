@@ -24,6 +24,9 @@ namespace MFDLabs.Wcf
             OnStop();
         }
     }
+
+    public class ServiceHostApp : ServiceHostApp<dynamic> {}
+
     /// <summary>
     /// An NT Service that hosts a WCF Service.
     /// This class encapsulates a ServiceHost.
@@ -115,7 +118,7 @@ namespace MFDLabs.Wcf
 
         public void Process(string[] args) => Process(args, null);
         /// <summary>
-        /// 
+        /// Process arguments
         /// </summary>
         /// <param name="args"></param>
         /// <param name="statsTask">A task to perform when the user presses a key</param>
@@ -128,10 +131,13 @@ namespace MFDLabs.Wcf
             {
                 try
                 {
-                    string option = args[0].Substring(1).ToLower();
+                    string option = args[0].StartsWith("--") // Starts with 2, split 2
+                        ? args[0].Substring(2).ToLower()
+                        : args[0].Substring(1).ToLower();
                     if (option == "console")
                     {
-                        EventLogLogger.Singleton.LifecycleEvent("Starting {0}...", typeof(TServiceClass));
+                        var type = typeof(TServiceClass);
+                        EventLogLogger.Singleton.LifecycleEvent("Starting {0}...", type == typeof(object) ? "ServiceHostApp" : type.Name);
                         OnStart(args);
 
                         EventLogLogger.Singleton.Warning("Service started. Press any key to {0}.", statsTask == null ? "exit" : "get stats");
@@ -190,8 +196,8 @@ namespace MFDLabs.Wcf
                         var newState = new Hashtable();
                         assemblyInstaller.Uninstall(newState);
                     }
-                    else
-                        throw new ApplicationException($"Bad argument {args[0]}");
+
+                    // Just skip unknown args
                 }
                 catch (Exception e)
                 {

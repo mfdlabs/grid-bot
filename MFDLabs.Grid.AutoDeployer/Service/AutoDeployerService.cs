@@ -12,71 +12,58 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Octokit;
+using Octokit.GraphQL;
 using Microsoft.Win32;
 using MFDLabs.Logging;
 using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Threading.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
 
+/** TODO: Report to Infrastructure that node deployed this App **/
+/** TODO: Expose some API to force Rollbacks and Force Deployments? **/
+
 namespace MFDLabs.Grid.AutoDeployer.Service
 {
-    internal sealed class AutoDeployerService
+    internal static class AutoDeployerService
     {
+        private class MinimalRelease
+        {
+            public class MinimalReleaseAsset
+            {
+                public string Name { get; set; }
+                public string Url { get; set; }
+            }
+
+            public string TagName { get; set; }
+            public string Name { get; set; }
+            public bool Draft { get; set; }
+            public bool Prerelease { get; set; }
+            public List<MinimalReleaseAsset> Assets { get; set; }
+
+            public string NextPageCursor { get; set; }
+        }
+        
         // language=regex
-        /// <summary>
-        /// <c>/(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?/g</c>
-        /// <br/>
-        /// <br/>
-        /// https://regexr.com/6hqa4 <br/>
-        /// https://regex101.com/r/og6X9j/1 <br/>
-        /// <br/>
-        /// Matches the following format:<br/>
-        /// yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}_{targetFramework}-{configuration}<br/>
-        ///<br/>
-        /// Group 1: Matches default deployment format: yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}<br/>
-        /// 		 Where {branch} is any a-zA-Z0-9 or the `-` character.<br/>
-        /// 		 Where {gitShortHash} is a-z0-9 7 characters long exactly.<br/>
-        /// Group 2: Matches the deployment date: yyyy.MM.dd<br/>
-        /// Group 3: Matches the deployment year: yyyy<br/>
-        /// Group 4: Matches the deployment month: MM<br/>
-        /// Group 5: Matches the deployment day: dd<br/>
-        /// Group 6: Matches the time: hh.mm.ss<br/>
-        /// Group 7: Matches the hour: hh<br/>
-        /// Group 8: Matches the minute: mm<br/>
-        /// Group 9: Matches the second: ss<br/>
-        /// Group 10: Matches the branch name in the format of a-zA-Z0-9\-<br/>
-        /// Group 11: Matches the gitShortHash with the length of 7 exactly.<br/>
-        /// Group 12: Matches the optional .NET configuration section: {targetFramework}-{configuration}<br/>
-        /// 		  Where {targetFramework} is in the format of a case insensitive net(standard|coreapp)?\d(\.?)\d: net472, NET472, netstandard2.0, NeTsTanDard2.0, netcoreapp3.0, NETCoreApp3.1<br/>
-        /// 		  Where {configuration} is the build configuration in the format of a case insensitive (release|debug)(config(uration)?): release, debug, Release, DEBUG, releaseConfig, ReleaseConfig, DebugCONFIG, DEBUGCONFIGURATION<br/>
-        /// Group 13: Matches the targetFramework in the format of net(standard|coreapp)?\d(\.?)\d<br/>
-        /// Group 14: Matches the name of the target framework net(standard|coreapp)<br/>
-        /// Group 15: Matches the extended name of the target framework (standard|coreapp)<br/>
-        /// Group 16: Matches the full number of the target framework version<br/>
-        /// Group 17: Matches the number on the right of the \. in group 16.<br/>
-        /// Group 18: Matches the build configuration (release|debug)<br/>
-        /// Group 19: Matches the identifier that determines if this belongs to a configuration archive, (config(uration)?)<br/>
-        /// Group 20: Matches the identifier that determines if this is the full `Configuration` string.<br/>
-        ///<br/>
-        /// NOTICE: For .NET Regex, the original match is capture group no.1, so group number 12 would 13 in .NET<br/>
-        /// </summary>
-        private const string DeploymentIdRegex = @"(((\d{4,})\.(\d{2}).(\d{2}))-((\d{2}).(\d{2}).(\d{2}))_([a-zA-Z0-9\-_]+)_([a-f0-9]{7}))_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{1,3}\.?){1,2}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?";
+        private const string DeploymentIdRegex = @"(?<app_prefix>(?<app_prefix_name>[a-zA-Z0-9\-_\.]{1,500})_)?(?<version_string>(?<date>(?<year>\d{4,})\.(?<month>\d{2}).(?<day>\d{2}))-(?<time>(?<hour>\d{2}).(?<minute>\d{2}).(?<second>\d{2}))_(?<branch>[a-zA-Z0-9\-_]{1,255})_(?<commit_sha>[a-f0-9]{7}))_?(?<dotnet_configuration>(?<dotnet_version>(?i)(?<dotnet_brand>net(?i)(?<dotnet_extended_brand>standard|coreapp)?)(?<dotnet_version_id>(?<dotnet_version_id_right>[0-9]{1,3}\.?){1,2}))-(?i)(?<dotnet_build_configuration>release|debug)(?i)(?<config_archive_extended_text>config(?i)(uration)?)?)?";
 
         // language=regex
         /// <summary>
-        /// \[(?i)(volatile)\]
+        /// \[(?i)(deploy)\]
         /// <br/>
         /// Matches the following string and its variants: [DEPLOY]
         /// </summary>
         private const string ShouldDeployPreReleaseSearchString = @"\[(?i)(deploy)\]";
         private const string UserAgent = "mfdlabs-github-api-client";
         private const string DeploymentMarkerFilename = ".mfdlabs-deployment-marker";
-        
+
         private static User _githubUser;
         private static GitHubClient _gitHubClient;
+        private static Octokit.GraphQL.Connection _gitHubQLClient;
         private static RegistryKey _versioningRegKey;
+        private static FileLock _markerLock;
 
         private static bool _isRunning;
         private static string _cachedVersion;
@@ -91,7 +78,9 @@ namespace MFDLabs.Grid.AutoDeployer.Service
         private static string _githubRepositoryName;
         private static string _githubToken;
         private static string _primaryDeploymentExecutable;
+        private static string _deploymentAppName;
         private static TimeSpan _pollingInterval;
+        private static TimeSpan _skippedVersionsInvalidationInterval;
 
         #endregion
 
@@ -100,15 +89,36 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             EventLogLogger.Singleton.LifecycleEvent("Stopping...");
             _isRunning = false;
             _versioningRegKey?.Dispose();
+            _markerLock?.Dispose();
         }
 
         public static void Start(object s, EventArgs e)
         {
             try { Work(); }
-            catch (ArgumentException ex) { Logger.Singleton.Error(ex.Message); Environment.Exit(1); }
-            catch (Exception ex) { Logger.Singleton.Error(ex); Environment.Exit(1); }
+            catch (ArgumentException ex) { Logger.Singleton.Error(ex.Message); Stop(null, null); }
+            catch (Exception ex) { Logger.Singleton.Error(ex); Stop(null, null); }
         }
-        
+
+        private static bool CachedVersionExistsRemotely() => _gitHubClient.Repository.Release.Get(_githubOrgOrAccountName, _githubRepositoryName, _cachedVersion).SyncOrDefault() != null;
+
+        private static DateTime GetDateTimeFromVersionString(this string str)
+        {
+            if (str == null) return DateTime.MinValue;
+
+            var groups = str.Match(DeploymentIdRegex).Groups;
+            if (groups == null)
+                throw new ArgumentException($"Invalid version string: {str}");
+
+            var year = groups["year"].Value.ToInt32();
+            var month = groups["month"].Value.ToInt32();
+            var day = groups["day"].Value.ToInt32();
+            var hour = groups["hour"].Value.ToInt32();
+            var minute = groups["minute"].Value.ToInt32();
+            var second = groups["second"].Value.ToInt32();
+
+            return new DateTime(year, month, day, hour, minute, second);
+        }
+
         private static void Work()
         {
             _versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
@@ -118,21 +128,26 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _githubRepositoryName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubRepositoryName;
             _primaryDeploymentExecutable = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPrimaryExecutableName;
             _pollingInterval = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.PollingInterval;
-
-            EventLogLogger.Singleton.LifecycleEvent("Starting...");
+            _skippedVersionsInvalidationInterval = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.SkippedVersionInvalidationInterval;
+            _deploymentAppName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentAppName?.ToLower();
 
 #if !DEBUG
             if (_pollingInterval < TimeSpan.FromSeconds(30))
                 throw new ArgumentException("The Polling interval cannot be less than 30 seconds.");
 #endif
+            if (_skippedVersionsInvalidationInterval < TimeSpan.FromMinutes(1))
+                throw new ArgumentException("The Skipped Version Invalidation interval cannot be less than 1 minute.");
 
             if (_deploymentPath.IsNullOrEmpty())
                 throw new ArgumentException("The Deployment Path cannot be null or empty.");
 
             if (_primaryDeploymentExecutable.IsNullOrEmpty())
                 throw new ArgumentException("The Primary Deployment Executable cannot be null or empty.");
+						
+			if (_deploymentAppName.IsNullOrEmpty())
+				throw new ArgumentException("The Deployment App Name cannot be null or empty.");
 
-            if (!FilesHelper.IsValidPath(_deploymentPath, false))
+            if (!_deploymentPath.IsValidPath(false))
                 throw new ArgumentException("The Deployment Path is not a valid fileSystem path.");
 
             if (_versioningRegSubKey.IsNullOrEmpty())
@@ -159,28 +174,60 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             if (_githubToken.IsNullOrEmpty())
                 throw new ArgumentException("The Github Token cannot be null or empty.");
 
-            var phv = new ProductHeaderValue(UserAgent);
+            var ghApiPhv = new Octokit.ProductHeaderValue(UserAgent);
+            var ghQlPhv = new Octokit.GraphQL.ProductHeaderValue(UserAgent);
 
             if (gheUrl.IsNullOrEmpty())
-                _gitHubClient = new(phv);
+            {
+                _gitHubClient = new(ghApiPhv);
+                _gitHubQLClient = new(ghQlPhv, _githubToken);
+            }
             else
-                _gitHubClient = new(phv, new Uri(gheUrl));
+            {
+                var uri = new Uri(gheUrl);
+
+                _gitHubClient = new(ghApiPhv, new Uri(gheUrl));
+                _gitHubQLClient = new(ghQlPhv, new($"{uri.Scheme}://{uri.Host}/graphql"), _githubToken);
+            }
 
             _gitHubClient.Credentials = new(_githubToken);
 
-            _githubUser = _gitHubClient.User.Current().Result;
+            _githubUser = _gitHubClient.User.Current().SyncOrDefault();
 
-            EventLogLogger.Singleton.LifecycleEvent("Authenticated to '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubClient.BaseAddress, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
+            if (_githubUser == null)
+                throw new ArgumentException($"Unable to authenticate to '{_gitHubClient.BaseAddress}' with token '{_githubToken}'");
+
+            // Technically Rest API is not required, but we only use it for authentication.
+
+            EventLogLogger.Singleton.LifecycleEvent("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
+            EventLogLogger.Singleton.LifecycleEvent("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
 
             _isRunning = true;
 
             BackgroundWork(Run);
+            BackgroundWork(SkippedVersionInvalidationWork);
+        }
+
+        private static void SkippedVersionInvalidationWork()
+        {
+            Logger.Singleton.Info("Starting Skipped Version Invalidation Thread...");
+
+            // Invalidates the _skippedVersions list.
+            // This is in case a user updates a release by fixing an error, or marks a pre-release for deployment.
+            while (_isRunning)
+            {
+                Thread.Sleep(_skippedVersionsInvalidationInterval);
+                _skippedVersions.Clear();
+            }
         }
 
         private static void Run()
         {
             SetupRegistry();
             SetupDeploymentPath();
+            _markerLock = new FileLock(Path.Combine(_deploymentPath, DeploymentMarkerFilename));
+            _markerLock.Lock();
+            PurgeCachedVersionIfNoLongerExists();
             DetermineLatestVersion();
             LaunchIfNotRunning();
 
@@ -225,7 +272,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     foreach (var a in r.Assets)
                     {
                         var fqp = Path.Combine(_deploymentPath, a.Name);
-                        DownloadArtifact(a.Url, fqp);
+                        DownloadArtifact(a.Name, a.Url, fqp);
                     }
 
                     if (!RunUnpacker(r, out var versionDeploymentPath))
@@ -243,7 +290,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     if (!File.Exists(primaryExe))
                     {
                         SkipVersion(r.TagName);
-                        FilesHelper.PollDeletionOfFileBlocking(versionDeploymentPath);
+                        versionDeploymentPath.PollDeletionBlocking();
                         EventLogLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
                         goto SLEEP;
                     }
@@ -259,6 +306,22 @@ SLEEP:
             }
         }
 
+        private static void PurgeCachedVersionIfNoLongerExists()
+        {
+            if (_cachedVersion != null && (!CachedVersionExistsOnSystem() || !CachedVersionExistsRemotely()))
+            {
+                EventLogLogger.Singleton.Warning("Unkown version '{0}' found in registry key HKLM:{1}.{2}.", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+                _cachedVersion = null;
+                _versioningRegKey.DeleteValue(_versioningRegVersionKeyName);
+            }
+        }
+
+        private static bool CachedVersionExistsOnSystem()
+        {
+            if (_cachedVersion == null) return false;
+            return (from f in Directory.EnumerateDirectories(_deploymentPath) where f.Contains(_cachedVersion) select f).Any();
+        }
+
         private static void LaunchIfNotRunning()
         {
             if (_cachedVersion == null) return;
@@ -272,13 +335,13 @@ SLEEP:
             StartNewProcess(primaryExe, versionDeploymentPath);
         }
 
-        private static void StartNewProcess(string primaryExe, string versionDeploymentPath)
+        private static void StartNewProcess(string primaryExe, string workingDirectory)
         {
             var proc = new Process();
             proc.StartInfo.FileName = "powershell.exe";
             proc.StartInfo.Arguments = $"-ExecutionPolicy Unrestricted -Command \"Start-Process '{primaryExe}' -WindowStyle Maximized\"";
-            proc.StartInfo.WorkingDirectory = versionDeploymentPath;
-			proc.StartInfo.UseShellExecute = true;
+            proc.StartInfo.WorkingDirectory = workingDirectory;
+            proc.StartInfo.UseShellExecute = true;
             proc.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
             if (SystemGlobal.ContextIsAdministrator())
                 proc.StartInfo.Verb = "runas";
@@ -293,12 +356,7 @@ SLEEP:
                 return;
             }
 
-            if (!SystemGlobal.ContextIsAdministrator()
-#if NETFRAMEWORK // for now
-                && pr.IsElevated()
-#endif
-
-                )
+            if (!SystemGlobal.ContextIsAdministrator() && pr.IsElevated())
             {
                 Logger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
                 return;
@@ -346,23 +404,25 @@ SLEEP:
 #endif
 
 
-        private static void CleanupArtifacts(ReleaseAsset[] assets)
+        private static void CleanupArtifacts(MinimalRelease.MinimalReleaseAsset[] assets)
         {
             foreach (var asset in assets)
             {
                 var fqp = Path.Combine(_deploymentPath, asset.Name);
                 EventLogLogger.Singleton.Debug("Deleting asset '{0}' from '{1}'", asset.Name, _deploymentPath);
-                FilesHelper.PollDeletionOfFileBlocking(fqp, 10);
+                fqp.PollDeletionBlocking();
             }
         }
 
-        private static bool RunUnpacker(Release release, out string versionDeploymentPath)
+        private static bool RunUnpacker(MinimalRelease release, out string versionDeploymentPath)
         {
             var unpackerFile = Path.Combine(
                 _deploymentPath,
                 (
                     from f in release.Assets
-                    where f.Name.IsMatch($@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1")
+                    where f.Name.IsMatch(
+                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1"
+                    )
                     select f
                 ).FirstOrDefault()?.Name
             );
@@ -400,46 +460,151 @@ SLEEP:
             return true;
         }
 
-        private static void DownloadArtifact(string uri, string outputPath)
+        private static void DownloadArtifact(string name, string uri, string outputPath)
         {
-            EventLogLogger.Singleton.Debug("Downloading artifact '{0}' to '{1}'", uri, outputPath);
-
             using var webClient = new WebClient();
+            using var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+            webClient.DownloadProgressChanged += (sender, e) =>
+            {
+                // Only log progress every 5%
+                if (e.ProgressPercentage % 5 != 0) return;
+
+                float kibRead = e.BytesReceived / 1024f;
+                float kibTotal = e.TotalBytesToReceive / 1024f;
+
+                Logger.Singleton.Verbose("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
+            };
+
+            webClient.DownloadFileCompleted += (sender, e) =>
+            {
+                if (e.Error != null)
+                {
+                    EventLogLogger.Singleton.Error("Failed to download '{0}': {1}", uri, e.Error.Message);
+                    waitHandle.Set();
+                    return;
+                }
+
+                waitHandle.Set();
+            };
+
             webClient.Headers.Add("User-Agent", UserAgent);
-            webClient.Headers.Add("Authorization", $"token {_githubToken}");
+            webClient.Headers.Add("Authorization", $"token {_githubToken}"); // If using GraphQL API, this is not needed as it gives you the raw S3 URL
             webClient.Headers.Add("Accept", "application/octet-stream");
-            webClient.DownloadFile(uri, outputPath);
+            webClient.DownloadFileAsync(new(uri), outputPath);
+
+            waitHandle.WaitOne();
         }
 
-        private static void SkipVersion(string version) => _skippedVersions.Add(version);
+        private static void SkipVersion(string version)
+        {
+            EventLogLogger.Singleton.Info("Skipping version '{0}'...", version);
 
-        private static bool DetermineIfNewReleaseAvailable(out Release latestRelease)
+            _skippedVersions.Add(version);
+        }
+
+        private static bool DetermineIfNewReleaseAvailable(out MinimalRelease latestRelease, string nextPageCursor = null)
         {
             latestRelease = null;
 
-            // GetAll here because it will not fetch pre-release if we use GetLatest
-            var releases = _gitHubClient.Repository.Release.GetAll(_githubOrgOrAccountName, _githubRepositoryName, new() { PageCount = 1, PageSize = 1 }).Result;
+            PurgeCachedVersionIfNoLongerExists();
+
+            var releasesQuery = (
+                from release in
+                    new Query()
+                    .Repository(
+                        name: _githubRepositoryName,
+                        owner: _githubOrgOrAccountName,
+                        followRenames: true
+                    )
+                    .Releases(
+                        first: 1,
+                        orderBy: new Octokit.GraphQL.Model.ReleaseOrder
+                        {
+                            Field = Octokit.GraphQL.Model.ReleaseOrderField.CreatedAt,
+                            Direction = Octokit.GraphQL.Model.OrderDirection.Desc
+                        },
+                        after: nextPageCursor
+                    )
+                select from node in release.Nodes
+                       select new MinimalRelease
+                       {
+                           Name = node.Name,
+                           TagName = node.TagName,
+                           Draft = node.IsDraft,
+                           Prerelease = node.IsPrerelease,
+                           NextPageCursor = release.PageInfo.EndCursor,
+                           Assets = (from asset in
+                                node.ReleaseAssets(
+                                    4,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                                )
+                                    select from node in asset.Nodes
+                                           select new MinimalRelease.MinimalReleaseAsset
+                                           {
+                                               Name = node.Name,
+                                               Url = node.Url
+                                           }
+                            ).ToList()
+                       }
+            ).Compile();
+            var releases = _gitHubQLClient.Run(releasesQuery).Sync();
 
             if (!releases.Any()) return false;
 
-            latestRelease = releases[0];
+            latestRelease = releases.FirstOrDefault();
             var latestReleaseVersion = latestRelease.TagName;
 
-            if (latestRelease.Draft) return false;
-            if (latestReleaseVersion == _cachedVersion) return false;
-            if (!latestReleaseVersion.IsMatch(DeploymentIdRegex, RegexOptions.Compiled)) return false;
-            if (_skippedVersions.Contains(latestReleaseVersion)) return false;
+            if (latestRelease.Draft) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
+            if (latestReleaseVersion == _cachedVersion && CachedVersionExistsOnSystem()) return false;
+            if (!latestReleaseVersion.IsMatch(DeploymentIdRegex, RegexOptions.Compiled)) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
+            if (_skippedVersions.Contains(latestReleaseVersion)) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
+
+            var isFirstPagedItem = nextPageCursor == null; // empty is last page
+
+            var cachedVersionDate = _cachedVersion.GetDateTimeFromVersionString().Ticks;
+            var newVersionDate = latestReleaseVersion.GetDateTimeFromVersionString().Ticks;
+
+            // is rollback
+            var isOldRelease = newVersionDate < cachedVersionDate;
+            var isRollback = isOldRelease && isFirstPagedItem;
+
+            if (isOldRelease && !isRollback)
+            {
+                // Skip this release and ignore the rest of the page
+                EventLogLogger.Singleton.Warning("{0} is older than the current version {1} but was not marked for roll-back. Skipping...", latestReleaseVersion, _cachedVersion);
+                SkipVersion(latestReleaseVersion);
+                return false;
+            }
 
             if (latestRelease.Prerelease)
             {
                 if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 {
                     EventLogLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
-                    return false;
+                    SkipVersion(latestReleaseVersion);
+                    return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
                 }
+				
+				EventLogLogger.Singleton.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
             }
 
-            EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease);
+			var groups = latestRelease.Name.Match(DeploymentIdRegex, RegexOptions.Compiled | RegexOptions.IgnoreCase).Groups;
+			var appNameGroup = groups["app_prefix_name"];
+
+			if (appNameGroup.Success && !appNameGroup.Value.IsMatch(_deploymentAppName, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+			{
+				EventLogLogger.Singleton.Warning("'{0}' was marked as for app '{1}' but we are deploying for app '{2}', skipping...", latestReleaseVersion, appNameGroup.Value, _deploymentAppName);
+				SkipVersion(latestReleaseVersion);
+				return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
+			}
+
+			// We assume no app prefix means the app name is the same as the release name
+
+            EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3} Is Old-Release: {4} Is Rollback: {5}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease, isOldRelease, isRollback);
 
             return true;
         }
@@ -465,12 +630,12 @@ SLEEP:
 
             // please look at the regex docs at the top of this file
             var sortedDirectories = from m in directoryMatches
-                                    let year = m.Groups[3].Value.ToInt32()
-                                    let month = m.Groups[4].Value.ToInt32()
-                                    let day = m.Groups[5].Value.ToInt32()
-                                    let hour = m.Groups[7].Value.ToInt32()
-                                    let minute = m.Groups[8].Value.ToInt32()
-                                    let second = m.Groups[9].Value.ToInt32()
+                                    let year = m.Groups["year"].Value.ToInt32()
+                                    let month = m.Groups["month"].Value.ToInt32()
+                                    let day = m.Groups["day"].Value.ToInt32()
+                                    let hour = m.Groups["hour"].Value.ToInt32()
+                                    let minute = m.Groups["minute"].Value.ToInt32()
+                                    let second = m.Groups["second"].Value.ToInt32()
                                     orderby new DateTime(year, month, day, hour, minute, second).Ticks descending
                                     select m;
 
@@ -478,7 +643,7 @@ SLEEP:
 
             if (currentDeployment != null)
             {
-                _cachedVersion = currentDeployment.Groups[1].Value;
+                _cachedVersion = currentDeployment.Groups["version_string"].Value;
 
                 EventLogLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
 
@@ -523,7 +688,7 @@ SLEEP:
 
             var winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
 
-            if (FilesHelper.IsSubDir(winDir, deploymentPath))
+            if (winDir.IsSubDir(deploymentPath))
             {
                 EventLogLogger.Singleton.Error("Cannot create deployment directory as it is reserved by Windows.");
                 Environment.Exit(1);
