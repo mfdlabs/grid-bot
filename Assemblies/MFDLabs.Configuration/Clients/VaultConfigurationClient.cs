@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using MFDLabs.Threading.Extensions;
 using MFDLabs.Configuration.Logging;
-using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
-using MFDLabs.Hashicorp.VaultClient.V1.Commons;
-using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
+using MFDLabs.Configuration.Settings;
 using MFDLabs.Hashicorp.VaultClient.Core;
+using MFDLabs.Hashicorp.VaultClient.V1.Commons;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
+using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
+using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {
@@ -23,7 +24,7 @@ namespace MFDLabs.Configuration.Clients.Vault
 
             try
             {
-                o = kv.ReadSecretPathsAsync(path, mountPoint).Result;
+                o = kv.ReadSecretPathsAsync(path, mountPoint).Sync();
                 return true;
             }
             catch (Exception ex)
@@ -67,11 +68,11 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         private void RefreshToken(object s)
         {
-            _tokenStr ??= _token.LookupSelfAsync()
+            _tokenStr ??= _token.LookupSelfAsync().Sync()
 #if !NETFRAMEWORK && !NETSTANDARD2_0
-                .Result.Data.Id[..6];
+                .Data.Id[..6];
 #else
-                .Result.Data.Id.Substring(0, 6);
+                .Data.Id.Substring(0, 6);
 #endif
 
 
@@ -107,8 +108,10 @@ namespace MFDLabs.Configuration.Clients.Vault
                         from secret in
                             from path in
                                 paths.Data.Keys
-                            select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                                mountPoint: BaseMountPoint).Result
+                            select _kvV2.ReadSecretAsync(
+                                $"{AppConfiguration}/{groupName}/{path}",
+                                mountPoint: BaseMountPoint
+                            ).Sync()
                         select secret.Data.Data
                     select new Setting
                     {
@@ -127,8 +130,10 @@ namespace MFDLabs.Configuration.Clients.Vault
                         from secret in
                             from path in
                                 paths.Data.Keys
-                            select _kvV2.ReadSecretAsync($"{AppConfiguration}/{groupName}/{path}",
-                                mountPoint: BaseMountPoint).Result
+                            select _kvV2.ReadSecretAsync(
+                                $"{AppConfiguration}/{groupName}/{path}", 
+                                mountPoint: BaseMountPoint
+                            ).Sync()
                         select secret.Data.Data
                     select new Setting
                     {
