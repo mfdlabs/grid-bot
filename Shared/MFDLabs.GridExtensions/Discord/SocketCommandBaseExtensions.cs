@@ -300,7 +300,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondEphemeralAsync(text, pingUser, embeds, isTts, component, embed, options).Sync();
+        ) => command.RespondEphemeralAsync(text, pingUser, embeds, isTts, component, embed, options).Wait();
 
         public static void RespondEphemeralPing(
             this SocketCommandBase command,
@@ -310,7 +310,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).Sync();
+        ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).Wait();
 
         public static void RespondPublic(
             this SocketCommandBase command,
@@ -321,7 +321,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).Sync();
+        ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).Wait();
 
         public static void RespondPublicPing(
             this SocketCommandBase command,
@@ -331,7 +331,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageComponent component = null,
             Embed embed = null,
             RequestOptions options = null
-        ) => command.RespondPublicPingAsync(text, embeds, isTts, component, embed, options).Sync();
+        ) => command.RespondPublicPingAsync(text, embeds, isTts, component, embed, options).Wait();
 
         public static async Task<bool> RejectIfNotAdminAsync(this SocketCommandBase cmd)
             => await AdminUtility.RejectIfNotAdminAsync(cmd);
