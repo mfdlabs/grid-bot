@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: CompilationRelaxations(8)]
 #endif
 [assembly: AssemblyTitle("MFDLabs.Grid.AutoDeployer")]
-[assembly: AssemblyDescription("A windows service that polls Github Cloud or Github Enterprise for new releases on the mfdlabs/grid-bot repository.")]
+[assembly: AssemblyDescription("A windows service that polls Github Cloud or Github Enterprise for new releases on a repository.")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
 #else

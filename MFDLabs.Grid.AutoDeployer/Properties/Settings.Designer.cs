@@ -12,7 +12,7 @@ namespace MFDLabs.Grid.AutoDeployer.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.0.3.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -110,6 +110,33 @@ namespace MFDLabs.Grid.AutoDeployer.Properties {
         public global::System.TimeSpan PollingInterval {
             get {
                 return ((global::System.TimeSpan)(this["PollingInterval"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Verbose")]
+        public global::MFDLabs.Logging.LogLevel EnvironmentLogLevel {
+            get {
+                return ((global::MFDLabs.Logging.LogLevel)(this["EnvironmentLogLevel"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DeploymentAppName {
+            get {
+                return ((string)(this["DeploymentAppName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:05:00")]
+        public global::System.TimeSpan SkippedVersionInvalidationInterval {
+            get {
+                return ((global::System.TimeSpan)(this["SkippedVersionInvalidationInterval"]));
             }
         }
     }
