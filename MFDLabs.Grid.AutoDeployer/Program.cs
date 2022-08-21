@@ -14,138 +14,137 @@ using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.AutoDeployer.Service;
 
-namespace MFDLabs.Grid.AutoDeployer
+namespace MFDLabs.Grid.AutoDeployer;
+
+internal static class Program
 {
-    internal class Program
+    private static readonly Option<bool> PurgeOption = new (new[] { "-purge", "/purge", "--purge" }, "Purge all known deployer info.") { IsRequired = false };
+
+    public static async Task Main(params string[] args)
     {
-        private static readonly Option<bool> _purgeOption = new (new[] { "-purge", "/purge", "--purge" }, "Purge all known deployer info.") { IsRequired = false };
+        Logger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
+        EventLogLogger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
 
-        public static async Task Main(params string[] args)
+        // If args has -purge or --purge etc.
+        // purge all known deployer info.
+        var rootCommand = new RootCommand(
+            description: "Polls Github Cloud or Github Enterprise constantly for new releases to deploy to the host machine."
+        )
         {
-            Logger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
-            EventLogLogger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
+            PurgeOption,
+            new Option<bool>(new[] { "-console", "/console", "--console" }, "Launch in console mode") { IsRequired = false },
+            new Option<bool>(new[] { "-install", "/install", "--install" }, "Installs the Application as a Windows Daemon") { IsRequired = false },
+            new Option<bool>(new[] { "-uninstall", "/uninstall", "--uninstall" }, "Uninstalls the Application if the Windows Daemon exists") { IsRequired = false }
+        };
+        rootCommand.TreatUnmatchedTokensAsErrors = false;
 
-            // If args has -purge or --purge etc.
-            // purge all known deployer info.
-            var rootCommand = new RootCommand(
-                description: "Polls Github Cloud or Github Enterprise constantly for new releases to deploy to the host machine."
-            )
-            {
-                _purgeOption,
-                new Option<bool>(new[] { "-console", "/console", "--console" }, "Launch in console mode") { IsRequired = false },
-                new Option<bool>(new[] { "-install", "/install", "--install" }, "Installs the Application as a Windows Daemon") { IsRequired = false },
-                new Option<bool>(new[] { "-uninstall", "/uninstall", "--uninstall" }, "Uninstalls the Application if the Windows Daemon exists") { IsRequired = false }
-            };
-            rootCommand.TreatUnmatchedTokensAsErrors = false;
+        rootCommand.SetHandler(Run);
 
-            rootCommand.SetHandler(Run);
+        var arguments = new CommandLineBuilder(rootCommand)
+            .UseHelp(int.MaxValue)
+            .UseParseDirective()
+            .UseSuggestDirective()
+            .RegisterWithDotnetSuggest()
+            .UseTypoCorrections()
+            .UseParseErrorReporting()
+            .Build()
+            .Parse(args);
 
-            var arguments = new CommandLineBuilder(rootCommand)
-                         .UseHelp(int.MaxValue)
-                         .UseParseDirective()
-                         .UseSuggestDirective()
-                         .RegisterWithDotnetSuggest()
-                         .UseTypoCorrections()
-                         .UseParseErrorReporting()
-                         .Build()
-                         .Parse(args);
+        Environment.Exit(await arguments.InvokeAsync());
+    }
 
-            Environment.Exit(await arguments.InvokeAsync());
-        }
+    private static void Run(InvocationContext context)
+    {
+        var args = from token in context.ParseResult.Tokens select token.Value;
 
-        private static void Run(InvocationContext context)
+        if (context.ParseResult.GetValueForOption(PurgeOption))
         {
-            var args = (from token in context.ParseResult.Tokens select token.Value);
+            Logger.Singleton.Warning("--purge set. Purging deployment files...");
 
-            if (context.ParseResult.GetValueForOption(_purgeOption) == true)
+            var deploymentPath = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
+            var versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
+
+            // If null, just exit and warn.
+            if (deploymentPath.IsNullOrEmpty())
             {
-                Logger.Singleton.Warning("--purge set. Purging deployment files...");
-
-                var deploymentPath = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
-                var versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
-
-                // If null, just exit and warn.
-                if (deploymentPath.IsNullOrEmpty())
-                {
-                    Logger.Singleton.Warning("Deployment path not set, cannot clear deployment directory. Exiting...");
-                    return;
-                }
-                if (versioningRegSubKey.IsNullOrEmpty())
-                {
-                    Logger.Singleton.Warning("Version Registry SubKey not set, cannot delete registry key. Exiting...");
-                    return;
-                }
-
-                var purgeDeploymentPath = true;
-                var purgeRegistryKey = true;
-
-                if (!Directory.Exists(deploymentPath))
-                {
-                    Logger.Singleton.Warning("Deployment path at '{0}' does not exist or is a file. Ignoring...", deploymentPath);
-                    purgeDeploymentPath = false;
-                }
-
-                if (Registry.LocalMachine.OpenSubKey(versioningRegSubKey) == null)
-                {
-                    Logger.Singleton.Warning("Version Registry SubKey at 'HKLM:{0}' did not exist. Ignoring...", versioningRegSubKey);
-                    purgeRegistryKey = false;
-                }
-
-                if (purgeDeploymentPath)
-                {
-                    foreach (var directory in Directory.EnumerateDirectories(deploymentPath)) // TODO: Match DeploymentId regex?
-                    {
-                        Logger.Singleton.LifecycleEvent("Deleting directory '{0}'...", directory);
-
-                        directory.PollDeletionBlocking(
-                            maxAttempts: 2,
-                            onFailure: ex =>
-                            {
-                                if (ex is UnauthorizedAccessException)
-                                    Logger.Singleton.Warning(
-                                        "Could not delete directory because we do not have write access." +
-                                        "Please run this app with elevated permissions or allow the user '{0}\\{1}'" +
-                                        "to write to the directory '{2}' and it's sub-directories. Ignoring...",
-                                        SystemGlobal.GetMachineId(),
-                                        ProcessHelper.GetCurrentUser(),
-                                        directory
-                                    );
-                                else
-                                    Logger.Singleton.Warning("Could not delete directory '{0}' because '{1}'", directory, ex.Message);
-                            },
-                            onSuccess: () => Logger.Singleton.LifecycleEvent("Successfully deleted directory '{0}'!", directory)
-                        );
-                    }
-                }
-
-                if (purgeRegistryKey)
-                {
-                    Logger.Singleton.LifecycleEvent("Deleting registry sub key 'HKLM:{0}'", versioningRegSubKey);
-                    try
-                    {
-                        Registry.LocalMachine.DeleteSubKeyTree(versioningRegSubKey, false);
-                        Logger.Singleton.LifecycleEvent("Successfully registry sub key 'HKLM:{0}'!", versioningRegSubKey);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Singleton.Warning("Could not delete registry sub key 'HKLM:{0}' because '{1}'", versioningRegSubKey, ex.Message);
-                    }
-                }
-
-                Logger.Singleton.Info("Purge finished!");
-
+                Logger.Singleton.Warning("Deployment path not set, cannot clear deployment directory. Exiting...");
+                return;
+            }
+            if (versioningRegSubKey.IsNullOrEmpty())
+            {
+                Logger.Singleton.Warning("Version Registry SubKey not set, cannot delete registry key. Exiting...");
                 return;
             }
 
-            var app = new ServiceHostApp();
-            app.EventLog.Source = "MFDLabs.Grid.AutoDeployer";
-            app.EventLog.Log = "MFDLabs.Grid.AutoDeployer";
+            var purgeDeploymentPath = true;
+            var purgeRegistryKey = true;
 
-            Console.CancelKeyPress += (sender, e) => app.Stop();
+            if (!Directory.Exists(deploymentPath))
+            {
+                Logger.Singleton.Warning("Deployment path at '{0}' does not exist or is a file. Ignoring...", deploymentPath);
+                purgeDeploymentPath = false;
+            }
 
-            app.HostOpening += AutoDeployerService.Start;
-            app.HostClosing += AutoDeployerService.Stop;
-            app.Process(args.ToArray());
+            if (Registry.LocalMachine.OpenSubKey(versioningRegSubKey) == null)
+            {
+                Logger.Singleton.Warning("Version Registry SubKey at 'HKLM:{0}' did not exist. Ignoring...", versioningRegSubKey);
+                purgeRegistryKey = false;
+            }
+
+            if (purgeDeploymentPath)
+            {
+                foreach (var directory in Directory.EnumerateDirectories(deploymentPath)) // TODO: Match DeploymentId regex?
+                {
+                    Logger.Singleton.LifecycleEvent("Deleting directory '{0}'...", directory);
+
+                    directory.PollDeletionBlocking(
+                        maxAttempts: 2,
+                        onFailure: ex =>
+                        {
+                            if (ex is UnauthorizedAccessException)
+                                Logger.Singleton.Warning(
+                                    "Could not delete directory because we do not have write access. " +
+                                    "Please run this app with elevated permissions or allow the user '{0}\\{1}' " +
+                                    "to write to the directory '{2}' and it's sub-directories. Ignoring...",
+                                    SystemGlobal.GetMachineId(),
+                                    ProcessHelper.GetCurrentUser(),
+                                    directory
+                                );
+                            else
+                                Logger.Singleton.Warning("Could not delete directory '{0}' because '{1}'", directory, ex.Message);
+                        },
+                        onSuccess: () => Logger.Singleton.LifecycleEvent("Successfully deleted directory '{0}'!", directory)
+                    );
+                }
+            }
+
+            if (purgeRegistryKey)
+            {
+                Logger.Singleton.LifecycleEvent("Deleting registry sub key 'HKLM:{0}'", versioningRegSubKey);
+                try
+                {
+                    Registry.LocalMachine.DeleteSubKeyTree(versioningRegSubKey, false);
+                    Logger.Singleton.LifecycleEvent("Successfully registry sub key 'HKLM:{0}'!", versioningRegSubKey);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Singleton.Warning("Could not delete registry sub key 'HKLM:{0}' because '{1}'", versioningRegSubKey, ex.Message);
+                }
+            }
+
+            Logger.Singleton.Info("Purge finished!");
+
+            return;
         }
+
+        var app = new ServiceHostApp();
+        app.EventLog.Source = "MFDLabs.Grid.AutoDeployer";
+        app.EventLog.Log = "MFDLabs.Grid.AutoDeployer";
+
+        Console.CancelKeyPress += (_, _) => app.Stop();
+
+        app.HostOpening += AutoDeployerService.Start;
+        app.HostClosing += AutoDeployerService.Stop;
+        app.Process(args.ToArray());
     }
 }

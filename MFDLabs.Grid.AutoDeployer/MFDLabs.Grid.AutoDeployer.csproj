@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net481</TargetFramework>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
@@ -20,12 +20,12 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID;</DefineConstants>
+    <DefineConstants>WE_ON_THE_GRID;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
+    <DefineConstants>WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,8 +44,8 @@
   <ItemGroup>
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.ServiceModel" />
   </ItemGroup>
 
   <ItemGroup>
@@ -72,6 +72,23 @@
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Infrastructure" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Deploy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="runservice.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="RunService.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
