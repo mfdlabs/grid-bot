@@ -20,5 +20,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2017. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Stuffs (R)")]
 [assembly: ComVisible(false)]
-[assembly: CLSCompliant(true)]
+[assembly: CLSCompliant(false)]
 [assembly: AssemblyVersion("1.0.*")]
