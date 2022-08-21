@@ -22,11 +22,19 @@ using MFDLabs.Threading.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable InvalidXmlDocComment
+
 /** TODO: Report to Infrastructure that node deployed this App **/
 /** TODO: Expose some API to force Rollbacks and Force Deployments? **/
+/** TODO: Rate limit detection for not just the REST API but also the GraphQL API **/
 
 namespace MFDLabs.Grid.AutoDeployer.Service
 {
+    /// <summary>
+    /// This Service facilitates a WCF Channel that will deploy GitHub components to Nodes.
+    /// </summary>
     internal static class AutoDeployerService
     {
         private class MinimalRelease
@@ -99,7 +107,50 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             catch (Exception ex) { Logger.Singleton.Error(ex); Stop(null, null); }
         }
 
-        private static bool CachedVersionExistsRemotely() => _gitHubClient.Repository.Release.Get(_githubOrgOrAccountName, _githubRepositoryName, _cachedVersion).SyncOrDefault() != null;
+        private static bool CachedVersionExistsRemotely(out bool wasRatelimited, out TimeSpan? retryAfter)
+        {
+            wasRatelimited = false;
+            retryAfter = null;
+            
+            try
+            {
+                return _gitHubClient.Repository.Release.Get(
+                    owner: _githubOrgOrAccountName, 
+                    name: _githubRepositoryName, 
+                    tag: _cachedVersion
+                ).Sync() != null;
+            }
+            catch (ApiException ex) when (ex.StatusCode is HttpStatusCode.NotFound or (HttpStatusCode)429 or HttpStatusCode.Forbidden)
+            {
+                if (ex.StatusCode is HttpStatusCode.NotFound) { wasRatelimited = false; return false; }
+                
+                // Determine the amount of time we should wait before trying again
+                var rateLimitRemaining = ex.HttpResponse.Headers
+                    .FirstOrDefault(h => h.Key == "X-RateLimit-Remaining")
+                    .Value?.ToInt32();
+
+                if (rateLimitRemaining != 0) return false;
+                wasRatelimited = true;
+                
+                var rateLimitReset = ex.HttpResponse.Headers
+                    .FirstOrDefault(h => h.Key == "X-RateLimit-Reset")
+                    .Value?.ToInt32();
+                
+                if (rateLimitReset == null) return false;
+                
+                var rateLimitResetDateTime = DateTimeOffset.FromUnixTimeSeconds(rateLimitReset.Value);
+                
+                retryAfter = rateLimitResetDateTime.Subtract(DateTimeOffset.UtcNow);
+                
+                return false;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Singleton.Error(ex);
+                return false;
+            }
+        }
 
         private static DateTime GetDateTimeFromVersionString(this string str)
         {
@@ -135,6 +186,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             if (_pollingInterval < TimeSpan.FromSeconds(30))
                 throw new ArgumentException("The Polling interval cannot be less than 30 seconds.");
 #endif
+            
             if (_skippedVersionsInvalidationInterval < TimeSpan.FromMinutes(1))
                 throw new ArgumentException("The Skipped Version Invalidation interval cannot be less than 1 minute.");
 
@@ -147,7 +199,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 			if (_deploymentAppName.IsNullOrEmpty())
 				throw new ArgumentException("The Deployment App Name cannot be null or empty.");
 
-            if (!_deploymentPath.IsValidPath(false))
+            if (!_deploymentPath.IsValidPath())
                 throw new ArgumentException("The Deployment Path is not a valid fileSystem path.");
 
             if (_versioningRegSubKey.IsNullOrEmpty())
@@ -227,7 +279,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             SetupDeploymentPath();
             _markerLock = new FileLock(Path.Combine(_deploymentPath, DeploymentMarkerFilename));
             _markerLock.Lock();
-            PurgeCachedVersionIfNoLongerExists();
+            PurgeCachedVersionIfNoLongerExists(out _, out _);
             DetermineLatestVersion();
             LaunchIfNotRunning();
 
@@ -301,19 +353,23 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                     _cachedVersion = r.TagName;
                     WriteVersionToRegistry();
                 }
-SLEEP:
+                
+                SLEEP:
                 Thread.Sleep(_pollingInterval);
             }
         }
 
-        private static void PurgeCachedVersionIfNoLongerExists()
+        private static void PurgeCachedVersionIfNoLongerExists(out bool remoteVersionCheckWasRatelimited, out TimeSpan? retryAfter)
         {
-            if (_cachedVersion != null && (!CachedVersionExistsOnSystem() || !CachedVersionExistsRemotely()))
-            {
-                EventLogLogger.Singleton.Warning("Unkown version '{0}' found in registry key HKLM:{1}.{2}.", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
-                _cachedVersion = null;
-                _versioningRegKey.DeleteValue(_versioningRegVersionKeyName);
-            }
+            remoteVersionCheckWasRatelimited = false;
+            retryAfter = null;
+            
+            if (_cachedVersion == null || (CachedVersionExistsOnSystem() && CachedVersionExistsRemotely(out remoteVersionCheckWasRatelimited, out retryAfter))) 
+                return;
+            
+            EventLogLogger.Singleton.Warning("Unkown version '{0}' found in registry key HKLM:{1}.{2}.", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+            _cachedVersion = null;
+            _versioningRegKey.DeleteValue(_versioningRegVersionKeyName);
         }
 
         private static bool CachedVersionExistsOnSystem()
@@ -388,7 +444,7 @@ SLEEP:
         }
 
 #if GRID_BOT
-        public static void InvokeMaintenanceCommandOnPreviousExe(string tagName)
+        private static void InvokeMaintenanceCommandOnPreviousExe(string tagName)
         {
             BackgroundWork(() =>
             {
@@ -404,7 +460,7 @@ SLEEP:
 #endif
 
 
-        private static void CleanupArtifacts(MinimalRelease.MinimalReleaseAsset[] assets)
+        private static void CleanupArtifacts(IEnumerable<MinimalRelease.MinimalReleaseAsset> assets)
         {
             foreach (var asset in assets)
             {
@@ -424,7 +480,7 @@ SLEEP:
                         $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1"
                     )
                     select f
-                ).FirstOrDefault()?.Name
+                ).FirstOrDefault()?.Name!
             );
 
             versionDeploymentPath = unpackerFile.Replace(".Unpacker.ps1", "");
@@ -463,29 +519,31 @@ SLEEP:
         private static void DownloadArtifact(string name, string uri, string outputPath)
         {
             using var webClient = new WebClient();
-            using var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-            webClient.DownloadProgressChanged += (sender, e) =>
+            webClient.DownloadProgressChanged += (_, e) =>
             {
                 // Only log progress every 5%
                 if (e.ProgressPercentage % 5 != 0) return;
 
-                float kibRead = e.BytesReceived / 1024f;
-                float kibTotal = e.TotalBytesToReceive / 1024f;
+                var kibRead = e.BytesReceived / 1024f;
+                var kibTotal = e.TotalBytesToReceive / 1024f;
 
                 Logger.Singleton.Verbose("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
             };
 
-            webClient.DownloadFileCompleted += (sender, e) =>
+            webClient.DownloadFileCompleted += (_, e) =>
             {
                 if (e.Error != null)
                 {
                     EventLogLogger.Singleton.Error("Failed to download '{0}': {1}", uri, e.Error.Message);
                     waitHandle.Set();
+                    waitHandle.Dispose();
                     return;
                 }
 
                 waitHandle.Set();
+                waitHandle.Dispose();
             };
 
             webClient.Headers.Add("User-Agent", UserAgent);
@@ -505,108 +563,132 @@ SLEEP:
 
         private static bool DetermineIfNewReleaseAvailable(out MinimalRelease latestRelease, string nextPageCursor = null)
         {
-            latestRelease = null;
-
-            PurgeCachedVersionIfNoLongerExists();
-
-            var releasesQuery = (
-                from release in
-                    new Query()
-                    .Repository(
-                        name: _githubRepositoryName,
-                        owner: _githubOrgOrAccountName,
-                        followRenames: true
-                    )
-                    .Releases(
-                        first: 1,
-                        orderBy: new Octokit.GraphQL.Model.ReleaseOrder
-                        {
-                            Field = Octokit.GraphQL.Model.ReleaseOrderField.CreatedAt,
-                            Direction = Octokit.GraphQL.Model.OrderDirection.Desc
-                        },
-                        after: nextPageCursor
-                    )
-                select from node in release.Nodes
-                       select new MinimalRelease
-                       {
-                           Name = node.Name,
-                           TagName = node.TagName,
-                           Draft = node.IsDraft,
-                           Prerelease = node.IsPrerelease,
-                           NextPageCursor = release.PageInfo.EndCursor,
-                           Assets = (from asset in
-                                node.ReleaseAssets(
-                                    4,
-                                    null,
-                                    null,
-                                    null,
-                                    null
-                                )
-                                    select from node in asset.Nodes
-                                           select new MinimalRelease.MinimalReleaseAsset
-                                           {
-                                               Name = node.Name,
-                                               Url = node.Url
-                                           }
-                            ).ToList()
-                       }
-            ).Compile();
-            var releases = _gitHubQLClient.Run(releasesQuery).Sync();
-
-            if (!releases.Any()) return false;
-
-            latestRelease = releases.FirstOrDefault();
-            var latestReleaseVersion = latestRelease.TagName;
-
-            if (latestRelease.Draft) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
-            if (latestReleaseVersion == _cachedVersion && CachedVersionExistsOnSystem()) return false;
-            if (!latestReleaseVersion.IsMatch(DeploymentIdRegex, RegexOptions.Compiled)) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
-            if (_skippedVersions.Contains(latestReleaseVersion)) return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
-
-            var isFirstPagedItem = nextPageCursor == null; // empty is last page
-
-            var cachedVersionDate = _cachedVersion.GetDateTimeFromVersionString().Ticks;
-            var newVersionDate = latestReleaseVersion.GetDateTimeFromVersionString().Ticks;
-
-            // is rollback
-            var isOldRelease = newVersionDate < cachedVersionDate;
-            var isRollback = isOldRelease && isFirstPagedItem;
-
-            if (isOldRelease && !isRollback)
+            while (true)
             {
-                // Skip this release and ignore the rest of the page
-                EventLogLogger.Singleton.Warning("{0} is older than the current version {1} but was not marked for roll-back. Skipping...", latestReleaseVersion, _cachedVersion);
-                SkipVersion(latestReleaseVersion);
-                return false;
-            }
+                latestRelease = null;
 
-            if (latestRelease.Prerelease)
-            {
-                if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                PurgeCachedVersionIfNoLongerExists(out var wasRatelimited, out var retryAfter);
+                
+                if (wasRatelimited && retryAfter.HasValue)
                 {
-                    EventLogLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
-                    SkipVersion(latestReleaseVersion);
-                    return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
+                    EventLogLogger.Singleton.Warning("Ratelimited by GitHub API. Yield for {0} seconds...", retryAfter);
+                    Thread.Sleep(retryAfter.Value);
+                    return false;
                 }
-				
-				EventLogLogger.Singleton.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
+
+                var releasesQuery = (from release in 
+                        new Query()
+                            .Repository(
+                                name: _githubRepositoryName, 
+                                owner: _githubOrgOrAccountName, 
+                                followRenames: true
+                            )
+                            .Releases(
+                                first: 1, 
+                                orderBy: new Octokit.GraphQL.Model.ReleaseOrder
+                                {
+                                    Field = Octokit.GraphQL.Model.ReleaseOrderField.CreatedAt, 
+                                    Direction = Octokit.GraphQL.Model.OrderDirection.Desc
+                                }, 
+                                after: nextPageCursor
+                            )
+                    select from node in release.Nodes
+                    select new MinimalRelease
+                    {
+                        Name = node.Name,
+                        TagName = node.TagName,
+                        Draft = node.IsDraft,
+                        Prerelease = node.IsPrerelease,
+                        NextPageCursor = release.PageInfo.EndCursor,
+                        Assets = (from asset in 
+                            node.ReleaseAssets(
+                                4, 
+                                null, 
+                                null, 
+                                null, 
+                                null
+                            ) select from assetNode in 
+                                asset.Nodes select new MinimalRelease.MinimalReleaseAsset
+                        {
+                            Name = assetNode.Name, 
+                            Url = assetNode.Url
+                        }).ToList()
+                    }).Compile();
+                var releases = _gitHubQLClient
+                    .Run(releasesQuery)
+                    .Sync()
+                    .ToList();
+
+                if (!releases.Any()) return false;
+
+                latestRelease = releases.FirstOrDefault();
+                if (latestRelease == null) return false;
+                var latestReleaseVersion = latestRelease.TagName;
+
+                if (latestRelease.Draft)
+                {
+                    nextPageCursor = latestRelease.NextPageCursor;
+                    continue;
+                }
+                if (latestReleaseVersion == _cachedVersion && CachedVersionExistsOnSystem()) return false;
+                if (!latestReleaseVersion.IsMatch(DeploymentIdRegex, RegexOptions.Compiled))
+                {
+                    nextPageCursor = latestRelease.NextPageCursor;
+                    continue;
+                }
+                if (_skippedVersions.Contains(latestReleaseVersion))
+                {
+                    nextPageCursor = latestRelease.NextPageCursor;
+                    continue;
+                }
+
+                var isFirstPagedItem = nextPageCursor == null; // empty is last page
+
+                var cachedVersionDate = _cachedVersion.GetDateTimeFromVersionString().Ticks;
+                var newVersionDate = latestReleaseVersion.GetDateTimeFromVersionString().Ticks;
+
+                // is rollback
+                var isOldRelease = newVersionDate < cachedVersionDate;
+                var isRollback = isOldRelease && isFirstPagedItem;
+
+                if (isOldRelease && !isRollback)
+                {
+                    // Skip this release and ignore the rest of the page
+                    EventLogLogger.Singleton.Warning("{0} is older than the current version {1} but was not marked for roll-back. Skipping...", latestReleaseVersion, _cachedVersion);
+                    SkipVersion(latestReleaseVersion);
+                    return false;
+                }
+
+                if (latestRelease.Prerelease)
+                {
+                    if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                    {
+                        EventLogLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
+                        SkipVersion(latestReleaseVersion);
+                        nextPageCursor = latestRelease.NextPageCursor;
+                        continue;
+                    }
+
+                    EventLogLogger.Singleton.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
+                }
+
+                var groups = latestRelease.Name.Match(DeploymentIdRegex, RegexOptions.Compiled | RegexOptions.IgnoreCase).Groups;
+                var appNameGroup = groups["app_prefix_name"];
+
+                if (appNameGroup.Success && !appNameGroup.Value.IsMatch(_deploymentAppName, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                {
+                    EventLogLogger.Singleton.Warning("'{0}' was marked as for app '{1}' but we are deploying for app '{2}', skipping...", latestReleaseVersion, appNameGroup.Value, _deploymentAppName);
+                    SkipVersion(latestReleaseVersion);
+                    nextPageCursor = latestRelease.NextPageCursor;
+                    continue;
+                }
+
+                // We assume no app prefix means the app name is the same as the release name
+
+                EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3} Is Old-Release: {4} Is Rollback: {5}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease, isOldRelease, isRollback);
+
+                return true;
             }
-
-			var groups = latestRelease.Name.Match(DeploymentIdRegex, RegexOptions.Compiled | RegexOptions.IgnoreCase).Groups;
-			var appNameGroup = groups["app_prefix_name"];
-
-			if (appNameGroup.Success && !appNameGroup.Value.IsMatch(_deploymentAppName, RegexOptions.Compiled | RegexOptions.IgnoreCase))
-			{
-				EventLogLogger.Singleton.Warning("'{0}' was marked as for app '{1}' but we are deploying for app '{2}', skipping...", latestReleaseVersion, appNameGroup.Value, _deploymentAppName);
-				SkipVersion(latestReleaseVersion);
-				return DetermineIfNewReleaseAvailable(out latestRelease, latestRelease.NextPageCursor);
-			}
-
-			// We assume no app prefix means the app name is the same as the release name
-
-            EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3} Is Old-Release: {4} Is Rollback: {5}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease, isOldRelease, isRollback);
-
-            return true;
         }
 
         private static void DetermineLatestVersion()
@@ -617,10 +699,10 @@ SLEEP:
             // .NET deployments are normally in the format:
             // yyyy.MM.dd-hh.mm.ss_{branch}_{gitShortHash}-{targetFramework}-{configuration}
 
-            var directoryMatches = from f in Directory.EnumerateDirectories(_deploymentPath)
+            var directoryMatches = (from f in Directory.EnumerateDirectories(_deploymentPath)
                                    let match = f.Match(DeploymentIdRegex, RegexOptions.Compiled)
                                    where match.Success
-                                   select match;
+                                   select match).ToList();
 
             if (!directoryMatches.Any())
             {
@@ -641,16 +723,12 @@ SLEEP:
 
             var currentDeployment = sortedDirectories.FirstOrDefault();
 
-            if (currentDeployment != null)
-            {
-                _cachedVersion = currentDeployment.Groups["version_string"].Value;
+            if (currentDeployment == null) return;
+            
+            _cachedVersion = currentDeployment.Groups["version_string"].Value;
+            EventLogLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
 
-                EventLogLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
-
-                WriteVersionToRegistry();
-
-                return;
-            }
+            WriteVersionToRegistry();
         }
 
         private static void WriteVersionToRegistry()
@@ -664,15 +742,7 @@ SLEEP:
         }
 
         private static string GetVersionFromRegistry() => _versioningRegKey?.GetValue(_versioningRegVersionKeyName, null) as string;
-
-        private static void SetupRegistry()
-        {
-            if (_versioningRegKey == null)
-            {
-                // regKey doesn't exist. Create it.
-                _versioningRegKey = Registry.LocalMachine.CreateSubKey(_versioningRegSubKey, true);
-            }
-        }
+        private static void SetupRegistry() => _versioningRegKey ??= Registry.LocalMachine.CreateSubKey(_versioningRegSubKey, true);
 
         private static void SetupDeploymentPath()
         {
