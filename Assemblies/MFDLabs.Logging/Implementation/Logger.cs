@@ -18,6 +18,10 @@ using Microsoft.Ccr.Core;
 using PInvoke;
 #endif
 
+// ReSharper disable LocalizableElement
+// ReSharper disable InconsistentNaming
+// ReSharper disable UseStringInterpolationWhenPossible
+
 namespace MFDLabs.Logging
 {
     public enum LogColor
@@ -66,28 +70,21 @@ namespace MFDLabs.Logging
         // language=regex
         private const string _loggerNameRegex = @"^[a-zA-Z0-9_\-\.]{1,75}$";
 
-        private static string _logFileBaseDirectoryBacking = null;
+        private static string _logFileBaseDirectoryBacking;
         private static string _logFileBaseDirectory
         {
             get
             {
                 try
                 {
-
-                    if (_logFileBaseDirectoryBacking == null)
-                        _logFileBaseDirectoryBacking = Path.DirectorySeparatorChar == '/'
-                            ? Path.Combine(Path.GetTempPath(), "mfdlabs", "logs")
-                            : Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "MFDLABS", "Logs");
-
-                    return _logFileBaseDirectoryBacking;
+                    return _logFileBaseDirectoryBacking ??= Path.DirectorySeparatorChar == '/'
+                        ? Path.Combine(Path.GetTempPath(), "mfdlabs", "logs")
+                        : Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "MFDLABS", "Logs");
                 }
                 catch
                 {
                     // If it fails, default to the current working directory
-                    if (_logFileBaseDirectoryBacking == null)
-                        _logFileBaseDirectoryBacking = Directory.GetCurrentDirectory();
-
-                    return _logFileBaseDirectoryBacking;
+                    return _logFileBaseDirectoryBacking ??= Directory.GetCurrentDirectory();
                 }
             }
         }
@@ -106,16 +103,18 @@ namespace MFDLabs.Logging
         // Private Static Properties
         //////////////////////////////////////////////////////////////////////////////
 
-        protected static Logger _singleton = null;
-        protected static Logger _noopSingleton = null;
+        // ReSharper disable once MemberCanBePrivate.Global
+        protected static Logger _singleton;
+        // ReSharper disable once MemberCanBePrivate.Global
+        protected static Logger _noopSingleton;
 
-        private static bool? _hasTerminal = null;
+        private static bool? _hasTerminal;
 
         //////////////////////////////////////////////////////////////////////////////
         // Private Readonly Properties (Only set in the constructor)
         //////////////////////////////////////////////////////////////////////////////
 
-        private readonly bool _cutLogPrefix = true;
+        private readonly bool _cutLogPrefix;
 
         private readonly object _fileSystemLock = new();
         private readonly object _consoleLock = new();
@@ -131,21 +130,21 @@ namespace MFDLabs.Logging
         // Private Properties
         //////////////////////////////////////////////////////////////////////////////
 
-        protected string _name = null;
-        private LogLevel _logLevel = LogLevel.Information;
-        private bool _logToConsole = true;
-        private bool _logToFileSystem = true;
-        private bool _logThreadId = false;
-        private bool _logWithColor = false;
+        protected string _name;
+        private LogLevel _logLevel;
+        private bool _logToConsole;
+        private bool _logToFileSystem;
+        private bool _logThreadId;
+        private bool _logWithColor;
 
-        private LockedFileStream _lockedFileWriteStream = null;
-        private string _fileName = null;
-        private string _fullyQualifiedFileName = null;
+        private LockedFileStream _lockedFileWriteStream;
+        private string _fileName;
+        private string _fullyQualifiedFileName;
 
-        private string _cachedNonColorPrefix = null;
-        private string _cachedColorPrefix = null;
+        private string _cachedNonColorPrefix;
+        private string _cachedColorPrefix;
 
-        private bool _disposed = false;
+        private bool _disposed;
 
         //////////////////////////////////////////////////////////////////////////////
         // Private Static Helper Methods
@@ -167,7 +166,9 @@ namespace MFDLabs.Logging
             }
         }
 
-        private static string _getCurrentThreadIdFormatted() => Thread.CurrentThread.ManagedThreadId.ToString("x")?.PadLeft(4, '0') ?? "<unknown>";
+        private static string _getCurrentThreadIdFormatted() => Thread.CurrentThread.ManagedThreadId
+            .ToString("x")
+            .PadLeft(4, '0');
         private static string _getProcessUptime() => (DateTime.Now - SystemGlobal.CurrentProcess.StartTime).TotalSeconds.ToString("f7");
 
         private static string _getAnsiColorByLogColor(LogColor color)
@@ -189,7 +190,7 @@ namespace MFDLabs.Logging
             => string.Format(
                    "[{0}{1}{2}]",
                    _getAnsiColorByLogColor(color),
-                   content.ToString(),
+                   content,
                    _getAnsiColorByLogColor(LogColor.Reset)
                );
 
@@ -197,7 +198,7 @@ namespace MFDLabs.Logging
         // Private/Protected Helper Methods
         //////////////////////////////////////////////////////////////////////////////
 
-        protected virtual string _getNonColorLogPrefix()
+        private string _getNonColorLogPrefix()
         {
             if (_cutLogPrefix)
                 return _cachedNonColorPrefix ??= string.Format(
@@ -218,7 +219,7 @@ namespace MFDLabs.Logging
             );
         }
 
-        protected virtual string _getColorPrefix()
+        private string _getColorPrefix()
         {
             if (_cutLogPrefix)
                 return _cachedColorPrefix ??= string.Format(
@@ -239,7 +240,7 @@ namespace MFDLabs.Logging
             );
         }
 
-        protected virtual string _constructLoggerMessage(LogLevel logLevel, string format, params object[] args)
+        protected string _constructLoggerMessage(LogLevel logLevel, string format, params object[] args)
         {
             var formattedMessage = args is { Length: 0 }
                 ? format
@@ -266,7 +267,8 @@ namespace MFDLabs.Logging
             );
         }
 
-        protected virtual string _constructColoredLoggerMessage(LogLevel logLevel, LogColor color, string format, params object[] args)
+        // ReSharper disable once MemberCanBePrivate.Global
+        protected string _constructColoredLoggerMessage(LogLevel logLevel, LogColor color, string format, params object[] args)
         {
             var formattedMessage = args is { Length: 0 } 
                 ? format 
@@ -398,29 +400,24 @@ namespace MFDLabs.Logging
 
             _fullyQualifiedFileName ??= Path.Combine(_logFileBaseDirectory, _fileName);
 
-            if (!Directory.Exists(_logFileBaseDirectory))
+            if (Directory.Exists(_logFileBaseDirectory)) return;
+            
+            try
             {
-                try
-                {
-                    Directory.CreateDirectory(_logFileBaseDirectory);
-                }
-                catch (IOException)
-                {
-                    // Assume it's a file.
-                    _logToFileSystem = false;
-                    _closeFileStream();
-                    Warning("Unable to create log file directory. It already exists and is a file.");
-
-                    return;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    _logToFileSystem = false;
-                    _closeFileStream();
-                    Warning("Unable to create log file directory. Please ensure that the current user has permission to create directories.");
-
-                    return;
-                }
+                Directory.CreateDirectory(_logFileBaseDirectory);
+            }
+            catch (IOException)
+            {
+                // Assume it's a file.
+                _logToFileSystem = false;
+                _closeFileStream();
+                Warning("Unable to create log file directory. It already exists and is a file.");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logToFileSystem = false;
+                _closeFileStream();
+                Warning("Unable to create log file directory. Please ensure that the current user has permission to create directories.");
             }
         }
 
@@ -460,25 +457,20 @@ namespace MFDLabs.Logging
                     Directory.CreateDirectory(_logFileBaseDirectory);
                 }
 
-                foreach (var logger in _loggers)
+                foreach (var logger in _loggers.Where(logger => logger._logToFileSystem))
                 {
-                    if (logger._logToFileSystem)
-                    {
-                        logger._createFileName();
-                        logger._createFileStream();
-                    }
+                    logger._createFileName();
+                    logger._createFileStream();
                 }
             }
             catch (IOException)
             {
                 // Assume it's a file.
                 Logger.Singleton.Error("Unable to create log file directory. It already exists and is a file.");
-                return;
             }
             catch (UnauthorizedAccessException)
             {
                 Logger.Singleton.Error("Unable to create or delete log file directory. Please ensure that the current user has permission to create and delete directories.");
-                return;
             }
             catch (Exception ex)
             {
@@ -495,9 +487,8 @@ namespace MFDLabs.Logging
 
             try
             {
-                foreach (var logger in _loggers)
-                    if (logger._name != _singleton?._name && logger._name != _noopSingleton?._name)
-                        logger.Dispose();
+                foreach (var logger in _loggers.Where(logger => logger._name != _singleton?._name && logger._name != _noopSingleton?._name))
+                    logger.Dispose();
             }
             catch (Exception ex)
             {
@@ -525,6 +516,7 @@ namespace MFDLabs.Logging
         /// <remarks>
         /// If you do not require a specific logger, use <see cref="Logger.Singleton"/> instead.
         /// </remarks>
+        // ReSharper disable once MemberCanBeProtected.Global
         public Logger(
             string name,
             LogLevel logLevel = LogLevel.Information,
@@ -539,7 +531,7 @@ namespace MFDLabs.Logging
             if (!name.IsMatch(_loggerNameRegex))
                 throw new ArgumentException($"The logger name must match '{_loggerNameRegex}'", nameof(name));
 
-            if (_loggers.Where(logger => logger.Name == name).Any())
+            if (_loggers.Any(logger => logger.Name == name))
                 throw new InvalidOperationException($"A logger with the name of '{name}' already exists.");
 
             _loggers.Add(this);
@@ -590,9 +582,6 @@ namespace MFDLabs.Logging
                    "_noop",
                    LogLevel.None,
                    false,
-                   false,
-                   true,
-                   false,
                    false
                );
 
@@ -604,6 +593,7 @@ namespace MFDLabs.Logging
         /// <summary>
         /// Gets or sets the name of the logger.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         public string Name
         {
             get => _name;
@@ -613,11 +603,10 @@ namespace MFDLabs.Logging
                 if (value.IsNullOrEmpty()) throw new ArgumentNullException(nameof(value));
                 if (!value.IsMatch(_loggerNameRegex))
                     throw new ArgumentException($"The logger name must match '{_loggerNameRegex}'", nameof(value));
-                if (_loggers.Where(logger => logger.Name == value && logger.Name != _name).Any())
+                if (_loggers.Any(logger => logger.Name == value && logger.Name != _name))
                     throw new InvalidOperationException($"A logger with the name of '{value}' already exists.");
 
-                if (value != _name)
-                    _name = value;
+                _name = value;
             }
         }
 
@@ -631,8 +620,7 @@ namespace MFDLabs.Logging
             {
                 if (_disposed) throw new ObjectDisposedException(_name);
                 
-                if (value != _logLevel)
-                    _logLevel = value;
+                _logLevel = value;
             }
         }
 
@@ -646,19 +634,18 @@ namespace MFDLabs.Logging
             {
                 if (_disposed) throw new ObjectDisposedException(_name);
 
-                if (value != _logToFileSystem)
-                {
-                    _logToFileSystem = value;
+                if (value == _logToFileSystem) return;
+                
+                _logToFileSystem = value;
 
-                    if (value == true)
-                    {
-                        _createFileName();
-                        _createFileStream();
-                    }
-                    else
-                    {
-                        _closeFileStream();
-                    }
+                if (value)
+                {
+                    _createFileName();
+                    _createFileStream();
+                }
+                else
+                {
+                    _closeFileStream();
                 }
             }
         }
@@ -673,8 +660,7 @@ namespace MFDLabs.Logging
             {
                 if (_disposed) throw new ObjectDisposedException(_name);
 
-                if (value != _logToConsole)
-                    _logToConsole = value;
+                _logToConsole = value;
             }
         }
 
@@ -692,9 +678,8 @@ namespace MFDLabs.Logging
             set
             {
                 if (_disposed) throw new ObjectDisposedException(_name);
-
-                if (value != _logThreadId)
-                    _logThreadId = value;
+                
+                _logThreadId = value;
             }
         }
 
@@ -707,9 +692,8 @@ namespace MFDLabs.Logging
             set
             {
                 if (_disposed) throw new ObjectDisposedException(_name);
-
-                if (value != _logWithColor)
-                    _logWithColor = value;
+                
+                _logWithColor = value;
             }
         }
 

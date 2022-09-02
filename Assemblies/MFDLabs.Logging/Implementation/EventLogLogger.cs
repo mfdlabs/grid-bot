@@ -1,22 +1,25 @@
-﻿#if NETFRAMEWORK
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using MFDLabs.Threading;
 
 namespace MFDLabs.Logging
 {
+#if NET5_0_OR_GREATER
+    using System.Runtime.Versioning;
+
+    [SupportedOSPlatform("windows")]
+#endif
     public class EventLogLogger : Logger
     {
-        private static new EventLogLogger _singleton = null;
+        private new static EventLogLogger _singleton;
 
-        private EventLog _eventLog = null;
+        private EventLog _eventLog;
         private readonly object _eventLogLock = new();
 
         private bool _logToEventLog = true;
         private Atomic _eventId = 0;
 
-        private EventLogEntryType _logLevelToEntryType(LogLevel logLevel) 
+        private EventLogEntryType _logLevelToEntryType(LogLevel logLevel)
             => logLevel switch
             {
                 LogLevel.Error => EventLogEntryType.Error,
@@ -36,11 +39,10 @@ namespace MFDLabs.Logging
                 _eventId++;
 
                 var entryType = _logLevelToEntryType(logLevel);
-                var message = base._constructLoggerMessage(logLevel, format, args);
+                var message = _constructLoggerMessage(logLevel, format, args);
 
                 try
                 {
-
                     _eventLog?.WriteEntry(message, entryType, _eventId);
                 }
                 catch (Exception)
@@ -115,7 +117,7 @@ namespace MFDLabs.Logging
         /// <param name="cutLogPrefix">If true, the logger will cut the log prefix.</param>
         /// <param name="logThreadId">If true, the logger will log with a thread id.</param>
         /// <param name="logWithColor">If true, the logger will console log with colors.</param>
-        /// <exception cref=".ArgumentNullException">Thrown if <paramref name="eventLog"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="eventLog"/> is null.</exception>
         public EventLogLogger(
             EventLog eventLog,
             LogLevel logLevel = LogLevel.Information,
@@ -138,7 +140,7 @@ namespace MFDLabs.Logging
         }
 
         /// <inheritdoc cref="Logger.Singleton"/>
-        public static new EventLogLogger Singleton
+        public new static EventLogLogger Singleton
             => _singleton ??= new EventLogLogger(
                     LogInstaller.LogName,
                     LogInstaller.SourceName,
@@ -151,5 +153,3 @@ namespace MFDLabs.Logging
                 );
     }
 }
-
-#endif
