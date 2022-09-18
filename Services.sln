@@ -55,10 +55,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metrics", "Metrics", "{6A9E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Instrumentation", "Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj", "{5D59D8C8-6B3C-45F9-BB2A-3F09F1F3326E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{711A73BD-9A06-412B-9CA8-C67E265ECFD3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.AutoDeployer.Unit.Tests", "Unit Tests\MFDLabs.Grid.AutoDeployer.Unit.Tests\MFDLabs.Grid.AutoDeployer.Unit.Tests.csproj", "{CD35574A-0146-49E7-B4F7-624A61AC9D3C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -327,22 +323,6 @@ Global
 		{5D59D8C8-6B3C-45F9-BB2A-3F09F1F3326E}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
 		{5D59D8C8-6B3C-45F9-BB2A-3F09F1F3326E}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
 		{5D59D8C8-6B3C-45F9-BB2A-3F09F1F3326E}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugGrid|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugGrid|Any CPU.Build.0 = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseDeploy|Any CPU.ActiveCfg = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseDeploy|Any CPU.Build.0 = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -371,7 +351,6 @@ Global
 		{6131788B-81D1-410C-9CA1-6BDE5822DB28} = {437C251F-C5CA-4D9D-BDCF-B9DD2FFB936F}
 		{6A9E7A46-52AF-4F98-B8C8-90FC1974757D} = {72541B93-52D9-47CE-ACCD-9279015ABBC8}
 		{5D59D8C8-6B3C-45F9-BB2A-3F09F1F3326E} = {6A9E7A46-52AF-4F98-B8C8-90FC1974757D}
-		{CD35574A-0146-49E7-B4F7-624A61AC9D3C} = {711A73BD-9A06-412B-9CA8-C67E265ECFD3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1738DAC0-DF8A-4C95-8B03-CF31A9A1966E}

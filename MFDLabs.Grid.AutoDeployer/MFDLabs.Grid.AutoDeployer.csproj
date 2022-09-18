@@ -86,6 +86,7 @@
   <ItemGroup>
     <None Update="runservice.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>RunService.ps1</DependentUpon>
     </None>
     <None Update="RunService.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
