@@ -46,7 +46,7 @@ namespace MFDLabs.Logging
         static Logger()
         {
             var stdout = Console.OpenStandardOutput();
-            var stdoutStream = new System.IO.StreamWriter(stdout, System.Text.Encoding.ASCII)
+            var stdoutStream = new StreamWriter(stdout, System.Text.Encoding.ASCII)
             {
                 AutoFlush = true
             };

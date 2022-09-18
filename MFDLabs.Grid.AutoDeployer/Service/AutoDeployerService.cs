@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Linq;
 using System.Text;
+using System.Net.Http;
 using System.Threading;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -21,6 +22,7 @@ using MFDLabs.Text.Extensions;
 using MFDLabs.Threading.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.ErrorHandling.Extensions;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable EmptyGeneralCatchClause
@@ -29,6 +31,7 @@ using MFDLabs.Diagnostics.Extensions;
 /** TODO: Report to Infrastructure that node deployed this App **/
 /** TODO: Expose some API to force Rollbacks and Force Deployments? **/
 /** TODO: Rate limit detection for not just the REST API but also the GraphQL API **/
+/** TODO: Store some stuff in the registry like skipped version. **/
 
 namespace MFDLabs.Grid.AutoDeployer.Service
 {
@@ -145,6 +148,12 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                 return false;
 
             }
+            /* Last cases for this, we assume it is either timeout or 500. */
+            catch (Exception ex) when (ex is HttpRequestException or ApiException)
+            {
+                EventLogLogger.Singleton.Warning(ex.ToDetailedString());
+                return true;
+            }
             catch (Exception ex)
             {
                 Logger.Singleton.Error(ex);
@@ -238,7 +247,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             {
                 var uri = new Uri(gheUrl);
 
-                _gitHubClient = new(ghApiPhv, new Uri(gheUrl));
+                _gitHubClient = new(ghApiPhv, uri);
                 _gitHubQLClient = new(ghQlPhv, new($"{uri.Scheme}://{uri.Host}/graphql"), _githubToken);
             }
 
@@ -275,87 +284,95 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         private static void Run()
         {
-            SetupRegistry();
-            SetupDeploymentPath();
-            _markerLock = new FileLock(Path.Combine(_deploymentPath, DeploymentMarkerFilename));
-            _markerLock.Lock();
-            PurgeCachedVersionIfNoLongerExists(out _, out _);
-            DetermineLatestVersion();
-            LaunchIfNotRunning();
-
-            while (_isRunning)
+            try
             {
-                if (DetermineIfNewReleaseAvailable(out var r))
+                SetupRegistry();
+                SetupDeploymentPath();
+                _markerLock = new FileLock(Path.Combine(_deploymentPath, DeploymentMarkerFilename));
+                _markerLock.Lock();
+                PurgeCachedVersionIfNoLongerExists(out _, out _);
+                DetermineLatestVersion();
+                LaunchIfNotRunning();
+
+                while (_isRunning)
                 {
-                    // We have the release, it should have the following files:
-                    // A .mfdlabs-config-archive file -> This file contains .config files
-                    // A .Unpacker.ps1 file -> This file runs a 7Zip command that unpacks the contents to the archives into the directory it's in.
-                    // A .Unpacker.bat file -> This file is a wrapper to the .ps1 file.
-                    // A .mfdlabs-archive file -> Contains everything else other than the .config files.
-                    // There should only be 4 assets in the release, and each of these should match the deployment id regex and have any of those extensions at the end.
-                    if (r.Assets.Count != 4)
+                    if (DetermineIfNewReleaseAvailable(out var r))
                     {
-                        SkipVersion(r.TagName);
-                        EventLogLogger.Singleton.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
-                        goto SLEEP;
-                    }
-
-                    var regex = $@"{r.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
-
-                    foreach (var a in r.Assets)
-                    {
-                        if (!a.Name.IsMatch(regex))
+                        // We have the release, it should have the following files:
+                        // A .mfdlabs-config-archive file -> This file contains .config files
+                        // A .Unpacker.ps1 file -> This file runs a 7Zip command that unpacks the contents to the archives into the directory it's in.
+                        // A .Unpacker.bat file -> This file is a wrapper to the .ps1 file.
+                        // A .mfdlabs-archive file -> Contains everything else other than the .config files.
+                        // There should only be 4 assets in the release, and each of these should match the deployment id regex and have any of those extensions at the end.
+                        if (r.Assets.Count != 4)
                         {
                             SkipVersion(r.TagName);
-                            EventLogLogger.Singleton.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
+                            EventLogLogger.Singleton.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
                             goto SLEEP;
                         }
-                    }
+
+                        var regex = $@"{r.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
+
+                        foreach (var a in r.Assets)
+                        {
+                            if (!a.Name.IsMatch(regex))
+                            {
+                                SkipVersion(r.TagName);
+                                EventLogLogger.Singleton.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
+                                goto SLEEP;
+                            }
+                        }
 
 #if GRID_BOT
-                    if (ProcessHelper.GetProcessByName(_primaryDeploymentExecutable.ToLower().Replace(".exe", ""), out _))
-                    {
-                        InvokeMaintenanceCommandOnPreviousExe(r.TagName);
-                        EventLogLogger.Singleton.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
-                        Thread.Sleep(TimeSpan.FromSeconds(15));
-                    }
+                        if (ProcessHelper.GetProcessByName(_primaryDeploymentExecutable.ToLower().Replace(".exe", ""), out _))
+                        {
+                            InvokeMaintenanceCommandOnPreviousExe(r.TagName);
+                            EventLogLogger.Singleton.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
+                            Thread.Sleep(TimeSpan.FromSeconds(15));
+                        }
 #endif
 
-                    foreach (var a in r.Assets)
-                    {
-                        var fqp = Path.Combine(_deploymentPath, a.Name);
-                        DownloadArtifact(a.Name, a.Url, fqp);
-                    }
+                        foreach (var a in r.Assets)
+                        {
+                            var fqp = Path.Combine(_deploymentPath, a.Name);
+                            DownloadArtifact(a.Name, a.Url, fqp);
+                        }
 
-                    if (!RunUnpacker(r, out var versionDeploymentPath))
-                    {
+                        if (!RunUnpacker(r, out var versionDeploymentPath))
+                        {
+                            CleanupArtifacts(r.Assets.ToArray());
+                            try { Directory.Delete(versionDeploymentPath, true); } catch { }
+                            try { Directory.Delete(Path.Combine(_deploymentPath, r.TagName), true); } catch { }
+                            SkipVersion(r.TagName);
+                            goto SLEEP;
+                        }
                         CleanupArtifacts(r.Assets.ToArray());
-                        try { Directory.Delete(versionDeploymentPath, true); } catch { }
-                        try { Directory.Delete(Path.Combine(_deploymentPath, r.TagName), true); } catch { }
-                        SkipVersion(r.TagName);
-                        goto SLEEP;
+
+                        var primaryExe = Path.Combine(versionDeploymentPath, _primaryDeploymentExecutable);
+
+                        if (!File.Exists(primaryExe))
+                        {
+                            SkipVersion(r.TagName);
+                            versionDeploymentPath.PollDeletionBlocking();
+                            EventLogLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
+                            goto SLEEP;
+                        }
+
+                        KillAllProcessByNameSafe(_primaryDeploymentExecutable);
+                        StartNewProcess(primaryExe, versionDeploymentPath);
+
+                        _cachedVersion = r.TagName;
+                        WriteVersionToRegistry();
                     }
-                    CleanupArtifacts(r.Assets.ToArray());
 
-                    var primaryExe = Path.Combine(versionDeploymentPath, _primaryDeploymentExecutable);
-
-                    if (!File.Exists(primaryExe))
-                    {
-                        SkipVersion(r.TagName);
-                        versionDeploymentPath.PollDeletionBlocking();
-                        EventLogLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
-                        goto SLEEP;
-                    }
-
-                    KillAllProcessByNameSafe(_primaryDeploymentExecutable);
-                    StartNewProcess(primaryExe, versionDeploymentPath);
-
-                    _cachedVersion = r.TagName;
-                    WriteVersionToRegistry();
+SLEEP:
+                    Thread.Sleep(_pollingInterval);
                 }
-                
-                SLEEP:
-                Thread.Sleep(_pollingInterval);
+            }
+            catch (Exception ex)
+            {
+                EventLogLogger.Singleton.Error(ex);
+                Stop(null, null);
             }
         }
 
@@ -561,8 +578,10 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _skippedVersions.Add(version);
         }
 
-        private static bool DetermineIfNewReleaseAvailable(out MinimalRelease latestRelease, string nextPageCursor = null)
+        private static bool DetermineIfNewReleaseAvailable(out MinimalRelease latestRelease)
         {
+            string nextPageCursor = null;
+
             while (true)
             {
                 latestRelease = null;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 using System.CommandLine;
 using System.Threading.Tasks;
 using System.CommandLine.Parsing;
@@ -12,18 +13,25 @@ using MFDLabs.Logging;
 using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Configuration.Logging;
 using MFDLabs.Grid.AutoDeployer.Service;
 
 namespace MFDLabs.Grid.AutoDeployer;
 
 internal static class Program
 {
-    private static readonly Option<bool> PurgeOption = new (new[] { "-purge", "/purge", "--purge" }, "Purge all known deployer info.") { IsRequired = false };
+    private static readonly Option<bool> PurgeOption = new(new[] { "-purge", "/purge", "--purge" }, "Purge all known deployer info.") { IsRequired = false };
 
     public static async Task Main(params string[] args)
     {
         Logger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
         EventLogLogger.Singleton.LogLevel = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel;
+
+        ConfigurationLogging.OverrideDefaultConfigurationLogging(
+            EventLogLogger.Singleton.Error,
+            Logger.Singleton.Warning,
+            Logger.NoopSingleton.Info
+        );
 
         // If args has -purge or --purge etc.
         // purge all known deployer info.
@@ -137,14 +145,37 @@ internal static class Program
             return;
         }
 
+        TryCreateEventLog(typeof(Program).Namespace, typeof(Program).Namespace);
+
         var app = new ServiceHostApp();
-        app.EventLog.Source = "MFDLabs.Grid.AutoDeployer";
-        app.EventLog.Log = "MFDLabs.Grid.AutoDeployer";
+        app.EventLog.Source = typeof(Program).Namespace;
+        app.EventLog.Log = typeof(Program).Namespace;
 
         Console.CancelKeyPress += (_, _) => app.Stop();
 
         app.HostOpening += AutoDeployerService.Start;
         app.HostClosing += AutoDeployerService.Stop;
         app.Process(args.ToArray());
+    }
+
+    private static void TryCreateEventLog(string source, string log)
+    {
+#if NETFRAMEWORK
+        try
+        {
+            if (EventLog.Exists(log) && EventLog.SourceExists(source)) return;
+
+            EventLog.CreateEventSource(source, log);
+
+            var eventLog = new EventLog(source, ".", log);
+
+            if (eventLog.OverflowAction != OverflowAction.OverwriteAsNeeded)
+            {
+                eventLog.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 5);
+                eventLog.MaximumKilobytes = 16000;
+            }
+        }
+        catch { }
+#endif
     }
 }
