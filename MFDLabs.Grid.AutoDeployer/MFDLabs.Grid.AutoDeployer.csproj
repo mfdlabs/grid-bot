@@ -69,6 +69,18 @@
     <None Update="App.config">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Update="App.debug.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.debug-vault.config">
+      <DependentUpon>App.debug.config</DependentUpon>
+    </None>
+    <None Update="App.release.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.release-vault.config">
+      <DependentUpon>App.debug.config</DependentUpon>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
