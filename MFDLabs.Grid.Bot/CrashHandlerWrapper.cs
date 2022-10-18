@@ -2,6 +2,6 @@
 {
     internal static class CrashHandlerWrapper
     {
-        public static void Upload(System.Exception ex) => MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex);
+        public static void Upload(System.Exception ex, bool overrideSystemWhenExitingCrashHandler = false) => MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, overrideSystemWhenExitingCrashHandler);
     }
 }

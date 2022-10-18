@@ -1,7 +1,8 @@
 ﻿using System;
+using MFDLabs.Text.Extensions;
+using MFDLabs.Threading.Extensions;
 using MFDLabs.Configuration.Logging;
 using MFDLabs.Hashicorp.ConsulClient;
-using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Configuration
 {
@@ -40,7 +41,7 @@ namespace MFDLabs.Configuration
 
             try
             {
-                var service = _consulClient.Catalog.Service(serviceName).Result.Response;
+                var service = _consulClient.Catalog.Service(serviceName).Sync().Response;
 
                 if (service.Length > 0)
                 {

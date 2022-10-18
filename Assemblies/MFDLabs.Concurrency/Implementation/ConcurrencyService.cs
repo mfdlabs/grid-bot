@@ -177,7 +177,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        SystemLogger.Singleton.Error(ex);
+                        Logger.Singleton.Error(ex);
                     }
                 },
                 (result1) =>
@@ -188,7 +188,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        SystemLogger.Singleton.Error(ex);
+                        Logger.Singleton.Error(ex);
                     }
                 }
             );
@@ -206,7 +206,7 @@ namespace MFDLabs.Concurrency
             Choice(
                 resultPortSet,
                 successHandler,
-                SystemLogger.Singleton.Error
+                Logger.Singleton.Error
             );
         }
 
@@ -298,7 +298,7 @@ namespace MFDLabs.Concurrency
                     }
                     catch (Exception ex)
                     {
-                        SystemLogger.Singleton.Error(ex);
+                        Logger.Singleton.Error(ex);
                     }
                 }
             );

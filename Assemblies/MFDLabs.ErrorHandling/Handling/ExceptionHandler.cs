@@ -1,10 +1,10 @@
 ﻿#if NETFRAMEWORK
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Web;
+using System.Diagnostics;
+using System.ComponentModel;
+using System.Collections.Generic;
 using MFDLabs.ErrorHandling.Extensions;
 
 namespace MFDLabs
@@ -126,7 +126,7 @@ namespace MFDLabs
             //If not a presentable exception, continue to throw it as an unhandled exception
         }
 
-        #region |CustomExceptions|
+#region |CustomExceptions|
         //Custom exception class that should be presented to the Presentation Layer and not left unhandled
         public class PresentableException : ApplicationException
         {
@@ -146,16 +146,16 @@ namespace MFDLabs
                 PresentationErrorCode = presentationErrorCode;
             }
         }
-        #endregion
+#endregion
 
-        #region |ExceptionEnums|
+#region |ExceptionEnums|
         //SQL Errors that should be presented to the Presentation Layer - value of the enum must be the Error Number returned by the SQL Server
         public enum PresentableSqlErrors
         {
             [Description("Search Query is malformed, please check the search terms and try your search again.")]
             SearchQueryMalformed = 7630
         }
-        #endregion
+#endregion
     }
 }
 

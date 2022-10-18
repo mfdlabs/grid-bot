@@ -299,39 +299,55 @@
         <member name="M:MFDLabs.Concurrency.ConcurrencyService.Dispose">
             <inheritdoc/>
         </member>
-        <member name="T:MFDLabs.Concurrency.FastAsyncResult">
+        <member name="T:MFDLabs.Concurrency.CustomThreadPool">
             <summary>
-            Simple fast async result.
+            An implementation for a custom thread pool that uses the Concurrent Runtime.
             </summary>
         </member>
-        <member name="M:MFDLabs.Concurrency.FastAsyncResult.#ctor(System.AsyncCallback,System.Object)">
+        <member name="M:MFDLabs.Concurrency.CustomThreadPool.#ctor(System.String,System.Int32)">
             <summary>
-            Construct a new FastAsyncResult
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.CustomThreadPool"/>
             </summary>
-            <param name="callback">On AsyncCallbackInvoked</param>
-            <param name="state">State</param>
+            <param name="counterRegistry">A perf counter registry.</param>
+            <param name="name">The name of this thread pool</param>
+            <param name="threadCount">The total worker thread count for the internal dispatcher.</param>
         </member>
-        <member name="P:MFDLabs.Concurrency.FastAsyncResult.AsyncState">
-            <inheritdoc/>
-        </member>
-        <member name="P:MFDLabs.Concurrency.FastAsyncResult.AsyncWaitHandle">
+        <member name="P:MFDLabs.Concurrency.CustomThreadPool.QueueCount">
             <summary>
-            wait handle
+            The amount of items in the DispatcherQueue
             </summary>
         </member>
-        <member name="P:MFDLabs.Concurrency.FastAsyncResult.CompletedSynchronously">
-            <inheritdoc/>
-        </member>
-        <member name="P:MFDLabs.Concurrency.FastAsyncResult.IsCompleted">
-            <inheritdoc/>
-        </member>
-        <member name="M:MFDLabs.Concurrency.FastAsyncResult.Dispose">
-            <inheritdoc/>
-        </member>
-        <member name="M:MFDLabs.Concurrency.FastAsyncResult.SetComplete">
+        <member name="P:MFDLabs.Concurrency.CustomThreadPool.PendingTaskCount">
             <summary>
-            Set complete
+            The total items in the dispatcher that are waiting to be processed.
             </summary>
+        </member>
+        <member name="P:MFDLabs.Concurrency.CustomThreadPool.ProcessedTaskCount">
+            <summary>
+            The total items that have been processed.
+            </summary>
+        </member>
+        <member name="P:MFDLabs.Concurrency.CustomThreadPool.WorkerThreadCount">
+            <summary>
+            The total number of WorkerThreads inside the dispatcher.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.CustomThreadPool.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:MFDLabs.Concurrency.CustomThreadPool.QueueUserWorkItem(System.Threading.WaitCallback)">
+            <summary>
+            Queue a user work item without a state
+            </summary>
+            <param name="callback">The callback to invoke in the new thread.</param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.CustomThreadPool.QueueUserWorkItem(System.Threading.WaitCallback,System.Object)">
+            <summary>
+            Queue a user work item with a state
+            </summary>
+            <param name="callback">The callback to invoke in the new thread.</param>
+            <param name="state">The state to pass into the thread.</param>
+            <exception cref="T:System.ArgumentNullException">The callback is null.</exception>
         </member>
         <member name="T:MFDLabs.Concurrency.Interleaver">
             <summary>
@@ -395,6 +411,227 @@
         </member>
         <member name="M:MFDLabs.Concurrency.RefreshAhead`1.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="T:MFDLabs.Concurrency.IResult`1">
+            <summary>
+            Represents a simple interface that will return a basic result
+            </summary>
+            <typeparam name="T">The typeof the result</typeparam>
+        </member>
+        <member name="M:MFDLabs.Concurrency.IResult`1.GetResult">
+            <summary>
+            Fetch the result
+            </summary>
+            <returns>The <typeparamref name="T"/> that was stored in the result object.</returns>
+        </member>
+        <member name="T:MFDLabs.Concurrency.Result`1">
+            <summary>
+            Basic implementation of <see cref="T:MFDLabs.Concurrency.IResult`1"/>, but not inherited.
+            </summary>
+            <typeparam name="T">The typeof the result.</typeparam>
+        </member>
+        <member name="M:MFDLabs.Concurrency.Result`1.#ctor(`0)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.Result`1"/> with <typeparamref name="T"/> as an input.
+            </summary>
+            <param name="value">The <typeparamref name="T"/> paremter.</param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.Result`1.#ctor(System.Exception)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.Result`1"/> with <see cref="T:System.Exception"/> as an input.
+            </summary>
+            <param name="exception">The <see cref="T:System.Exception"/> paramter.</param>
+        </member>
+        <member name="P:MFDLabs.Concurrency.Result`1.Exception">
+            <summary>
+            Represents the <see cref="T:System.Exception"/> object.
+            </summary>
+            <returns>Returns a <see cref="T:System.Exception"/> object.</returns>
+        </member>
+        <member name="P:MFDLabs.Concurrency.Result`1.Value">
+            <summary>
+            Represents the <typeparamref name="T"/> object. 
+            If <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> is not null it will throw an exception.
+            </summary>
+            <returns>Returns a <typeparamref name="T"/> object.</returns>
+            <exception cref="T:System.Exception">If the <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> property is present it will throw this.</exception>
+        </member>
+        <member name="M:MFDLabs.Concurrency.Result`1.Test(System.Action{`0},System.Action{System.Exception})">
+            <summary>
+            Test the result if the <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> property is present.
+            </summary>
+            <param name="successHandler">The <see cref="T:System.Action`1"/> to be invoked when the test succeeds.</param>
+            <param name="failureHandler">The <see cref="T:System.Action`1"/> to be invoked if the <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> property is present.</param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.Result`1.Test(System.Action{`0},System.Action{System.Exception},System.Action)">
+            <summary>
+            Test the result if the <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> property is present. Will then invoke an empty delegate regardless if it fails.
+            </summary>
+            <param name="successHandler">The <see cref="T:System.Action`1"/> to be invoked when the test succeeds.</param>
+            <param name="failureHandler">The <see cref="T:System.Action`1"/> to be invoked if the <see cref="P:MFDLabs.Concurrency.Result`1.Exception"/> property is present.</param>
+            <param name="cleanupHandler">The <see cref="T:System.Action"/> to be invoked on try-finally block.</param>
+        </member>
+        <member name="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult">
+            <summary>
+            Simple <see cref="T:System.IAsyncResult"/> that represents Synchronous Completion.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.#ctor(System.AsyncCallback,System.Object)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult"/> with a <see cref="T:System.AsyncCallback"/> and an <see cref="T:System.Object"/>.
+            </summary>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked OnEnd.</param>
+            <param name="state">The optional state to be used.</param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.#ctor(System.AsyncCallback,System.Object,System.Boolean)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult"/> with a <see cref="T:System.AsyncCallback"/>, an <see cref="T:System.Object"/> and <see cref="T:System.Boolean"/> parameter to setComplete
+            </summary>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked OnEnd.</param>
+            <param name="state">The optional state to be used.</param>
+            <param name="setComplete">A <see cref="T:System.Boolean"/> that determines if we should call <see cref="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.SetCompleted"/></param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.#ctor(System.AsyncCallback,System.Object,System.Exception)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult"/> with a <see cref="T:System.AsyncCallback"/>, an <see cref="T:System.Object"/> and <see cref="T:System.Exception"/> parameter to setComplete with an error.
+            </summary>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked OnEnd.</param>
+            <param name="state">The optional state to be used.</param>
+            <param name="error">A <see cref="T:System.Exception"/> that determines if we should call <see cref="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.SetCompleted(System.Exception)"/></param>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.AsyncWaitHandle">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.AsyncState">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.CompletedSynchronously">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.IsCompleted">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.Error">
+            <summary>
+            Gets a value that represents an <see cref="T:System.Exception"/> object passed into <see cref="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.SetCompleted(System.Exception)"/>
+            </summary>
+            <returns>Returns an <see cref="T:System.Exception"/> object if it was set</returns>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.CheckResult">
+            <summary>
+            Checks the Error property, if it's not null it will throw.
+            </summary>
+            <exception cref="T:System.Exception">The exception to be thrown if <see cref="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.Error"/> is present.</exception>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.SetCompleted">
+            <summary>
+            Set the <see cref="T:System.IAsyncResult"/> completed and invoke the callback.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.SetCompleted(System.Exception)">
+            <summary>
+            Set the <see cref="T:System.IAsyncResult"/> completed but with an error.
+            </summary>
+            <param name="error">The <see cref="T:System.Exception"/> object to assign to <see cref="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult.Error"/></param>
+        </member>
+        <member name="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1">
+            <summary>
+            Implementation of <see cref="T:MFDLabs.Concurrency.IResult`1"/>.
+            </summary>
+            <typeparam name="T">The typeof the result.</typeparam>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1.#ctor(`0,System.AsyncCallback,System.Object)">
+            <summary>
+            Constructs a new instance of <see cref="T:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1"/>.
+            </summary>
+            <param name="token">Sets the <see cref="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1.Token"/> parameter and the value to be returned by <see cref="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1.GetResult"/></param>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked OnEnd.</param>
+            <param name="state">The optional state to be used.</param>
+        </member>
+        <member name="P:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1.Token">
+            <summary>
+            The <typeparamref name="T"/> result object, do not use this as it will throw.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.SynchronousCompletionAsyncResult`1.GetResult">
+            <inheritdoc/>
+        </member>
+        <member name="T:MFDLabs.Concurrency.FastAsyncResult">
+            <summary>
+            Represents a <see cref="T:System.IAsyncResult"/> with fast operations.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult.#ctor(System.AsyncCallback,System.Object)">
+            <summary>
+            Constructs a new <see cref="T:MFDLabs.Concurrency.FastAsyncResult"/>.
+            </summary>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked.</param>
+            <param name="state">The optional state.</param>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult.AsyncWaitHandle">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult.AsyncState">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult.CompletedSynchronously">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult.IsCompleted">
+            <inheritdoc/>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult.Error">
+            <summary>
+            Gets a value that represents an <see cref="T:System.Exception"/> object passed into <see cref="M:MFDLabs.Concurrency.FastAsyncResult.SetCompleted(System.Exception)"/>
+            </summary>
+            <returns>Returns an <see cref="T:System.Exception"/> object if it was set</returns>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult.SetCompleted">
+            <summary>
+            Set the <see cref="T:System.IAsyncResult"/> completed and invoke the callback.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult.SetCompleted(System.Exception)">
+            <summary>
+            Set the <see cref="T:System.IAsyncResult"/> completed but with an error.
+            </summary>
+            <param name="error">The <see cref="T:System.Exception"/> object to assign to <see cref="P:MFDLabs.Concurrency.FastAsyncResult.Error"/></param>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult.SetFailed(System.Exception)">
+            <summary>
+            Sets the <see cref="P:MFDLabs.Concurrency.FastAsyncResult.Error"/> property
+            </summary>
+            <param name="error">The <see cref="T:System.Exception"/> object to assign to <see cref="P:MFDLabs.Concurrency.FastAsyncResult.Error"/></param>
+        </member>
+        <member name="T:MFDLabs.Concurrency.FastAsyncResult`1">
+            <summary>
+            Implementation of <see cref="T:MFDLabs.Concurrency.IResult`1"/>.
+            </summary>
+            <typeparam name="T">The typeof the result.</typeparam>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult`1.#ctor(System.AsyncCallback,System.Object)">
+            <summary>
+            Constructs a new <see cref="T:MFDLabs.Concurrency.FastAsyncResult`1"/> object.
+            </summary>
+            <param name="callback">The <see cref="T:System.AsyncCallback"/> to be invoked.</param>
+            <param name="state">The optional state.</param>
+        </member>
+        <member name="P:MFDLabs.Concurrency.FastAsyncResult`1.Token">
+            <summary>
+            The <typeparamref name="T"/> result object, do not use this as it will throw.
+            </summary>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult`1.GetResult">
+            <inheritdoc/>
+        </member>
+        <member name="M:MFDLabs.Concurrency.FastAsyncResult`1.SetCompleted(`0)">
+            <summary>
+            Sets the <see cref="T:System.IAsyncResult"/> completed with a <typeparamref name="T"/> result.
+            </summary>
+            <param name="result">The <typeparamref name="T"/> result to set.</param>
         </member>
         <member name="T:MFDLabs.Concurrency.DispatcherMonitor">
             <summary>

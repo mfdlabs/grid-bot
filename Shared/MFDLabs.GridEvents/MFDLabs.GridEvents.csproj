@@ -20,11 +20,15 @@
     <DefineConstants>TRACE;DEBUG;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.7.2" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
-    <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
     <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
     <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />

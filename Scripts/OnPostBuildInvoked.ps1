@@ -15,8 +15,23 @@ param (
     [string] $SolutionDir,
     [string] $ProjectName,
     [string] $TargetFramework,
-	[bool] $DeleteDebugSymbols = $true
+    [string] $DeployScriptOverride,
+    [bool] $DeleteDebugSymbols = $true,
+	[bool] $WriteNewGitHubRelease = $true,
+    [string] $ReleasePrefix = $null
 )
+
+# $boundArgs = $MyInvocation.BoundParameters.Keys;
+# $boundArgsStr = "";
+
+# foreach ($key in $boundArgs) {
+#     $value = $(get-variable $key).Value;
+
+#     $boundArgsStr += "-$key $value ";
+# }
+
+# Write-Host "$($MyInvocation.MyCommand.Name) $boundArgsStr" -ForegroundColor Green
+Write-Host "OnPostBuildInvoked with Configuration '$ConfigurationName' at Target '$TargetName'" -ForegroundColor Green;
 
 $isDebug = $ConfigurationName.StartsWith("Debug");
 $isVaultBacked = $ConfigurationName.Contains("Grid");
@@ -24,6 +39,8 @@ $isDeployment = $ConfigurationName.Contains("Deploy");
 $appSettingsConfiguration = IF ($isDebug) { "Debug" } else { "Release" };
 
 if ($isVaultBacked) {
+	Write-Host "Build is vault-backed, appending vault configuration postfix." -ForegroundColor Green;
+	
     $appSettingsConfiguration += "-Vault";
 }
 
@@ -47,8 +64,9 @@ IF (Test-Path $runtimeScriptsDir) {
 }
 
 # Copy the runtime-scripts
-Copy-Item -Path "$($ProjectDir)RuntimeScripts" -Destination $runtimeScriptsDir -Recurse -Force
-
+IF (Test-Path "$($ProjectDir)RuntimeScripts") {
+    Copy-Item -Path "$($ProjectDir)RuntimeScripts" -Destination $runtimeScriptsDir -Recurse -Force
+}
 
 # Delete the old Lua scripts and copy the new Lua scripts
 $luaScriptsDir = "$($ProjectDir)$($OutDir)Lua";
@@ -58,8 +76,9 @@ IF (Test-Path $luaScriptsDir) {
 }
 
 # Copy the Lua scripts
-Copy-Item -Path "$($ProjectDir)Lua" -Destination $luaScriptsDir -Recurse -Force
-
+IF (Test-Path "$($ProjectDir)Lua") {
+    Copy-Item -Path "$($ProjectDir)Lua" -Destination $luaScriptsDir -Recurse -Force
+}
 
 # Delete all translation scripts at the output
 $translationScriptsDirectories = @(
@@ -84,7 +103,7 @@ foreach ($translationScriptsDirectory in $translationScriptsDirectories) {
     }
 }
 
-
+Write-Host "Finished pre-cleanup, should deploy: $(IF ($isDeployment) { "true" } ELSE { "false" })" -ForegroundColor Green;
 
 IF ($isDeployment) {
     $deploymentConfiguration = IF ($isDebug) { "Debug" } ELSE { "Release" };
@@ -103,12 +122,12 @@ IF ($isDeployment) {
 
     # Call the deploy script
     Write-Host "Deploying..." -ForegroundColor Green;
-    $scriptName = "$($SolutionDir)Scripts\Deploy.ps1";
+    $scriptName = IF ($DeployScriptOverride) { $DeployScriptOverride } ELSE { "$($SolutionDir)Scripts\Deploy.ps1" };
     if (!(Get-Item -Path $scriptName)) {
         Write-Host "Deploy script $scriptName does not exist" -ForegroundColor Red;
         Exit 1;
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false
+    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $WriteNewGitHubRelease -preRelease $isDebug -releasePrefix $ReleasePrefix
 }

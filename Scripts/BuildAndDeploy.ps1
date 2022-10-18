@@ -10,9 +10,15 @@ param (
     [bool]$checkForExistingSourceArchive = $true,
     [bool]$checkForExistingConfigArchive = $true,
     [bool]$writeUnpackerScripts = $true,
+    [bool]$writeNewRelease = $true,
+    [bool]$preRelease = $false,
+    [bool]$allowPreReleaseGridDeployment = $false,
+    [string]$githubToken = $null,
+    [string]$remoteName = "origin",
+    [string]$releasePrefix = $null,
     [bool]$restoreSolution = $true,
     [bool]$cleanObjAndBinFolders = $false
 )
 
 & .\Build.ps1 -root $root -solutionName $solutionName -buildKind $deploymentKind -buildConfig $buildConfig -restoreSolution $restoreSolution -cleanObjAndBinFolders $cleanObjAndBinFolders
-& .\Deploy.ps1 -root $root -deploymentKind $deploymentKind -config $deploymentConfig -targetFramework $targetFramework -isGitIntegrated $isGitIntegrated -replaceExtensions $replaceExtensions -checkForExistingSourceArchive $checkForExistingSourceArchive -checkForExistingConfigArchive $checkForExistingConfigArchive -writeUnpackerScripts $writeUnpackerScripts
+& .\Deploy.ps1 -root $root -deploymentKind $deploymentKind -config $deploymentConfig -targetFramework $targetFramework -isGitIntegrated $isGitIntegrated -replaceExtensions $replaceExtensions -checkForExistingSourceArchive $checkForExistingSourceArchive -checkForExistingConfigArchive $checkForExistingConfigArchive -writeUnpackerScripts $writeUnpackerScripts -writeNewRelease $writeNewRelease -preRelease $preRelease -allowPreReleaseGridDeployment $allowPreReleaseGridDeployment -githubToken $githubToken -remoteName $remoteName -releasePrefix $releasePrefix

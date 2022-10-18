@@ -49,7 +49,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             {
                 if (!userIsAdmin && !userIsPrivilaged)
                 {
-                    SystemLogger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
+                    Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
 
                     var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
@@ -62,15 +62,15 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             if (userIsBlacklisted)
             {
                 await message.Author.FireEventAsync("Fatality", "They tried to use the bot while blacklisted");
-                SystemLogger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", message.Author.Id, message.Author.Username, message.Author.Discriminator);
+                Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", message.Author.Id, message.Author.Username, message.Author.Discriminator);
 
                 try
                 {
-                    await message.Author.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please contact <@{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID)}>");
+                    await message.Author.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
                 }
                 catch
                 {
-                    SystemLogger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
+                    Logger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
                 }
 
                 return;

@@ -10,6 +10,6 @@ namespace MFDLabs.Grid.Bot.Hooks
         public char[] HookKeys => new[] { 't', 'T' };
 
         public void Callback(char key) 
-            => SystemLogger.Singleton.Log("The current time is '{0}'", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+            => Logger.Singleton.Log("The current time is '{0}'", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
     }
 }

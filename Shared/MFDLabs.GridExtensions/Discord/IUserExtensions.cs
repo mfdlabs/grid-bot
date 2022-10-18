@@ -6,6 +6,7 @@ using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Threading.Extensions;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {
@@ -179,7 +180,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             bool isSpoiler = false,
             MessageReference messageReference = null
         )
-            => user.SendDirectMessageWithFileAsync(fileName, text, isTts, embed, options, isSpoiler, messageReference).GetAwaiter().GetResult();
+            => user.SendDirectMessageWithFileAsync(fileName, text, isTts, embed, options, isSpoiler, messageReference).Sync();
         public static IUserMessage SendDirectMessageWithFile(
             this IUser user,
             Stream stream,
@@ -191,7 +192,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             bool isSpoiler = false,
             MessageReference messageReference = null
         )
-            => user.SendDirectMessageWithFileAsync(stream, fileName, text, isTts, embed, options, isSpoiler, messageReference).GetAwaiter().GetResult();
+            => user.SendDirectMessageWithFileAsync(stream, fileName, text, isTts, embed, options, isSpoiler, messageReference).Sync();
         public static IUserMessage SendDirectMessage(
             this IUser user,
             string text = null,
@@ -200,6 +201,6 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null,
             MessageReference messageReference = null
         )
-            => user.SendDirectMessageAsync(text, isTts, embed, options, messageReference).GetAwaiter().GetResult();
+            => user.SendDirectMessageAsync(text, isTts, embed, options, messageReference).Sync();
     }
 }
