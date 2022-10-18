@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
             await message.ReplyAsync(
-                $"The log file name for this instance is: `{SystemLogger.FileName}`\n" + 
+                $"The log file name for this instance is: `{Logger.Singleton.FileName}`\n" + 
                 "Please paste this into the `Log File Name` field in grid-bot-support templates so that the internal team can easily identify this instance's log files."
             );
         }

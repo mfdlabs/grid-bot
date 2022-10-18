@@ -32,5 +32,14 @@
     <Setting Name="PollingInterval" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:00</Value>
     </Setting>
+    <Setting Name="EnvironmentLogLevel" Type="MFDLabs.Logging.LogLevel" Scope="Application">
+      <Value Profile="(Default)">Verbose</Value>
+    </Setting>
+    <Setting Name="DeploymentAppName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SkippedVersionInvalidationInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:05:00</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -15,6 +15,8 @@ namespace MFDLabs.Grid.Bot.Commands
 {
     internal class ViewCurrentConsole : IStateSpecificCommandHandler
     {
+		private const string ImageName = "ServerShot.png";
+		
         public string CommandName => "View Current Bot Instance Console";
         public string CommandDescription => "Attempts to take a screenshot of the bot's console output.";
         public string[] CommandAliases => new[] { "vcc", "viewcurrentconsole" };
@@ -44,13 +46,13 @@ namespace MFDLabs.Grid.Bot.Commands
 
             var bitmap = currentMainwindowHandle.GetBitmapForWindowByWindowHandle();
 
-            bitmap.Save("ServerShot.png");
+            bitmap.Save(ImageName);
 
-            await message.Channel.SendFileAsync("ServerShot.png");
+            await message.Channel.SendFileAsync(ImageName);
 
             TaskHelper.SetTimeout(() =>
             {
-                FilesHelper.PollDeletionOfFile("ServerShot.png");
+                ImageName.PollDeletion();
             }, TimeSpan.FromSeconds(2));
         }
     }

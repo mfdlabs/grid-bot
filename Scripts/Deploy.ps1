@@ -12,7 +12,8 @@ param (
     [bool]$preRelease = $false,
     [bool]$allowPreReleaseGridDeployment = $false,
     [string]$githubToken = $null,
-    [string]$remoteName = "origin"
+    [string]$remoteName = "origin",
+    [string]$releasePrefix = $null
 )
 
 $date = Get-Date;
@@ -300,8 +301,14 @@ powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted 
 
         & Write-Host "Writing new release..." -ForegroundColor Green
 
+        [string] $name = $null;
+
+        if ($null -ne $releasePrefix -and "" -ne $releasePrefix) {
+            $name = "$($releasePrefix.ToLowerInvariant())_$($versioningTag)";
+        }
+
         try {
-            PublishGitRelease -from $root -tag $versioningTag -branch $(ReadGitBranch -from $root) -remoteName $remoteName -files $deploymentFiles.ToArray() -preRelease $preRelease -allowPreReleaseGridDeployment $allowPreReleaseGridDeployment
+            PublishGitRelease -from $root -tag $versioningTag -name $name -branch $(ReadGitBranch -from $root) -remoteName $remoteName -files $deploymentFiles.ToArray() -preRelease $preRelease -allowPreReleaseGridDeployment $allowPreReleaseGridDeployment
         }
         catch {}
     }

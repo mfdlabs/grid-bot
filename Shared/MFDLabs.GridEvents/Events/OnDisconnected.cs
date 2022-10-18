@@ -13,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Events
         {
 #if DEBUG || DEBUG_LOGGING_IN_PROD
             if (!(ex is TaskCanceledException && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
-                SystemLogger.Singleton.Error(ex);
+                Logger.Singleton.Error(ex);
 #endif
             return Task.CompletedTask;
         }

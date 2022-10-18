@@ -32,7 +32,6 @@
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj" />
-    <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
     <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
     <ProjectReference Include="..\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj" />
@@ -41,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.7.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />

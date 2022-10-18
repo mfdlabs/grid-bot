@@ -2,6 +2,7 @@
 
 using Discord;
 using Discord.WebSocket;
+using MFDLabs.Threading.Extensions;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {
@@ -12,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             ApplicationCommandProperties properties,
             RequestOptions options = null
         )
-            => client.CreateApplicationCommandAsync(properties, options).GetAwaiter().GetResult();
+            => client.CreateApplicationCommandAsync(properties, options).Sync();
 
     }
 }

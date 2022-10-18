@@ -3,11 +3,11 @@ using MFDLabs.Text.Extensions;
 
 #if NETFRAMEWORK
 using System;
-using System.ComponentModel;
+using System.Management;
 using System.Security.Principal;
 using System.Collections.Generic;
-using System.Management;
 using System.Runtime.InteropServices;
+using PInvoke;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Diagnostics.NativeWin32;
 
@@ -16,6 +16,7 @@ using PHANDLE = System.IntPtr;
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 using DWORD = System.Int32;
+using Win32Exception = System.ComponentModel.Win32Exception;
 #endif
 
 namespace MFDLabs.Diagnostics
@@ -57,6 +58,19 @@ namespace MFDLabs.Diagnostics
             return false;
         }
 
+#if NETFRAMEWORK
+        public static bool TryEnableAnsiCodesForHandle(Kernel32.StdHandle stdHandle)
+        {
+            var consoleHandle = Kernel32.GetStdHandle(stdHandle);
+            if (Kernel32.GetConsoleMode(consoleHandle, out var consoleBufferModes) &&
+                consoleBufferModes.HasFlag(Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+                return true;
+
+            consoleBufferModes |= Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            return Kernel32.SetConsoleMode(consoleHandle, consoleBufferModes);
+        }
+#endif
+
         public static string GetCurrentUser()
         {
 #if NETFRAMEWORK || WE_LOVE_ENVIRONMENT_USERNAME
@@ -78,11 +92,18 @@ namespace MFDLabs.Diagnostics
         {
 #if NETFRAMEWORK
 #if !SIMPLISTIC_FETCH_OF_OWNER
-            var processHandle = PHANDLE.Zero;
+            var processHandle = Kernel32.SafeObjectHandle.Null;
+            var phandle = PHANDLE.Zero;
             try
             {
-                NativeMethods.OpenProcessToken(process.Handle, 0x8, out processHandle);
-                var wi = new WindowsIdentity(processHandle);
+                AdvApi32.OpenProcessToken(process.Handle, 0x8, out processHandle);
+
+                if (processHandle.IsInvalid)
+                    return null;
+
+                phandle = processHandle.DangerousGetHandle();
+
+                var wi = new WindowsIdentity(phandle);
                 string user = wi.Name;
                 return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
             }
@@ -92,8 +113,8 @@ namespace MFDLabs.Diagnostics
             }
             finally
             {
-                if (processHandle != IntPtr.Zero) 
-                    NativeMethods.CloseHandle(processHandle);
+                if (phandle != PHANDLE.Zero) 
+                    Kernel32.CloseHandle(phandle);
             }
 #else
             return GetProcessOwnerByProcessId(process.Id);
@@ -195,7 +216,7 @@ namespace MFDLabs.Diagnostics
         {
             try
             {
-                var hProcess = NativeMethods.GetProcessHandleFromHwnd(hwnd);
+                var hProcess = Oleacc.GetProcessHandleFromHwnd(hwnd);
 
                 return ProcessIsElavatedByHandle(hProcess);
             }
@@ -213,11 +234,18 @@ namespace MFDLabs.Diagnostics
 
         private static bool ProcessIsElavatedByHandle(HANDLE hProcess)
         {
-            var phToken = PHANDLE.Zero;
+            var processHandle = Kernel32.SafeObjectHandle.Null;
+            var phandle = PHANDLE.Zero;
             try
             {
-                NativeMethods.OpenProcessToken(hProcess, 8, out phToken);
-                return new WindowsIdentity(phToken).IsAdministrator();
+                AdvApi32.OpenProcessToken(hProcess, 8, out processHandle);
+
+                if (processHandle.IsInvalid)
+                    return false;
+
+                phandle = processHandle.DangerousGetHandle();
+
+                return new WindowsIdentity(phandle).IsAdministrator();
             }
             catch
             {
@@ -225,10 +253,8 @@ namespace MFDLabs.Diagnostics
             }
             finally
             {
-                if (phToken != PHANDLE.Zero)
-                {
-                    NativeMethods.CloseHandle(phToken);
-                }
+                if (phandle != PHANDLE.Zero)
+                    Kernel32.CloseHandle(phandle);
             }
         }
 

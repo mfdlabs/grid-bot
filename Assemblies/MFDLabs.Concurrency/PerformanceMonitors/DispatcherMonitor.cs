@@ -35,7 +35,7 @@ namespace MFDLabs.Concurrency
 
         private void dispatcher_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            SystemLogger.Singleton.Error(new ApplicationException($"{_dispatcher.Name} had an unhandled exception", e.ExceptionObject as Exception));
+            Logger.Singleton.Error(new ApplicationException($"{_dispatcher.Name} had an unhandled exception", e.ExceptionObject as Exception));
         }
 
         private static void Monitor()
@@ -54,7 +54,7 @@ namespace MFDLabs.Concurrency
                 }
                 catch (Exception ex)
                 {
-                    SystemLogger.Singleton.Error(ex);
+                    Logger.Singleton.Error(ex);
                 }
 
                 if (sleep != TimeSpan.Zero)

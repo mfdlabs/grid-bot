@@ -81,9 +81,9 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             perf.TotalItemsProcessedThatFailedPerSecond.Increment();
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            SystemLogger.Singleton.Error(ex);
+            Logger.Singleton.Error(ex);
 #else
-            SystemLogger.Singleton.Warning("An error occurred when trying to execute grid server screenshot work queue task: {0}", ex.Message);
+            Logger.Singleton.Warning("An error occurred when trying to execute grid server screenshot work queue task: {0}", ex.Message);
 #endif
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
@@ -160,7 +160,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             }
             finally
             {
-                FilesHelper.PollDeletionOfFile(tempPath);
+                tempPath.PollDeletion();
             }
         }
 
@@ -199,7 +199,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             try
             {
 #if !NETFRAMEWORK
-                SystemLogger.Singleton.Warning("Screenshots are not supported on this framework.");
+                Logger.Singleton.Warning("Screenshots are not supported on this framework.");
                 message.Reply("Grid Server Screenshots are not enabled at this time, please try again later.");
 #else
                 if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
@@ -260,7 +260,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             finally
             {
                 sw.Stop();
-                SystemLogger.Singleton.Debug("Took {0}s to execute grid server screenshot work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                Logger.Singleton.Debug("Took {0}s to execute grid server screenshot work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
 
                 if (failure)
                 {

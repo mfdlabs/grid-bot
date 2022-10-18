@@ -41,13 +41,13 @@ namespace MFDLabs.Grid.Bot
                 "Error",
                 $"Startup Failure: {ex.Message}."
             );
-            SystemLogger.Singleton.LifecycleEvent(PrimaryTaskError);
+            Logger.Singleton.LifecycleEvent(PrimaryTaskError);
             PerformanceServer.Stop();
         }
 
         public static void Invoke(string[] args)
         {
-            SystemLogger.Singleton.LifecycleEvent(BadActorMessage);
+            Logger.Singleton.LifecycleEvent(BadActorMessage);
 
             GoogleAnalyticsManager.Initialize(
                 PerfmonCounterRegistryProvider.Registry,
@@ -57,14 +57,14 @@ namespace MFDLabs.Grid.Bot
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
             {
                 GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Debug Mode Enabled");
-                SystemLogger.Singleton.Warning(DebugMode);
+                Logger.Singleton.Warning(DebugMode);
             }
 #endif
             if (SystemGlobal.ContextIsAdministrator() &&
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
             {
                 GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
-                SystemLogger.Singleton.Warning(AdminMode);
+                Logger.Singleton.Warning(AdminMode);
             }
 
             GoogleAnalyticsManager.TrackNetworkEvent(
@@ -74,8 +74,18 @@ namespace MFDLabs.Grid.Bot
                 $"opened with file name '{SystemGlobal.CurrentProcess.ProcessName}' at path " +
                 $"'{Directory.GetCurrentDirectory()}' (version {SystemGlobal.AssemblyVersion})."
             );
+			
+			if (args.Contains("--write-settings"))
+			{
+				Logger.Singleton.Warning("Writing settings instead of actually launching.");
+				
+				global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+				
+				Environment.Exit(0);
+				return;
+			}
 
-            SystemLogger.Singleton.Debug(
+            Logger.Singleton.Debug(
                 "Process '{0}' opened with file name '{1}' at path '{2}' (version {3}).",
                 SystemGlobal.CurrentProcess.Id.ToString("x"),
                 SystemGlobal.CurrentProcess.ProcessName,
@@ -115,6 +125,8 @@ namespace MFDLabs.Grid.Bot
             }
 
             InvokeAsync(args).Wait();
+
+            Environment.Exit(0);
         }
 
         private static async Task InvokeAsync(IEnumerable<string> args)
@@ -129,7 +141,7 @@ namespace MFDLabs.Grid.Bot
                     "Error",
                     "MainTask Failure: No Bot Token."
                 );
-                SystemLogger.Singleton.Error(NoBotToken);
+                Logger.Singleton.Error(NoBotToken);
                 // Case here so backtrace can catch potential hackers trying to use this without a token
                 // (they got assemblies but no configuration)
                 throw new InvalidOperationException(NoBotToken);

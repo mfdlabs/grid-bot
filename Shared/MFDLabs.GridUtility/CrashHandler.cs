@@ -10,12 +10,16 @@
             if (ex == null)
                 return;
 
+            var traceBack = global::MFDLabs.ErrorHandling.Extensions.ExceptionExtensions.ToDetailedString(
+                new global::System.Exception("Crash Handler call traceback.", ex)
+            );
+
             global::System.Threading.ThreadPool.QueueUserWorkItem(s =>
             {
                 try
                 {
                     System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_UploadRunning);
-                    System.Console.WriteLine(ex.Message);
+                    System.Console.WriteLine(traceBack);
                     var bckTraceCreds = new MFDLabs.Backtrace.Model.BacktraceCredentials(
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerURL,
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.CrashHandlerAccessToken
@@ -28,7 +32,7 @@
                 }
                 catch (global::System.Exception e)
                 {
-                    System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure, e.Message);
+                    System.Console.WriteLine(global::MFDLabs.Grid.Bot.Properties.Resources.CrashHandler_Upload_Failure, e.ToString());
                 }
             });
         }

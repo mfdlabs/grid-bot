@@ -7,7 +7,7 @@ namespace MFDLabs.Grid.Bot.Events
     {
         public static Task Invoke()
         {
-            SystemLogger.Singleton.Debug("BotGlobal logged in.");
+            Logger.Singleton.Debug("BotGlobal logged in.");
             return Task.CompletedTask;
         }
     }

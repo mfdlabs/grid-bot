@@ -122,7 +122,7 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var url = GetAvatarFetchUrl(userId, placeId);
 
-            SystemLogger.Singleton.Warning(
+            Logger.Singleton.Warning(
                 "Trying to render user '{0}' in place '{1}' with the dimensions of {2}x{3} with the url '{4}'",
                 userId,
                 placeId,
@@ -160,24 +160,24 @@ namespace MFDLabs.Grid.Bot.Utility
                     )
                 );
 
-                SystemLogger.Singleton.Warning("Trying to convert the reponse from a Base64 string via: Convert.FromBase64String()");
+                Logger.Singleton.Warning("Trying to convert the reponse from a Base64 string via: Convert.FromBase64String()");
 
                 var first = result.ElementAt(0);
                 if (first != null)
                 {
                     //setting when for how much is truncated ;-;
-                    SystemLogger.Singleton.Warning("Returning image contents of '{0}...[Truncated]'.", first.value.Substring(0, 150));
+                    Logger.Singleton.Warning("Returning image contents of '{0}...[Truncated]'.", first.value.Substring(0, 150));
 
                     return (new MemoryStream(Convert.FromBase64String(first.value)), GetFileName(userId, placeId, settings));
                 }
 
-                SystemLogger.Singleton.Error("The first return argument for the render was null, this may be an issue with the grid server.");
+                Logger.Singleton.Error("The first return argument for the render was null, this may be an issue with the grid server.");
 
                 return (null, null);
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(ex);
+                Logger.Singleton.Error(ex);
                 return (null, null);
             }
         }
