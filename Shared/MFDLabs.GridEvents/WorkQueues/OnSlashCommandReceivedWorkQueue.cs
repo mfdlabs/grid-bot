@@ -43,7 +43,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             {
                 if (!userIsAdmin && !userIsPrivilaged)
                 {
-                    SystemLogger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
+                    Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
 
                     var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
@@ -55,7 +55,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
             if (userIsBlacklisted)
             {
-                SystemLogger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", command.User.Id, command.User.Username, command.User.Discriminator);
+                Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", command.User.Id, command.User.Username, command.User.Discriminator);
 
                 try
                 {
@@ -63,7 +63,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                 }
                 catch
                 {
-                    SystemLogger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
+                    Logger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
                 }
 
                 return;

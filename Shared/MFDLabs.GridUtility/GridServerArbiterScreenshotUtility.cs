@@ -199,7 +199,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
             finally
             {
-                FilesHelper.PollDeletionOfFile(tempFileName);
+                tempFileName.PollDeletion();
             }
         }
 

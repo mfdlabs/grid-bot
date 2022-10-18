@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var sock = new UdpClient(new IPEndPoint(IPAddress.Loopback, 47001));
 
-            SystemLogger.Singleton.LifecycleEvent("Receiving shutdown requests on 127.0.0.1:47001");
+            Logger.Singleton.LifecycleEvent("Receiving shutdown requests on 127.0.0.1:47001");
 
             var sender = new IPEndPoint(IPAddress.Loopback, 0);
 
@@ -26,7 +26,7 @@ namespace MFDLabs.Grid.Bot.Utility
             {
                 var ver = sock.Receive(ref sender);
 
-                SystemLogger.Singleton.Warning("Received a shutdown request.");
+                Logger.Singleton.Warning("Received a shutdown request.");
                 GridProcessHelper.KillAllGridServersSafe();
                 GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe();
 

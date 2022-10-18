@@ -99,9 +99,9 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             perf.TotalItemsProcessedThatFailedPerSecond.Increment();
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            SystemLogger.Singleton.Error(ex);
+            Logger.Singleton.Error(ex);
 #else
-            SystemLogger.Singleton.Warning("An error occurred when trying to execute render work queue task: {0}", ex.Message);
+            Logger.Singleton.Warning("An error occurred when trying to execute render work queue task: {0}", ex.Message);
 #endif
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
@@ -191,7 +191,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                         if (originalCommandName == "sexually-weird-render")
                         {
-                            SystemLogger.Singleton.Warning("Got the test render command.");
+                            Logger.Singleton.Warning("Got the test render command.");
 
                             var (weirdStream, weirdFileName) = GridServerCommandUtility.RenderUser(
                                 4,
@@ -234,7 +234,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                 _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
                                 failure = true;
 
-                                SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
+                                Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
                                 message.Reply("You have no Roblox account associated with you.");
                                 return;
                             }
@@ -261,7 +261,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                         _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
                                         failure = true;
 
-                                        SystemLogger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
+                                        Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
                                         message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
                                         return;
                                     }
@@ -270,7 +270,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                 }
                                 else
                                 {
-                                    SystemLogger.Singleton.Warning("The first parameter of the command was " +
+                                    Logger.Singleton.Warning("The first parameter of the command was " +
                                                                    "not a valid Int64, trying to get the userID " +
                                                                    "by username lookup.");
                                     username = contentArray.Join(' ').EscapeNewLines().Escape();
@@ -287,7 +287,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                                     if (!username.IsNullOrEmpty())
                                     {
-                                        SystemLogger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
+                                        Logger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
                                         var nullableUserId = UserUtility.GetUserIdByUsername(username);
 
                                         if (!nullableUserId.HasValue)
@@ -296,12 +296,12 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                             _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
                                             failure = true;
 
-                                            SystemLogger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
+                                            Logger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
                                             message.Reply($"The user by the username of '{username}' was not found.");
                                             return;
                                         }
 
-                                        SystemLogger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
+                                        Logger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
                                         userId = nullableUserId.Value;
                                     }
                                     else
@@ -310,7 +310,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                         _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
                                         failure = true;
 
-                                        SystemLogger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
+                                        Logger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
                                         message.Reply($"Missing required parameter 'userID' or 'userName', " +
                                                       $"the layout is: " +
                                                       $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
@@ -327,7 +327,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                     _perfmon.TotalItemsProcessedThatHadInvalidUserIDsPerSecond.Increment();
                                     failure = true;
 
-                                    SystemLogger.Singleton.Warning(
+                                    Logger.Singleton.Warning(
                                         "The input user ID of {0} was greater than the environment's maximum user ID size of {1}.",
                                         userId,
                                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize
@@ -341,13 +341,13 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                         if (UserUtility.GetIsUserBanned(userId))
                         {
-                            SystemLogger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
+                            Logger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
                             var user = userId == default ? username : userId.ToString();
                             message.Reply($"The user '{user}' is banned or does not exist.");
                             return;
                         }
 
-                        SystemLogger.Singleton.Info(
+                        Logger.Singleton.Info(
                                     "Trying to render the character for the user '{0}' with the place '{1}', " +
                                     "and the dimensions of {2}x{3}",
                                     userId,
@@ -385,7 +385,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                 _itemCount--;
                 _processingItem = false;
                 sw.Stop();
-                SystemLogger.Singleton.Debug("Took {0}s to execute render work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                Logger.Singleton.Debug("Took {0}s to execute render work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
 
                 if (failure)
                 {

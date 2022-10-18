@@ -145,7 +145,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            SystemLogger.Singleton.Info("User '{0}' is privilaged or an admin.", command.User.Id);
+            Logger.Singleton.Info("User '{0}' is privilaged or an admin.", command.User.Id);
             return true;
         }
 
@@ -159,7 +159,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            SystemLogger.Singleton.Info("User '{0}' is an admin.", command.User.Id);
+            Logger.Singleton.Info("User '{0}' is an admin.", command.User.Id);
             return true;
         }
         public static async Task<bool> RejectIfNotOwnerAsync(SocketCommandBase command)
@@ -172,7 +172,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            SystemLogger.Singleton.Info("User '{0}' is the owner.", command.User.Id);
+            Logger.Singleton.Info("User '{0}' is the owner.", command.User.Id);
             return true;
         }
 #endif
@@ -187,7 +187,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return false;
             }
 
-            SystemLogger.Singleton.Info("User '{0}' is privilaged or an admin.", message.Author.Id);
+            Logger.Singleton.Info("User '{0}' is privilaged or an admin.", message.Author.Id);
             return true;
         }
 
@@ -195,12 +195,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             if (!UserIsAdmin(message.Author))
             {
-                SystemLogger.Singleton.Warning("User '{0}' is not on the admin whitelist. Please take this with " +
+                Logger.Singleton.Warning("User '{0}' is not on the admin whitelist. Please take this with " +
                                                "caution as leaked internal methods may be abused!", message.Author.Id);
                 await message.ReplyAsync("You lack the correct permissions to execute that command.");
                 return false;
             }
-            SystemLogger.Singleton.Info("User '{0}' is on the admin whitelist.", message.Author.Id);
+            Logger.Singleton.Info("User '{0}' is on the admin whitelist.", message.Author.Id);
             return true;
         }
 
@@ -208,12 +208,12 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             if (!UserIsOwner(message.Author))
             {
-                SystemLogger.Singleton.Warning("User '{0}' is not the owner. Please take this with caution " +
+                Logger.Singleton.Warning("User '{0}' is not the owner. Please take this with caution " +
                                                "as leaked internal methods may be abused!", message.Author.Id);
                 await message.ReplyAsync("You lack the correct permissions to execute that command.");
                 return false;
             }
-            SystemLogger.Singleton.Info("User '{0}' is the owner.", message.Author.Id);
+            Logger.Singleton.Info("User '{0}' is the owner.", message.Author.Id);
             return true;
         }
     }

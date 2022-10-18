@@ -50,7 +50,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (assemblyName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null assembly name, aborting.");
+                Logger.Singleton.Warning("Null assembly name, aborting.");
                 await message.ReplyAsync("The first parameter of the command was null, expected the " +
                                          "\"AssemblyName\" to be not null or not empty.");
                 return;
@@ -60,7 +60,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingsGroupName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null setting group name, aborting.");
+                Logger.Singleton.Warning("Null setting group name, aborting.");
                 await message.ReplyAsync("The second parameter of the command was null, expected the " +
                                          "\"SettingsGroupName\" to be not null or not empty.");
                 return;
@@ -74,14 +74,14 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (FileNotFoundException)
             {
-                SystemLogger.Singleton.Warning("Could not find the assembly '{0}', aborting.", assemblyName);
+                Logger.Singleton.Warning("Could not find the assembly '{0}', aborting.", assemblyName);
                 await message.ReplyAsync($"Could not find the assembly by the name of '{assemblyName}'." +
                                          $"Please check to make sure you spelled it correctly! (CaSe-SeNsItIvE)");
                 return;
             }
             catch (TypeLoadException)
             {
-                SystemLogger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.",
+                Logger.Singleton.Warning("Could not find the type '{0}' in the assembly '{1}', aborting.",
                     settingsGroupName,
                     assemblyName);
                 await message.ReplyAsync($"Could not find the type by the name of '{settingsGroupName}' in " +
@@ -91,7 +91,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (remoteSettings.BaseType != typeof(ApplicationSettingsBase))
             {
-                SystemLogger.Singleton.Warning(
+                Logger.Singleton.Warning(
                     "The type '{0}' in the assembly '{1}' did not extend the type '{2}', aborting.",
                     remoteSettings.FullName,
                     remoteSettings.Assembly.FullName,
@@ -107,7 +107,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingsInstance == null)
             {
-                SystemLogger.Singleton.Warning("The property 'Default' on the type '{0}' in the assembly '{1}'" +
+                Logger.Singleton.Warning("The property 'Default' on the type '{0}' in the assembly '{1}'" +
                                                "was null, aborting.",
                     remoteSettings.FullName,
                     remoteSettings.Assembly.FullName);

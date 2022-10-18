@@ -7,6 +7,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Threading.Extensions;
 
 namespace MFDLabs.Grid.Bot.Extensions
 {
@@ -76,7 +77,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null,
             bool isSpoiler = false
         )
-            => message.ReplyWithFileAsync(fileName, text, isTts, embed, options, isSpoiler).GetAwaiter().GetResult();
+            => message.ReplyWithFileAsync(fileName, text, isTts, embed, options, isSpoiler).Sync();
         public static RestUserMessage ReplyWithFile(
             this SocketMessage message,
             Stream stream,
@@ -87,7 +88,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             RequestOptions options = null,
             bool isSpoiler = false
         )
-            => message.ReplyWithFileAsync(stream, fileName, text, isTts, embed, options, isSpoiler).GetAwaiter().GetResult();
+            => message.ReplyWithFileAsync(stream, fileName, text, isTts, embed, options, isSpoiler).Sync();
         public static RestUserMessage Reply
             (this SocketMessage message,
             string text = null,
@@ -95,7 +96,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             Embed embed = null,
             RequestOptions options = null
         )
-            => message.ReplyAsync(text, isTts, embed, options).GetAwaiter().GetResult();
+            => message.ReplyAsync(text, isTts, embed, options).Sync();
         public static bool IsInPublicChannel(this SocketMessage message) =>
             message.Channel is SocketGuildChannel;
         public static async Task<bool> RejectIfNotAdminAsync(this SocketMessage message) 
@@ -105,10 +106,10 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static async Task<bool> RejectIfNotOwnerAsync(this SocketMessage message)
             => await AdminUtility.RejectIfNotOwnerAsync(message);
         public static bool RejectIfNotPrivilaged(this SocketMessage message) 
-            => message.RejectIfNotPrivilagedAsync().GetAwaiter().GetResult();
+            => message.RejectIfNotPrivilagedAsync().Sync();
         public static bool RejectIfNotAdmin(this SocketMessage message)
-            => message.RejectIfNotAdminAsync().GetAwaiter().GetResult();
+            => message.RejectIfNotAdminAsync().Sync();
         public static bool RejectIfNotOwner(this SocketMessage message) 
-            => message.RejectIfNotOwnerAsync().GetAwaiter().GetResult();
+            => message.RejectIfNotOwnerAsync().Sync();
     }
 }

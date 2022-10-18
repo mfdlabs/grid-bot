@@ -5,8 +5,10 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Grid.Bot.WorkQueues;
 
 namespace MFDLabs.Grid.Bot.SlashCommands
 {
@@ -40,7 +42,22 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                 .WithType(ApplicationCommandOptionType.SubCommand),
         };
 
-        public async Task Invoke(SocketSlashCommand command) => await command.RespondPublicAsync($"TODO: Revise for @ {command.Id}\nWorkQueue rewrite for V2 tasks\nGRIDBOT-88");
+        public async Task Invoke(SocketSlashCommand command)
+        {
+            if (!PercentageInvoker.InvokeAction(
+                () => RenderingWorkQueueV2.Singleton.EnqueueWorkItem(command),
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderWorkQueueRolloutPercentage
+            ))
+            {
+                if (command.User.IsAdmin())
+                {
+                    RenderingWorkQueueV2.Singleton.EnqueueWorkItem(command);
+                    return;
+                }
+                await command.RespondEphemeralPingAsync("Rendering is not enabled at this time.");
+                return;
+            }
+        }
     }
 }
 

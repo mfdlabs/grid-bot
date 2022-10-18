@@ -116,7 +116,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     return;
                 case FaultException fault:
                 {
-                    SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+                    Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
 
                     switch (fault.Message)
                     {
@@ -153,9 +153,9 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             }
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            SystemLogger.Singleton.Error(ex);
+            Logger.Singleton.Error(ex);
 #else
-            SystemLogger.Singleton.Warning("An error occurred when trying to execute render work queue task: {0}", ex.Message);
+            Logger.Singleton.Warning("An error occurred when trying to execute render work queue task: {0}", ex.Message);
 #endif
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
@@ -306,7 +306,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         ("isAdmin", isAdminScript)
                     );
 
-                    if (isAdminScript) SystemLogger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
+                    if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
 
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
                         script = $"{LuaUtility.SafeLuaMode}{script}";
@@ -410,16 +410,15 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     {
                         try
                         {
-                            SystemLogger.Singleton.LifecycleEvent(
+                            Logger.Singleton.LifecycleEvent(
                                 "Trying delete the script '{0}' at path '{1}'",
                                 scriptId,
                                 scriptName
                             );
-                            FilesHelper.PollDeletionOfFile(
-                                scriptName,
+                            scriptName.PollDeletion(
                                 10,
-                                ex => SystemLogger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                                () => SystemLogger.Singleton.LifecycleEvent(
+                                ex => Logger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
+                                () => Logger.Singleton.LifecycleEvent(
                                     "Successfully deleted the script '{0}' at path '{1}'!",
                                         scriptId,
                                         scriptName
@@ -430,7 +429,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         {
                             global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                             isFailure = true;
-                            SystemLogger.Singleton.Warning(
+                            Logger.Singleton.Warning(
                                 "Failed to delete the user script '{0}' because '{1}'",
                                 scriptName,
                                 ex.Message
@@ -442,7 +441,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             finally
             {
                 sw.Stop();
-                SystemLogger.Singleton.Debug("Took {0}s to execute script execution work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
+                Logger.Singleton.Debug("Took {0}s to execute script execution work queue task.", sw.Elapsed.TotalSeconds.ToString("f7"));
 
                 if (isFailure)
                 {

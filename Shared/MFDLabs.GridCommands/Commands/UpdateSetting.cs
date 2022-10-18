@@ -33,7 +33,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null Setting name, aborting.");
+                Logger.Singleton.Warning("Null Setting name, aborting.");
                 await message.ReplyAsync("The first parameter of the command was null, expected " +
                                          "the \"SettingName\" to be not null or not empty.");
                 return;
@@ -45,7 +45,7 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
-                    SystemLogger.Singleton.Warning("The environment does not allow nulls.");
+                    Logger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is disabled, " +
                                              "please supply a 'non-nullable' value.");
                     return;
@@ -62,7 +62,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (SettingsPropertyNotFoundException ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
                 await message.ReplyAsync(ex.Message);
                 return;
             }
@@ -93,7 +93,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
 
                 switch (ex)
                 {
@@ -118,7 +118,7 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName] = transformedValue;
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-                SystemLogger.Singleton.LifecycleEvent("Successfully set the setting " +
+                Logger.Singleton.LifecycleEvent("Successfully set the setting " +
                                                       "'{0}' to the value of '{1}'.",
                     settingName,
                     // ReSharper disable once PossibleInvalidOperationException
@@ -131,7 +131,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (SettingsPropertyIsReadOnlyException ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
                 await message.ReplyAsync(ex.Message);
             }
         }

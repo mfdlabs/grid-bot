@@ -39,7 +39,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (settingName.IsNullOrEmpty())
             {
-                SystemLogger.Singleton.Warning("Null Setting name, aborting.");
+                Logger.Singleton.Warning("Null Setting name, aborting.");
                 await message.ReplyAsync("The first parameter of the command was null, expected " +
                                          "the \"SettingName\" to be not null or not empty.");
                 return;
@@ -53,7 +53,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
             catch (SettingsPropertyNotFoundException ex)
             {
-                SystemLogger.Singleton.Warning(ex.Message);
+                Logger.Singleton.Warning(ex.Message);
                 await message.ReplyAsync(ex.Message);
                 return;
             }

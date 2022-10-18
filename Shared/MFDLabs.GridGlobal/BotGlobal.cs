@@ -27,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Global
 
         public static async Task TryLogout()
         {
-            SystemLogger.Singleton.Log("Attempting to logout bot user...");
+            Logger.Singleton.Log("Attempting to logout bot user...");
 
             if (Client != null)
             {
@@ -35,11 +35,11 @@ namespace MFDLabs.Grid.Bot.Global
                 {
                     await Client.StopAsync().ConfigureAwait(false);
                     //await _client.LogoutAsync().ConfigureAwait(false);
-                    SystemLogger.Singleton.Info("Bot successfully logged out and stopped!");
+                    Logger.Singleton.Info("Bot successfully logged out and stopped!");
                 }
                 catch
                 {
-                    SystemLogger.Singleton.Warning("Failed to log out bot user, most likely wasn't logged in prior.");
+                    Logger.Singleton.Warning("Failed to log out bot user, most likely wasn't logged in prior.");
                 }
             }
         }

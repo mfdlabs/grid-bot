@@ -22,7 +22,7 @@ namespace MFDLabs.Grid.Bot.Events
                 "LatencyUpdate",
                 $"Received a latency update from the discord socket, old latency '{oldLatency}', new latency '{newLatency}'.");
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            SystemLogger.Singleton.Info(
+            Logger.Singleton.Info(
                 "Received a latency update from the discord socket, old latency '{0}', new latency '{1}'.",
                 oldLatency,
                 newLatency);
@@ -38,7 +38,7 @@ namespace MFDLabs.Grid.Bot.Events
                 "LatencyUpdate",
                 $"Received a latency update from the discord socket, old latency '{oldLatency}', new latency '{newLatency}'.");
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            SystemLogger.Singleton.Info(
+            Logger.Singleton.Info(
                 "Received a latency update from the discord socket, old latency '{0}', new latency '{1}'.",
                 oldLatency,
                 newLatency);

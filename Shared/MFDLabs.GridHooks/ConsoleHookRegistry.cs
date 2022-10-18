@@ -63,19 +63,19 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static void ParseAndInsertIntoConsoleHookRegistry()
         {
-            SystemLogger.Singleton.LifecycleEvent("Begin attempt to register console hooks via Reflection.");
+            Logger.Singleton.LifecycleEvent("Begin attempt to register console hooks via Reflection.");
 
             try
             {
                 var @namespace = GetHookNamespace();
 
-                SystemLogger.Singleton.Info("Got console hook namespace '{0}'.", @namespace);
+                Logger.Singleton.Info("Got console hook namespace '{0}'.", @namespace);
 
                 var types = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(@namespace);
 
                 if (types.Length == 0)
                 {
-                    SystemLogger.Singleton.Warning("There were no console hooks found in the namespace '{0}'.", @namespace);
+                    Logger.Singleton.Warning("There were no console hooks found in the namespace '{0}'.", @namespace);
                     return;
                 }
 
@@ -87,11 +87,11 @@ namespace MFDLabs.Grid.Bot.Registries
 
                         if (consoleHook is IConsoleHook trueConsoleHook)
                         {
-                            SystemLogger.Singleton.Info("Parsing console hook '{0}'.", type.FullName);
+                            Logger.Singleton.Info("Parsing console hook '{0}'.", type.FullName);
 
                             if (trueConsoleHook.HookKeys.Length < 1)
                             {
-                                SystemLogger.Singleton.Trace(
+                                Logger.Singleton.Trace(
                                     "Exception when reading '{0}': Expected the sizeof field 'HookKeys' to be greater than 0, got {1}",
                                     type.FullName,
                                     trueConsoleHook.HookKeys.Length
@@ -107,11 +107,11 @@ namespace MFDLabs.Grid.Bot.Registries
             }
             catch (Exception ex)
             {
-                SystemLogger.Singleton.Error(ex);
+                Logger.Singleton.Error(ex);
             }
             finally
             {
-                SystemLogger.Singleton.Verbose("Successfully initialized the ConsoleHookRegistry.");
+                Logger.Singleton.Verbose("Successfully initialized the ConsoleHookRegistry.");
             }
         }
 

@@ -293,7 +293,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", $"Slash Command - {commandAlias}");
             Counters.RequestCountN++;
-            SystemLogger.Singleton.Verbose(
+            Logger.Singleton.Verbose(
                 "Try execute the slash command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
                 commandAlias,
                 !args.IsNullOrEmpty()
@@ -333,7 +333,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     Counters.RequestFailedCountN++;
 
-                    SystemLogger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
+                    Logger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
@@ -352,7 +352,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     await command.User.FireEventAsync("SlashCommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
                     InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    SystemLogger.Singleton.Warning("The slash command '{0}' is disabled. {1}",
+                    Logger.Singleton.Warning("The slash command '{0}' is disabled. {1}",
                         commandAlias,
                         disabledMessage != null
                             ? $"Because: '{disabledMessage}'"
@@ -438,7 +438,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 sw.Stop();
                 InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                 InstrumentationPerfmon.CommandsThatFinished.Increment();
-                SystemLogger.Singleton.Debug(
+                Logger.Singleton.Debug(
                     "Took {0}s to execute command '{1}'{2}.",
                     sw.Elapsed.TotalSeconds,
                     commandAlias,
@@ -469,7 +469,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 }
                 catch (Exception ex)
                 {
-                    SystemLogger.Singleton.Error(ex);
+                    Logger.Singleton.Error(ex);
                 }
             });
         }
@@ -492,7 +492,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
             Counters.RequestCountN++;
-            SystemLogger.Singleton.Verbose(
+            Logger.Singleton.Verbose(
                 "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
                 commandAlias,
                 messageContent.Length > 0
@@ -519,7 +519,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             if (commandAlias.IsNullOrWhiteSpace())
             {
-                SystemLogger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
+                Logger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
                 await message.Author.FireEventAsync("InvalidCommand", "Got prefix but command alias was empty");
                 return;
             }
@@ -530,7 +530,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 !message.Author.IsAdmin()
             )
             {
-                SystemLogger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
+                Logger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
                 await message.Author.FireEventAsync("InvalidCommand", "The command did not contain alphabet characters.");
                 // should we reply here?
                 return;
@@ -551,7 +551,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     InstrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     Counters.RequestFailedCountN++;
-                    SystemLogger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
+                    Logger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
                     if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
@@ -572,7 +572,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     await message.Author.FireEventAsync("CommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
                     InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    SystemLogger.Singleton.Warning("The command '{0}' is disabled. {1}",
+                    Logger.Singleton.Warning("The command '{0}' is disabled. {1}",
                         commandAlias,
                         disabledMessage != null
                             ? $"Because: '{disabledMessage}'"
@@ -661,7 +661,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 sw.Stop();
                 InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                 InstrumentationPerfmon.CommandsThatFinished.Increment();
-                SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.",
+                Logger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.",
                     sw.Elapsed.TotalSeconds,
                     commandAlias,
                     inNewThread
@@ -674,7 +674,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static void ExecuteSlashCommandInNewThread(string alias, SocketSlashCommand command, IStateSpecificSlashCommandHandler handler, Stopwatch sw)
         {
-            SystemLogger.Singleton.LifecycleEvent("Queueing user work item for slash command '{0}'.", alias);
+            Logger.Singleton.LifecycleEvent("Queueing user work item for slash command '{0}'.", alias);
 
             ThreadPool.QueueUserWorkItem(async _ =>
             {
@@ -695,7 +695,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     sw.Stop();
                     InstrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                     InstrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
-                    SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
+                    Logger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
                 }
 
             });
@@ -711,7 +711,7 @@ namespace MFDLabs.Grid.Bot.Registries
             IStateSpecificCommandHandler command
         )
         {
-            SystemLogger.Singleton.LifecycleEvent("Queueing user work item for command '{0}'.", alias);
+            Logger.Singleton.LifecycleEvent("Queueing user work item for command '{0}'.", alias);
 
             // could we have 2 versions here where we pool it and background it?
 
@@ -739,7 +739,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     sw.Stop();
                     InstrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                     InstrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
-                    SystemLogger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
+                    Logger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
                 }
             });
         }
@@ -757,22 +757,22 @@ namespace MFDLabs.Grid.Bot.Registries
             switch (ex)
             {
                 case NotSupportedException _:
-                    SystemLogger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                    Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
                 case ApplicationException _:
-                    SystemLogger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
+                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
                     await command.RespondEphemeralPingAsync($"The command threw an exception: {ex.Message}");
                     return;
                 case TimeoutException _:
                     InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    SystemLogger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
+                    Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
                     await command.RespondEphemeralPingAsync("the command you tried to execute has timed out, please " +
                                                         "try identify the leading cause of a timeout.");
                     return;
                 case EndpointNotFoundException _:
                     InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
                     InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
-                    SystemLogger.Singleton.Warning("The grid service was not online.");
+                    Logger.Singleton.Warning("The grid service was not online.");
                     await command.RespondEphemeralPingAsync($"the grid service is not currently running, " +
                                                         $"please ask <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>" +
                                                         $" to start the service.");
@@ -780,7 +780,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 case FaultException fault:
                 {
                     InstrumentationPerfmon.FailedCommandsThatTriggeredAFaultException.Increment();
-                    SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+                    Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
 
                     if (fault.Message == "Cannot invoke BatchJob while another job is running")
                     {
@@ -821,7 +821,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InstrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
 
-            SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToDetailedString());
+            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToDetailedString());
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
@@ -864,26 +864,26 @@ namespace MFDLabs.Grid.Bot.Registries
             switch (ex)
             {
                 case CircuitBreakerException _:
-                    SystemLogger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToDetailedString());
+                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToDetailedString());
                     await message.ReplyAsync(ex.Message);
                     return;
                 case NotSupportedException _:
-                    SystemLogger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                    Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
                 case ApplicationException _:
-                    SystemLogger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
+                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
                     await message.ReplyAsync($"The command threw an exception: {ex.Message}");
                     return;
                 case TimeoutException _:
                     InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    SystemLogger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
+                    Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
                     await message.ReplyAsync("the command you tried to execute has timed out, please try identify " +
                                              "the leading cause of a timeout.");
                     return;
                 case EndpointNotFoundException _:
                     InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
                     InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
-                    SystemLogger.Singleton.Warning("The grid service was not online.");
+                    Logger.Singleton.Warning("The grid service was not online.");
                     await message.ReplyAsync($"the grid service is not currently running, please ask " +
                                              $"<@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start " +
                                              $"the service.");
@@ -891,7 +891,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 case FaultException fault:
                 {
                     InstrumentationPerfmon.FailedCommandsThatTriggeredAFaultException.Increment();
-                    SystemLogger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+                    Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
 
                     switch (fault.Message)
                     {
@@ -934,7 +934,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InstrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
 
-            SystemLogger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}",
+            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}",
                 exceptionId.ToString(),
                 ex.ToDetailedString());
 
@@ -998,13 +998,13 @@ namespace MFDLabs.Grid.Bot.Registries
             lock (StateSpecificCommandHandlers)
             {
                 InstrumentationPerfmon.CommandsParsedAndInsertedIntoRegistry.Increment();
-                SystemLogger.Singleton.LifecycleEvent("Begin attempt to register commands via Reflection");
+                Logger.Singleton.LifecycleEvent("Begin attempt to register commands via Reflection");
 
                 try
                 {
                     var defaultCommandNamespace = GetDefaultCommandNamespace();
 
-                    SystemLogger.Singleton.Info("Got default command namespace '{0}'.", defaultCommandNamespace);
+                    Logger.Singleton.Info("Got default command namespace '{0}'.", defaultCommandNamespace);
 
                     var defaultCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(defaultCommandNamespace);
 
@@ -1016,14 +1016,14 @@ namespace MFDLabs.Grid.Bot.Registries
                     {
 
                         var slashCommandNamespace = GetSlashCommandNamespace();
-                        SystemLogger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
+                        Logger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
                         var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
 
 
                         if (slashCommandTypes.Length == 0)
                         {
                             InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                            SystemLogger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
+                            Logger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
                         }
                         else
                         {
@@ -1037,12 +1037,12 @@ namespace MFDLabs.Grid.Bot.Registries
 
                                         if (commandHandler is not IStateSpecificSlashCommandHandler trueCommandHandler) continue;
 
-                                        SystemLogger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
+                                        Logger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
 
                                         if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                            SystemLogger.Singleton.Error(
+                                            Logger.Singleton.Error(
                                                 "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' " +
                                                 "to not be null or empty",
                                                 type.FullName
@@ -1054,7 +1054,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                         if (GetSlashCommandByCommandAlias(trueCommandHandler.CommandAlias) != null)
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandAliasesThatAlreadyExisted.Increment();
-                                            SystemLogger.Singleton.Error(
+                                            Logger.Singleton.Error(
                                                 "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
                                                 type.FullName,
                                                 trueCommandHandler.CommandAlias
@@ -1065,7 +1065,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                         if (trueCommandHandler.CommandDescription is { Length: 0 })
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                            SystemLogger.Singleton.Error(
+                                            Logger.Singleton.Error(
                                                 "Exception when reading '{0}': Expected field 'CommandDescription' " +
                                                 "to have a size greater than 0",
                                                 type.FullName
@@ -1089,7 +1089,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                                             if (guild == null)
                                             {
-                                                SystemLogger.Singleton.Trace(
+                                                Logger.Singleton.Trace(
                                                     "Exception when reading '{0}': Unknown Guild '{1}'",
                                                     type.FullName,
                                                     trueCommandHandler.GuildId
@@ -1116,7 +1116,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                 catch (Exception ex)
                                 {
                                     InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                                    SystemLogger.Singleton.Error(ex);
+                                    Logger.Singleton.Error(ex);
                                 }
                             }
                         }
@@ -1127,7 +1127,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     if (defaultCommandTypes.Length == 0)
                     {
                         InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                        SystemLogger.Singleton.Warning("There were no default commands found in the namespace '{0}'.",
+                        Logger.Singleton.Warning("There were no default commands found in the namespace '{0}'.",
                             defaultCommandNamespace);
                     }
                     else
@@ -1141,12 +1141,12 @@ namespace MFDLabs.Grid.Bot.Registries
                                     var commandHandler = Activator.CreateInstance(type);
                                     if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)
                                     {
-                                        SystemLogger.Singleton.Info("Parsing command '{0}'.", type.FullName);
+                                        Logger.Singleton.Info("Parsing command '{0}'.", type.FullName);
 
                                         if (trueCommandHandler.CommandAliases.Length < 1)
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                            SystemLogger.Singleton.Trace(
+                                            Logger.Singleton.Trace(
                                                 "Exception when reading '{0}': Expected the sizeof field " +
                                                 "'CommandAliases' to be greater than 0, got {1}",
                                                 type.FullName,
@@ -1159,7 +1159,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                         if (trueCommandHandler.CommandName.IsNullOrEmpty())
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoName.Increment();
-                                            SystemLogger.Singleton.Trace(
+                                            Logger.Singleton.Trace(
                                                 "Exception when reading '{0}': Expected field 'CommandName' to be not null",
                                                 type.FullName
                                             );
@@ -1170,7 +1170,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                         if (trueCommandHandler.CommandDescription is { Length: 0 })
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                            SystemLogger.Singleton.Warning(
+                                            Logger.Singleton.Warning(
                                                 "Exception when reading '{0}': Expected field " +
                                                 "'CommandDescription' to have a size greater than 0",
                                                 type.FullName
@@ -1197,7 +1197,7 @@ namespace MFDLabs.Grid.Bot.Registries
                             catch (Exception ex)
                             {
                                 InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                                SystemLogger.Singleton.Error(ex);
+                                Logger.Singleton.Error(ex);
                             }
                         }
                     }
@@ -1206,11 +1206,11 @@ namespace MFDLabs.Grid.Bot.Registries
                 catch (Exception ex)
                 {
                     InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                    SystemLogger.Singleton.Error(ex);
+                    Logger.Singleton.Error(ex);
                 }
                 finally
                 {
-                    SystemLogger.Singleton.Verbose("Successfully initialized the CommandRegistry.");
+                    Logger.Singleton.Verbose("Successfully initialized the CommandRegistry.");
                 }
             }
         }
@@ -1257,24 +1257,24 @@ namespace MFDLabs.Grid.Bot.Registries
 
         public static void LogMetricsReport()
         {
-            SystemLogger.Singleton.Warning(
+            Logger.Singleton.Warning(
                 "Command Registry metrics report for Date ({0} at {1})",
                 DateTimeGlobal.GetUtcNowAsIso(),
                 LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7")
             );
-            SystemLogger.Singleton.Log("=====================================================================================");
-            SystemLogger.Singleton.Log("Total command request count: {0}", Counters.RequestCountN);
-            SystemLogger.Singleton.Log("Total succeeded command request count: {0}", Counters.RequestSucceededCountN);
-            SystemLogger.Singleton.Log("Total failed command request count: {0}", Counters.RequestFailedCountN);
+            Logger.Singleton.Log("=====================================================================================");
+            Logger.Singleton.Log("Total command request count: {0}", Counters.RequestCountN);
+            Logger.Singleton.Log("Total succeeded command request count: {0}", Counters.RequestSucceededCountN);
+            Logger.Singleton.Log("Total failed command request count: {0}", Counters.RequestFailedCountN);
 
             var modes = CalculateModes();
 
-            SystemLogger.Singleton.Log("Average request channel: '{0}' with average of {1}", modes.Channels.Item, modes.Channels.Average);
-            SystemLogger.Singleton.Log("Average request guild: '{0}' with average of {1}", modes.Servers.Item, modes.Servers.Average);
-            SystemLogger.Singleton.Log("Average request user: '{0}' with average of {1}", modes.Users.Item, modes.Users.Average);
-            SystemLogger.Singleton.Log("Average request command name: '{0}' with average of {1}", modes.Commands.Item, modes.Commands.Average);
+            Logger.Singleton.Log("Average request channel: '{0}' with average of {1}", modes.Channels.Item, modes.Channels.Average);
+            Logger.Singleton.Log("Average request guild: '{0}' with average of {1}", modes.Servers.Item, modes.Servers.Average);
+            Logger.Singleton.Log("Average request user: '{0}' with average of {1}", modes.Users.Item, modes.Users.Average);
+            Logger.Singleton.Log("Average request command name: '{0}' with average of {1}", modes.Commands.Item, modes.Commands.Average);
 
-            SystemLogger.Singleton.Log("=====================================================================================");
+            Logger.Singleton.Log("=====================================================================================");
         }
 
         private static void InsertIntoAverages(string channelName, string serverName, string userName, string commandName)
