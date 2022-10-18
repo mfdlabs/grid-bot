@@ -13,7 +13,7 @@ namespace MFDLabs.Grid.Bot.Events
     {
         public static Task Invoke(DiscordSocketClient shard)
         {
-            SystemLogger.Singleton.Debug("Shard '{0}' has been connected to the Hub.", shard.ShardId);
+            Logger.Singleton.Debug("Shard '{0}' has been connected to the Hub.", shard.ShardId);
             return Task.CompletedTask;
         }
     }
@@ -22,7 +22,7 @@ namespace MFDLabs.Grid.Bot.Events
     {
         public static Task Invoke()
         {
-            SystemLogger.Singleton.Debug("Client has been connected to the Hub.");
+            Logger.Singleton.Debug("Client has been connected to the Hub.");
             return Task.CompletedTask;
         }
     }

@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Dependencies\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
     <ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
     <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
     <ProjectReference Include="..\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
@@ -33,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.7.2" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 

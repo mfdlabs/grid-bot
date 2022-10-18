@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net481</TargetFramework>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
@@ -10,43 +10,22 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <WarningLevel>0</WarningLevel>
-    <DefineConstants>TRACE;</DefineConstants>
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DefineConstants>TRACE;DEBUG;</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID;</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <WarningLevel>0</WarningLevel>
+    <DefineConstants>WE_ON_THE_GRID;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,14 +35,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Octokit" Version="0.51.0" />
+    <PackageReference Include="Octokit.GraphQL" Version="0.1.9-beta" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.ServiceModel" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,8 +53,8 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Wcf\MFDLabs.Wcf.csproj" />
-    <ProjectReference Include="..\Dependencies\Octokit\Octokit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -87,14 +69,44 @@
     <None Update="App.config">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Update="App.debug.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.debug-vault.config">
+      <DependentUpon>App.debug.config</DependentUpon>
+    </None>
+    <None Update="App.release.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.release-vault.config">
+      <DependentUpon>App.debug.config</DependentUpon>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Infrastructure" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Deploy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="runservice.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>RunService.ps1</DependentUpon>
+    </None>
+    <None Update="RunService.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $true" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $true -WriteNewGitHubRelease $true -ReleasePrefix $(TargetName)" />
   </Target>
 
 </Project>

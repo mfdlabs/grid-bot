@@ -110,7 +110,7 @@ namespace MFDLabs.Concurrency
             try { ExecutionContext.Run(item.Context, item.Callback.Invoke, item.State); }
             catch (ThreadAbortException) { }
             catch (ThreadInterruptedException) { }
-            catch (Exception ex) { SystemLogger.Singleton.Error(ex); }
+            catch (Exception ex) { Logger.Singleton.Error(ex); }
         }
         private void MonitorPerformance(string instanceName)
         {
@@ -169,7 +169,7 @@ namespace MFDLabs.Concurrency
 #endif
             }
             catch (ThreadAbortException) { }
-            catch (Exception ex) { SystemLogger.Singleton.Error(ex); }
+            catch (Exception ex) { Logger.Singleton.Error(ex); }
         }
 
         /// <inheritdoc/>

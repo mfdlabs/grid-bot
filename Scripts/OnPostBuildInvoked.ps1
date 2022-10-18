@@ -16,8 +16,22 @@ param (
     [string] $ProjectName,
     [string] $TargetFramework,
     [string] $DeployScriptOverride,
-    [bool] $DeleteDebugSymbols = $true
+    [bool] $DeleteDebugSymbols = $true,
+	[bool] $WriteNewGitHubRelease = $true,
+    [string] $ReleasePrefix = $null
 )
+
+# $boundArgs = $MyInvocation.BoundParameters.Keys;
+# $boundArgsStr = "";
+
+# foreach ($key in $boundArgs) {
+#     $value = $(get-variable $key).Value;
+
+#     $boundArgsStr += "-$key $value ";
+# }
+
+# Write-Host "$($MyInvocation.MyCommand.Name) $boundArgsStr" -ForegroundColor Green
+Write-Host "OnPostBuildInvoked with Configuration '$ConfigurationName' at Target '$TargetName'" -ForegroundColor Green;
 
 $isDebug = $ConfigurationName.StartsWith("Debug");
 $isVaultBacked = $ConfigurationName.Contains("Grid");
@@ -25,6 +39,8 @@ $isDeployment = $ConfigurationName.Contains("Deploy");
 $appSettingsConfiguration = IF ($isDebug) { "Debug" } else { "Release" };
 
 if ($isVaultBacked) {
+	Write-Host "Build is vault-backed, appending vault configuration postfix." -ForegroundColor Green;
+	
     $appSettingsConfiguration += "-Vault";
 }
 
@@ -87,7 +103,7 @@ foreach ($translationScriptsDirectory in $translationScriptsDirectories) {
     }
 }
 
-
+Write-Host "Finished pre-cleanup, should deploy: $(IF ($isDeployment) { "true" } ELSE { "false" })" -ForegroundColor Green;
 
 IF ($isDeployment) {
     $deploymentConfiguration = IF ($isDebug) { "Debug" } ELSE { "Release" };
@@ -113,5 +129,5 @@ IF ($isDeployment) {
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $false -preRelease $false
+    & "$($scriptName)" -root $SolutionDir -config $deploymentConfiguration -targetFramework $TargetFramework -deploymentKind $ProjectName -checkForExistingConfigArchive $false -writeNewRelease $WriteNewGitHubRelease -preRelease $isDebug -releasePrefix $ReleasePrefix
 }

@@ -1,6 +1,4 @@
-﻿#if NETFRAMEWORK
-
-using System.Collections;
+﻿using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -34,5 +32,3 @@ namespace MFDLabs
         }
     }
 }
-
-#endif

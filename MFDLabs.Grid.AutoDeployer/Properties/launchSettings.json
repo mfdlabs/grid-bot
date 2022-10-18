@@ -2,7 +2,7 @@
   "profiles": {
     "MFDLabs.Grid.AutoDeployer": {
       "commandName": "Project",
-      "commandLineArgs": "-Console"
+      "commandLineArgs": "-console"
     }
   }
 }

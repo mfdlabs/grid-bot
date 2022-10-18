@@ -18,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Events
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                 if (!(message.Exception is TaskCanceledException &&
                       !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
-                    SystemLogger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
+                    Logger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
                         message.Source,
                         message.Message,
                         message.Exception.ToDetailedString());
@@ -32,19 +32,19 @@ namespace MFDLabs.Grid.Bot.Events
             switch (message)
             {
                 case {Severity: LogSeverity.Warning}:
-                    SystemLogger.Singleton.Warning("DiscordInternal-WARNING-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Warning("DiscordInternal-WARNING-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Debug}:
-                    SystemLogger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Info}:
-                    SystemLogger.Singleton.Info("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Info("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Verbose}:
-                    SystemLogger.Singleton.Verbose("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Verbose("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Error | LogSeverity.Critical}:
-                    SystemLogger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Critical}:
                     break;

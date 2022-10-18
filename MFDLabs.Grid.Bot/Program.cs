@@ -40,7 +40,7 @@
                     global::System.Console.ResetColor();
 
                     if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))
-                        global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()));
+                        global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()), true);
 
                     return;
                 }
@@ -55,6 +55,8 @@
                         (e.ExceptionObject as global::System.Exception)?.Message
                     );
                     global::System.Console.ResetColor();
+                    global::System.Console.WriteLine("Press any key to exit...");
+                    global::System.Console.ReadKey(true);
                     global::System.Environment.Exit(1);
                     return;
                 }
@@ -68,12 +70,24 @@
                 global::System.Console.ResetColor();
 
                 if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))
-                    global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception);
+                    global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception, true);
 
                 global::MFDLabs.Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
 
-                if (e.ExceptionObject is global::System.InvalidOperationException)
-                    global::System.Environment.Exit(1);
+                if (e.ExceptionObject is global::System.AggregateException aggregate)
+                {
+                    if (global::System.Linq.Enumerable.Any(
+                        global::System.Linq.Enumerable.Where(
+                            aggregate.InnerExceptions,
+                            x => x is global::System.InvalidOperationException
+                        )
+                    ))
+                    {
+                        global::System.Console.WriteLine("Press any key to exit...");
+                        global::System.Console.ReadKey(true);
+                        global::System.Environment.Exit(1);
+                    }
+                }
             };
 
             global::MFDLabs.Grid.Bot.Runner.Invoke(args);

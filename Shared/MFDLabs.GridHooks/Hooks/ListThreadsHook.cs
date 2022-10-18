@@ -12,9 +12,9 @@ namespace MFDLabs.Grid.Bot.Hooks
         {
             var threads = Process.GetCurrentProcess().Threads;
 
-            SystemLogger.Singleton.Log("Total thread count: {0}", threads.Count);
+            Logger.Singleton.Log("Total thread count: {0}", threads.Count);
 
-            foreach (ProcessThread thread in threads) SystemLogger.Singleton.Log("Thread ID: {0}", thread.Id);
+            foreach (ProcessThread thread in threads) Logger.Singleton.Log("Thread ID: {0}", thread.Id);
         }
     }
 }

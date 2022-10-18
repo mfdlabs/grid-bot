@@ -25,7 +25,7 @@ namespace MFDLabs.Logging.Diagnostics
 
             if (!result) return false;
 
-            if (!(task is TaskCommon taskCommon)) return true;
+            if (task is not TaskCommon taskCommon) return true;
 
             Next.SetValue(taskCommon, null);
             Previous.SetValue(taskCommon, null);

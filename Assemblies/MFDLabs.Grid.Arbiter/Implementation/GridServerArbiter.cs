@@ -284,7 +284,7 @@ namespace MFDLabs.Grid
 
                         if (IsPortInUse(port))
                         {
-                            SystemLogger.Singleton.Warning("Chosen random port, {0}, is already in use", port);
+                            Logger.Singleton.Warning("Chosen random port, {0}, is already in use", port);
                             continue;
                         }
 
@@ -295,7 +295,7 @@ namespace MFDLabs.Grid
                             _perfmon.PortAllocationSuccessesPerSecond.Increment();
                             _perfmon.PortAllocationSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
 
-                            SystemLogger.Singleton.Info(
+                            Logger.Singleton.Info(
                                 "Port {0} is chosen for the next GridServerInstance. Number of attempts = {1}, time taken = {2} ms",
                                 port,
                                 i + 1,
@@ -303,7 +303,7 @@ namespace MFDLabs.Grid
                             );
                             return port;
                         }
-                        SystemLogger.Singleton.Warning("Chosen random port {0} has been used recently. Total number of recently used ports is {1}", port, _cache.Count);
+                        Logger.Singleton.Warning("Chosen random port {0} has been used recently. Total number of recently used ports is {1}", port, _cache.Count);
                     }
                 }
                 sw.Stop();
@@ -343,10 +343,10 @@ namespace MFDLabs.Grid
         public int KillAllOpenInstancesUnsafe()
         {
             var instanceCount = _instances.Count;
-            SystemLogger.Singleton.LifecycleEvent("Disposing of all grid server instances");
+            Logger.Singleton.LifecycleEvent("Disposing of all grid server instances");
             foreach (var instance in _instances.ToArray())
             {
-                SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
+                Logger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
                 PortAllocation.RemovePortFromCacheIfExists(instance.Port);
                 _instances.Remove(instance);
                 instance.Dispose();
@@ -359,10 +359,10 @@ namespace MFDLabs.Grid
             lock (_instances)
             {
                 var instanceCount = _instances.Count;
-                SystemLogger.Singleton.LifecycleEvent("Disposing of all grid server instances");
+                Logger.Singleton.LifecycleEvent("Disposing of all grid server instances");
                 foreach (var instance in _instances.ToArray())
                 {
-                    SystemLogger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
+                    Logger.Singleton.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
                     PortAllocation.RemovePortFromCacheIfExists(instance.Port);
                     _instances.Remove(instance);
 
@@ -500,7 +500,7 @@ namespace MFDLabs.Grid
                 true,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up arbitered instance '{0}' on host '{1}'",
+            Logger.Singleton.Debug("Queueing up arbitered instance '{0}' on host '{1}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString());
             _instances.Add(instance);
@@ -539,7 +539,7 @@ namespace MFDLabs.Grid
                 true,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
+            Logger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString(),
                 newLease
@@ -575,7 +575,7 @@ namespace MFDLabs.Grid
                 isPoolable,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up persistent arbitered instance '{0}' on host '{1}'",
+            Logger.Singleton.Debug("Queueing up persistent arbitered instance '{0}' on host '{1}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString());
             _instances.Add(instance);
@@ -608,7 +608,7 @@ namespace MFDLabs.Grid
                 true,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up arbitered instance '{0}' on host '{1}'",
+            Logger.Singleton.Debug("Queueing up arbitered instance '{0}' on host '{1}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString());
             lock (_instances)
@@ -648,7 +648,7 @@ namespace MFDLabs.Grid
                 true,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
+            Logger.Singleton.Debug("Queueing up leased arbitered instance '{0}' on host '{1}' with lease '{2}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString(),
                 newLease
@@ -685,7 +685,7 @@ namespace MFDLabs.Grid
                 isPoolable,
                 openNowInNewThread
             );
-            SystemLogger.Singleton.Debug("Queueing up persistent arbitered instance '{0}' on host '{1}'",
+            Logger.Singleton.Debug("Queueing up persistent arbitered instance '{0}' on host '{1}'",
                 instance.Name,
                 instance.Endpoint.Address.Uri.ToString());
             lock (_instances)
@@ -806,7 +806,7 @@ namespace MFDLabs.Grid
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
-            SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
+            Logger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
 
             return InvokeMethodToInvoke<T>(args, methodToInvoke, instance);
         }
@@ -841,7 +841,7 @@ namespace MFDLabs.Grid
 
             var instance = GetOrCreateGridServerInstance(name, maxAttemptsToHitGridServer, hostName, isPoolable);
 
-            SystemLogger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
+            Logger.Singleton.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
 
             return await InvokeMethodToInvokeAsync<T>(args, methodToInvoke, instance);
         }
@@ -1290,7 +1290,7 @@ namespace MFDLabs.Grid
             public void Dispose()
             {
                 GC.SuppressFinalize(this);
-                SystemLogger.Singleton.LifecycleEvent("Closing instance '{0}'...", _name);
+                Logger.Singleton.LifecycleEvent("Closing instance '{0}'...", _name);
                 GridProcessHelper.KillProcessByPidSafe(ProcessId);
             }
 
@@ -1452,16 +1452,16 @@ namespace MFDLabs.Grid
                 }
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-                SystemLogger.Singleton.Error("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.ToDetailedString());
+                Logger.Singleton.Error("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.ToDetailedString());
 #else
-                SystemLogger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.Message);
+                Logger.Singleton.Warning("Exception occurred when trying to execute command '{0}->{1}': {2}. Retrying...", _name, lastMethod, ex.Message);
 #endif
                 return default;
             }
 
             private T HandleEndpointNotFoundException<T>(string lastMethod)
             {
-                SystemLogger.Singleton.Warning("The grid server instance command the name of '{0}->{1}' threw an EndpointNotFoundException, opening and retrying...", _name, lastMethod);
+                Logger.Singleton.Warning("The grid server instance command the name of '{0}->{1}' threw an EndpointNotFoundException, opening and retrying...", _name, lastMethod);
                 if (!global::MFDLabs.Grid.Properties.Settings.Default.OpenServiceOnEndpointNotFoundException)
                     return default;
 
@@ -1630,7 +1630,7 @@ namespace MFDLabs.Grid
             {
                 if (IsExpired)
                 {
-                    SystemLogger.Singleton.Warning("Instance '{0}' lease has expired, disposing...", Name);
+                    Logger.Singleton.Warning("Instance '{0}' lease has expired, disposing...", Name);
                     Dispose();
                 }
                 else
@@ -1638,17 +1638,17 @@ namespace MFDLabs.Grid
             }
             public void RenewLease()
             {
-                SystemLogger.Singleton.LifecycleEvent("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
+                Logger.Singleton.LifecycleEvent("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
                 ScheduleExpirationCheck();
             }
             public void SubscribeExpirationListener(OnExpired @delegate)
             {
-                SystemLogger.Singleton.Warning("Subscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
+                Logger.Singleton.Warning("Subscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
                 _onExpiredListeners += @delegate;
             }
             public void UnsubscribeExpirationListener(OnExpired @delegate)
             {
-                SystemLogger.Singleton.Warning("Unsubscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
+                Logger.Singleton.Warning("Unsubscribing expiration listener '{0}.{1}'", @delegate.Method.DeclaringType.FullName, @delegate.Method.Name);
                 _onExpiredListeners -= @delegate;
             }
 

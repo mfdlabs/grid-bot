@@ -9,6 +9,7 @@ using MFDLabs.Discord.RbxUsers.Client;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Http.Client;
 using MFDLabs.Users.Client;
+using MFDLabs.Threading.Extensions;
 using MFDLabs.Users.Client.Models.Users;
 
 namespace MFDLabs.Grid.Bot.Utility
@@ -49,9 +50,9 @@ namespace MFDLabs.Grid.Bot.Utility
             catch (Exception ex) { global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true); return null; }
         }
 
-        public static long? GetRobloxIdByIUser(IUser user) => GetRobloxIdByIUserAsync(user).GetAwaiter().GetResult();
+        public static long? GetRobloxIdByIUser(IUser user) => GetRobloxIdByIUserAsync(user).Sync();
 
-        public static bool GetIsUserBanned(long id) => GetIsUserBannedAsync(id).GetAwaiter().GetResult();
+        public static bool GetIsUserBanned(long id) => GetIsUserBannedAsync(id).Sync();
 
         private static async Task<bool> GetIsUserBannedAsync(long id)
         {
@@ -67,7 +68,7 @@ namespace MFDLabs.Grid.Bot.Utility
             } catch (Exception ex) { global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true); return false; }
         }
 
-        public static long? GetUserIdByUsername(string username) => GetUserIdByUsernameAsync(username).GetAwaiter().GetResult();
+        public static long? GetUserIdByUsername(string username) => GetUserIdByUsernameAsync(username).Sync();
 
         private static async Task<long?> GetUserIdByUsernameAsync(string username)
         {

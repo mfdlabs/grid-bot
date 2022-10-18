@@ -30,7 +30,7 @@ namespace MFDLabs.Grid.Bot.Utility
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
                 parsedScript = script.ToLower();
 
-            SystemLogger.Singleton.Info("Check if script '{0}' contains blacklisted words.", escapedString);
+            Logger.Singleton.Info("Check if script '{0}' contains blacklisted words.", escapedString);
 
             foreach (var keyword in GetBlacklistedKeywords())
             {
@@ -41,12 +41,12 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (!parsedScript.Contains(parsedKeyword)) continue;
                 
                 word = parsedKeyword;
-                SystemLogger.Singleton.Warning("The script '{0}' contains blacklisted words.", escapedString);
+                Logger.Singleton.Warning("The script '{0}' contains blacklisted words.", escapedString);
 
                 return true;
             }
 
-            SystemLogger.Singleton.Info("The script '{0}' does not contain blacklisted words.", escapedString);
+            Logger.Singleton.Info("The script '{0}' does not contain blacklisted words.", escapedString);
             return false;
         }
 
