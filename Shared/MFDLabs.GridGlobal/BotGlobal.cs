@@ -2,6 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Logging;
+using MFDLabs.Configuration.Extensions;
 
 namespace MFDLabs.Grid.Bot.Global
 {
@@ -19,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Global
 
         public static async Task SingletonLaunch()
         {
-            await Client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken).ConfigureAwait(false);
+            await Client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>()).ConfigureAwait(false);
             await Client.StartAsync().ConfigureAwait(false);
         }
 

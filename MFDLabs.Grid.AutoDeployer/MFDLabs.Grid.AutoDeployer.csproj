@@ -79,7 +79,7 @@
       <DependentUpon>App.config</DependentUpon>
     </None>
     <None Update="App.release-vault.config">
-      <DependentUpon>App.debug.config</DependentUpon>
+      <DependentUpon>App.release.config</DependentUpon>
     </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
