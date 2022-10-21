@@ -1,16 +1,17 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Linq;
-using System.IO;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Configuration;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Collections.Specialized;
 using MFDLabs.Threading;
-using MFDLabs.Configuration.Sections.Vault;
-using MFDLabs.Configuration.Clients.Vault;
-using MFDLabs.Configuration.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Configuration.Logging;
+using MFDLabs.Configuration.Extensions;
+using MFDLabs.Configuration.Clients.Vault;
+using MFDLabs.Configuration.Sections.Vault;
 using MFDLabs.Configuration.Elements.Vault;
 
 namespace MFDLabs.Configuration.Providers
@@ -24,30 +25,35 @@ namespace MFDLabs.Configuration.Providers
             if (ConfigurationSection != null)
             {
                 var configuration = GetGroupConfigurationElement();
-                var address = configuration.Address;
 
-                if (address == null)
+                if (configuration != null)
                 {
-                    if (!global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryEnabled)
-                        throw new ConfigurationErrorsException("Consul Service discovery is not enabled, and the vault configuration address was null.");
+                    var address = configuration.Address.FromEnvironmentExpression<string>();
 
-                    address = ConsulServiceDiscovery.GetFullyQualifiedServiceURL(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName);
+                    if (address.IsNullOrEmpty())
+                    {
+                        if (!global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryEnabled)
+                            throw new ConfigurationErrorsException("Consul Service discovery is not enabled, and the vault configuration address was null.");
 
-                    if (address == null)
-                        throw new ApplicationException($"Consul Service discovery address lookup for service '{(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName)}' failed: The Service did not exist.");
+                        address = ConsulServiceDiscovery.GetFullyQualifiedServiceURL(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName);
+
+                        if (address == null)
+                            throw new ApplicationException($"Consul Service discovery address lookup for service '{(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryVaultServiceName)}' failed: The Service did not exist.");
+                    }
+
+                    if (configuration.Credential.FromEnvironmentExpression<string>().IsNullOrEmpty())
+                        throw new ConfigurationErrorsException("The configuration credential was null or empty when that was unexpected!");
+
+                    ConfigurationClient = GetClient(address, configuration.AuthenticationType, configuration.Credential.FromEnvironmentExpression<string>());
+                    ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Vault Client point to address '{0}'.", address);
+                    var updateInterval = configuration.UpdateInterval;
+                    Timer = new SelfDisposingTimer(RefreshRegisteredProviders, updateInterval, updateInterval);
+                    Providers = new ConcurrentDictionary<string, VaultProvider>();
+                    ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Timer created, refresh every '{0}'.", updateInterval);
+                    return;
                 }
-
-                if (configuration.Credential.IsNullOrEmpty())
-                    throw new ConfigurationErrorsException("The configuration credential was null or empty when that was unexpected!");
-
-                ConfigurationClient = GetClient(address, configuration.AuthenticationType, configuration.Credential);
-                ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Vault Client point to address '{0}'.", address);
-                var updateInterval = configuration.UpdateInterval;
-                Timer = new SelfDisposingTimer(RefreshRegisteredProviders, updateInterval, updateInterval);
-                Providers = new ConcurrentDictionary<string, VaultProvider>();
-                ConfigurationLogging.Info("MFDLabs.Configuration.Providers.VaultProvider static init Timer created, refresh every '{0}'.", updateInterval);
-                return;
             }
+
             ConfigurationLogging.Warning("No config file found with mfdlabsVaultConfiguration.");
         }
 
