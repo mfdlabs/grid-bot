@@ -365,7 +365,5 @@ FodyWeavers.xsd
 #
 Deploy/
 
-App.*.config
-WtfIsThis.cs
 .idea/
 .AssemblyAttributes

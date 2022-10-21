@@ -22,6 +22,7 @@ using MFDLabs.Text.Extensions;
 using MFDLabs.Threading.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
+using MFDLabs.Configuration.Extensions;
 using MFDLabs.ErrorHandling.Extensions;
 
 // ReSharper disable InconsistentNaming
@@ -229,7 +230,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             if (_cachedVersion != null)
                 EventLogLogger.Singleton.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
 
-            _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken;
+            _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken.FromEnvironmentExpression<string>();
             var gheUrl = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
 
             if (_githubToken.IsNullOrEmpty())
