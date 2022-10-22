@@ -120,10 +120,12 @@ function ReadGitRemoteUrl([string] $from, [string] $remoteName) {
 
     if ($remoteUrl.StartsWith("ssh://")) {
         $remoteUrl = $remoteUrl.Replace("ssh://", "")
+		$remoteUrl = $remoteUrl.Replace(":", "/")
     }
     
     if ($remoteUrl.StartsWith("git@")) {
         $remoteUrl = $remoteUrl.Replace("git@", "")
+		$remoteUrl = $remoteUrl.Replace(":", "/")
     }
 
     if ($remoteUrl.EndsWith(".git")) {
@@ -241,7 +243,7 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $name, [strin
     # Step 1
     $url = "https://$gitBaseUrl/repos/$owner/$repoName/releases/tags/$tag"
     $response = try {
-        Invoke-WebRequest -Uri $url -Method Get -Headers @{
+        Invoke-WebRequest -UseBasicParsing -Uri $url -Method Get -Headers @{
             "Authorization" = "token $env:GITHUB_TOKEN"
         } -ErrorAction SilentlyContinue
     }
@@ -281,7 +283,7 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $name, [strin
     Write-Host "Payload: $jsonEncodedPayload" -ForegroundColor Yellow
 
     $response = try {
-        Invoke-WebRequest -Uri $url -Method POST -Body $jsonEncodedPayload -Headers @{
+        Invoke-WebRequest -UseBasicParsing -Uri $url -Method POST -Body $jsonEncodedPayload -Headers @{
             "Authorization" = "token $env:GITHUB_TOKEN"
             "Accept"        = "application/vnd.github.v3+json"
             "Content-Type"  = "application/json"
@@ -320,7 +322,7 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $name, [strin
 
         $bytes = [System.IO.File]::ReadAllBytes($file)
 
-        Invoke-RestMethod -Method PUT -Uri $url -Headers @{
+        Invoke-RestMethod -UseBasicParsing -Method PUT -Uri $url -Headers @{
             "Authorization" = "token $env:GITHUB_TOKEN"
             "Accept"        = "application/vnd.github.v3+json"
             "Content-Type"  = "application/octet-stream"
@@ -335,7 +337,7 @@ function PublishGitRelease([string] $from, [string] $tag, [string] $name, [strin
 
     $jsonEncodedPayload = ConvertTo-Json -InputObject $payload
     $response = try {
-        Invoke-WebRequest -Uri $url -Method PATCH -Body $jsonEncodedPayload -Headers @{
+        Invoke-WebRequest -UseBasicParsing -Uri $url -Method PATCH -Body $jsonEncodedPayload -Headers @{
             "Authorization" = "token $env:GITHUB_TOKEN"
             "Accept"        = "application/vnd.github.v3+json"
             "Content-Type"  = "application/json"
