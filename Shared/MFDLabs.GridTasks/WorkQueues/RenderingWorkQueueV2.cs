@@ -21,7 +21,6 @@ using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using System.ServiceModel.Channels;
 
 namespace MFDLabs.Grid.Bot.WorkQueues
 {
@@ -264,7 +263,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
 #else
                     item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                    break;
+                    return long.MinValue;
 #endif
 
                 case "self":
@@ -290,7 +289,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
 #else
                     item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                    break;
+                    return long.MinValue;
 #endif
             }
 
