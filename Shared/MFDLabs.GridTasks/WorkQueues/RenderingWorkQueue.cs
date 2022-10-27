@@ -222,6 +222,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                         if (contentArray.Length == 0)
                         {
+#if FEATURE_RBXDISCORDUSERS_CLIENT
                             isAuthorCheck = true;
 
                             var nullableUserId = message.Author.GetRobloxId();
@@ -238,6 +239,10 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             }
 
                             userId = nullableUserId.Value;
+#else
+                            message.Reply("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
+                            return;
+#endif
                         }
 
                         string username = null;
@@ -249,6 +254,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                                 if (message.MentionedUsers.Count > 0)
                                 {
+#if FEATURE_RBXDISCORDUSERS_CLIENT
                                     var user = message.MentionedUsers.ElementAt(0);
                                     // we have mentioned a user.
                                     var nullableUserId = user.GetRobloxId();
@@ -265,6 +271,10 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                                     }
 
                                     userId = nullableUserId.Value;
+#else
+                                    message.Reply("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
+                                    return;
+#endif
                                 }
                                 else
                                 {
@@ -346,13 +356,13 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         }
 
                         Logger.Singleton.Info(
-                                    "Trying to render the character for the user '{0}' with the place '{1}', " +
-                                    "and the dimensions of {2}x{3}",
-                                    userId,
-                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
-                                );
+                            "Trying to render the character for the user '{0}' with the place '{1}', " +
+                            "and the dimensions of {2}x{3}",
+                            userId,
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                        );
 
                         // get a stream and temp filename
                         var (stream, fileName) = GridServerCommandUtility.RenderUser(
