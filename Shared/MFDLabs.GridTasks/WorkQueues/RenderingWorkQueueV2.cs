@@ -21,7 +21,6 @@ using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using System.ServiceModel.Channels;
 
 namespace MFDLabs.Grid.Bot.WorkQueues
 {
