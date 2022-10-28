@@ -6,50 +6,31 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
-    <AssemblyName>MFDLabs.Grid.Bot</AssemblyName>
-    <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
     <Configurations>Debug;Release;DebugDeploy;ReleaseDeploy;DebugGrid;ReleaseGrid;DebugGridDeploy;ReleaseGridDeploy</Configurations>
     <OutputType>Exe</OutputType>
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <WarningLevel>0</WarningLevel>
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DefineConstants>TRACE;DEBUG;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  <PropertyGroup>
+    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;WE_ON_THE_GRID;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <WarningLevel>0</WarningLevel>
+    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WE_ON_THE_GRID</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
@@ -58,6 +39,28 @@
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="App.debug.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.debug-vault.config">
+      <DependentUpon>App.Debug.config</DependentUpon>
+    </None>
+    <None Update="App.release.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Update="App.release-vault.config">
+      <DependentUpon>App.Release.config</DependentUpon>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

@@ -73,7 +73,7 @@ namespace MFDLabs.Backtrace.Common
             {
                 case PlatformID.Win32NT:
                     return "Windows NT";
-#if NETSTANDARD2_0
+#if NETSTANDARD
                 case PlatformID.Unix:
 
                     // for .NET Core Environment.OSVersion returns Unix for MacOS and Linux
@@ -110,7 +110,7 @@ namespace MFDLabs.Backtrace.Common
 
         internal static string CpuArchitecture()
         {
-#if NETSTANDARD2_0
+#if NETSTANDARD
             Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
             switch (cpuArchitecture)
             {
@@ -160,7 +160,7 @@ namespace MFDLabs.Backtrace.Common
                 || assemblyName.Equals("System")
                 || assemblyName.StartsWith("System."));
         }
-#if !NET35
+#if !NETFRAMEWORK
         internal static bool StateMachineFrame(TypeInfo type)
         {
             if (type == null)

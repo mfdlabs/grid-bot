@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Runtime.ExceptionServices;
 #endif
 

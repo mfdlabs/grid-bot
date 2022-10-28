@@ -168,7 +168,7 @@ namespace MFDLabs.Backtrace.Model
             return token != null && token.Length > 0 && uri.IsWellFormedOriginalString();
         }
 
-#if NET35 || NET45
+#if NETFRAMEWORK
         /// <summary>
         /// Read Backtrace credentials from application configuration
         /// </summary>

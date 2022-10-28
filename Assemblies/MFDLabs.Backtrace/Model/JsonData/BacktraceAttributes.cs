@@ -82,7 +82,7 @@ namespace MFDLabs.Backtrace.Model.JsonData
             {
                 Attributes["culture"] = callingAssembly.GetName().CultureInfo.Name;
             }
-#if !NET35
+#if !NETFRAMEWORK
             Attributes["dynamic"] = callingAssembly.IsDynamic;
             Attributes["trusted"] = callingAssembly.IsFullyTrusted;
 #endif

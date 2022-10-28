@@ -4,7 +4,7 @@ using MFDLabs.Backtrace.Model;
 using MFDLabs.Backtrace.Model.Database;
 using System;
 using System.Collections.Generic;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 #endif
 
@@ -26,7 +26,7 @@ namespace MFDLabs.Backtrace
         public Action<BacktraceResult> AfterSend;
 
         #region Constructor
-#if !NETSTANDARD2_0
+#if !NETSTANDARD
         /// <summary>
         /// Initializing Backtrace client instance
         /// </summary>
@@ -196,7 +196,7 @@ namespace MFDLabs.Backtrace
         }
         #endregion
 
-#if !NET35
+#if !NETFRAMEWORK
         #region Send asynchronous
         /// <summary>
         /// Sending asynchronous Backtrace report to Backtrace API

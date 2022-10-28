@@ -212,9 +212,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             var sw = Stopwatch.StartNew();
             bool isFailure = false;
 
-            // Double nested try catch statement here if we are .NETFRAMEWORK
-            // because we want to track instances regardless of it they suceeded or not.
-
             try
             {
                 using (message.Channel.EnterTypingState())
@@ -321,25 +318,19 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     // bump to 20 seconds so it doesn't batch job timeout on first execution
                     var job = new Job() { id = scriptId, expirationInSeconds = userIsAdmin ? 20000 : 20 };
 
-#if NETFRAMEWORK
                     var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
                     var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
-#endif
 
                     try
                     {
                         File.WriteAllText(scriptName, script, Encoding.ASCII);
 
-#if NETFRAMEWORK
                         var result = LuaUtility.ParseLuaValues(instance.BatchJobEx(job, scriptEx));
 
                         instance.Lock();
 
                         message.CreateGridServerInstanceReference(ref instance);
 
-#else
-                        var result = LuaUtility.ParseLuaValues(GridServerArbiter.Singleton.BatchJobEx(job, scriptEx));
-#endif
 
 
                         if (!result.IsNullOrEmpty())
@@ -347,22 +338,14 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             if (result.Length > MaxResultLength)
                             {
                                 _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
-                                message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)),
+                                message.ReplyWithFile(new MemoryStream(Encoding.UTF8.GetBytes(result)), 
                                     "execute-result.txt",
-#if NETFRAMEWORK
                                 $"This instance will expire at <t:{expirationTime}:T>"
-#else
-                                "Executed script with return:"
-#endif
                                 );
                                 return;
                             }
                             message.Reply(
-#if NETFRAMEWORK
                                 $"This instance will expire at <t:{expirationTime}:T>",
-#else
-                                "Executed script with return:",
-#endif
                                 embed: new EmbedBuilder()
                                 .WithTitle("Return value")
                                 .WithDescription($"```\n{result}\n```")
@@ -375,11 +358,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             return;
                         }
 
-#if NETFRAMEWORK
                         message.Reply($"Executed script with no return! This instance will expire at <t:{expirationTime}:T>");
-#else
-                        message.Reply("Executed script with no return!");
-#endif
 
 
                     }
@@ -393,13 +372,11 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                             message.Reply("There was an IO error when writing the script to the system, please try again later.");
                         }
 
-#if NETFRAMEWORK
                         // We assume that it didn't actually track screenshots here.
                         instance.Lock();
                         message.CreateGridServerInstanceReference(ref instance);
 
                         message.Reply($"This instance will expire at <t:{expirationTime}:T>");
-#endif
 
 
                         if (ex is not IOException) throw; // rethrow.

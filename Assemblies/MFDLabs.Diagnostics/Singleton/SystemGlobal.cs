@@ -46,9 +46,9 @@ namespace MFDLabs.Diagnostics
         public static bool ContextIsAdministrator()
         {
 #if NETFRAMEWORK
-            
             return WindowsIdentity.GetCurrent().IsAdministrator();
 #else
+
             return getuid() == 0;
 #endif
         }

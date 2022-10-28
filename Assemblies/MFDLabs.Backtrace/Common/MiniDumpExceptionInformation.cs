@@ -47,7 +47,7 @@ namespace MFDLabs.Backtrace.Common
             exp.ClientPointers = false;
             exp.ExceptionPointers = IntPtr.Zero;
             //right now GetExceptionPointers method is not available in .NET Standard 
-#if !NETSTANDARD2_0
+#if !NETSTANDARD
             if (exceptionInfo == MinidumpException.Present)
             {
                 exp.ExceptionPointers = Marshal.GetExceptionPointers();

@@ -25,16 +25,16 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        private static readonly ConcurrentDictionary<ulong, (DateTime, Atomic)> TrackedUsers = new();
+        private static readonly ConcurrentDictionary<ulong, (DateTime, Atomic<int>)> TrackedUsers = new();
 
-        public static (DateTime, Atomic) GetOrCreateTrack(this IUser user, Atomic count, TimeSpan lease)
+        public static (DateTime, Atomic<int>) GetOrCreateTrack(this IUser user, Atomic<int> count, TimeSpan lease)
         {
             return TrackedUsers.GetOrAdd(user.Id, (DateTime.Now.Add(lease), count));
         }
 
-        public static (DateTime, Atomic) UpdateOrCreateTrack(this IUser user, Atomic? count, TimeSpan? lease, bool incrementLastCount = false)
+        public static (DateTime, Atomic<int>) UpdateOrCreateTrack(this IUser user, Atomic<int>? count, TimeSpan? lease, bool incrementLastCount = false)
         {
-            (DateTime? expires, Atomic? count) updateTuple;
+            (DateTime? expires, Atomic<int>? count) updateTuple;
             if (lease == null) updateTuple = (null, count);
             else updateTuple = (DateTime.Now.Add(lease.Value), count);
 

@@ -68,12 +68,7 @@ namespace MFDLabs.Configuration.Clients.Vault
 
         private void RefreshToken(object s)
         {
-            _tokenStr ??= _token.LookupSelfAsync().Sync()
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-                .Data.Id[..6];
-#else
-                .Data.Id.Substring(0, 6);
-#endif
+            _tokenStr ??= _token.LookupSelfAsync().Sync().Data.Id.Substring(0, 6);
 
 
             _vaultClientRefreshTimer.Change(-1, -1);

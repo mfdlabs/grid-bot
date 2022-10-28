@@ -159,7 +159,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 1,
                 NetworkingGlobal.GenerateUuidv4(),
                 null,
-                "sitetest4.robloxlabs.com",
+                "roblox.com",
                 Guid.NewGuid(),
                 NetworkingGlobal.GetLocalIp(),
                 1,
@@ -188,7 +188,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 1,
                 $"{jobId}-Sig2",
                 null,
-                "sitetest4.robloxlabs.com",
+                "roblox.com",
                 Guid.NewGuid(),
                 NetworkingGlobal.GetLocalIp(),
                 1,
@@ -203,7 +203,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 "User",
                 1,
                 null,
-                $"https://assetdelivery.sitetest4.robloxlabs.com/v1/asset?id={placeId}",
+                $"https://assetdelivery.roblox.com/v1/asset?id={placeId}",
                 null,
                 null
             );

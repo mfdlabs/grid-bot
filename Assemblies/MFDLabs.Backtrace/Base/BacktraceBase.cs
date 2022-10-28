@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using MFDLabs.Backtrace.Services;
 using MFDLabs.Backtrace.Types;
 using MFDLabs.Backtrace.Model.Database;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 #endif
 
@@ -17,7 +17,7 @@ namespace MFDLabs.Backtrace.Base
     /// </summary>
     public class BacktraceBase
     {
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Ignore AggregateException and only prepare report for inner exceptions
         /// </summary>
@@ -177,7 +177,7 @@ namespace MFDLabs.Backtrace.Base
         /// <param name="report">Report to send</param>
         public virtual BacktraceResult Send(BacktraceReport report)
         {
-#if !NET35
+#if !NETFRAMEWORK
             if (UnpackAggregateExcetpion && report.Exception is AggregateException)
             {
                 return HandleAggregateException(report).Result;
@@ -216,7 +216,7 @@ namespace MFDLabs.Backtrace.Base
             }
             return Send(innerExceptionReport);
         }
-#if !NET35
+#if !NETFRAMEWORK
 
         /// <summary>
         /// Send asynchronous report to Backtrace API

@@ -3,7 +3,7 @@ using MFDLabs.Backtrace.Model.Database;
 using MFDLabs.Backtrace.Types;
 using System;
 using System.Collections.Generic;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 #endif
 
@@ -26,7 +26,7 @@ namespace MFDLabs.Backtrace.Interfaces
         /// </summary>
         void Flush();
 
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Send all reports stored in BacktraceDatabase asynchronous and clean database
         /// </summary>

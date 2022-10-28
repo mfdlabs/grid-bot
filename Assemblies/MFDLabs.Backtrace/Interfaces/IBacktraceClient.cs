@@ -1,6 +1,6 @@
 ﻿using MFDLabs.Backtrace.Model;
 using System;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 #endif
 
@@ -17,7 +17,7 @@ namespace MFDLabs.Backtrace.Interfaces
         /// <param name="report">New backtrace report</param>
         BacktraceResult Send(BacktraceReport report);
 
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Send new asynchronous report to a Backtrace API
         /// </summary>

@@ -7,7 +7,7 @@ using System.IO;
 using MFDLabs.Backtrace.Common;
 using System.Collections.Generic;
 using MFDLabs.Backtrace.Extensions;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 using System.Net.Http;
 #endif
@@ -54,12 +54,12 @@ namespace MFDLabs.Backtrace.Services
             }
             _serverurl = credentials.GetSubmissionUrl();
             reportLimitWatcher = new ReportLimitWatcher(reportPerMin);
-#if !NET35
+#if !NETFRAMEWORK
             InitializeHttpClient(credentials.Proxy);
 #endif
         }
         #region asyncRequest
-#if !NET35
+#if !NETFRAMEWORK
 
         /// <summary>
         /// The http client.
@@ -153,7 +153,7 @@ namespace MFDLabs.Backtrace.Services
         /// <returns>Server response</returns>
         public BacktraceResult Send(BacktraceData data)
         {
-#if !NET35
+#if !NETFRAMEWORK
             return Task.Run(() => SendAsync(data)).Result;
 #else
             //check rate limiting
@@ -246,7 +246,7 @@ namespace MFDLabs.Backtrace.Services
             {
                 if (disposing)
                 {
-#if !NET35
+#if !NETFRAMEWORK
                     HttpClient.Dispose();
 #endif
                 }
