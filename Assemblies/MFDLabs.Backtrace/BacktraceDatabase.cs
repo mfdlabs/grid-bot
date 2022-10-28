@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Timers;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Threading.Tasks;
 #endif
 
@@ -138,7 +138,7 @@ namespace MFDLabs.Backtrace
             _timer.Interval = DatabaseSettings.RetryInterval * 1000;
             // don't stop timer work
             _timer.AutoReset = true;
-#if NET35
+#if NETFRAMEWORK
             _timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
 #else
             _timer.Elapsed += new ElapsedEventHandler(OnTimedEventAsync);
@@ -237,7 +237,7 @@ namespace MFDLabs.Backtrace
                 }
             }
         }
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Send and asynchronous delete all records from database
         /// </summary>
@@ -453,7 +453,7 @@ namespace MFDLabs.Backtrace
             {
                 if (disposing)
                 {
-#if !NET35
+#if !NETFRAMEWORK
                     BacktraceApi?.Dispose();
                     _timer?.Dispose();
 #endif

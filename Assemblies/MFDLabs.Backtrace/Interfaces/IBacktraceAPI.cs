@@ -14,7 +14,7 @@ namespace MFDLabs.Backtrace.Interfaces
         /// <param name="data">Library diagnostic data</param>
         BacktraceResult Send(BacktraceData data);
 
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Send asynchronous Backtrace report to Backtrace API
         /// </summary>

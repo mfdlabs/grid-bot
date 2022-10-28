@@ -66,7 +66,7 @@ namespace MFDLabs.Backtrace.Model
 
         internal Assembly FrameAssembly { get; set; }
 
-#if NET45
+#if NETFRAMEWORK
         public BacktraceStackFrame(Microsoft.Diagnostics.Runtime.ClrStackFrame frame)
         {
             FunctionName = frame.Method.Name;
@@ -119,7 +119,7 @@ namespace MFDLabs.Backtrace.Model
             {
                 return methodName;
             }
-#if NET35
+#if NETFRAMEWORK
             return methodName;
 #else
             var declaringType = method.DeclaringType?.GetTypeInfo();
@@ -146,7 +146,7 @@ namespace MFDLabs.Backtrace.Model
             return result.ToString();
 #endif
         }
-#if !NET35
+#if !NETFRAMEWORK
         /// <summary>
         /// Generate method full name with included namespace
         /// </summary>

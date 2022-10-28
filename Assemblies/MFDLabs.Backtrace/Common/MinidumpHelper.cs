@@ -23,7 +23,7 @@ namespace MFDLabs.Backtrace.Common
         private static bool IsMemoryDumpAvailable()
         {
             bool result = true;
-#if NETSTANDARD2_0
+#if NETSTANDARD
             result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
             //if we other platform than Windows libraries aren't available

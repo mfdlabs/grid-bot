@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-#if !NET35
+#if !NETFRAMEWORK
 using System.Net.Http;
 using System.Net.Http.Headers;
 #endif
+
 namespace MFDLabs.Backtrace.Common
 {
     /// <summary>

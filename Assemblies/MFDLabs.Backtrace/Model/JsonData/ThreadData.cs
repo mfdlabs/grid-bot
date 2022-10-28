@@ -1,4 +1,4 @@
-﻿#if NET45
+﻿#if NETFRAMEWORK
 using Microsoft.Diagnostics.Runtime;
 #endif
 using MFDLabs.Backtrace.Extensions;
@@ -31,7 +31,7 @@ namespace MFDLabs.Backtrace.Model.JsonData
         /// </summary>
         internal ThreadData(Assembly callingAssembly, IEnumerable<BacktraceStackFrame> exceptionStack)
         {
-#if NET45
+#if NETFRAMEWORK
             try
             {
                 //use available in .NET 4.5 api to find stack trace of all available managed threads
@@ -97,7 +97,7 @@ namespace MFDLabs.Backtrace.Model.JsonData
             }
         }
 
-#if NET45
+#if NETFRAMEWORK
         /// <summary>
         /// Get all used threads in calling assembly. Function ignore current thread Id 
         /// </summary>
