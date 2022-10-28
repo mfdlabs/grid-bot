@@ -5,10 +5,10 @@ namespace MFDLabs.Sentinels
 {
     public static class ExponentialBackoff
     {
-        public static TimeSpan CalculateBackoff(byte attempt, byte maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None) 
+        public static TimeSpan CalculateBackoff(uint attempt, uint maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None) 
             => CalculateBackoff(attempt, maxAttempts, baseDelay, maxDelay, jitter, () => Random.NextDouble());
 
-        private static TimeSpan CalculateBackoff(byte attempt, byte maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter, Func<double> nextRandomDouble)
+        private static TimeSpan CalculateBackoff(uint attempt, uint maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter, Func<double> nextRandomDouble)
         {
             if (maxAttempts > CeilingForMaxAttempts) 
                 throw new ArgumentOutOfRangeException($"{maxAttempts} must be less than or equal to {CeilingForMaxAttempts}");
@@ -25,7 +25,7 @@ namespace MFDLabs.Sentinels
             return delay;
         }
 
-        private const byte CeilingForMaxAttempts = 10;
+        private const uint CeilingForMaxAttempts = 10;
         private static readonly ThreadLocalRandom Random = new ThreadLocalRandom();
     }
 }

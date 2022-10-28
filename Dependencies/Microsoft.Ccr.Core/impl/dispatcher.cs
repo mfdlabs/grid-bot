@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Diagnostics;
+using System.Globalization;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Microsoft.Ccr.Core.Properties;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-#if !NET461
-using System.Runtime.InteropServices;
-#endif
 
 namespace Microsoft.Ccr.Core
 {
@@ -79,11 +77,7 @@ namespace Microsoft.Ccr.Core
             {
                 var currentCausalities = GetCurrentThreadCausalities();
                 return CausalityThreadContext.IsEmpty(currentCausalities)
-#if NET40 || NET35
-                    ? new Causality[0]
-#else
                     ? Array.Empty<Causality>()
-#endif
                     : currentCausalities.Causalities;
             }
         }
@@ -296,10 +290,10 @@ namespace Microsoft.Ccr.Core
         {
             var taskExecutionWorker = new TaskExecutionWorker(this);
             var thread = new Thread(taskExecutionWorker.ExecutionLoop, maxThreadStackSize);
-#if !NET461 && !NET40 && !NET35
+#if !NETFRAMEWORK
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 thread.SetApartmentState(apartmentState);
-#elif NETFRAMEWORK // Weird hack for a #if statement here, because net461 hates RuntimeInformation
+#else
             thread.SetApartmentState(apartmentState);
 #endif
             thread.Name = Name;

@@ -34,18 +34,7 @@ namespace MFDLabs.Hashicorp.VaultClient.Core
         {
             VaultClientSettings = vaultClientSettings;
 
-#if NET45
-            var handler = new WebRequestHandler();
-
-            // if auth method is kerberos, then set the credentials in the handler.
-            if (vaultClientSettings.AuthMethodInfo?.AuthMethodType == AuthMethodType.Kerberos)
-            {
-                var kerberosAuthMethodInfo = vaultClientSettings.AuthMethodInfo as KerberosAuthMethodInfo;
-                handler.PreAuthenticate = kerberosAuthMethodInfo.PreAuthenticate;
-                handler.Credentials = kerberosAuthMethodInfo.Credentials;
-            }
-
-#elif NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48
+#if NETFRAMEWORK
 
             var handler = new WinHttpHandler();
 

@@ -4,11 +4,6 @@ using MFDLabs.Threading;
 
 namespace MFDLabs.Logging
 {
-#if NET5_0_OR_GREATER
-    using System.Runtime.Versioning;
-
-    [SupportedOSPlatform("windows")]
-#endif
     public class EventLogLogger : Logger
     {
         private new static EventLogLogger _singleton;
@@ -17,9 +12,9 @@ namespace MFDLabs.Logging
         private readonly object _eventLogLock = new();
 
         private bool _logToEventLog = true;
-        private Atomic _eventId = 0;
+        private Atomic<short> _eventId = 0;
 
-        private EventLogEntryType _logLevelToEntryType(LogLevel logLevel)
+        private static EventLogEntryType _logLevelToEntryType(LogLevel logLevel)
             => logLevel switch
             {
                 LogLevel.Error => EventLogEntryType.Error,

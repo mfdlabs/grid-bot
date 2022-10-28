@@ -1305,9 +1305,9 @@ namespace MFDLabs.Grid.Bot.Registries
 
         public class CountersData
         {
-            public Atomic RequestCountN = 0;
-            public Atomic RequestFailedCountN = 0;
-            public Atomic RequestSucceededCountN = 0;
+            public Atomic<int> RequestCountN = 0;
+            public Atomic<int> RequestFailedCountN = 0;
+            public Atomic<int> RequestSucceededCountN = 0;
         }
 
         public class Modes

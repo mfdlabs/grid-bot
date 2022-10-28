@@ -1,26 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../../SharedProjects.targets" />
+
   <PropertyGroup>
-    <TargetFrameworks>net461;net472;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <LangVersion>9</LangVersion>
-    <RootNamespace>MFDLabs.Grid.Bot.Extensions</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DefineConstants>TRACE;DEBUG;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>TRACE;WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

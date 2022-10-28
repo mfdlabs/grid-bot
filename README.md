@@ -39,5 +39,6 @@ This will help the primary members of the Web Team to identify issues that arise
 
 Other things that you may need are the Build Agent statuses, or the VM Tester reports:
 
-- [Build Statuses](https://7series.kairex.vmminfra.dev/ui/mfdlabs/project/grid-bot?tab=last-build)
+- [Build Statuses (Kairex)](https://7series.kairex.vmminfra.dev/ui/mfdlabs/project/grid-bot?tab=last-build)
+- [Build Statuses (TeamCity)](https://tcity-ptko-dev-eu-west-1.infrastructure.vmminfra.net/project.html?projectId=GridBotGridAutoDeployer&tab=projectOverview)
 - [VM Tester Reports (Atlantic K.)](https://7series.atlantic-kilo.vmminfra.dev/ui/mfdlabs/atlantic-project/grid-bot/reports)

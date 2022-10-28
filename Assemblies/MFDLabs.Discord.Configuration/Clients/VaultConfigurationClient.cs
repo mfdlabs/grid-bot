@@ -69,14 +69,8 @@ namespace MFDLabs.Discord.Configuration
         
         private void RefreshToken(object s)
         {
-            _tokenStr ??= _token.LookupSelfAsync().Sync()
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-                .Data.Id[..6];
-#else
-                .Data.Id.Substring(0, 6);
-#endif
+            _tokenStr ??= _token.LookupSelfAsync().Sync().Data.Id.Substring(0, 6);
 
-            
             _vaultClientRefreshTimer.Change(-1, -1);
             Logger.Singleton.Info("Renewing vault client's token, '{0}...'", _tokenStr);
             _token.RenewSelfAsync().Wait();

@@ -151,7 +151,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static readonly object _renderLock = new();
         private static bool _processingItem;
-        private static Atomic _itemCount = 0;
+        private static Atomic<int> _itemCount = 0;
 
         #endregion Concurrency
 

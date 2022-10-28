@@ -131,8 +131,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
 #endregion Metrics
 
-#if NETFRAMEWORK
-
         private static void MaximizeGridServer([In] HWND hWnd)
         {
             const int SW_MAXIMIZE = 3;
@@ -181,8 +179,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             }
         }
 
-#endif
-
         private static void ProcessItem(SocketTaskRequest item)
         {
             if (item == null) throw new ApplicationException("The task request was null.");
@@ -198,10 +194,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
             try
             {
-#if !NETFRAMEWORK
-                Logger.Singleton.Warning("Screenshots are not supported on this framework.");
-                message.Reply("Grid Server Screenshots are not enabled at this time, please try again later.");
-#else
                 if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                 {
                     ProcessSingleInstancedGridServerScreenshot(message);
@@ -255,7 +247,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                         message.Reply("Internal Exception."); // for now, will figure out actual message later.
                         break;
                 }
-#endif
             }
             finally
             {

@@ -69,11 +69,7 @@ namespace Microsoft.Ccr.Core
         public Interleave(ExclusiveReceiverGroup mutex, ConcurrentReceiverGroup concurrent) 
             : this(
                 new TeardownReceiverGroup(
-#if NET40 || NET35
-                    new ReceiverTask[0]
-#else
                     Array.Empty<ReceiverTask>()
-#endif
                 ), 
                 mutex, 
                 concurrent

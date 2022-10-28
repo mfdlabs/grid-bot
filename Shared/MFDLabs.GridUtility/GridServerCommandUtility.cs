@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Networking;
-
-#if NETFRAMEWORK
-using Microsoft.Win32;
-#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBeMadeStatic.Global
@@ -42,14 +39,11 @@ namespace MFDLabs.Grid.Bot.Utility
 
         private static object GetGridServerPath(bool throwIfNoGridServer = true)
         {
-#if NETFRAMEWORK
             var value = Registry.GetValue(
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName,
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName,
                 null);
-#else
-            var value = Environment.GetEnvironmentVariable("GRID_SERVER_LOCATION");
-#endif
+
             if (value != null) return value;
             if (throwIfNoGridServer) 
                 throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.GetMachineId()}', " +
