@@ -231,6 +231,8 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                 case "discord_user":
 
+#if FEATURE_RBXDISCORDUSERS_CLIENT
+
                     var userRef = (IUser)subCommand.GetOptionValue("user");
                     if (userRef == null)
                     {
@@ -259,7 +261,14 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                     break;
 
+#else
+                    item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
+                    return long.MinValue;
+#endif
+
                 case "self":
+
+#if FEATURE_RBXDISCORDUSERS_CLIENT
 
                     var nullableUserIdFromAuthor = item.User.GetRobloxId();
 
@@ -277,6 +286,11 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     userId = nullableUserIdFromAuthor.Value;
 
                     break;
+
+#else
+                    item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
+                    return long.MinValue;
+#endif
             }
 
             return userId;

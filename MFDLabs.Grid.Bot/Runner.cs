@@ -17,6 +17,7 @@ using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
+using MFDLabs.Configuration.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 namespace MFDLabs.Grid.Bot
@@ -134,7 +135,7 @@ namespace MFDLabs.Grid.Bot
             // For Unix, skip this, as I assume we won't need this:)
             ConsoleHookRegistry.Register();
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.IsNullOrWhiteSpace())
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>().IsNullOrWhiteSpace())
             {
                 await GoogleAnalyticsManager.TrackNetworkEventAsync(
                     "MainTask",
