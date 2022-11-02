@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
-    public class GaClientConfig
+    public class GaUniversalClientConfig
     {
         public string Url { get; }
         public string TrackerId { get; }
@@ -11,7 +11,7 @@ namespace MFDLabs.Analytics.Google.Client
         public int CircuitBreakerFailuresAllowedBeforeTrip { get; }
         public TimeSpan CircuitBreakerRetryInterval { get; }
 
-        public GaClientConfig(string url,
+        public GaUniversalClientConfig(string url,
             string trackerId,
             int maxRedirects,
             TimeSpan requestTimeout,

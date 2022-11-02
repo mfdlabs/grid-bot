@@ -1,27 +1,46 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using MFDLabs.Diagnostics;
-using MFDLabs.Analytics.Google.Client;
-using MFDLabs.Instrumentation;
 using MFDLabs.Networking;
+using MFDLabs.Instrumentation;
+using MFDLabs.Analytics.Google.MetricsProtocol.Client;
+using MFDLabs.Analytics.Google.UniversalAnalytics.Client;
 
 namespace MFDLabs.Analytics.Google
 {
     public static class GoogleAnalyticsManager
     {
-        private static bool _fitToUse = true;
-
-        public static void Initialize(ICounterRegistry registry, string trackerId) =>
-            _sharedGaClient = new GaClient(
+        public static void Initialize(ICounterRegistry registry, string trackerId, string metricsId, string apiSecret, bool enableServersideValidation = false)
+        {
+            _sharedGaUniversalClient = new GaUniversalClient(
                 registry,
-                new GaClientConfig(
+                new GaUniversalClientConfig(
                     global::MFDLabs.Analytics.Google.Properties.Settings.Default.GoogleAnalyticsURL,
                     trackerId,
-                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientMaxRedirects,
-                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientRequestTimeout,
-                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientCircuitBreakerFailuresAllowedBeforeTrip,
-                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GAClientCircuitBreakerRetryInterval
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GaUniversalClientMaxRedirects,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GaUniversalClientRequestTimeout,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GaUniversalClientCircuitBreakerFailuresAllowedBeforeTrip,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GaUnversalClientCircuitBreakerRetryInterval
                 )
             );
+
+            _sharedGa4Client = new Ga4Client(
+                registry,
+                new Ga4ClientConfig(
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.GoogleAnalyticsURL,
+                    metricsId,
+                    apiSecret,
+                    enableServersideValidation,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.Ga4ClientMaxRedirects,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.Ga4ClientRequestTimeout,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.Ga4ClientCircuitBreakerFailuresAllowedBeforeTrip,
+                    global::MFDLabs.Analytics.Google.Properties.Settings.Default.Ga4ClientCircuitBreakerRetryInterval
+                )
+            );
+
+
+        }
+
 
         public static void TrackEvent(string clientId,
             string category = "Server",
@@ -29,45 +48,55 @@ namespace MFDLabs.Analytics.Google
             string label = "None",
             int value = 1)
         {
-            if (!_fitToUse) return;
-
             try
             {
-                _sharedGaClient?.TrackEvent(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value, SystemGlobal.GetMachineId());
+                _sharedGaUniversalClient?.TrackEvent(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value, SystemGlobal.GetMachineId());
+                _sharedGa4Client?.FireEvent(clientId, "track_event", new
+                {
+                    category = $"{SystemGlobal.GetMachineId()} {category}",
+                    action,
+                    label,
+                    value = value.ToString(),
+                    source = SystemGlobal.GetMachineId()
+                }, null);
             }
             catch
             {
-                _fitToUse = false;
             }
         }
 
         public static void TrackPageView(string clientId, string documentLocationUrl)
         {
-            if (!_fitToUse) return;
-
             try
             {
-                _sharedGaClient?.TrackPageView(clientId, $"$({SystemGlobal.GetMachineId()}).{documentLocationUrl}", SystemGlobal.GetMachineId());
+                _sharedGaUniversalClient?.TrackPageView(clientId, $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}", SystemGlobal.GetMachineId());
+                _sharedGa4Client?.FireEvent(clientId, "page_view", new
+                {
+                    document_location_url = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
+                    source = SystemGlobal.GetMachineId()
+                }, null);
             }
             catch
             {
-                _fitToUse = false;
             }
         }
 
         public static async Task TrackPageViewAsync(string clientId, string documentLocationUrl)
         {
-            if (!_fitToUse) return;
-
-            if (_sharedGaClient == null) return;
-
             try
             {
-                await _sharedGaClient.TrackPageViewAsync(clientId, $"$({SystemGlobal.GetMachineId()}).{documentLocationUrl}", SystemGlobal.GetMachineId()).ConfigureAwait(false);
+                if (_sharedGaUniversalClient != null)
+                    await _sharedGaUniversalClient.TrackPageViewAsync(clientId, $"$({SystemGlobal.GetMachineId()}).{documentLocationUrl}", SystemGlobal.GetMachineId()).ConfigureAwait(false);
+
+                if (_sharedGa4Client != null)
+                    await _sharedGa4Client.FireEventAsync(clientId, "page_view", null, new
+                    {
+                        document_location_url = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
+                        source = SystemGlobal.GetMachineId()
+                    }, null).ConfigureAwait(false);
             }
             catch
             {
-                _fitToUse = false;
             }
         }
 
@@ -89,20 +118,27 @@ namespace MFDLabs.Analytics.Google
             string label = "None",
             int value = 1)
         {
-            if (!_fitToUse) return;
-
-            if (_sharedGaClient == null) return;
-
             try
             {
-                await _sharedGaClient.TrackEventAsync(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value, SystemGlobal.GetMachineId()).ConfigureAwait(false);
+                if (_sharedGaUniversalClient != null)
+                    await _sharedGaUniversalClient.TrackEventAsync(clientId, $"{SystemGlobal.GetMachineId()} {category}", action, label, value, SystemGlobal.GetMachineId()).ConfigureAwait(false);
+
+                if (_sharedGa4Client != null)
+                    await _sharedGa4Client.FireEventAsync(clientId, "track_event", null, new
+                    {
+                        category = $"{SystemGlobal.GetMachineId()} {category}",
+                        action,
+                        label,
+                        value = value.ToString(),
+                        source = SystemGlobal.GetMachineId()
+                    }, null).ConfigureAwait(false);
             }
             catch
             {
-                _fitToUse = false;
             }
         }
 
-        private static IGaClient _sharedGaClient;
+        private static IGaUniversalClient _sharedGaUniversalClient;
+        private static IGa4Client _sharedGa4Client;
     }
 }

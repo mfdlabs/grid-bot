@@ -12,7 +12,7 @@ namespace MFDLabs.Analytics.Google.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,7 +25,7 @@ namespace MFDLabs.Analytics.Google.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://www.google-analytics.com")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://www.google-analytics.com")]
         public string GoogleAnalyticsURL {
             get {
                 return ((string)(this["GoogleAnalyticsURL"]));
@@ -35,36 +35,72 @@ namespace MFDLabs.Analytics.Google.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int GAClientMaxRedirects {
+        public int GaUniversalClientMaxRedirects {
             get {
-                return ((int)(this["GAClientMaxRedirects"]));
+                return ((int)(this["GaUniversalClientMaxRedirects"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("00:00:30")]
-        public global::System.TimeSpan GAClientRequestTimeout {
+        public global::System.TimeSpan GaUniversalClientRequestTimeout {
             get {
-                return ((global::System.TimeSpan)(this["GAClientRequestTimeout"]));
+                return ((global::System.TimeSpan)(this["GaUniversalClientRequestTimeout"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int GAClientCircuitBreakerFailuresAllowedBeforeTrip {
+        public int GaUniversalClientCircuitBreakerFailuresAllowedBeforeTrip {
             get {
-                return ((int)(this["GAClientCircuitBreakerFailuresAllowedBeforeTrip"]));
+                return ((int)(this["GaUniversalClientCircuitBreakerFailuresAllowedBeforeTrip"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("00:00:05")]
-        public global::System.TimeSpan GAClientCircuitBreakerRetryInterval {
+        public global::System.TimeSpan GaUnversalClientCircuitBreakerRetryInterval {
             get {
-                return ((global::System.TimeSpan)(this["GAClientCircuitBreakerRetryInterval"]));
+                return ((global::System.TimeSpan)(this["GaUnversalClientCircuitBreakerRetryInterval"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int Ga4ClientMaxRedirects {
+            get {
+                return ((int)(this["Ga4ClientMaxRedirects"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:30")]
+        public global::System.TimeSpan Ga4ClientRequestTimeout {
+            get {
+                return ((global::System.TimeSpan)(this["Ga4ClientRequestTimeout"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int Ga4ClientCircuitBreakerFailuresAllowedBeforeTrip {
+            get {
+                return ((int)(this["Ga4ClientCircuitBreakerFailuresAllowedBeforeTrip"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:05")]
+        public global::System.TimeSpan Ga4ClientCircuitBreakerRetryInterval {
+            get {
+                return ((global::System.TimeSpan)(this["Ga4ClientCircuitBreakerRetryInterval"]));
             }
         }
     }

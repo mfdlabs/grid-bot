@@ -18,7 +18,8 @@ param (
     [string] $DeployScriptOverride,
     [bool] $DeleteDebugSymbols = $true,
 	[bool] $WriteNewGitHubRelease = $true,
-    [string] $ReleasePrefix = $null
+    [string] $ReleasePrefix = $null,
+    [bool] $IsUsingSystemConfiguration = $true
 )
 
 # $boundArgs = $MyInvocation.BoundParameters.Keys;
@@ -47,14 +48,10 @@ if ($isVaultBacked) {
 # Copy the current configuration settings to the target
 $projectConfigurationFile = "$($ProjectDir)App.$AppSettingsConfiguration.config";
 # Check if it exists
-if (!(Get-Item -Path $projectConfigurationFile)) {
-    Write-Host "Configuration file $projectConfigurationFile does not exist" -ForegroundColor Red;
-    Exit 1;
+if (Test-Path $projectConfigurationFile) {
+    $outputConfigurationName = "$($ProjectDir)$($OutDir)$($TargetName)$($TargetExt).config"
+    Copy-Item -Path $projectConfigurationFile -Destination $outputConfigurationName -Force
 }
-
-$outputConfigurationName = "$($ProjectDir)$($OutDir)$($TargetName)$($TargetExt).config"
-Copy-Item -Path $projectConfigurationFile -Destination $outputConfigurationName -Force
-
 
 # Delete old runtime-scripts and copy new runtime-scripts
 $runtimeScriptsDir = "$($ProjectDir)$($OutDir)RuntimeScripts";

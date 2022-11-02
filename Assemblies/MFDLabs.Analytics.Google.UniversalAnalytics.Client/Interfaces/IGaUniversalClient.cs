@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
-    public interface IGaClient
+    public interface IGaUniversalClient
     {
         void TrackPageView(string clientId,
             string documentLocationUrl,

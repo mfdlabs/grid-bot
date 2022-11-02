@@ -9,14 +9,14 @@ using MFDLabs.Http.Client;
 using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
-    public class GaClient : IGaClient
+    public class GaUniversalClient : IGaUniversalClient
     {
-        public GaClient(ICounterRegistry counterRegistry, GaClientConfig config)
+        public GaUniversalClient(ICounterRegistry counterRegistry, GaUniversalClientConfig config)
         {
-            var settings = new GaClientSettings(config);
-            var httpClientBuilder = new GaHttpClientBuilder(counterRegistry, settings, config);
+            var settings = new GaUniversalClientSettings(config);
+            var httpClientBuilder = new GaUniversalHttpClientBuilder(counterRegistry, settings, config);
             var httpClient = httpClientBuilder.Build();
             _config = config;
             _sender = new FormDataRequestSender(httpClient, new HttpRequestBuilderSettings(settings.Endpoint));
@@ -280,6 +280,6 @@ namespace MFDLabs.Analytics.Google.Client
         }
 
         private readonly FormDataRequestSender _sender;
-        private readonly GaClientConfig _config;
+        private readonly GaUniversalClientConfig _config;
     }
 }
