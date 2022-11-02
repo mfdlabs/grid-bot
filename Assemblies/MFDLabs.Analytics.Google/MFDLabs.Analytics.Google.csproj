@@ -27,6 +27,7 @@
 	<ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
 	<ProjectReference Include="..\MFDLabs.Analytics.Google.UniversalAnalytics.Client\MFDLabs.Analytics.Google.UniversalAnalytics.Client.csproj" />
 	<ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+	<ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
 	<ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
   </ItemGroup>
 
