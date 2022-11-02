@@ -768,5 +768,32 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((string)(this["WhitelistedCounterServerCidrs"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("G-1DBF9PK9KT")]
+        public string GoogleAnalyticsMetricsID {
+            get {
+                return ((string)(this["GoogleAnalyticsMetricsID"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("AFJlwquBQqOW_KvPCG5DlQ")]
+        public string GoogleAnalyticsApiSecret {
+            get {
+                return ((string)(this["GoogleAnalyticsApiSecret"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GoogleAnalyticsEnableServerSideValidation {
+            get {
+                return ((bool)(this["GoogleAnalyticsEnableServerSideValidation"]));
+            }
+        }
     }
 }

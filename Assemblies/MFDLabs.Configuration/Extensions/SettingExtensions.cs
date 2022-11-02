@@ -47,14 +47,8 @@ namespace MFDLabs.Configuration.Extensions
             // Check if the env var is empty
             if (envVarName.IsNullOrWhiteSpace()) return str.To<TResult>();
 
-            // Get the env var value
-            var env = Environment.GetEnvironmentVariable(envVarName);
-
-            // Check if the env var value is empty, if so, return the original string
-            if (env.IsNullOrEmpty()) return str.To<TResult>();
-
             // Replace the env var value with the env var name
-            return env.To<TResult>();
+            return Environment.GetEnvironmentVariable(envVarName).To<TResult>();
         }
     }
 }

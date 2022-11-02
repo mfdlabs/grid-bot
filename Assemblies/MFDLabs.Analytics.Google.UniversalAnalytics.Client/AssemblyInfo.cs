@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Analytics.Google.Client")]
+[assembly: AssemblyTitle("MFDLabs.Analytics.Google.UniversalAnalytics.Client")]
 [assembly: AssemblyDescription("Service Client for interacting with Google Analytics")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Analytics.Google.Client")]
+[assembly: AssemblyProduct("MFDLabs.Analytics.Google.UniversalAnalytics.Client")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2021. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Metrics (R)")]
 [assembly: ComVisible(false)]

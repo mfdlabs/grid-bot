@@ -109,7 +109,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Analytics", "Analytics", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Analytics.Google", "Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj", "{3EDC3274-D4ED-4AA1-A347-00A9B4F9FC9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Analytics.Google.Client", "Assemblies\MFDLabs.Analytics.Google.Client\MFDLabs.Analytics.Google.Client.csproj", "{897D935E-9198-4452-8FF0-3020102FF1F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Analytics.Google.UniversalAnalytics.Client", "Assemblies\MFDLabs.Analytics.Google.UniversalAnalytics.Client\MFDLabs.Analytics.Google.UniversalAnalytics.Client.csproj", "{897D935E-9198-4452-8FF0-3020102FF1F7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.FileSystem", "Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj", "{798A29EB-0998-4D5D-BF0D-A485A75D7349}"
 EndProject
@@ -153,6 +153,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Targets", "Targets", "{C5B2
 		SharedGridProjects.targets = SharedGridProjects.targets
 		SharedProjects.targets = SharedProjects.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFDLabs.Analytics.Google.MetricsProtocol.Client", "Assemblies\MFDLabs.Analytics.Google.MetricsProtocol.Client\MFDLabs.Analytics.Google.MetricsProtocol.Client.csproj", "{26C568F1-748C-482C-9013-0A6EA5E8B507}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -870,6 +872,22 @@ Global
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.ReleaseGridDeploy|Any CPU.ActiveCfg = ReleaseGrid|Any CPU
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.ReleaseGridDeploy|Any CPU.Build.0 = ReleaseGrid|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugGrid|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugGrid|Any CPU.Build.0 = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugGridDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.DebugGridDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseDeploy|Any CPU.Build.0 = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseGridDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{26C568F1-748C-482C-9013-0A6EA5E8B507}.ReleaseGridDeploy|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -936,6 +954,7 @@ Global
 		{F6C0887C-083A-43A5-9F09-F9967D28C1A5} = {9685C904-F110-4634-8A25-7B10B4AE559E}
 		{6E5501FF-76F9-4A22-B04A-C27C7F636E43} = {9685C904-F110-4634-8A25-7B10B4AE559E}
 		{70A7CD06-3B31-40D2-817D-F937C89050EA} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
+		{26C568F1-748C-482C-9013-0A6EA5E8B507} = {8E7AA611-95BB-4BE8-8EF6-C95E7F850B0B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}

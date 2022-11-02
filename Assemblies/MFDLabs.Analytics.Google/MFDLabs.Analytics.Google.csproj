@@ -22,9 +22,10 @@
   </ItemGroup>
   
   <ItemGroup>
+	<ProjectReference Include="..\MFDLabs.Analytics.Google.MetricsProtocol.Client\MFDLabs.Analytics.Google.MetricsProtocol.Client.csproj" />
 	<ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
 	<ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-	<ProjectReference Include="..\MFDLabs.Analytics.Google.Client\MFDLabs.Analytics.Google.Client.csproj" />
+	<ProjectReference Include="..\MFDLabs.Analytics.Google.UniversalAnalytics.Client\MFDLabs.Analytics.Google.UniversalAnalytics.Client.csproj" />
 	<ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
 	<ProjectReference Include="..\MFDLabs.Networking\MFDLabs.Networking.csproj" />
   </ItemGroup>

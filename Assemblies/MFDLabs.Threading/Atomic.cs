@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace MFDLabs.Threading
 {
@@ -34,7 +35,7 @@ namespace MFDLabs.Threading
 
         #region |Public Members|
 
-        public dynamic Value
+        public T Value
         {
             get
             {
@@ -69,7 +70,7 @@ namespace MFDLabs.Threading
 
         #region |Constructors|
 
-        public Atomic() => this.Value = 0;
+        public Atomic() => this.Value = (T)(dynamic)0;
         public Atomic(T value) => this.Value = value;
         public Atomic(Atomic<T> other) => this.Value = other.Value;
 
@@ -79,19 +80,19 @@ namespace MFDLabs.Threading
 
         #region |Equality|
 
-        public static bool operator ==(Atomic<T> self, Atomic<T> obj) => self.Value == obj.Value;
-        public static bool operator !=(Atomic<T> self, Atomic<T> obj) => self.Value != obj.Value;
-        public static bool operator ==(Atomic<T> self, T obj) => self.Value == obj;
-        public static bool operator !=(Atomic<T> self, T obj) => self.Value != obj;
+        public static bool operator ==(Atomic<T> self, Atomic<T> obj) => EqualityComparer<T>.Default.Equals(self.Value, obj.Value);
+        public static bool operator !=(Atomic<T> self, Atomic<T> obj) => !EqualityComparer<T>.Default.Equals(self.Value, obj.Value);
+        public static bool operator ==(Atomic<T> self, T obj) => EqualityComparer<T>.Default.Equals(self.Value, obj);
+        public static bool operator !=(Atomic<T> self, T obj) => !EqualityComparer<T>.Default.Equals(self.Value, obj);
 
         #endregion |Equality|
 
         #region |Less/Greater Than|
 
-        public static bool operator <(Atomic<T> left, Atomic<T> right) => left.Value < right.Value;
-        public static bool operator >(Atomic<T> left, Atomic<T> right) => left.Value > right.Value;
-        public static bool operator <(Atomic<T> left, T right) => left.Value < right;
-        public static bool operator >(Atomic<T> left, T right) => left.Value > right;
+        public static bool operator <(Atomic<T> left, Atomic<T> right) => left.Value.CompareTo(right.Value) < 0;
+        public static bool operator >(Atomic<T> left, Atomic<T> right) => left.Value.CompareTo(right.Value) > 0;
+        public static bool operator <(Atomic<T> left, T right) => left.Value.CompareTo(right) < 0;
+        public static bool operator >(Atomic<T> left, T right) => left.Value.CompareTo(right) > 0;
 
         #endregion |Less/Greater Than|
 
@@ -118,8 +119,18 @@ namespace MFDLabs.Threading
 
         #region |Arithmetic Operators|
 
-        public static Atomic<T> operator ++(Atomic<T> self) => self.Value = self.Value++;
-        public static Atomic<T> operator --(Atomic<T> self) => self.Value = self.Value--;
+        public static Atomic<T> operator ++(Atomic<T> self)
+        {
+            dynamic v = self.Value;
+
+            return self.Value = ++v;
+        }
+        public static Atomic<T> operator --(Atomic<T> self)
+        {
+            dynamic v = self.Value;
+
+            return self.Value = --v;
+        }
 
         #endregion |Arithmetic Operators|
 
@@ -150,17 +161,16 @@ namespace MFDLabs.Threading
 
         #region |IEquatable Members|
 
-        public override bool Equals(object obj) => obj is Atomic<T> atomic && this.Value == atomic.Value;
-        public bool Equals(Atomic<T> atomic) => this.Value == atomic.Value;
+        public override bool Equals(object obj) => obj is Atomic<T> atomic && this == atomic;
+        public bool Equals(Atomic<T> atomic) => this == atomic;
 
         #endregion |IEquatable Members|
 
         #region |IFormattable Members|
 
-        public override string ToString() => _value.ToString();
-        public string ToString(IFormatProvider provider) => _value.ToString(provider);
-        public string ToString(string format) => _value.ToString(format);
-        public string ToString(string format, IFormatProvider provider) => _value.ToString(format, provider);
+        public override string ToString() => Value.ToString();
+        public string ToString(IFormatProvider provider) => Value.ToString(provider);
+        public string ToString(string format, IFormatProvider provider) => Value.ToString(format, provider);
 
         #endregion |IFormattable Members|
 
@@ -187,7 +197,7 @@ namespace MFDLabs.Threading
 
         #region Auto-Generated Items
 
-        public override int GetHashCode() => (int)this.Value ^ (int)(this.Value >> 32);
+        public override int GetHashCode() => (int)(dynamic)this.Value ^ (int)((dynamic)this.Value >> 32);
         private string GetDebuggerDisplay() => ToString();
 
         #endregion Auto-Generated Items

@@ -131,10 +131,10 @@ try {
     $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
     & Write-Host "Deploying source archive $componentDir\*.pdb,*.dll,*.xml to $($sourceArchive)" -ForegroundColor Green
-    & Write-Host "Deploying config archive $componentDir\*.config to $($configArchive)" -ForegroundColor Green
+    & Write-Host "Deploying config archive $componentDir\*.config,appsettings.json,appsettings.*.json to $($configArchive)" -ForegroundColor Green
 
-    & 7zip-Archive a -r -bb3 -y -tzip $sourceArchive "$componentDir\*.*" "-x!*.config"
-    & 7zip-Archive a -r -bb3 -y -tzip $configArchive "$componentDir\*.config"
+    & 7zip-Archive a -r -bb3 -y -tzip $sourceArchive "$componentDir\*.*" "-x!*.config" "-x!appsettings.json" "-x!appsettings.*.json"
+    & 7zip-Archive a -r -bb3 -y -tzip $configArchive "$componentDir\*.config" "$componentDir\appsettings.json" "$componentDir\appsettings.*.json"
 
     [bool] $deployingNewSource = $true;
     [bool] $deployingNewConfig = $true;

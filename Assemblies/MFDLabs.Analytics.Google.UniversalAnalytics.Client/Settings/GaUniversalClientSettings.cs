@@ -1,9 +1,9 @@
 ﻿using System;
 using MFDLabs.Http.ServiceClient;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
-    internal sealed class GaClientSettings : IServiceClientSettings
+    internal sealed class GaUniversalClientSettings : IServiceClientSettings
     {
         public string ClientName => "GAClient";
         public string UserAgent => "MFDLabs.Http.Client GAHttpClient";
@@ -13,7 +13,7 @@ namespace MFDLabs.Analytics.Google.Client
         public TimeSpan RetryInterval { get; }
         public TimeSpan RequestTimeout { get; }
 
-        public GaClientSettings(GaClientConfig config)
+        public GaUniversalClientSettings(GaUniversalClientConfig config)
         {
             Endpoint = config.Url;
             MaxRedirects = config.MaxRedirects;

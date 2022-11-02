@@ -10,13 +10,13 @@ using MFDLabs.Text.Extensions;
 
 using HttpClientBuilder = MFDLabs.Http.Client.HttpClientBuilder;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
-    internal sealed class GaHttpClientBuilder : HttpClientBuilder
+    internal sealed class GaUniversalHttpClientBuilder : HttpClientBuilder
     {
-        public GaHttpClientBuilder(ICounterRegistry counterRegistry,
-            GaClientSettings httpClientSettings,
-            GaClientConfig config)
+        public GaUniversalHttpClientBuilder(ICounterRegistry counterRegistry,
+            GaUniversalClientSettings httpClientSettings,
+            GaUniversalClientConfig config)
             : base(null, httpClientSettings)
         {
             if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
@@ -42,7 +42,7 @@ namespace MFDLabs.Analytics.Google.Client
             AddHandlerAfter<RequestFailureThrowsHandler>(new CircuitBreakerHandler(circuitBreakerPolicy));
         }
 
-        private const string ClientCircuitBreakerPart = "MFDLabs.Analytics.Google.Client.";
-        private const string CategoryName = "MFDLabs.Analytics.Google.Client";
+        private const string ClientCircuitBreakerPart = "MFDLabs.Analytics.Google.UniversalAnalytics.Client.";
+        private const string CategoryName = "MFDLabs.Analytics.Google.UniversalAnalytics.Client";
     }
 }

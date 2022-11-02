@@ -3,18 +3,30 @@
   <Profiles />
   <Settings>
     <Setting Name="GoogleAnalyticsURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://www.google-analytics.com</Value>
+      <Value Profile="(Default)">https://www.google-analytics.com</Value>
     </Setting>
-    <Setting Name="GAClientMaxRedirects" Type="System.Int32" Scope="Application">
+    <Setting Name="GaUniversalClientMaxRedirects" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">1</Value>
     </Setting>
-    <Setting Name="GAClientRequestTimeout" Type="System.TimeSpan" Scope="Application">
+    <Setting Name="GaUniversalClientRequestTimeout" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:30</Value>
     </Setting>
-    <Setting Name="GAClientCircuitBreakerFailuresAllowedBeforeTrip" Type="System.Int32" Scope="Application">
+    <Setting Name="GaUniversalClientCircuitBreakerFailuresAllowedBeforeTrip" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">1</Value>
     </Setting>
-    <Setting Name="GAClientCircuitBreakerRetryInterval" Type="System.TimeSpan" Scope="Application">
+    <Setting Name="GaUnversalClientCircuitBreakerRetryInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:05</Value>
+    </Setting>
+    <Setting Name="Ga4ClientMaxRedirects" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Ga4ClientRequestTimeout" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:30</Value>
+    </Setting>
+    <Setting Name="Ga4ClientCircuitBreakerFailuresAllowedBeforeTrip" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Ga4ClientCircuitBreakerRetryInterval" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:05</Value>
     </Setting>
   </Settings>

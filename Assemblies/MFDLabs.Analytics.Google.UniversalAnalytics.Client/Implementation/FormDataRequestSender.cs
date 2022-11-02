@@ -10,7 +10,7 @@ using MFDLabs.Text.Extensions;
 
 using HttpMethod = MFDLabs.Http.HttpMethod;
 
-namespace MFDLabs.Analytics.Google.Client
+namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
     internal sealed class FormDataRequestSender
     {

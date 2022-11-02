@@ -52,7 +52,10 @@ namespace MFDLabs.Grid.Bot
 
             GoogleAnalyticsManager.Initialize(
                 PerfmonCounterRegistryProvider.Registry,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsMetricsID,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsApiSecret,
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsEnableServerSideValidation
             );
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
@@ -75,16 +78,16 @@ namespace MFDLabs.Grid.Bot
                 $"opened with file name '{SystemGlobal.CurrentProcess.ProcessName}' at path " +
                 $"'{Directory.GetCurrentDirectory()}' (version {SystemGlobal.AssemblyVersion})."
             );
-			
-			if (args.Contains("--write-settings"))
-			{
-				Logger.Singleton.Warning("Writing settings instead of actually launching.");
-				
-				global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-				
-				Environment.Exit(0);
-				return;
-			}
+
+            if (args.Contains("--write-settings"))
+            {
+                Logger.Singleton.Warning("Writing settings instead of actually launching.");
+
+                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+
+                Environment.Exit(0);
+                return;
+            }
 
             Logger.Singleton.Debug(
                 "Process '{0}' opened with file name '{1}' at path '{2}' (version {3}).",
