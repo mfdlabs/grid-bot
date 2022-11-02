@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MFDLabs.Diagnostics;
+using MFDLabs.Logging;
 using MFDLabs.Networking;
+using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
+using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Analytics.Google.MetricsProtocol.Client;
 using MFDLabs.Analytics.Google.UniversalAnalytics.Client;
+
 
 namespace MFDLabs.Analytics.Google
 {
@@ -60,8 +63,9 @@ namespace MFDLabs.Analytics.Google
                     source = SystemGlobal.GetMachineId()
                 }, null);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -76,8 +80,9 @@ namespace MFDLabs.Analytics.Google
                     source = SystemGlobal.GetMachineId()
                 }, null);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -95,8 +100,9 @@ namespace MFDLabs.Analytics.Google
                         source = SystemGlobal.GetMachineId()
                     }, null).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -133,8 +139,9 @@ namespace MFDLabs.Analytics.Google
                         source = SystemGlobal.GetMachineId()
                     }, null).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
