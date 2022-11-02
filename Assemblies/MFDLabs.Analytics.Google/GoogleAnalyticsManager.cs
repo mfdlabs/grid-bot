@@ -1,13 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using MFDLabs.Logging;
+﻿using System.Threading.Tasks;
 using MFDLabs.Networking;
 using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
-using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Analytics.Google.MetricsProtocol.Client;
 using MFDLabs.Analytics.Google.UniversalAnalytics.Client;
-
 
 namespace MFDLabs.Analytics.Google
 {
@@ -63,9 +59,8 @@ namespace MFDLabs.Analytics.Google
                     source = SystemGlobal.GetMachineId()
                 }, null);
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -76,13 +71,12 @@ namespace MFDLabs.Analytics.Google
                 _sharedGaUniversalClient?.TrackPageView(clientId, $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}", SystemGlobal.GetMachineId());
                 _sharedGa4Client?.FireEvent(clientId, "page_view", new
                 {
-                    document_location_url = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
-                    source = SystemGlobal.GetMachineId()
+                    page_location = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
+                    page_referrer = SystemGlobal.GetMachineId()
                 }, null);
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -100,9 +94,8 @@ namespace MFDLabs.Analytics.Google
                         source = SystemGlobal.GetMachineId()
                     }, null).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
@@ -139,9 +132,8 @@ namespace MFDLabs.Analytics.Google
                         source = SystemGlobal.GetMachineId()
                     }, null).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.Singleton.Warning(ex.ToDetailedString());
             }
         }
 
