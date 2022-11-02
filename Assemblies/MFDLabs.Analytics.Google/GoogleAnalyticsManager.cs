@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using MFDLabs.Networking;
 using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
