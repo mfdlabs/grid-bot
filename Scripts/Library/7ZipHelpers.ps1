@@ -12,25 +12,27 @@ function GetArchiveHash([string] $File) {
         return $null
     }
 
-    $fileInfo = Get-ItemProperty -Path $File
+    return (Get-FileHash $File).Hash
 
-    $archivePath = "$env:temp\$($fileInfo.Name)\"
+    # $fileInfo = Get-ItemProperty -Path $File
 
-    try {
+    # $archivePath = "$env:temp\$($fileInfo.Name)\"
 
-        if (![System.IO.Directory]::Exists($archivePath)) {
-            & Write-Host "Creating temp directory $archivePath" -ForegroundColor Green
-            [System.IO.Directory]::CreateDirectory($archivePath) *> $null;
-        }
+    # try {
 
-        7zip-Archive x $File "-o$archivePath" -y *> $null
+    #     if (![System.IO.Directory]::Exists($archivePath)) {
+    #         & Write-Host "Creating temp directory $archivePath" -ForegroundColor Green
+    #         [System.IO.Directory]::CreateDirectory($archivePath) *> $null;
+    #     }
 
-        $data = 7zip-Archive h $archivePath* | FindStr "data:";
+    #     7zip-Archive x $File "-o$archivePath" -y *> $null
 
-        return ($data -split ":")[1].Trim();
-    }
-    finally {
-        & Write-Host "Removing temp directory $archivePath" -ForegroundColor Green
-        [System.IO.Directory]::Delete($archivePath, $true)
-    }
+    #     $data = 7zip-Archive h $archivePath* | FindStr "data:";
+
+    #     return ($data -split ":")[1].Trim();
+    # }
+    # finally {
+    #     & Write-Host "Removing temp directory $archivePath" -ForegroundColor Green
+    #     [System.IO.Directory]::Delete($archivePath, $true)
+    # }
 }
