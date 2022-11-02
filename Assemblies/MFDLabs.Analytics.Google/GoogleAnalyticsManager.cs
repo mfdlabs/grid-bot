@@ -90,8 +90,8 @@ namespace MFDLabs.Analytics.Google
                 if (_sharedGa4Client != null)
                     await _sharedGa4Client.FireEventAsync(clientId, "page_view", null, new
                     {
-                        document_location_url = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
-                        source = SystemGlobal.GetMachineId()
+                        page_location = $"{SystemGlobal.GetMachineId()} @ {documentLocationUrl}",
+                        page_referrer = SystemGlobal.GetMachineId()
                     }, null).ConfigureAwait(false);
             }
             catch
