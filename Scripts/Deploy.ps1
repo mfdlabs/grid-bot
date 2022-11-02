@@ -2,7 +2,7 @@ param (
     [string]$root,
     [string]$deploymentKind,
     [string]$config,
-    [string]$targetFramework = "net472",
+    [string]$targetFramework = "net48",
     [bool]$isGitIntegrated = $true,
     [bool]$replaceExtensions = $true,
     [bool]$checkForExistingSourceArchive = $true,
@@ -13,8 +13,17 @@ param (
     [bool]$allowPreReleaseGridDeployment = $false,
     [string]$githubToken = $null,
     [string]$remoteName = "origin",
-    [string]$releasePrefix = $null
+    [string]$releasePrefix = $null,
+    [bool]$skipDefer = $false
 )
+
+if ($false -eq $skipDefer) {
+    $randomWait = Get-Random -Minimum 1.0 -Maximum 20.0
+
+    & Write-Host "Deferring for $randomWait seconds to ensure that other machines are not creating duplicate releases." -ForegroundColor Yellow
+
+    & Start-Sleep -Seconds $randomWait
+}
 
 $date = Get-Date;
 
@@ -127,8 +136,8 @@ try {
 
     $sourceArchive = "$($archivePrefix)-$($config).zip"
     $configArchive = "$($archivePrefix)-$($config)Config.zip"
-    $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
-    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
     & Write-Host "Deploying source archive $componentDir\*.pdb,*.dll,*.xml to $($sourceArchive)" -ForegroundColor Green
     & Write-Host "Deploying config archive $componentDir\*.config,appsettings.json,appsettings.*.json to $($configArchive)" -ForegroundColor Green
@@ -148,10 +157,12 @@ try {
             [System.IO.File]::Delete($sourceArchive)
         }
         else {
-            $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config).mfdlabs-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+            $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config).mfdlabs-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
             if (![string]::IsNullOrEmpty($existingSourceArchive)) {
-                & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".mfdlabs-archive", ".zip")
+                $fileName = Split-Path $existingSourceArchive -Leaf
+
+                & Rename-Item -Path $existingSourceArchive -NewName ($fileName -replace ".mfdlabs-archive", ".zip")
                 $existingSourceArchive = ("$existingSourceArchive" -replace ".mfdlabs-archive", ".zip")
             }
 
@@ -159,7 +170,9 @@ try {
 
             if (CheckHash -NewLocation $sourceArchive -ExistingLocation $existingSourceArchive) {
                 if (![string]::IsNullOrEmpty($existingSourceArchive)) {
-                    & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+                    $fileName = Split-Path $existingSourceArchive -Leaf
+
+                    & Rename-Item -Path $existingSourceArchive -NewName ($fileName -replace ".zip", ".mfdlabs-archive")
                     $existingSourceArchive = ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
                 }
 
@@ -170,7 +183,9 @@ try {
             }
 
             if (![string]::IsNullOrEmpty($existingSourceArchive) -and $deployingNewSource) {
-                & Rename-Item -Path $existingSourceArchive -NewName ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
+                $fileName = Split-Path $existingSourceArchive -Leaf
+
+                & Rename-Item -Path $existingSourceArchive -NewName ($fileName -replace ".zip", ".mfdlabs-archive")
                 $existingSourceArchive = ("$existingSourceArchive" -replace ".zip", ".mfdlabs-archive")
             }
         }
@@ -184,16 +199,20 @@ try {
             [System.IO.File]::Delete($configArchive)
         }
         else {
-            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*-$($targetFramework)-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
             if (![string]::IsNullOrEmpty($existingConfigArchive)) {
-                & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".mfdlabs-config-archive", ".zip")
+                $fileName = Split-Path $existingConfigArchive -Leaf
+
+                & Rename-Item -Path $existingConfigArchive -NewName ($fileName -replace ".mfdlabs-config-archive", ".zip")
                 $existingConfigArchive = ("$existingConfigArchive" -replace ".mfdlabs-config-archive", ".zip")
             }
 
             if (CheckHash -NewLocation $configArchive -ExistingLocation $existingConfigArchive) {
                 if (![string]::IsNullOrEmpty($existingConfigArchive)) {
-                    & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+                    $fileName = Split-Path $existingConfigArchive -Leaf
+
+                    & Rename-Item -Path $existingConfigArchive -NewName ($fileName -replace ".zip", ".mfdlabs-config-archive")
                     $existingConfigArchive = ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
                 }
 
@@ -204,7 +223,9 @@ try {
             }
 
             if (![string]::IsNullOrEmpty($existingConfigArchive) -and $deployingNewConfig) {
-                & Rename-Item -Path $existingConfigArchive -NewName ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
+                $fileName = Split-Path $existingConfigArchive -Leaf
+
+                & Rename-Item -Path $existingConfigArchive -NewName ($fileName -replace ".zip", ".mfdlabs-config-archive")
                 $existingConfigArchive = ("$existingConfigArchive" -replace ".zip", ".mfdlabs-config-archive")
             }
         }
@@ -215,7 +236,7 @@ try {
         $newSourceArchive = $sourceArchive;
 
         if ($replaceExtensions) {
-            $newSourceArchive = $sourceArchive.Replace(".zip", ".mfdlabs-archive")
+            $newSourceArchive = "$($archivePrefixName)-$($config).mfdlabs-archive"
             & Write-Host "Renaming $($sourceArchive) to $($newSourceArchive)" -ForegroundColor Green
             & Rename-Item -Path $sourceArchive -NewName $newSourceArchive
         }
@@ -227,7 +248,7 @@ try {
         $newConfigArchive = $configArchive;
 
         if ($replaceExtensions) {
-            $newConfigArchive = $configArchive.Replace(".zip", ".mfdlabs-config-archive")
+            $newConfigArchive = "$($archivePrefixName)-$($config)Config.mfdlabs-config-archive"
             & Write-Host "Renaming $($configArchive) to $($newConfigArchive)" -ForegroundColor Green
             & Rename-Item -Path $configArchive -NewName $newConfigArchive
         }
