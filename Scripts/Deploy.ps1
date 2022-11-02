@@ -18,7 +18,7 @@ param (
 )
 
 if ($false -eq $skipDefer) {
-    $randomWait = Get-Random -Minimum 1.0 -Maximum 7.0
+    $randomWait = Get-Random -Minimum 1.0 -Maximum 20.0
 
     & Write-Host "Deferring for $randomWait seconds to ensure that other machines are not creating duplicate releases." -ForegroundColor Yellow
 
