@@ -241,7 +241,7 @@ try {
             & Rename-Item -Path $sourceArchive -NewName $newSourceArchive
         }
 
-        $deploymentFiles.Add($newSourceArchive) > $null
+        $deploymentFiles.Add($sourceArchive.Replace(".zip", ".mfdlabs-archive")) > $null
     }
 
     if ($deployingNewConfig) {
@@ -253,7 +253,7 @@ try {
             & Rename-Item -Path $configArchive -NewName $newConfigArchive
         }
 
-        $deploymentFiles.Add($newConfigArchive) > $null
+        $deploymentFiles.Add($configArchive.Replace(".zip", ".mfdlabs-config-archive")) > $null
     }
 
     # If we aren't deploying a new component archive, but we are deploying a config archive, then delete the new archive and warn the user
