@@ -203,7 +203,7 @@ namespace MFDLabs.Grid
 
                 var path = GetGridServerLaunchPath();
 
-                var command = $"{path}{(global::MFDLabs.Grid.Properties.Settings.Default.GridServerExecutableName)}";
+                var command = Path.Combine(path, global::MFDLabs.Grid.Properties.Settings.Default.GridServerExecutableName);
 
                 var psi = new ProcessStartInfo
                 {
