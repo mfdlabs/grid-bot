@@ -153,7 +153,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public enum ScreenshotStatus
         {
             NoRecentExecutions,
-            UnkownMessageId,
+            UnknownMessageId,
             NullInstance,
             DisposedInstance,
             Success
@@ -190,7 +190,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public static (Stream stream, string fileName, ScreenshotStatus status, GridServerArbiter.LeasedGridServerInstance instance) ScreenshotGridServer(this SocketMessage message, ulong messageId)
         {
             if (!message.CheckIfHasRecentExecutions(out var messageIds)) return (null, null, ScreenshotStatus.NoRecentExecutions, null);
-            if (!messageIds.Contains(messageId)) return (null, null, ScreenshotStatus.UnkownMessageId, null);
+            if (!messageIds.Contains(messageId)) return (null, null, ScreenshotStatus.UnknownMessageId, null);
 
             var gridInstance = message.GetInstanceByMessage(messageId);
 
@@ -211,9 +211,9 @@ namespace MFDLabs.Grid.Bot.Utility
             
             var firstMessageId = messageIds.First();
             
-            var gridInstance = message.GetInstanceByMessage(messageId);
+            var gridInstance = message.GetInstanceByMessage(firstMessageId);
             
-            nextExecutionTime = gridInstance.Expiration;
+            nextExecutionTime = gridInstance?.Expiration;
             
             return true;
         }
