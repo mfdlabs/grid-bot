@@ -7,7 +7,7 @@ using Http.ServiceClient;
 
 internal sealed class Ga4ClientSettings : IServiceClientSettings
 {
-    public string ClientName => "GAClient";
+    public string ClientName => "Ga4Client";
     public string UserAgent => "MFDLabs.Http.Client GA4HttpClient";
     public string Endpoint { get; }
     public int MaxRedirects { get; }
