@@ -57,7 +57,7 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var key = message.ConstructBaseItemKey();
 
-            UserMessageIds.AddOrUpdate(key, _ => Array.Empty<ulong>(), (_, old) =>
+            UserMessageIds.AddOrUpdate(key, _ => new ulong[] { message.Id }, (_, old) =>
             {
 
                 var @new = old.ToList();
@@ -75,9 +75,9 @@ namespace MFDLabs.Grid.Bot.Utility
             return null;
         }
 
-        private static string GetInstanceReferenceUrl(this SocketMessage message)
+        private static string GetInstanceReferenceUrl(this SocketMessage message, ulong messageId)
         {
-            if (ScriptReferenceLookupTable.TryGetValue(message.ConstructItemKey(), out var url)) return url;
+            if (ScriptReferenceLookupTable.TryGetValue(message.ConstructItemKey(messageId), out var url)) return url;
 
             return null;
         }
@@ -229,7 +229,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             foreach (var messageId in messageIds)
             {
-                var jumpUrl = message.GetInstanceReferenceUrl();
+                var jumpUrl = message.GetInstanceReferenceUrl(messageId);
                 builder.AddField($"Message Id: {messageId}", $"[Jump To Message]({jumpUrl})", true);
             }
 
