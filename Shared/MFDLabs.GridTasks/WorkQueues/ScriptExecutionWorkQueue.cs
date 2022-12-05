@@ -217,6 +217,13 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                 using (message.Channel.EnterTypingState())
                 {
                     var userIsAdmin = message.Author.IsAdmin();
+                    
+                    if (message.HasReachedMaximumExecutionCount(out var nextAvailableExecutionDate) && !userIsAdmin)
+                    {
+                        message.Reply($"You have reached the maximum script execution count of 25, you may execute again after <t:{new DateTimeOffset(nextAvailableExecutionDate ?? DateTime.UtcNow).ToUnixTimeSeconds()}:T>.");
+                        return;
+                    }
+                    
                     var script = contentArray.Join(" ");
 
                     if (script.IsNullWhiteSpaceOrEmpty())

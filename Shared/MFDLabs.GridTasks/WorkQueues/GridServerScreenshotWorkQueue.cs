@@ -210,7 +210,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     }
 
                     message.Reply(
-                        $"Type `{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}viewconsole {{instanceId}}` to screenshot the specified instance.", 
+                        $"Type `{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}viewconsole {{messageId}}` to screenshot the result of the specified message.", 
                         embed: embed
                     );
                     return;
@@ -218,24 +218,24 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                 var clientIdx = contentArray.First();
 
-                if (!int.TryParse(clientIdx, out var i))
+                if (!ulong.TryParse(clientIdx, out var messageId))
                 {
                     failure = true;
-                    message.Reply($"The index '{contentArray.First()}' was not a valid integer.");
+                    message.Reply($"The first argument of '{contentArray.First()}' was not a valid message id.");
                     return;
                 }
 
-                var (stream, fileName, status, instance) = message.ScreenshotGridServer(i);
+                var (stream, fileName, status, instance) = message.ScreenshotGridServer(messageId);
 
                 switch (status)
                 {
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.NoRecentExecutions:
                         message.Reply("You haven't executed any scripts in this channel!");
                         break;
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.UnkownId:
+                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.UnknownMessageId:
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.NullInstance:
-                        message.Reply($"There was no script execution found with the ID '{i}', " +
-                                      $"re run the command with no arguments to see what executions you can screenshot.");
+                        message.Reply($"There was no script execution found with the message id '{messageId}', " +
+                                      $"re run the command with no arguments to see what messages you contain scripts.");
                         break;
 
                     case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:

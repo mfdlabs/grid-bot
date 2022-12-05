@@ -17,23 +17,21 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public static class GridServerArbiterScreenshotUtility
     {
-        // In the format of {guildId}:{channelId}:{userId}:{number??}
-        // Refer to GRIDBOT-87 to check what we decided on.
+        // In the format of {guildId}:{channelId}:{userId}:{messageId}
 
         // guildId -> the ID of the guild (or ID of the user if we are in a DMChannel)
         // channelId -> the ID of the guild channel (or ID of the user if we are in a DMChannel)
         // userId -> the ID of the author who executed the work item.
-        // number -> an atomic number that increments and decrements per allocation and expiration? -- This one is still debated
+        // messageId -> the ID of the message that used the command
         private static readonly ConcurrentDictionary<string, GridServerArbiter.LeasedGridServerInstance> SavedInstances = new();
 
-        // This refers to each grid server instance id that is owned by a user:
+        // This refers to each message ID that a user used the ;x command on:
         // Key -> {guildId}:{channelId}:{userId}
-        // TODO: Maybe instead of a collection of integers, it could be an atomic?
-        private static readonly ConcurrentDictionary<string, ICollection<int>> UserAllocatedIds = new();
+        private static readonly ConcurrentDictionary<string, ICollection<ulong>> UserMessageIds = new();
 
         // Would be better if we can embed a link to the orignal script link
-        // i.e.: {guildId}:{channelId}:{userId}:{number??} -> http://discord.com/channels/guildId/channelId/messageId (if a user channel, make it a reference to /channels/@me/botUserId/messageId)
-        private static readonly ConcurrentDictionary<string, (ulong, string)> ScriptReferenceLookupTable = new();
+        // i.e.: {guildId}:{channelId}:{userId}:{messageId} -> http://discord.com/channels/guildId/channelId/messageId (if a user channel, make it a reference to /channels/@me/botUserId/messageId)
+        private static readonly ConcurrentDictionary<string, string> ScriptReferenceLookupTable = new();
 
         private static string ConstructBaseItemKey(this SocketMessage message)
         {
@@ -45,9 +43,9 @@ namespace MFDLabs.Grid.Bot.Utility
             return $"{guildId}:{channelId}:{userId}";
         }
 
-        private static string ConstructItemKey(this SocketMessage message, int number)
+        private static string ConstructItemKey(this SocketMessage message, ulong? messageId = null)
         {
-            return $"{message.ConstructBaseItemKey()}:{number}";
+            return $"{message.ConstructBaseItemKey()}:{(messageId ?? message.Id)}";
         }
 
         private static bool GridServerInstanceAlreadyExists(GridServerArbiter.LeasedGridServerInstance inst)
@@ -55,54 +53,44 @@ namespace MFDLabs.Grid.Bot.Utility
             return (from gInstance in SavedInstances where gInstance.Value == inst select gInstance.Value).FirstOrDefault() != null;
         }
 
-        private static void AppendToUserCountTable(this SocketMessage message, int number)
+        private static void AppendToUserMessageIdTable(this SocketMessage message)
         {
             var key = message.ConstructBaseItemKey();
 
-            UserAllocatedIds.AddOrUpdate(key, _ => Array.Empty<int>(), (_, old) =>
+            UserMessageIds.AddOrUpdate(key, _ => Array.Empty<ulong>(), (_, old) =>
             {
 
                 var @new = old.ToList();
 
-                @new.Add(number);
+                @new.Add(message.Id);
 
                 return @new;
             });
         }
 
-        private static int GetCurrentIndexForGridServer(this SocketMessage message)
+        private static GridServerArbiter.LeasedGridServerInstance GetInstanceByMessage(this SocketMessage message, ulong messageId)
         {
-            var userAllocatedIds = UserAllocatedIds.GetOrAdd(message.ConstructBaseItemKey(), Array.Empty<int>());
-
-            return userAllocatedIds.LastOrDefault();
-        }
-
-        private static GridServerArbiter.LeasedGridServerInstance GetInstanceByMessage(this SocketMessage message, int number)
-        {
-            if (SavedInstances.TryGetValue(message.ConstructItemKey(number), out var inst)) return inst;
+            if (SavedInstances.TryGetValue(message.ConstructItemKey(messageId), out var inst)) return inst;
 
             return null;
         }
 
-        private static (ulong, string) GetInstanceReferenceUrl(this SocketMessage message, int number)
+        private static string GetInstanceReferenceUrl(this SocketMessage message)
         {
-            if (ScriptReferenceLookupTable.TryGetValue(message.ConstructItemKey(number), out var tup)) return tup;
+            if (ScriptReferenceLookupTable.TryGetValue(message.ConstructItemKey(), out var url)) return url;
 
-            return (0, null);
+            return null;
         }
 
         public static void CreateGridServerInstanceReference(this SocketMessage message, ref GridServerArbiter.LeasedGridServerInstance inst)
         {
             if (GridServerInstanceAlreadyExists(inst)) return;
 
-            var currentId = message.GetCurrentIndexForGridServer();
-            currentId++;
-
-            var key = message.ConstructItemKey(currentId);
+            var key = message.ConstructItemKey();
 
             SavedInstances.TryAdd(key, inst);
-            message.AppendToUserCountTable(currentId);
-            ScriptReferenceLookupTable.TryAdd(key, (message.Id, message.GetJumpUrl()));
+            message.AppendToUserMessageIdTable();
+            ScriptReferenceLookupTable.TryAdd(key, message.GetJumpUrl());
             inst.SubscribeExpirationListener(OnLeasedExpired);
             inst.Lock();
         }
@@ -123,15 +111,15 @@ namespace MFDLabs.Grid.Bot.Utility
             var guildId = split[0];
             var channelId = split[1];
             var userId = split[2];
-            var number = split[3].ToInt32();
+            var messageId = split[3].ToUInt64();
 
             var baseKey = $"{guildId}:{channelId}:{userId}";
 
-            UserAllocatedIds.AddOrUpdate(baseKey, _ => Array.Empty<int>(), (_, old) =>
+            UserMessageIds.AddOrUpdate(baseKey, _ => Array.Empty<ulong>(), (_, old) =>
             {
                 var @new = old.ToList();
 
-                @new.Remove(number);
+                @new.Remove(messageId);
 
                 return @new;
             });
@@ -150,11 +138,11 @@ namespace MFDLabs.Grid.Bot.Utility
             );
         }
 
-        private static bool CheckIfHasIds(this SocketMessage self, out ICollection<int> d)
+        private static bool CheckIfHasRecentExecutions(this SocketMessage self, out ICollection<ulong> d)
         {
             var key = self.ConstructBaseItemKey();
 
-            if (UserAllocatedIds.TryGetValue(key, out d))
+            if (UserMessageIds.TryGetValue(key, out d))
             {
                 return d.Count > 0;
             }
@@ -165,7 +153,7 @@ namespace MFDLabs.Grid.Bot.Utility
         public enum ScreenshotStatus
         {
             NoRecentExecutions,
-            UnkownId,
+            UnknownMessageId,
             NullInstance,
             DisposedInstance,
             Success
@@ -199,12 +187,12 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        public static (Stream stream, string fileName, ScreenshotStatus status, GridServerArbiter.LeasedGridServerInstance instance) ScreenshotGridServer(this SocketMessage message, int index)
+        public static (Stream stream, string fileName, ScreenshotStatus status, GridServerArbiter.LeasedGridServerInstance instance) ScreenshotGridServer(this SocketMessage message, ulong messageId)
         {
-            if (!message.CheckIfHasIds(out var ids)) return (null, null, ScreenshotStatus.NoRecentExecutions, null);
-            if (!ids.Contains(index)) return (null, null, ScreenshotStatus.UnkownId, null);
+            if (!message.CheckIfHasRecentExecutions(out var messageIds)) return (null, null, ScreenshotStatus.NoRecentExecutions, null);
+            if (!messageIds.Contains(messageId)) return (null, null, ScreenshotStatus.UnknownMessageId, null);
 
-            var gridInstance = message.GetInstanceByMessage(index);
+            var gridInstance = message.GetInstanceByMessage(messageId);
 
             if (gridInstance == null) return (null, null, ScreenshotStatus.NullInstance, null);
             if (gridInstance.IsDisposed) return (null, null, ScreenshotStatus.DisposedInstance, null);
@@ -213,20 +201,36 @@ namespace MFDLabs.Grid.Bot.Utility
 
             return (stream, $"{gridInstance.Name}.png", ScreenshotStatus.Success, gridInstance);
         }
+        
+        public static bool HasReachedMaximumExecutionCount(this SocketMessage message, out DateTime? nextExecutionTime)
+        {
+            nextExecutionTime = null;
+            
+            if (!message.CheckIfHasRecentExecutions(out var messageIds)) return false;
+            if (messageIds.Count < 25) return false;
+            
+            var firstMessageId = messageIds.First();
+            
+            var gridInstance = message.GetInstanceByMessage(firstMessageId);
+            
+            nextExecutionTime = gridInstance?.Expiration;
+            
+            return true;
+        }
 
         public static Embed ConstructUserLookupEmbed(this SocketMessage message)
         {
-            if (!message.CheckIfHasIds(out var ids)) return null;
+            if (!message.CheckIfHasRecentExecutions(out var messageIds)) return null;
 
             var builder = new EmbedBuilder()
-                .WithTitle("Your Grid Server Instances");
+                .WithTitle("Your Recent Script Exections");
 
             var text = "";
 
-            foreach (var id in ids)
+            foreach (var messageId in messageIds)
             {
-                var (messageId, jumpUrl) = message.GetInstanceReferenceUrl(id);
-                builder.AddField($"Instance ID {id}", $"[{messageId}]({jumpUrl})", true);
+                var jumpUrl = message.GetInstanceReferenceUrl();
+                builder.AddField($"Message Id: {messageId}", $"[Jump To Message]({jumpUrl})", true);
             }
 
             builder.WithAuthor(message.Author);
