@@ -47,6 +47,6 @@ internal sealed class Ga4ValidatorHttpClientBuilder : HttpClientBuilder
         AddHandlerAfter<RequestFailureThrowsHandler>(new CircuitBreakerHandler(circuitBreakerPolicy));
     }
 
-    private const string ClientCircuitBreakerPart = "MFDLabs.Analytics.Google.MetricsProtocol.Client.";
-    private const string CategoryName = "MFDLabs.Analytics.Google.MetricsProtocol.Client";
+    private const string ClientCircuitBreakerPart = "MFDLabs.Analytics.Google.MetricsProtocolValidator.Client.";
+    private const string CategoryName = "MFDLabs.Analytics.Google.MetricsProtocolValidator.Client";
 }
