@@ -220,7 +220,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                     
                     if (message.HasReachedMaximumExecutionCount(out var nextAvailableExecutionDate) && !userIsAdmin)
                     {
-                        message.Reply($"You have reached the maximum script execution count of 25, you may execute again after <t:{new DateTimeOffset(nextAvailableExecutionDate.Value ?? DateTime.UtcNow).ToUnixTimeSeconds()}:T>.");
+                        message.Reply($"You have reached the maximum script execution count of 25, you may execute again after <t:{new DateTimeOffset(nextAvailableExecutionDate ?? DateTime.UtcNow).ToUnixTimeSeconds()}:T>.");
                         return;
                     }
                     
