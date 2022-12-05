@@ -5,8 +5,8 @@ namespace MFDLabs.Analytics.Google.UniversalAnalytics.Client
 {
     internal sealed class GaUniversalClientSettings : IServiceClientSettings
     {
-        public string ClientName => "GAClient";
-        public string UserAgent => "MFDLabs.Http.Client GAHttpClient";
+        public string ClientName => "GaUniversalClient";
+        public string UserAgent => "MFDLabs.Http.Client GaUniversalHttpClient";
         public string Endpoint { get; }
         public int MaxRedirects { get; }
         public int FailuresAllowedBeforeTrip { get; }
