@@ -119,6 +119,8 @@ try {
     & Write-Host "Got Git Hash: $hash, Is Fake Hash: $(IF($isGitIntegrated){"No"} ELSE {"Yes"})" -ForegroundColor Green
 
     $deploymentFiles = new-object system.collections.arraylist;
+	
+	$random = Get-Random -Minimum 1 -Maximum 9999999
 
     $versioningTag = "$($date.Year).
                     $(GetParsedNumber -num $date.Month).
@@ -126,7 +128,7 @@ try {
                     $(GetParsedNumber -num $date.Hour).
                     $(GetParsedNumber -num $date.Minute).
                     $(GetParsedNumber -num $date.Second)_
-                    $($branch)_
+                    $($branch)-$($random)_
                     $($hash)" -replace '\s+', '';
 
     $archivePrefixName = "$($versioningTag)_$($targetFramework)" -replace '\s+', '';
