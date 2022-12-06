@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -29,43 +31,33 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
             
-            throw new ApplicationException("Temporarily disabled until we figure out how to list settings inside an ApplicationSettingsBase instance");
-
-            var fields = global::MFDLabs.Grid.Bot.Properties.Settings.Default.GetType()
-                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic);
+            var props = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Properties.Cast<SettingsProperty>();
 
             var builder = new EmbedBuilder().WithTitle("All Application Settings.");
 
             var embeds = new List<Embed>();
-            var i = 0;
+            var count = 0;
 
-            foreach (var field in fields)
+            foreach (var field in props)
             {
-                if (field.Name.ToLower()
-                        .Contains("token") ||
-                    field.Name.ToLower()
-                        .Contains("accesskey") ||
-                    field.Name.ToLower()
-                        .Contains("apikey"))
-                    continue;
-                if (i == 24)
+                if (count == 24)
                 {
                     embeds.Add(builder.Build());
                     builder = new EmbedBuilder();
-                    i = 0;
+                    count = 0;
                 }
+
                 builder.AddField(
-                    $"{field.Name} ({field.PropertyType.FullName})",
-                    $"`{field.GetValue(global::MFDLabs.Grid.Bot.Properties.Settings.Default)}`",
+                    $"{field.Name} ({field.PropertyType})",
+                    $"`{(global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name])}`",
                     false
                 );
-                i++;
+                count++;
             }
 
-            if (i < 24) embeds.Add(builder.Build());
+            if (count < 24) embeds.Add(builder.Build());
 
-            await message.ReplyAsync(
-                $"Echoeing back {fields.Length} settings in {Math.Floor((float) (fields.Length / 25))} group{(fields.Length > 1 ? "s" : "")}.");
+            await message.ReplyAsync($"Echoeing back {props.Count()} settings in {Math.Floor((float) (props.Count() / 25))} group{(props.Count() > 1 ? "s" : "")}.");
 
             foreach (var embed in embeds)
             {
