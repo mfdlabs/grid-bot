@@ -260,5 +260,8 @@
     <Setting Name="GoogleAnalyticsEnableServerSideValidation" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ScreenshotUtilityLaunchGridServerOnLeaseExpired" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

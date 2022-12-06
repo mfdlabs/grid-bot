@@ -795,5 +795,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["GoogleAnalyticsEnableServerSideValidation"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ScreenshotUtilityLaunchGridServerOnLeaseExpired {
+            get {
+                return ((bool)(this["ScreenshotUtilityLaunchGridServerOnLeaseExpired"]));
+            }
+        }
     }
 }

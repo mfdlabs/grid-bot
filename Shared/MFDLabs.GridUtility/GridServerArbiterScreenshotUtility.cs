@@ -126,16 +126,18 @@ namespace MFDLabs.Grid.Bot.Utility
 
             SavedInstances.TryRemove(instanceKey, out _);
             ScriptReferenceLookupTable.TryRemove(instanceKey, out _);
-            GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
-                null,
-                1
+
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotUtilityLaunchGridServerOnLeaseExpired)
+                GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
+                    null,
+                    1
 #if DEBUG
-                ,
-                5,
-                "localhost",
-                false
+                    ,
+                    5,
+                    "localhost",
+                    false
 #endif
-            );
+                );
         }
 
         private static bool CheckIfHasRecentExecutions(this SocketMessage self, out ICollection<ulong> d)
