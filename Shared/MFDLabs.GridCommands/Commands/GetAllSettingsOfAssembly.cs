@@ -19,6 +19,9 @@ using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Reflection.Extensions;
+using Discord;
+using System.Collections.Generic;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -126,7 +129,44 @@ namespace MFDLabs.Grid.Bot.Commands
                     && p.FirstOrDefault(b => b.ParameterType == typeof(string)) != null;
             });
 
-            throw new ApplicationException("Partially disabled due to not being able to get all members of an index property :(.");
+            var props = settingInstanceValue.GetType()
+                                                 .GetProperty("Properties", BindingFlags.Instance)
+                                                 .GetValue(settingInstanceValue)
+                                                 .To<SettingsPropertyCollection>()
+                                                 .Cast<SettingsProperty>();
+
+            var builder = new EmbedBuilder().WithTitle($"All {settingsGroupName} Application Settings.");
+
+            var embeds = new List<Embed>();
+            var count = 0;
+
+            foreach (var field in props)
+            {
+                if (count == 24)
+                {
+                    embeds.Add(builder.Build());
+                    builder = new EmbedBuilder();
+                    count = 0;
+                }
+
+                builder.AddField(
+                    $"{field.Name} ({field.PropertyType})",
+                    $"`{indexer.GetValue(settingInstanceValue, new[] { field.Name })}`",
+                    false
+                );
+                count++;
+            }
+
+            if (count < 24) embeds.Add(builder.Build());
+
+            await message.ReplyAsync($"Echoeing back {props.Count()} settings in {Math.Floor((float)(props.Count() / 25))} group{(props.Count() > 1 ? "s" : "")}.");
+
+            foreach (var embed in embeds)
+            {
+                await message.Channel.SendMessageAsync(
+                    embed: embed
+                );
+            }
         }
     }
 }
