@@ -47,5 +47,12 @@ namespace MFDLabs.Text.Extensions
         public static string ReplaceFirst(this string text, string search, string replace) => TextGlobal.ReplaceFirst(text, search, replace);
         /*public static string Replace(this string s, string oldValue, string newValue) => s.Replace(oldValue, newValue);
         public static string Replace(this string s, char oldChar, char newChar) => s.Replace(oldChar, newChar);*/
+        
+        public static string Truncate(this string value, int maxLength, string truncationSuffix = "…")
+        {
+            return value?.Length > maxLength
+               ? value.Substring(0, maxLength) + truncationSuffix
+               : value;
+        }
     }
 }
