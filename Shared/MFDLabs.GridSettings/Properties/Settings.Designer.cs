@@ -804,5 +804,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((bool)(this["ScreenshotUtilityLaunchGridServerOnLeaseExpired"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:05")]
+        public global::System.TimeSpan CommandCircuitBreakerWrapperRetryInterval {
+            get {
+                return ((global::System.TimeSpan)(this["CommandCircuitBreakerWrapperRetryInterval"]));
+            }
+        }
     }
 }
