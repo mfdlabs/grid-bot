@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 
@@ -49,7 +50,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",
-                    $"`{(global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name])}`",
+                    $"`{(global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name].Truncate(1023))}`",
                     false
                 );
                 count++;
