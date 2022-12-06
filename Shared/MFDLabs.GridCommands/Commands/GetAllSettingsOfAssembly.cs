@@ -143,7 +143,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",
-                    $"`{(value is string v ? v.Truncate(1023) : value)}`",
+                    $"`{(value is string v ? v.Truncate(1021) : value)}`",
                     false
                 );
                 count++;
