@@ -1,27 +1,17 @@
-﻿/*
-
-WARNING:
-
-THIS IS NOT ALLOWED BECAUSE OF THE WAY INDEXERS WORK, PLEASE TRY AGAIN LATER!!!!
-
-!!!! I could try filter out all of the properties that are used by the ApplicationSettingsBase...? !!!!
- 
-*/
-
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Discord;
 using Discord.WebSocket;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Reflection.Extensions;
-using Discord;
-using System.Collections.Generic;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -151,7 +141,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",
-                    $"`{indexer.GetValue(settingInstanceValue, new[] { field.Name })}`",
+                    $"`{indexer.GetValue(settingInstanceValue, new[] { field.Name }).To<string>().Truncate(1023)}`",
                     false
                 );
                 count++;
