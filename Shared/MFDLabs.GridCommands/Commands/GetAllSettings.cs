@@ -47,10 +47,12 @@ namespace MFDLabs.Grid.Bot.Commands
                     builder = new EmbedBuilder();
                     count = 0;
                 }
+                
+                var value = global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name];
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",
-                    $"`{(global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name].Truncate(1023))}`",
+                    $"`{(value is string v ? v.Truncate(1023) : value)}`",
                     false
                 );
                 count++;
