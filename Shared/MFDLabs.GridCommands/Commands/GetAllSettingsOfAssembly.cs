@@ -138,10 +138,12 @@ namespace MFDLabs.Grid.Bot.Commands
                     builder = new EmbedBuilder();
                     count = 0;
                 }
+                
+                var value = indexer.GetValue(settingInstanceValue, new[] { field.Name });
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",
-                    $"`{indexer.GetValue(settingInstanceValue, new[] { field.Name }).To<string>().Truncate(1023)}`",
+                    $"`{(value is string v ? v.Truncate(1023) : value)}`",
                     false
                 );
                 count++;
