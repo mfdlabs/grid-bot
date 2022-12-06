@@ -263,5 +263,8 @@
     <Setting Name="ScreenshotUtilityLaunchGridServerOnLeaseExpired" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="CommandCircuitBreakerWrapperRetryInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:05</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

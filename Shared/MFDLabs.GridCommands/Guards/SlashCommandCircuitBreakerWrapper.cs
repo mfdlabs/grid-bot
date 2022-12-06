@@ -1,72 +1,30 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
+
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Sentinels;
+using MFDLabs.Grid.Bot.Interfaces;
 
 namespace MFDLabs.Grid.Bot.Guards
 {
-
-
     public class SlashCommandCircuitBreakerWrapper
     {
-        public TimeSpan RetryInterval { get; set; }
-        public TimeSpan TimeoutIntervalForTripping { get; set; }
-        public IStateSpecificSlashCommandHandler Command => _Command;
+        public TimeSpan RetryInterval { get; set; } = global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandCircuitBreakerWrapperRetryInterval;
+        public IStateSpecificSlashCommandHandler Command => _command;
 
         public SlashCommandCircuitBreakerWrapper(IStateSpecificSlashCommandHandler cmd)
         {
-            _Command = cmd ?? throw new ArgumentNullException(nameof(cmd));
-            _CircuitBreaker = new CircuitBreaker(GetType().Name);
+            _command = cmd ?? throw new ArgumentNullException(nameof(cmd));
+            _circuitBreaker = new($"Slash Command '{cmd.CommandAlias}' Circuit Breaker", ex => ex is not ApplicationException, () => RetryInterval);
         }
-        private void ResetCircuitBreaker()
-        {
-            _CircuitBreaker.Reset();
-            _NextRetry = DateTime.MinValue;
-        }
-        private void ResetSignal() => Interlocked.Exchange(ref _ShouldRetrySignal, 0);
-        private void TripAndRethrow(Exception ex)
-        {
-            var now = DateTime.UtcNow;
-            _NextRetry = now.Add(RetryInterval);
-            _CircuitBreaker.Trip();
-            throw ex;
-        }
-        private void Test()
-        {
-            try { _CircuitBreaker.Test(); }
-            catch (CircuitBreakerException)
-            {
-                if (!(DateTime.UtcNow >= _NextRetry)) throw;
-                if (Interlocked.CompareExchange(ref _ShouldRetrySignal, 1, 0) != 0) throw;
-            }
-        }
-        public void Execute(SocketSlashCommand cmd)
-        {
-            Test();
-            try { _Command.Invoke(cmd).Wait(); }
-            catch (Exception ex) { TripAndRethrow(ex); }
-            finally { ResetSignal(); }
-            ResetCircuitBreaker();
-        }
-        public async Task ExecuteAsync(SocketSlashCommand cmd)
-        {
-            Test();
-            try { await _Command.Invoke(cmd).ConfigureAwait(false); }
-            catch (Exception ex) { TripAndRethrow(ex); }
-            finally { ResetSignal(); }
-            ResetCircuitBreaker();
-        }
+        public async Task ExecuteAsync(SocketSlashCommand command)
+            => await _circuitBreaker.ExecuteAsync(async _ => await _command.Invoke(command));
 
-
-
-        private readonly IStateSpecificSlashCommandHandler _Command;
-        private readonly CircuitBreaker _CircuitBreaker;
-        private DateTime _NextRetry = DateTime.MinValue;
-        private int _ShouldRetrySignal;
+        private readonly IStateSpecificSlashCommandHandler _command;
+        private readonly ExecutionCircuitBreaker _circuitBreaker;
     }
+
 }
 
 #endif
