@@ -447,7 +447,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static void DeleteSocketCommand(SocketSlashCommand cmd)
         {
-            ThreadPool.QueueUserWorkItem(async _ =>
+            Task.Factory.StartNew(async () =>
             {
                 try
                 {
@@ -458,10 +458,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         cmdInternal = await guildChannel.Guild.GetApplicationCommandAsync(cmd.CommandId);
                     }
 
-                    if (cmdInternal == null)
-                    {
-                        cmdInternal = await BotGlobal.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
-                    }
+                    cmdInternal ??= await BotGlobal.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
 
                     await cmdInternal.DeleteAsync();
                 }
@@ -674,7 +671,7 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             Logger.Singleton.LifecycleEvent("Queueing user work item for slash command '{0}'.", alias);
 
-            ThreadPool.QueueUserWorkItem(async _ =>
+            Task.Factory.StartNew(async () =>
             {
                 try
                 {
@@ -713,7 +710,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             // could we have 2 versions here where we pool it and background it?
 
-            ThreadPool.QueueUserWorkItem(async _ =>
+            Task.Factory.StartNew(async () =>
             {
                 try
                 {
@@ -1010,7 +1007,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     // Queue up a thread here because slash command
                     // registration can block the main thread
-                    ThreadPool.QueueUserWorkItem(s =>
+                    Task.Factory.StartNew(() =>
                     {
 
                         var slashCommandNamespace = GetSlashCommandNamespace();

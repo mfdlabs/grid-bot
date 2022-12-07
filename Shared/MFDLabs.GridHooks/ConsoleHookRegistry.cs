@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
@@ -45,13 +46,13 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static IConsoleHook GetConsoleHook(char key) =>
             (from consoleHook in ConsoleHooks
-                where consoleHook.HookKeys.Contains(key)
-                select consoleHook).FirstOrDefault();
+             where consoleHook.HookKeys.Contains(key)
+             select consoleHook).FirstOrDefault();
 
         private static void RegisterInternal()
         {
             if (_wasRegistered) return;
-            
+
             lock (RegistrationLock)
             {
                 ParseAndInsertIntoConsoleHookRegistry();
@@ -123,10 +124,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 var consoleHook = GetConsoleHook(key);
 
                 if (consoleHook != default)
-                    ThreadPool.QueueUserWorkItem(_ =>
-                    {
-                        consoleHook.Callback(key);
-                    });
+                    Task.Factory.StartNew(() => consoleHook.Callback(key));
             }
         }
     }

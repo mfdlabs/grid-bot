@@ -12,7 +12,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static void Stop() => _isRunning = false;
 
-        public static void Receive(object dummy)
+        public static void Receive()
         {
             var sock = new UdpClient(new IPEndPoint(IPAddress.Loopback, 47001));
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using MFDLabs.Sentinels;
 
 namespace MFDLabs.FileSystem
@@ -100,9 +101,9 @@ namespace MFDLabs.FileSystem
         }
 
         public static void PollDeletion(this string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
-            => ThreadPool.QueueUserWorkItem(s => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess));
+            => Task.Factory.StartNew(() => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess));
         public static void PollDeletion(this string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)
-            => ThreadPool.QueueUserWorkItem(s => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess, baseDelay, maxDelay, jitter));
+            => Task.Factory.StartNew(() => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess, baseDelay, maxDelay, jitter));
         public static void PollDeletionBlocking(this string path, int maxAttempts = 10, Action<Exception> onFailure = null, Action onSuccess = null)
             => PollDeletionBlocking(path, maxAttempts, onFailure, onSuccess, BaseDelay, MaxDelay);
         public static void PollDeletionBlocking(this string path, int maxAttempts, Action<Exception> onFailure, Action onSuccess, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None)

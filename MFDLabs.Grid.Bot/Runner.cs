@@ -217,7 +217,7 @@ namespace MFDLabs.Grid.Bot
 
             SingleInstancedArbiter.SetBinding(defaultHttpBinding);
 
-            ThreadPool.QueueUserWorkItem(ShutdownUdpReceiver.Receive);
+            Task.Factory.StartNew(ShutdownUdpReceiver.Receive);
 
             if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();

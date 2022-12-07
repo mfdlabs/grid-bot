@@ -1265,7 +1265,7 @@ namespace MFDLabs.Grid
 
                 if (openNowInNewThread)
                 {
-                    ThreadPool.QueueUserWorkItem(_ => TryOpen(true));
+                    Task.Factory.StartNew(() => TryOpen(true));
                     return;
                 }
                 TryOpen();
