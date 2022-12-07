@@ -10,7 +10,6 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
         public IRawValueCounter CommandsPerSecond { get; }
         public IRawValueCounter FailedCommandsPerSecond { get; }
-        public IRawValueCounter NewThreadCountersPerSecond { get; }
         public IRawValueCounter SucceededCommandsPerSecond { get; }
         public IRawValueCounter NotFoundCommandsThatToldTheFrontendUser { get; }
         public IRawValueCounter NotFoundCommandsThatDidNotTellTheFrontendUser { get; }
@@ -21,15 +20,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         public IRawValueCounter DisabledCommandsThatDidNotAllowBypass { get; }
         public IRawValueCounter DisabledCommandsThatWereInvokedToTheFrontendUser { get; }
         public IRawValueCounter CommandsThatAreEnabled { get; }
-        public IRawValueCounter CommandsThatTryToExecuteInNewThread { get; }
-        public IRawValueCounter NewThreadCommandsThatAreOnlyAvailableToAdmins { get; }
-        public IRawValueCounter NewThreadCommandsThatDidNotPassAdministratorCheck { get; }
-        public IRawValueCounter NewThreadCommandsThatPassedAdministratorCheck { get; }
-        public IRawValueCounter NewThreadCommandsThatWereAllowedToExecute { get; }
-        public IRawValueCounter NewThreadCommandsThatWereNotAllowedToExecute { get; }
-        public IRawValueCounter CommandsThatDidNotTryNewThreadExecution { get; }
         public IRawValueCounter CommandsThatPassedAllChecks { get; }
-        public IRawValueCounter CommandsNotExecutedInNewThread { get; }
         public IRawValueCounter FailedCommandsThatTimedOut { get; }
         public IRawValueCounter FailedCommandsThatTriedToAccessOfflineGridServer { get; }
         public IRawValueCounter FailedCommandsThatTriggeredAFaultException { get; }
@@ -51,10 +42,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
         public IRawValueCounter CommandRegistryRegistrationsThatFailed { get; }
         public IRawValueCounter CommandsThatDidNotExist { get; }
         public IRawValueCounter CommandsThatFinished { get; }
-        public IRawValueCounter NewThreadCommandsThatFinished { get; }
-        public IRawValueCounter NewThreadCommandsThatPassedChecks { get; }
         public IAverageValueCounter AverageRequestTime { get; }
-        public IAverageValueCounter AverageThreadRequestTime { get; }
 
         public CommandRegistryInstrumentationPerformanceMonitor(ICounterRegistry counterRegistry)
         {
@@ -66,8 +54,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
 
             CommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "CommandsPerSecond", instance);
-            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "FailedCommandsPerSecond", instance);
-            NewThreadCountersPerSecond = counterRegistry.GetRawValueCounter(Category, "NewThreadCountersPerSecond", instance);
+            FailedCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "FailedCommandsPerSecond", instance);;
             SucceededCommandsPerSecond = counterRegistry.GetRawValueCounter(Category, "SucceededCommandsPerSecond", instance);
             NotFoundCommandsThatToldTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "NotFoundCommandsThatToldTheFrontendUser", instance);
             NotFoundCommandsThatDidNotTellTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "NotFoundCommandsThatDidNotTellTheFrontendUser", instance);
@@ -78,15 +65,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             DisabledCommandsThatDidNotAllowBypass = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatDidNotAllowBypass", instance);
             DisabledCommandsThatWereInvokedToTheFrontendUser = counterRegistry.GetRawValueCounter(Category, "DisabledCommandsThatWereInvokedToTheFrontendUser", instance);
             CommandsThatAreEnabled = counterRegistry.GetRawValueCounter(Category, "CommandsThatAreEnabled", instance);
-            CommandsThatTryToExecuteInNewThread = counterRegistry.GetRawValueCounter(Category, "CommandsThatTryToExecuteInNewThread", instance);
-            NewThreadCommandsThatAreOnlyAvailableToAdmins = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatAreOnlyAvailableToAdmins", instance);
-            NewThreadCommandsThatDidNotPassAdministratorCheck = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatDidNotPassAdministratorCheck", instance);
-            NewThreadCommandsThatPassedAdministratorCheck = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatPassedAdministratorCheck", instance);
-            NewThreadCommandsThatWereAllowedToExecute = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatWereAllowedToExecute", instance);
-            NewThreadCommandsThatWereNotAllowedToExecute = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatWereNotAllowedToExecute", instance);
-            CommandsThatDidNotTryNewThreadExecution = counterRegistry.GetRawValueCounter(Category, "CommandsThatDidNotTryNewThreadExecution", instance);
             CommandsThatPassedAllChecks = counterRegistry.GetRawValueCounter(Category, "CommandsThatPassedAllChecks", instance);
-            CommandsNotExecutedInNewThread = counterRegistry.GetRawValueCounter(Category, "CommandsNotExecutedInNewThread", instance);
             FailedCommandsThatTimedOut = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTimedOut", instance);
             FailedCommandsThatTriedToAccessOfflineGridServer = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTriedToAccessOfflineGridServer", instance);
             FailedCommandsThatTriggeredAFaultException = counterRegistry.GetRawValueCounter(Category, "FailedCommandsThatTriggeredAFaultException", instance);
@@ -109,10 +88,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
             CommandRegistryRegistrationsThatFailed = counterRegistry.GetRawValueCounter(Category, "CommandRegistryRegistrationsThatFailed", instance);
             CommandsThatDidNotExist = counterRegistry.GetRawValueCounter(Category, "CommandsThatDidNotExist", instance);
             CommandsThatFinished = counterRegistry.GetRawValueCounter(Category, "CommandsThatFinished", instance);
-            NewThreadCommandsThatFinished = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatFinished", instance);
-            NewThreadCommandsThatPassedChecks = counterRegistry.GetRawValueCounter(Category, "NewThreadCommandsThatPassedChecks", instance);
             AverageRequestTime = counterRegistry.GetAverageValueCounter(Category, "AverageRequestTime", instance);
-            AverageThreadRequestTime = counterRegistry.GetAverageValueCounter(Category, "AverageThreadRequestTime", instance);
         }
     }
 }

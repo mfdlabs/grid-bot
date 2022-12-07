@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using MFDLabs.Analytics.Google;
+using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Text.Extensions;
@@ -85,6 +86,12 @@ namespace MFDLabs.Grid.Bot.Extensions
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
             }
+        }
+        public static bool CanExecuteByRolloutPercentage(this IUser user, int rolloutPercentage)
+        {
+            if (user.IsAdmin()) return true;
+
+            return PercentageInvoker.CanInvoke(rolloutPercentage);
         }
         public static bool IsBlacklisted(this IUser user) => AdminUtility.UserIsBlacklisted(user);
         public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
