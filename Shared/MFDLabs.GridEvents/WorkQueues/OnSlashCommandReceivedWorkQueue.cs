@@ -23,51 +23,56 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static async void OnReceive(SocketSlashCommand command, SuccessFailurePort result)
         {
-            await command.User.FireEventAsync(typeof(OnSlashCommandReceivedWorkQueue).FullName, command.Channel.Name);
-
-            var userIsAdmin = command.User.IsAdmin();
-            var userIsPrivilaged = command.User.IsPrivilaged();
-            var userIsBlacklisted = command.User.IsBlacklisted();
-
-            if (command.User.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
-
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAllChannels)
+            using (await command.DeferEphemeralAsync())
             {
-                if (!command.Channel.IsWhitelisted() && !userIsAdmin)
+
+
+                await command.User.FireEventAsync(typeof(OnSlashCommandReceivedWorkQueue).FullName, command.Channel.Name);
+
+                var userIsAdmin = command.User.IsAdmin();
+                var userIsPrivilaged = command.User.IsPrivilaged();
+                var userIsBlacklisted = command.User.IsBlacklisted();
+
+                if (command.User.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
+
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAllChannels)
+                {
+                    if (!command.Channel.IsWhitelisted() && !userIsAdmin)
+                        return;
+                }
+
+                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+                {
+                    if (!userIsAdmin && !userIsPrivilaged)
+                    {
+                        Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
+
+                        var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+
+                        if (!failureMessage.IsNullOrEmpty()) await command.RespondEphemeralPingAsync(failureMessage);
+
+                        return;
+                    }
+                }
+
+                if (userIsBlacklisted)
+                {
+                    Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", command.User.Id, command.User.Username, command.User.Discriminator);
+
+                    try
+                    {
+                        await command.User.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
+                    }
+                    catch
+                    {
+                        Logger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
+                    }
+
                     return;
-            }
-
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
-            {
-                if (!userIsAdmin && !userIsPrivilaged)
-                {
-                    Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
-
-                    var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
-
-                    if (!failureMessage.IsNullOrEmpty()) await command.RespondEphemeralPingAsync(failureMessage);
-
-                    return;
-                }
-            }
-
-            if (userIsBlacklisted)
-            {
-                Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", command.User.Id, command.User.Username, command.User.Discriminator);
-
-                try
-                {
-                    await command.User.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
-                }
-                catch
-                {
-                    Logger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
                 }
 
-                return;
+                await CommandRegistry.CheckAndRunSlashCommand(command);
             }
-
-            await CommandRegistry.CheckAndRunSlashCommand(command);
         }
     }
 }
