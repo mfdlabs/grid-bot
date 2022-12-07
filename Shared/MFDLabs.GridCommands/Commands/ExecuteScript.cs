@@ -214,7 +214,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     {
                         File.WriteAllText(scriptName, script, Encoding.ASCII);
 
-                        var result = LuaUtility.ParseLuaValues(await instance.BatchJobExAsync(job, scriptEx));
+                        var result = LuaUtility.ParseLuaValues(instance.BatchJobEx(job, scriptEx));
 
                         instance.Lock();
 
