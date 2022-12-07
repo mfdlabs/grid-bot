@@ -269,7 +269,13 @@ namespace MFDLabs.Grid.Bot.Commands
                         await message.ReplyAsync($"This instance will expire at <t:{expirationTime}:T>");
 
 
-                        if (ex is TimeoutException) message.Author.IncrementExceptionLimit();
+                        if (ex is TimeoutException) 
+                        {
+                            if (!message.Author.IsOwner()) message.Author.IncrementExceptionLimit();
+                            
+                            await message.ReplyAsync("The code you supplied executed for too long, please try again later.");
+                        }
+
                         if (ex is not IOException or TimeoutException) throw;
                     }
                     finally
