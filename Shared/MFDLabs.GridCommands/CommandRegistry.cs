@@ -314,7 +314,6 @@ namespace MFDLabs.Grid.Bot.Registries
             );
 
             var sw = Stopwatch.StartNew();
-            var inNewThread = false;
 
             try
             {
@@ -386,42 +385,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 InstrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExecuteCommandsInNewThread)
-                {
-                    InstrumentationPerfmon.CommandsThatTryToExecuteInNewThread.Increment();
-
-                    var isAllowed = true;
-
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewThreadsOnlyAvailableForAdmins)
-                    {
-                        InstrumentationPerfmon.NewThreadCommandsThatAreOnlyAvailableToAdmins.Increment();
-                        if (!command.User.IsAdmin())
-                        {
-                            InstrumentationPerfmon.NewThreadCommandsThatDidNotPassAdministratorCheck.Increment();
-                            isAllowed = false;
-                        }
-                        else
-                        {
-                            InstrumentationPerfmon.NewThreadCommandsThatPassedAdministratorCheck.Increment();
-                        }
-                    }
-
-                    if (isAllowed)
-                    {
-                        inNewThread = true;
-                        InstrumentationPerfmon.NewThreadCommandsThatWereAllowedToExecute.Increment();
-                        InstrumentationPerfmon.NewThreadCountersPerSecond.Increment();
-                        ExecuteSlashCommandInNewThread(commandAlias, command, cmd, sw);
-                        return;
-                    }
-
-                    InstrumentationPerfmon.NewThreadCommandsThatWereNotAllowedToExecute.Increment();
-                }
-                else
-                {
-                    InstrumentationPerfmon.CommandsThatDidNotTryNewThreadExecution.Increment();
-                }
-
                 await GetSlashCommandWrapperByCommand(cmd).ExecuteAsync(command);
 
                 InstrumentationPerfmon.SucceededCommandsPerSecond.Increment();
@@ -437,10 +400,9 @@ namespace MFDLabs.Grid.Bot.Registries
                 InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                 InstrumentationPerfmon.CommandsThatFinished.Increment();
                 Logger.Singleton.Debug(
-                    "Took {0}s to execute command '{1}'{2}.",
+                    "Took {0}s to execute command '{1}'.",
                     sw.Elapsed.TotalSeconds,
-                    commandAlias,
-                    inNewThread ? " in new thread" : ""
+                    commandAlias
                 );
             }
         }
@@ -532,7 +494,6 @@ namespace MFDLabs.Grid.Bot.Registries
             }
 
             var sw = Stopwatch.StartNew();
-            var inNewThread = false;
 
             try
             {
@@ -603,44 +564,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 InstrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExecuteCommandsInNewThread)
-                {
-                    InstrumentationPerfmon.CommandsThatTryToExecuteInNewThread.Increment();
-
-                    var isAllowed = true;
-
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.NewThreadsOnlyAvailableForAdmins)
-                    {
-                        InstrumentationPerfmon.NewThreadCommandsThatAreOnlyAvailableToAdmins.Increment();
-                        if (!message.Author.IsAdmin())
-                        {
-                            InstrumentationPerfmon.NewThreadCommandsThatDidNotPassAdministratorCheck.Increment();
-                            isAllowed = false;
-                        }
-                        else
-                        {
-                            InstrumentationPerfmon.NewThreadCommandsThatPassedAdministratorCheck.Increment();
-                        }
-                    }
-
-                    if (isAllowed)
-                    {
-                        inNewThread = true;
-                        InstrumentationPerfmon.NewThreadCommandsThatWereAllowedToExecute.Increment();
-                        InstrumentationPerfmon.NewThreadCountersPerSecond.Increment();
-                        ExecuteCommandInNewThread(commandAlias, messageContent, message, sw, command);
-                        return;
-                    }
-
-                    InstrumentationPerfmon.NewThreadCommandsThatWereNotAllowedToExecute.Increment();
-                }
-                else
-                {
-                    InstrumentationPerfmon.CommandsThatDidNotTryNewThreadExecution.Increment();
-                }
-
-                InstrumentationPerfmon.CommandsNotExecutedInNewThread.Increment();
-
                 await GetWrapperByCommand(command)
                     .ExecuteAsync(messageContent, message, commandAlias);
 
@@ -656,87 +579,11 @@ namespace MFDLabs.Grid.Bot.Registries
                 sw.Stop();
                 InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
                 InstrumentationPerfmon.CommandsThatFinished.Increment();
-                Logger.Singleton.Debug("Took {0}s to execute command '{1}'{2}.",
+                Logger.Singleton.Debug("Took {0}s to execute command '{1}'.",
                     sw.Elapsed.TotalSeconds,
-                    commandAlias,
-                    inNewThread
-                        ? " in new thread"
-                        : "");
+                    commandAlias
+                );
             }
-        }
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        private static void ExecuteSlashCommandInNewThread(string alias, SocketSlashCommand command, IStateSpecificSlashCommandHandler handler, Stopwatch sw)
-        {
-            Logger.Singleton.LifecycleEvent("Queueing user work item for slash command '{0}'.", alias);
-
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    InstrumentationPerfmon.NewThreadCommandsThatPassedChecks.Increment();
-                    // We do not expect a result here.
-                    await GetSlashCommandWrapperByCommand(handler).ExecuteAsync(command);
-                    InstrumentationPerfmon.SucceededCommandsPerSecond.Increment();
-                    Counters.RequestSucceededCountN++;
-                }
-                catch (Exception ex)
-                {
-                    await HandleSlashCommandException(ex, alias, command);
-                }
-                finally
-                {
-                    sw.Stop();
-                    InstrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
-                    InstrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
-                    Logger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
-                }
-
-            });
-        }
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        private static void ExecuteCommandInNewThread(
-            string alias,
-            string[] messageContent,
-            SocketMessage message,
-            Stopwatch sw,
-            IStateSpecificCommandHandler command
-        )
-        {
-            Logger.Singleton.LifecycleEvent("Queueing user work item for command '{0}'.", alias);
-
-            // could we have 2 versions here where we pool it and background it?
-
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    InstrumentationPerfmon.NewThreadCommandsThatPassedChecks.Increment();
-                    // We do not expect a result here.
-                    await GetWrapperByCommand(command)
-                        .ExecuteAsync(
-                            messageContent,
-                            message,
-                            alias
-                        );
-                    InstrumentationPerfmon.SucceededCommandsPerSecond.Increment();
-                    Counters.RequestSucceededCountN++;
-                }
-                catch (Exception ex)
-                {
-                    await HandleException(ex, alias, message);
-                }
-                finally
-                {
-                    sw.Stop();
-                    InstrumentationPerfmon.AverageThreadRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
-                    InstrumentationPerfmon.NewThreadCommandsThatFinished.Increment();
-                    Logger.Singleton.Debug("Took {0}s to execute command '{1}'.", sw.Elapsed.TotalSeconds, alias);
-                }
-            });
         }
 
 #if WE_LOVE_EM_SLASH_COMMANDS

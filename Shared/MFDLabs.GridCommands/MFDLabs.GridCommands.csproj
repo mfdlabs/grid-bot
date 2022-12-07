@@ -19,7 +19,6 @@
     <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
     <ProjectReference Include="..\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj" />
     <ProjectReference Include="..\MFDLabs.GridHooks\MFDLabs.GridHooks.csproj" />
-    <ProjectReference Include="..\MFDLabs.GridTasks\MFDLabs.GridTasks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
