@@ -274,9 +274,11 @@ namespace MFDLabs.Grid.Bot.Commands
                             if (!message.Author.IsOwner()) message.Author.IncrementExceptionLimit();
                             
                             await message.ReplyAsync("The code you supplied executed for too long, please try again later.");
+
+                            return;
                         }
 
-                        if (ex is not IOException or TimeoutException) throw;
+                        if (ex is not IOException) throw;
                     }
                     finally
                     {
