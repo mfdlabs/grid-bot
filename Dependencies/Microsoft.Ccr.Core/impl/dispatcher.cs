@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Microsoft.Ccr.Core.Properties;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
