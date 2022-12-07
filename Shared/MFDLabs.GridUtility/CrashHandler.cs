@@ -14,7 +14,7 @@
                 new global::System.Exception("Crash Handler call traceback.", ex)
             );
 
-            global::System.Threading.ThreadPool.QueueUserWorkItem(s =>
+            global::System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
                 try
                 {

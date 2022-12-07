@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Microsoft.Ccr.Core.Properties;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -180,7 +180,7 @@ namespace Microsoft.Ccr.Core
             UnhandledExceptionPort?.Post(e);
             if (UnhandledException != null)
             {
-                ThreadPool.QueueUserWorkItem(
+                System.Threading.Tasks.Task.Factory.StartNew(
                     s => UnhandledException(
                         this, 
                         new UnhandledExceptionEventArgs(s as Exception, false)

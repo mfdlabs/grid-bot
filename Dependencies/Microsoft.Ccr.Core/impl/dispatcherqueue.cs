@@ -200,7 +200,7 @@ namespace Microsoft.Ccr.Core
             if (_dispatcher == null)
             {
                 _scheduledTaskCount += 1;
-                ThreadPool.QueueUserWorkItem(TaskExecutionWorker.ExecuteInCurrentThreadContext, task);
+                System.Threading.Tasks.Task.Factory.StartNew(TaskExecutionWorker.ExecuteInCurrentThreadContext, task);
                 return true;
             }
             lock (_taskQueue)
