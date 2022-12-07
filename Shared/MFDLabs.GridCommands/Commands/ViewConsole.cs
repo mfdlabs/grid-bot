@@ -8,7 +8,6 @@ using Discord.WebSocket;
 using MFDLabs.Logging;
 using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Models;
 using MFDLabs.Instrumentation;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Extensions;
