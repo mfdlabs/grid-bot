@@ -872,7 +872,7 @@ namespace MFDLabs.Grid.Bot.Registries
                             {
                                 try
                                 {
-                                    if (type.IsClass)
+                                    if (type.IsClass && type.GetInterface(nameof(IStateSpecificSlashCommandHandler)) != null)
                                     {
                                         var commandHandler = Activator.CreateInstance(type);
 
@@ -977,7 +977,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         {
                             try
                             {
-                                if (type.IsClass)
+                                if (type.IsClass && type.GetInterface(nameof(IStateSpecificCommandHandler)) != null)
                                 {
                                     var commandHandler = Activator.CreateInstance(type);
                                     if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)

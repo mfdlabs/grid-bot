@@ -33,44 +33,40 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         {
             if (!await command.RejectIfNotAdminAsync()) return;
 
-            using (await command.DeferEphemeralAsync())
+            var subCommand = command.Data.GetSubCommand();
+
+            var userOption = (IUser)subCommand.GetOptionValue("user");
+            if (userOption == null)
             {
+                await command.RespondEphemeralPingAsync("The user cannot be null");
+                return;
+            }
 
-                var subCommand = command.Data.GetSubCommand();
+            if (userOption.IsBot || userOption.IsWebhook)
+            {
+                await command.RespondEphemeralPingAsync("Cannot update the status of a bot user.");
+                return;
+            }
 
-                var userOption = (IUser)subCommand.GetOptionValue("user");
-                if (userOption == null)
-                {
-                    await command.RespondEphemeralPingAsync("The user cannot be null");
+            if (userOption.IsOwner())
+            {
+                await command.RespondEphemeralPingAsync("Cannot update the status of user because they are the owner.");
+                return;
+            }
+
+
+            switch (subCommand.Name)
+            {
+                case "add":
+                    if (userOption.IsBlacklisted()) { await command.RespondEphemeralPingAsync($"The user '{userOption.Id}' is already on the privilaged user list!"); return; }
+                    userOption.Entitle();
+                    await command.RespondEphemeralPingAsync($"Successfully added '{userOption.Id}' to the privilaged user list!");
                     return;
-                }
-
-                if (userOption.IsBot || userOption.IsWebhook)
-                {
-                    await command.RespondEphemeralPingAsync("Cannot update the status of a bot user.");
+                case "remove":
+                    if (!userOption.IsBlacklisted()) { await command.RespondEphemeralPingAsync($"The user '{userOption.Id}' is not on the privilaged user list!"); return; }
+                    userOption.Disentitle();
+                    await command.RespondEphemeralPingAsync($"Successfully removed '{userOption.Id}' from the privilaged user list!");
                     return;
-                }
-
-                if (userOption.IsOwner())
-                {
-                    await command.RespondEphemeralPingAsync("Cannot update the status of user because they are the owner.");
-                    return;
-                }
-
-
-                switch (subCommand.Name)
-                {
-                    case "add":
-                        if (userOption.IsBlacklisted()) { await command.RespondEphemeralPingAsync($"The user '{userOption.Id}' is already on the privilaged user list!"); return; }
-                        userOption.Entitle();
-                        await command.RespondEphemeralPingAsync($"Successfully added '{userOption.Id}' to the privilaged user list!");
-                        return;
-                    case "remove":
-                        if (!userOption.IsBlacklisted()) { await command.RespondEphemeralPingAsync($"The user '{userOption.Id}' is not on the privilaged user list!"); return; }
-                        userOption.Disentitle();
-                        await command.RespondEphemeralPingAsync($"Successfully removed '{userOption.Id}' from the privilaged user list!");
-                        return;
-                }
             }
         }
     }

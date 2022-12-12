@@ -21,13 +21,10 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
         public async Task Invoke(SocketSlashCommand command)
         {
-            using (await command.DeferEphemeralAsync())
-            {
-                await command.RespondEphemeralAsync(
-                    $"The log file name for this instance is: `{Logger.Singleton.FileName}`\n" + 
-                    "Please paste this into the `Log File Name` field in grid-bot-support templates so that the internal team can easily identify this instance's log files."
-                );
-            }
+            await command.RespondEphemeralAsync(
+                $"The log file name for this instance is: `{Logger.Singleton.FileName}`\n" +
+                "Please paste this into the `Log File Name` field in grid-bot-support templates so that the internal team can easily identify this instance's log files."
+            );
         }
     }
 }
