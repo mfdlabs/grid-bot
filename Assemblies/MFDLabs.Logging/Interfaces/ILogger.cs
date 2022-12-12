@@ -8,16 +8,50 @@ namespace MFDLabs.Logging
     public interface ILogger
     {
         /// <summary>
-        /// Defines a method that gets the max log level.
+        /// Gets or sets the name of the logger.
         /// </summary>
-        Func<LogLevel> MaxLogLevel { get; set; }
+        string Name { get; set; }
 
         /// <summary>
-        /// Defines a boolean that will determine if we log the thread ID.
-        /// 
-        /// Not used in every logger.
+        /// Gets or sets the log level of the logger.
+        /// </summary>
+        LogLevel LogLevel { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value that determines if this logger should log to a file.
+        /// </summary>
+        /// <remarks>When enabling this will create a log file, when disabling it will delete the log file.</remarks>
+        bool LogToFileSystem { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value that determines if this logger should log to the console.
+        /// </summary>
+        bool LogToConsole { get; set; }
+
+        /// <summary>
+        /// Gets the value that determines if the logger prefix should be shortened.
+        /// </summary>
+        bool CutLogPrefix { get; }
+
+        /// <summary>
+        /// Gets or sets the value that determines if the logger should log thread ids.
         /// </summary>
         bool LogThreadId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value that determines if the logger should log with color to the console.
+        /// </summary>
+        bool LogWithColor { get; set; }
+
+        /// <summary>
+        /// Gets the name of the log file.
+        /// </summary>
+        string FileName { get; }
+
+        /// <summary>
+        /// Gets the fully qualified log file name.
+        /// </summary>
+        string FullyQualifiedFileName { get; }
 
         /// <summary>
         /// Log a log message.

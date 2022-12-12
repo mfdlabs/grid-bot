@@ -4,7 +4,6 @@ using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Logging;
-using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Threading;
 
 // ReSharper disable AsyncVoidLambda
@@ -28,7 +27,6 @@ namespace MFDLabs.Grid.Bot.Utility
                     await BotGlobal.TryLogout();
                 GridProcessHelper.KillAllGridServersSafe();
                 GridProcessHelper.KillServerSafe();
-                LoggingSystem.EndLifetimeWatch();
                 Logger.TryClearLocalLog(false);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
@@ -49,7 +47,6 @@ namespace MFDLabs.Grid.Bot.Utility
                     GridServerArbiter.Singleton.KillAllOpenInstances();
                 if (killBot)
                     await BotGlobal.TryLogout();
-                LoggingSystem.EndLifetimeWatch();
                 Logger.TryClearLocalLog(true);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
@@ -67,7 +64,6 @@ namespace MFDLabs.Grid.Bot.Utility
                 if (killBot)
                     await BotGlobal.TryLogout();
                 Logger.TryClearLocalLog(true);
-                LoggingSystem.RestartLifetimeWatch();
                 await BotGlobal.SingletonLaunch();
 
                 if (!restartServers) return;

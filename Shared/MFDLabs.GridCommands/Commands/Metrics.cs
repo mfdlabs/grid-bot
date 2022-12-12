@@ -5,7 +5,6 @@ using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Logging.Diagnostics;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -42,7 +41,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 .Build();
 
             await message.ReplyAsync(
-                $"Command Registry metrics report for Date ({DateTimeGlobal.GetUtcNowAsIso()} at {LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds:f7})",
+                $"Command Registry metrics report for at ({DateTimeGlobal.GetUtcNowAsIso()}",
                 embed: embed
             );
         }

@@ -30,7 +30,6 @@ using MFDLabs.Grid.Bot.Guards;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Logging;
-using MFDLabs.Logging.Diagnostics;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Sentinels;
 using MFDLabs.Text.Extensions;
@@ -1100,9 +1099,8 @@ namespace MFDLabs.Grid.Bot.Registries
         public static void LogMetricsReport()
         {
             Logger.Singleton.Warning(
-                "Command Registry metrics report for Date ({0} at {1})",
-                DateTimeGlobal.GetUtcNowAsIso(),
-                LoggingSystem.GlobalLifetimeWatch.Elapsed.TotalSeconds.ToString("f7")
+                "Command Registry metrics report for at ({0}",
+                DateTimeGlobal.GetUtcNowAsIso()
             );
             Logger.Singleton.Log("=====================================================================================");
             Logger.Singleton.Log("Total command request count: {0}", Counters.RequestCountN);

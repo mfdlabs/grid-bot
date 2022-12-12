@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Discord.RbxUsers.Client\MFDLabs.Discord.RbxUsers.Client.csproj" />
+    <ProjectReference Include="..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
