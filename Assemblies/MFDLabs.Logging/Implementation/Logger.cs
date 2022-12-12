@@ -1041,7 +1041,7 @@ public class Logger : ILogger, IDisposable
             ? format
             : string.Format(format, args);
 
-        var message = string.Format("{0}\n{1}", formattedMessage, new StackTrace().ToString());
+        var message = string.Format("{0}\n{1}", formattedMessage, new StackTrace(true).ToString());
 
         this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, message);
     }
@@ -1053,7 +1053,7 @@ public class Logger : ILogger, IDisposable
 
         if (!this._checkLogLevel(LogLevel.Verbose)) return;
 
-        var message = string.Format("{0}\n{1}", messageGetter(), new StackTrace().ToString());
+        var message = string.Format("{0}\n{1}", messageGetter(), new StackTrace(true).ToString());
 
         this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, message);
     }
