@@ -21,21 +21,18 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
         public async Task Invoke(SocketSlashCommand command)
         {
-            using (await command.DeferEphemeralAsync())
-            {
-                // The deployment ID is literally just the name of the current directory that the executable is in.
-                // This is not a great way to do this, but it's the best I can think of for now.
-                
-                // Fetch current directory name.
-                var currentDirectory = Directory.GetCurrentDirectory();
-                var currentDirectoryName = Path.GetFileName(currentDirectory);
+            // The deployment ID is literally just the name of the current directory that the executable is in.
+            // This is not a great way to do this, but it's the best I can think of for now.
 
-                // Reply with the deployment ID.
-                await command.RespondEphemeralAsync(
-                    $"The deployment ID for this instance is: `{currentDirectoryName}`\n" + 
-                    "Please paste this into the `Deployment ID` field in grid-bot-support templates so that the internal team can easily identify this instance."
-                );
-            }
+            // Fetch current directory name.
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var currentDirectoryName = Path.GetFileName(currentDirectory);
+
+            // Reply with the deployment ID.
+            await command.RespondEphemeralAsync(
+                $"The deployment ID for this instance is: `{currentDirectoryName}`\n" +
+                "Please paste this into the `Deployment ID` field in grid-bot-support templates so that the internal team can easily identify this instance."
+            );
         }
     }
 }

@@ -36,38 +36,34 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         {
             if (!await command.RejectIfNotAdminAsync()) return;
 
-            using (await command.DeferEphemeralAsync())
+            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
             {
-
-                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                {
-                    await command.RespondEphemeralPingAsync("Not opening any instances due to single-instanced environment.");
-                    return;
-                }
-
-                var unsafeParamValue = command.Data.GetOptionValue("unsafe");
-                var countParamValue = command.Data.GetOptionValue("count");
-
-
-                var @unsafe = unsafeParamValue != null && unsafeParamValue.ToBoolean();
-                var count = countParamValue != null ? countParamValue.ToInt32() : 1;
-
-                if (count < 1)
-                {
-                    await command.RespondEphemeralPingAsync("The instance count is required to be above 0.");
-                    return;
-                }
-
-                if (@unsafe)
-                    GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(count);
-                else
-                    GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(count);
-
-                if (@unsafe)
-                    await command.RespondEphemeralPingAsync($"Successfully enqueued {count} of grid server instances for immediate startup.");
-                else
-                    await command.RespondEphemeralPingAsync($"Successfully opened {count} of grid server instances.");
+                await command.RespondEphemeralPingAsync("Not opening any instances due to single-instanced environment.");
+                return;
             }
+
+            var unsafeParamValue = command.Data.GetOptionValue("unsafe");
+            var countParamValue = command.Data.GetOptionValue("count");
+
+
+            var @unsafe = unsafeParamValue != null && unsafeParamValue.ToBoolean();
+            var count = countParamValue != null ? countParamValue.ToInt32() : 1;
+
+            if (count < 1)
+            {
+                await command.RespondEphemeralPingAsync("The instance count is required to be above 0.");
+                return;
+            }
+
+            if (@unsafe)
+                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(count);
+            else
+                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(count);
+
+            if (@unsafe)
+                await command.RespondEphemeralPingAsync($"Successfully enqueued {count} of grid server instances for immediate startup.");
+            else
+                await command.RespondEphemeralPingAsync($"Successfully opened {count} of grid server instances.");
         }
     }
 }
