@@ -50,6 +50,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+    <ProjectReference Include="..\Assemblies\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
@@ -89,6 +91,7 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure" />
+    <Folder Include="Proto\" />
   </ItemGroup>
 
   <ItemGroup>
