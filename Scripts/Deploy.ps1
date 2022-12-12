@@ -131,7 +131,6 @@ try {
                     $($branch)-$($random)_
                     $($hash)" -replace '\s+', '';
 					
-    $env:BUILD_YEAR = "$($date.Year)";		
     echo "##teamcity[setParameter name='env.BUILD_YEAR' value='$($date.Year)']"
 
     $archivePrefixName = "$($versioningTag)_$($targetFramework)" -replace '\s+', '';
