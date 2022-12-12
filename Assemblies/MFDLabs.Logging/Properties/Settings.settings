@@ -26,5 +26,8 @@
     <Setting Name="DefaultLoggerLogWithColor" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DefaultLogFileDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
