@@ -130,6 +130,8 @@ try {
                     $(GetParsedNumber -num $date.Second)_
                     $($branch)-$($random)_
                     $($hash)" -replace '\s+', '';
+					
+	echo "##teamcity[setParameter name='env.BUILD_YEAR' value='$($date.Year)']"
 
     $archivePrefixName = "$($versioningTag)_$($targetFramework)" -replace '\s+', '';
     $archivePrefix = [System.IO.Path]::Combine($deploymentYear, $archivePrefixName) -replace '\s+', '';
