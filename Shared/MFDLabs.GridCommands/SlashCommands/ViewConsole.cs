@@ -39,7 +39,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                 .WithName("command")
                 .WithDescription("Screenshot a grid server based on a slash command that performed a script execution.")
                 .WithType(ApplicationCommandOptionType.SubCommand)
-                .AddOption("command_id", ApplicationCommandOptionType.Integer, "The Id of the command that executed the script", true),
+                .AddOption("command_id", ApplicationCommandOptionType.String, "The Id of the command that executed the script", true),
 
             new SlashCommandOptionBuilder()
                 .WithName("show_recent_executions")
