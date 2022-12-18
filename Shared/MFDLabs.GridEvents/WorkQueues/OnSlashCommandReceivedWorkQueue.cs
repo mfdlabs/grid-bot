@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static async void OnReceive(SocketSlashCommand command, SuccessFailurePort result)
         {
-            using (await command.DeferEphemeralAsync())
+            using (await command.DeferPublicAsync())
             {
 
 
