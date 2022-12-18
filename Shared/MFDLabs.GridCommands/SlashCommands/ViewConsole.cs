@@ -36,10 +36,10 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()
-                .WithName("command_id")
+                .WithName("command")
                 .WithDescription("Screenshot a grid server based on a slash command that performed a script execution.")
-                .WithType(ApplicationCommandOptionType.Integer)
-                .WithRequired(true),
+                .WithType(ApplicationCommandOptionType.SubCommand)
+                .AddOption("command_id", ApplicationCommandOptionType.Integer, "The Id of the command that executed the script", true),
 
             new SlashCommandOptionBuilder()
                 .WithName("show_recent_executions")
@@ -139,8 +139,10 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                     await ProcessSingleInstancedGridServerScreenshot(command);
                     return;
                 }
+                
+                var subcommand = command.Data.GetSubCommand();
 
-                if (command.Data.GetSubCommand() != null)
+                if (subcommand.Name.ToLower() == "show_recent_executions")
                 {
                     var embed = command.ConstructUserLookupEmbed();
                     if (embed == null)
@@ -156,7 +158,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                     return;
                 }
 
-                var slashCommandId = command.Data.GetOptionValue("command_id")?.ToUInt64();
+                var slashCommandId = subcommand.GetOptionValue("command_id")?.ToUInt64();
                 var (stream, fileName, status, _) = command.ScreenshotGridServer(slashCommandId.Value);
 
                 switch (status)
