@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
+
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -10,10 +12,9 @@ using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
 using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Reflection.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 
-
-using System.Linq;
 using System.Runtime.InteropServices;
 using MFDLabs.Drawing;
 using MFDLabs.Threading;
@@ -22,27 +23,40 @@ using MFDLabs.Grid.Bot.Utility;
 
 using HWND = System.IntPtr;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace MFDLabs.Grid.Bot.SlashCommands
 {
-    internal class ViewConsole : IStateSpecificCommandHandler
+    internal class ViewConsole : IStateSpecificSlashCommandHandler
     {
-        public string CommandName => "View Grid Server Console";
-        public string CommandDescription => "Dispatches a 'ScreenshotTask' request to the task thread port." +
-                                            " Will try to screenshot the current grid server's console output.";
-        public string[] CommandAliases => new[] { "vc", "viewconsole" };
+        public string CommandDescription => "View Grid Server Console";
+        public string CommandAlias => "viewconsole";
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
+        public ulong? GuildId => null;
+
+        public SlashCommandOptionBuilder[] Options => new[]
+        {
+            new SlashCommandOptionBuilder()
+                .WithName("command_id")
+                .WithDescription("Screenshot a grid server based on a slash command that performed a script execution.")
+                .WithType(ApplicationCommandOptionType.Integer)
+                .WithRequired(true),
+
+            new SlashCommandOptionBuilder()
+                .WithName("show_recent_executions")
+                .WithDescription("Displays an embed of all recent executions within that channel.")
+                .WithType(ApplicationCommandOptionType.SubCommand)
+        };
 
         private sealed class ViewConsoleCommandPerformanceMonitor
         {
-            private const string Category = "MFDLabs.Grid.Commands.ViewConsole";
+            private const string Category = "MFDLabs.Grid.SlashCommands.ViewConsole";
 
             public IRawValueCounter TotalItemsProcessed { get; }
             public IRateOfCountsPerSecondCounter TotalItemsProcessedPerSecond { get; }
             public IRawValueCounter TotalItemsProcessedThatFailed { get; }
             public IRateOfCountsPerSecondCounter TotalItemsProcessedThatFailedPerSecond { get; }
-            public IAverageValueCounter ViewConsoleCommandSuccessAverageTimeTicks { get; }
-            public IAverageValueCounter ViewConsoleCommandFailureAverageTimeTicks { get; }
+            public IAverageValueCounter ViewConsoleSlashCommandSuccessAverageTimeTicks { get; }
+            public IAverageValueCounter ViewConsoleSlashCommandFailureAverageTimeTicks { get; }
 
             public ViewConsoleCommandPerformanceMonitor(ICounterRegistry counterRegistry)
             {
@@ -54,8 +68,8 @@ namespace MFDLabs.Grid.Bot.Commands
                 TotalItemsProcessedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedPerSecond", instance);
                 TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
                 TotalItemsProcessedThatFailedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatFailedPerSecond", instance);
-                ViewConsoleCommandSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ViewConsoleCommandSuccessAverageTimeTicks", instance);
-                ViewConsoleCommandFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ViewConsoleCommandFailureAverageTimeTicks", instance);
+                ViewConsoleSlashCommandSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ViewConsoleSlashCommandSuccessAverageTimeTicks", instance);
+                ViewConsoleSlashCommandFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ViewConsoleSlashCommandFailureAverageTimeTicks", instance);
             }
         }
 
@@ -76,7 +90,7 @@ namespace MFDLabs.Grid.Bot.Commands
             ShowWindow(hWnd, SW_MAXIMIZE);
         }
 
-        private static async Task ScreenshotSingleGridServerAndRespond(SocketMessage message)
+        private static async Task ScreenshotSingleGridServerAndRespond(SocketSlashCommand command)
         {
             var fileName = $"{NetworkingGlobal.GenerateUuidv4()}.png";
             var tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", fileName);
@@ -88,7 +102,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 bitMap.Save(tempPath);
                 var stream = new MemoryStream(File.ReadAllBytes(tempPath));
 
-                await message.ReplyWithFileAsync(stream, fileName, "Grid Server Output:");
+                await command.RespondWithFilePublicPingAsync(stream, fileName, "Grid Server Output:");
             }
             finally
             {
@@ -96,24 +110,21 @@ namespace MFDLabs.Grid.Bot.Commands
             }
         }
 
-        private static async Task ProcessSingleInstancedGridServerScreenshot(SocketMessage message)
+        private static async Task ProcessSingleInstancedGridServerScreenshot(SocketSlashCommand command)
         {
-            using (message.Channel.EnterTypingState())
+            var tte = GridProcessHelper.OpenServerSafe().elapsed;
+
+            if (tte.TotalSeconds > 1.5)
             {
-                var tte = GridProcessHelper.OpenServerSafe().elapsed;
-
-                if (tte.TotalSeconds > 1.5)
-                {
-                    // Wait for 1.25s so the grid server output can be populated.
-                    TaskHelper.SetTimeoutFromMilliseconds(() => ScreenshotSingleGridServerAndRespond(message).Wait(), 1250);
-                    return;
-                }
-
-                await ScreenshotSingleGridServerAndRespond(message);
+                // Wait for 1.25s so the grid server output can be populated.
+                TaskHelper.SetTimeoutFromMilliseconds(() => ScreenshotSingleGridServerAndRespond(command).Wait(), 1250);
+                return;
             }
+
+            await ScreenshotSingleGridServerAndRespond(command);
         }
 
-        public async Task Invoke(string[] contentArray, SocketMessage message, string originalCommand)
+        public async Task Invoke(SocketSlashCommand command)
         {
             _perfmon.TotalItemsProcessed.Increment();
             _perfmon.TotalItemsProcessedPerSecond.Increment();
@@ -125,64 +136,47 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
                 {
-                    await ProcessSingleInstancedGridServerScreenshot(message);
+                    await ProcessSingleInstancedGridServerScreenshot(command);
                     return;
                 }
 
-                if (!contentArray.Any() && message.Reference == null)
+                if (command.Data.GetSubCommand() != null)
                 {
-                    var embed = message.ConstructUserLookupEmbed();
+                    var embed = command.ConstructUserLookupEmbed();
                     if (embed == null)
                     {
-                        await message.ReplyAsync("You haven't executed any scripts in this channel!");
+                        await command.RespondEphemeralPingAsync("You haven't executed any scripts in this channel!");
                         return;
                     }
 
-                    await message.ReplyAsync(
-                        $"Type `{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}viewconsole {{messageId}}` or reply to the message to screenshot the console of the message.",
+                    await command.RespondEphemeralPingAsync(
+                        "Type `/viewconsole {slashCommandId}` or reply to the message to screenshot the console of the message.",
                         embed: embed
                     );
                     return;
                 }
 
-                var messageId = 0ul;
-
-                if (message.Reference is not null)
-                {
-                    messageId = message.Reference.MessageId.Value;
-                }
-                else
-                {
-                    var clientIdx = contentArray.First();
-
-                    if (!ulong.TryParse(clientIdx, out messageId))
-                    {
-                        failure = true;
-                        message.Reply($"The first argument of '{contentArray.First()}' was not a valid message id.");
-                        return;
-                    }
-                }
-
-                var (stream, fileName, status, _) = message.ScreenshotGridServer(messageId);
+                var slashCommandId = command.Data.GetOptionValue("command_id")?.ToUInt64();
+                var (stream, fileName, status, _) = command.ScreenshotGridServer(slashCommandId.Value);
 
                 switch (status)
                 {
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.NoRecentExecutions:
-                        message.Reply("You haven't executed any scripts in this channel!");
+                    case GridServerArbiterScreenshotUtilityV2.ScreenshotStatus.NoRecentExecutions:
+                        await command.RespondEphemeralPingAsync("You haven't executed any scripts in this channel!");
                         break;
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.UnknownMessageId:
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.NullInstance:
-                        message.Reply($"There was no script execution found with the message id '{messageId}', " +
-                                      $"re run the command with no arguments to see what messages you contain scripts.");
-                        break;
-
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.Success:
-                        message.ReplyWithFile(stream, fileName);
+                    case GridServerArbiterScreenshotUtilityV2.ScreenshotStatus.UnknownSlashCommandId:
+                    case GridServerArbiterScreenshotUtilityV2.ScreenshotStatus.NullInstance:
+                        await command.RespondEphemeralPingAsync($"There was no script execution found with the slash command id '{slashCommandId}', " +
+                                                                $"re run the command with no arguments to see what messages you contain scripts.");
                         break;
 
-                    case GridServerArbiterScreenshotUtility.ScreenshotStatus.DisposedInstance:
+                    case GridServerArbiterScreenshotUtilityV2.ScreenshotStatus.Success:
+                        await command.RespondWithFilePublicPingAsync(stream, fileName);
+                        break;
+
+                    case GridServerArbiterScreenshotUtilityV2.ScreenshotStatus.DisposedInstance:
                     default:
-                        message.Reply("Internal Exception."); // for now, will figure out actual message later.
+                        await command.RespondEphemeralPingAsync("Internal Exception."); // for now, will figure out actual message later.
                         break;
                 }
             }
@@ -195,13 +189,15 @@ namespace MFDLabs.Grid.Bot.Commands
                 {
                     _perfmon.TotalItemsProcessedThatFailed.Increment();
                     _perfmon.TotalItemsProcessedThatFailedPerSecond.Increment();
-                    _perfmon.ViewConsoleCommandFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
+                    _perfmon.ViewConsoleSlashCommandFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
                 }
                 else
                 {
-                    _perfmon.ViewConsoleCommandSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
+                    _perfmon.ViewConsoleSlashCommandSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
                 }
             }
         }
     }
 }
+
+#endif

@@ -12,11 +12,11 @@ namespace MFDLabs.Threading
     [Serializable]
     [ComVisible(true)]
     [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
-    public struct Atomic<T> : 
-        IComparable, 
-        IFormattable, 
-        IConvertible, 
-        IComparable<Atomic<T>>, 
+    public struct Atomic<T> :
+        IComparable,
+        IFormattable,
+        IConvertible,
+        IComparable<Atomic<T>>,
         IEquatable<Atomic<T>>
     where T :
         struct,
