@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net;
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using MFDLabs.Networking.Extensions;
 using MFDLabs.Text.Extensions;
@@ -10,19 +12,29 @@ namespace MFDLabs.Networking
     {
         public static string GenerateUuidv4() => Guid.NewGuid().ToString();
         public static string LocalIp => GetLocalIpAsInt().ToString();
-        public static string GetLocalIp()
-        {
-            if (!global::MFDLabs.Networking.Properties.Settings.Default.LocalIPOverride.IsNullWhiteSpaceOrEmpty())
-                return global::MFDLabs.Networking.Properties.Settings.Default.LocalIPOverride;
+ 
+        public static bool GetAddressByInterface(NetworkInterfaceType interfaceType, out string ip, AddressFamily? family = null)
+            => !string.IsNullOrEmpty(
+                ip = NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(item => item.NetworkInterfaceType == interfaceType &&
+                                    item.OperationalStatus == OperationalStatus.Up)
+                    .Select(item => item.GetIPProperties().UnicastAddresses)
+                    .Select(item => item.Where(ip => family == null || ip.Address.AddressFamily == family).FirstOrDefault()?.Address)
+                    .FirstOrDefault()?
+                    .ToString()
+                );
 
-            foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-            return "0.0.0.0";
+        public static string GetLocalIp(AddressFamily? family = null)
+        {
+            if (GetAddressByInterface(NetworkInterfaceType.Wireless80211, out var ip, family))
+                return ip;
+
+            if (GetAddressByInterface(NetworkInterfaceType.Ethernet, out ip, family))
+                return ip;
+
+            GetAddressByInterface(NetworkInterfaceType.Loopback, out ip, family);
+
+            return ip;
         }
 
         public static bool IsIpv4(string ip)
@@ -227,7 +239,7 @@ namespace MFDLabs.Networking
         }
 
 
-        public static long GetLocalIpAsInt() => GetLocalIp().ToIntIpAddress();
+        public static long GetLocalIpAsInt() => GetLocalIp(AddressFamily.InterNetwork).ToIntIpAddress();
         public static long ToInt(string ip)
         {
             // careful of sign extension: convert to uint first;

@@ -121,13 +121,12 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         private static long GetUserId(
             ref SocketSlashCommand item,
             ref SocketSlashCommandDataOption subCommand,
-            ref string option,
             ref bool failure
         )
         {
             var userId = 0L;
 
-            switch (option.ToLower())
+            switch (subCommand.Name.ToLower())
             {
                 case "roblox_id":
                     var nullableUserId = subCommand.GetOptionValue("id")?.ToInt64();
@@ -273,9 +272,8 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                     _processingItem = true;
 
                     var subCommand = command.Data.GetSubCommand();
-                    var option = subCommand.Name;
 
-                    var userId = GetUserId(ref command, ref subCommand, ref option, ref failure);
+                    var userId = GetUserId(ref command, ref subCommand, ref failure);
                     if (userId == long.MinValue) return;
 
                     if (UserUtility.GetIsUserBanned(userId))
