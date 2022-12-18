@@ -642,12 +642,12 @@ namespace MFDLabs.Grid.Bot.Registries
 
                     if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
                     {
-                        await command.RespondEphemeralPingAsync("An exception occurred on the grid server, please review this error to see if your input was malformed:");
-                        await command.RespondWithFileEphemeralPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "Fault From Server:");
+                        await command.RespondPublicPingAsync("An exception occurred on the grid server, please review this error to see if your input was malformed:");
+                        await command.RespondWithFilePublicPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "Fault From Server:");
                         return;
                     }
 
-                    await command.RespondEphemeralPingAsync(
+                    await command.RespondPublicPingAsync(
                         "An exception occurred on the grid server, please review this error to see if your input was malformed:",
                         embed: new EmbedBuilder()
                             .WithColor(0xff, 0x00, 0x00)
