@@ -115,7 +115,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
             switch (subcommand.Name.ToLower())
             {
                 case "attachment":
-                    var attachment = subcommand.GetOptionValue("contents")?.To<IAttachment>();
+                    var attachment = (IAttachment)subcommand.GetOptionValue("contents");
                     if (attachment == null)
                     {
                         isFailure = true;
