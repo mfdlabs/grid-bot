@@ -39,7 +39,7 @@
       <Value Profile="(Default)">RccServicePath</Value>
     </Setting>
     <Setting Name="GridServerExecutableName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">RCCService.exe</Value>
+      <Value Profile="(Default)">GridServer.exe</Value>
     </Setting>
   </Settings>
 </SettingsFile>
