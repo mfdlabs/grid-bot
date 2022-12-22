@@ -133,7 +133,7 @@ namespace MFDLabs.Grid.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("RCCService.exe")]
+        [global::System.Configuration.DefaultSettingValueAttribute("GridServer.exe")]
         public string GridServerExecutableName {
             get {
                 return ((string)(this["GridServerExecutableName"]));

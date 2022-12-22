@@ -162,7 +162,8 @@ namespace MFDLabs.Grid.Bot
                         GatewayIntents =
                             GatewayIntents.GuildMessages
                             | GatewayIntents.DirectMessages
-                            | GatewayIntents.Guilds,
+                            | GatewayIntents.Guilds
+                            | GatewayIntents.MessageContent,
                         LogGatewayIntentWarnings = false,
 #if DISCORD_SHARDING_ENABLED
                         TotalShards = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShardedClientTotalNumberOfShards,
