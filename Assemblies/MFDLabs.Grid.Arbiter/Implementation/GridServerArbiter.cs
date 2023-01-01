@@ -258,14 +258,12 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
                 _portAllocator.RemovePortFromCacheIfExists(instance.Endpoint.Address.Uri.Port);
                 _instances.Remove(instance);
 
-                // What is this hack here? Why does it not call inherited class's Dipose() method?
-                //if (instance is LeasedGridServerInstance lI) lI.Dispose();
-                // else instance.Dispose();
-
                 instance.Dispose();
             }
 
             _logger.Debug("{0} grid server instances were disposed of", instanceCount);
+
+            _webServerDeployer.StopWebServer();
 
             return instanceCount;
         }

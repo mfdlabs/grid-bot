@@ -90,7 +90,8 @@ public class GridServerProcess : IGridServerProcess, IDisposable
         {
             FileName = executableName,
             UseShellExecute = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Maximized
         };
 
         if (!string.IsNullOrEmpty(workingDirectory))
