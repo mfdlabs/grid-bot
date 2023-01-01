@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Win32;
-using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
@@ -17,85 +15,6 @@ namespace MFDLabs.Grid.Bot.Utility
 {
     public static class GridServerCommandUtility
     {
-        public enum ScriptType
-        {
-            InternalScript,
-            InternalModule,
-            ThumbnailScript,
-            ThumbnailModule,
-            LuaPackage,
-            SharedCoreScript,
-            ClientCoreScript,
-            CoreModule,
-            ServerCoreScript,
-            StarterCharacterScript,
-            StarterPlayerScript,
-            StarterPlayerScriptNewStructure,
-            StarterPlayerScriptCommon,
-            HiddenCommon,
-            Hidden,
-            HiddenModule
-        }
-
-        private static object GetGridServerPath(bool throwIfNoGridServer = true)
-        {
-            var value = Registry.GetValue(
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryKeyName,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerRegistryValueName,
-                null);
-
-            if (value != null) return value;
-            if (throwIfNoGridServer) 
-                throw new ApplicationException($"The grid server was not correctly installed on the machine '{SystemGlobal.GetMachineId()}', " +
-                                               "please contact the datacenter administrator to sort this out.");
-            return default;
-        }
-
-        public static string GetGridServerScriptPath(string scriptName,
-            ScriptType scriptType = ScriptType.InternalScript,
-            bool throwIfNoGridServer = true,
-            bool test = false)
-        {
-            var prefix = GetGridServerPrefixByScriptType(scriptType, throwIfNoGridServer);
-
-            scriptName = scriptName.Replace("..", "");
-            var fullPath = Path.Combine(prefix, $"{scriptName}.lua");
-
-            if (!test) return fullPath;
-            
-            if (!File.Exists(fullPath)) 
-                throw new ApplicationException($"Unable to find the script file '{scriptName}' at the path '{prefix}'");
-
-            return fullPath;
-        }
-
-        private static string GetGridServerPrefixByScriptType(ScriptType scriptType, bool throwIfNoGridServer = true)
-        {
-            var prefix = (string)GetGridServerPath(throwIfNoGridServer);
-            var scriptPart = scriptType switch
-            {
-                ScriptType.InternalScript => Path.Combine("internalscripts", "scripts"),
-                ScriptType.InternalModule => Path.Combine("internalscripts", "modules"),
-                ScriptType.ThumbnailScript => Path.Combine("internalscripts", "thumbnails"),
-                ScriptType.ThumbnailModule => Path.Combine("internalscripts", "thumbnails", "modules"),
-                ScriptType.LuaPackage => Path.Combine("ExtraContent", "LuaPackges"),
-                ScriptType.SharedCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts"),
-                ScriptType.ClientCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts", "CoreScripts"),
-                ScriptType.CoreModule => Path.Combine("ExtraContent", "scripts", "CoreScripts", "Modules"),
-                ScriptType.ServerCoreScript => Path.Combine("ExtraContent", "scripts", "CoreScripts", "ServerCoreScripts"),
-                ScriptType.StarterCharacterScript => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterCharacterScripts"),
-                ScriptType.StarterPlayerScript => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScripts"),
-                ScriptType.StarterPlayerScriptNewStructure => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScripts_NewStructure"),
-                ScriptType.StarterPlayerScriptCommon => Path.Combine("ExtraContent", "scripts", "PlayerScripts", "StarterPlayerScriptsCommon"),
-                ScriptType.HiddenCommon => Path.Combine("ExtraContent", "hidden", "common"),
-                ScriptType.Hidden => Path.Combine("Content", "hidden", "rcc"),
-                ScriptType.HiddenModule => Path.Combine("Content", "hidden", "rcc", "modules"),
-                _ => throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, null)
-            };
-
-            return Path.Combine(prefix, scriptPart);
-        }
-
         private static IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {
             yield return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAssetFetchUrl; // baseUrl
@@ -142,7 +61,6 @@ namespace MFDLabs.Grid.Bot.Utility
             try
             {
                 var result = GridServerArbiter.Singleton.BatchJobEx(
-                    "Render Queue",
                     new Job()
                     {
                         id = NetworkingGlobal.GenerateUuidv4(),
@@ -186,28 +104,30 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static LuaValue[] LaunchSimpleGame(string jobId, long placeId, long universeId)
         {
-            return GridServerArbiter.Singleton.OpenJobEx(
-                "Game Server Queue",
-                new Job() { id = jobId, expirationInSeconds = 20000 },
-                new ScriptExecution()
-                {
-                    name = "Execute Script",
-                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
-                }
-            );
+            return GridServerArbiter.Singleton
+                .GetOrCreatePersistentInstance("Game Server Queue")
+                .OpenJobEx(
+                    new Job() { id = jobId, expirationInSeconds = 20000 },
+                    new ScriptExecution()
+                    {
+                        name = "Execute Script",
+                        script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
+                    }
+                );
         }
 
-        public static Task<LuaValue[]> LaunchSimpleGameAsync(string jobId, long placeId, long universeId)
+        public static async Task<LuaValue[]> LaunchSimpleGameAsync(string jobId, long placeId, long universeId)
         {
-            return GridServerArbiter.Singleton.OpenJobExAsync(
-                "Game Server Queue",
-                new Job() { id = jobId, expirationInSeconds = 20000 },
-                new ScriptExecution()
-                {
-                    name = "Execute Script",
-                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
-                }
-            );
+            return await GridServerArbiter.Singleton
+                .GetOrCreatePersistentInstance("Game Server Queue")
+                .OpenJobExAsync(
+                    new Job() { id = jobId, expirationInSeconds = 20000 },
+                    new ScriptExecution()
+                    {
+                        name = "Execute Script",
+                        script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
+                    }
+                );
         }
 
         private static string GetFileName(long userId, long placeId, ThumbnailSettings settings)

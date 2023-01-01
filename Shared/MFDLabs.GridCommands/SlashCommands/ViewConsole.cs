@@ -22,6 +22,7 @@ using MFDLabs.Networking;
 using MFDLabs.Grid.Bot.Utility;
 
 using HWND = System.IntPtr;
+using System.ServiceModel.Channels;
 
 namespace MFDLabs.Grid.Bot.SlashCommands
 {
@@ -79,53 +80,12 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
         #endregion Metrics
 
-        private static void MaximizeGridServer([In] HWND hWnd)
-        {
-            const int SW_MAXIMIZE = 3;
-
-            [DllImport("user32.dll")]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool ShowWindow(HWND hWnd, int nCmdShow);
-
-            ShowWindow(hWnd, SW_MAXIMIZE);
-        }
-
-        private static async Task ScreenshotSingleGridServerAndRespond(SocketSlashCommand command)
-        {
-            var fileName = $"{NetworkingGlobal.GenerateUuidv4()}.png";
-            var tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", fileName);
-            try
-            {
-                var mainWindowHandle = ProcessHelper.GetWindowHandle("rccservice");
-                MaximizeGridServer(mainWindowHandle);
-                var bitMap = mainWindowHandle.GetBitmapForWindowByWindowHandle();
-                bitMap.Save(tempPath);
-                var stream = new MemoryStream(File.ReadAllBytes(tempPath));
-
-                await command.RespondWithFilePublicPingAsync(stream, fileName, "Grid Server Output:");
-            }
-            finally
-            {
-                tempPath.PollDeletion();
-            }
-        }
-
-        private static async Task ProcessSingleInstancedGridServerScreenshot(SocketSlashCommand command)
-        {
-            var tte = GridProcessHelper.OpenServerSafe().elapsed;
-
-            if (tte.TotalSeconds > 1.5)
-            {
-                // Wait for 1.25s so the grid server output can be populated.
-                TaskHelper.SetTimeoutFromMilliseconds(() => ScreenshotSingleGridServerAndRespond(command).Wait(), 1250);
-                return;
-            }
-
-            await ScreenshotSingleGridServerAndRespond(command);
-        }
-
         public async Task Invoke(SocketSlashCommand command)
         {
+            await command.RespondEphemeralAsync("Temporarily disabled until grid-bot#113.");
+
+            return;
+
             _perfmon.TotalItemsProcessed.Increment();
             _perfmon.TotalItemsProcessedPerSecond.Increment();
 
@@ -134,12 +94,6 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
             try
             {
-                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                {
-                    await ProcessSingleInstancedGridServerScreenshot(command);
-                    return;
-                }
-                
                 var subcommand = command.Data.GetSubCommand();
 
                 if (subcommand.Name.ToLower() == "show_recent_executions")

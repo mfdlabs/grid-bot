@@ -196,13 +196,6 @@ namespace MFDLabs.Grid.Bot
             BotGlobal.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
-                GridProcessHelper.KillAllGridServersSafe();
-
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OpenGridServerAtStartup &&
-                global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                GridProcessHelper.OpenServerSafe();
-
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
             {
                 MaxReceivedMessageSize = int.MaxValue,
@@ -212,13 +205,15 @@ namespace MFDLabs.Grid.Bot
             GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
             GridServerArbiter.SetCounterRegistry(PerfmonCounterRegistryProvider.Registry);
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterQueueUpEnabled &&
-                !global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                GridServerArbiter.Singleton.SetupPool();
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterQueueUpEnabled)
+                GridServerArbiter.Singleton.BatchCreateLeasedInstances(
+                    count: 25
+                );
 
-            SingleInstancedArbiter.SetBinding(defaultHttpBinding);
+            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
+                GridServerArbiter.Singleton.KillAllInstances();
 
-            Task.Factory.StartNew(ShutdownUdpReceiver.Receive);
+            Task.Run(ShutdownUdpReceiver.Receive);
 
             if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();

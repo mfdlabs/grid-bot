@@ -12,7 +12,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public string CommandName => "Batch Open Grid Servers";
         public string CommandDescription => $"Attempts to batch open grid servers\nLayout:" +
                                             $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}batchinstance " +
-                                            $"unsafe?=false count?=1";
+                                            $"count?=1";
         public string[] CommandAliases => new[] { "batch", "batchinstance" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -20,15 +20,6 @@ namespace MFDLabs.Grid.Bot.Commands
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
             if (!await message.RejectIfNotAdminAsync()) return;
-
-            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-            {
-                await message.ReplyAsync("Not opening any instances due to single-instanced environment.");
-                return;
-            }
-
-            if (!bool.TryParse(messageContentArray.ElementAtOrDefault(0), out bool @unsafe))
-                @unsafe = false;
 
             if (!int.TryParse(messageContentArray.ElementAtOrDefault(1), out int count))
                 count = 1;
@@ -39,15 +30,9 @@ namespace MFDLabs.Grid.Bot.Commands
                 return;
             }
 
-            if (@unsafe)
-                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(count);
-            else
-                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(count);
+            GridServerArbiter.Singleton.BatchCreateLeasedInstances(count: count);
 
-            if (@unsafe)
-                await message.ReplyAsync($"Successfully dequeued {count} of grid server instances for immediate startup.");
-            else
-                await message.ReplyAsync($"Successfully opened {count} of grid server instances.");
+            await message.ReplyAsync($"Successfully opened {count} of grid server instances.");
         }
     }
 }

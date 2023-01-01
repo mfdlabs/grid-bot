@@ -1,5 +1,4 @@
 ﻿using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
 
 namespace MFDLabs.Grid.Bot.Hooks
 {
@@ -9,10 +8,7 @@ namespace MFDLabs.Grid.Bot.Hooks
 
         public void Callback(char key)
         {
-            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                GridProcessHelper.OpenServerSafe();
-            else 
-                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances();
+            GridServerArbiter.Singleton.BatchCreateLeasedInstances();
         }
     }
 }

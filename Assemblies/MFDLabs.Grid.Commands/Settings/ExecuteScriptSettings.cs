@@ -1,16 +1,30 @@
-﻿using System.Collections.Generic;
+﻿namespace MFDLabs.Grid.Commands;
 
-namespace MFDLabs.Grid.Commands
+using System.Collections.Generic;
+
+/// <summary>
+/// Settings for <see cref="ExecuteScriptCommand"/>
+/// </summary>
+public class ExecuteScriptSettings
 {
-    public class ExecuteScriptSettings
-    {
-        public string Type { get; }
-        public IDictionary<string, object> Arguments { get; }
+    /// <summary>
+    /// The type of script/name of the script.
+    /// </summary>
+    public string Type { get; set; }
 
-        public ExecuteScriptSettings(string type, IDictionary<string, object> arguments)
-        {
-            Type = type;
-            Arguments = arguments;
-        }
+    /// <summary>
+    /// The arguments to pass to the script.
+    /// </summary>
+    public IDictionary<string, object> Arguments { get; }
+
+    /// <summary>
+    /// Construct a new instance of <see cref="ExecuteScriptSettings"/>
+    /// </summary>
+    /// <param name="type">The type of script/name of the script.</param>
+    /// <param name="arguments">The arguments to pass to the script.</param>
+    public ExecuteScriptSettings(string type, IDictionary<string, object> arguments)
+    {
+        Type = type;
+        Arguments = arguments;
     }
 }

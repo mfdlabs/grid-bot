@@ -1,11 +1,17 @@
-﻿namespace MFDLabs.Grid.Commands
+﻿namespace MFDLabs.Grid.Commands;
+
+/// <summary>
+/// The base grid command for ScriptExecution on RCCService
+/// </summary>
+public abstract class GridCommand
 {
     /// <summary>
-    /// The base grid command for ScriptExecution on RCCService
+    /// The command mode
     /// </summary>
-    public abstract class GridCommand
-    {
-        public abstract string Mode { get; }
-        public abstract int MessageVersion { get; }
-    }
+    public abstract string Mode { get; }
+
+    /// <summary>
+    /// The version of the message
+    /// </summary>
+    public abstract int MessageVersion { get; }
 }

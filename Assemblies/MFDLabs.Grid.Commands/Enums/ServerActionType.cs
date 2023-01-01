@@ -1,7 +1,12 @@
-﻿namespace MFDLabs.Grid.Commands
+﻿namespace MFDLabs.Grid.Commands;
+
+/// <summary>
+/// Represents the type of action to perform on the server.
+/// </summary>
+public enum ServerActionType
 {
-    public enum ServerActionType
-    {
-        Shutdown
-    }
+    /// <summary>
+    /// Shutdown the server.
+    /// </summary>
+    Shutdown
 }

@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Utility
         // channelId -> the ID of the guild channel (or ID of the user if we are in a DMChannel)
         // userId -> the ID of the author who executed the work item.
         // messageId -> the ID of the message that used the command
-        private static readonly ConcurrentDictionary<string, GridServerArbiter.LeasedGridServerInstance> SavedInstances = new();
+        private static readonly ConcurrentDictionary<string, ILeasedGridServerInstance> SavedInstances = new();
 
         // This refers to each message ID that a user used the ;x command on:
         // Key -> {guildId}:{channelId}:{userId}
@@ -44,7 +44,7 @@ namespace MFDLabs.Grid.Bot.Utility
             return $"{command.ConstructBaseItemKey()}:{(messageId ?? command.Id)}";
         }
 
-        private static bool GridServerInstanceAlreadyExists(GridServerArbiter.LeasedGridServerInstance inst) 
+        private static bool GridServerInstanceAlreadyExists(ILeasedGridServerInstance inst) 
             => (from gInstance in SavedInstances where gInstance.Value == inst select gInstance.Value).FirstOrDefault() != null;
 
         private static void AppendToUserSlashCommandIdTable(this SocketSlashCommand command)
@@ -62,14 +62,14 @@ namespace MFDLabs.Grid.Bot.Utility
             });
         }
 
-        private static GridServerArbiter.LeasedGridServerInstance GetInstanceBySlashCommand(this SocketSlashCommand command, ulong messageId)
+        private static ILeasedGridServerInstance GetInstanceBySlashCommand(this SocketSlashCommand command, ulong messageId)
         {
             if (SavedInstances.TryGetValue(command.ConstructItemKey(messageId), out var inst)) return inst;
 
             return null;
         }
 
-        public static void CreateGridServerInstanceReference(this SocketSlashCommand command, ref GridServerArbiter.LeasedGridServerInstance inst)
+        public static void CreateGridServerInstanceReference(this SocketSlashCommand command, ref ILeasedGridServerInstance inst)
         {
             if (GridServerInstanceAlreadyExists(inst)) return;
 
@@ -81,10 +81,10 @@ namespace MFDLabs.Grid.Bot.Utility
             inst.Lock();
         }
 
-        private static string GetGridServerInstanceKey(GridServerArbiter.LeasedGridServerInstance inst) 
+        private static string GetGridServerInstanceKey(ILeasedGridServerInstance inst) 
             => (from x in SavedInstances where x.Value == inst select x.Key).FirstOrDefault();
 
-        private static void OnLeasedExpired(GridServerArbiter.LeasedGridServerInstance inst)
+        private static void OnLeasedExpired(ILeasedGridServerInstance inst)
         {
             var instanceKey = GetGridServerInstanceKey(inst);
 
@@ -111,7 +111,7 @@ namespace MFDLabs.Grid.Bot.Utility
             SavedInstances.TryRemove(instanceKey, out _);
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScreenshotUtilityLaunchGridServerOnLeaseExpired)
-                GridServerArbiter.Singleton.BatchQueueUpLeasedArbiteredInstancesUnsafe(
+                GridServerArbiter.Singleton.BatchCreateLeasedInstances(
                     null,
                     1
 #if DEBUG
@@ -155,12 +155,12 @@ namespace MFDLabs.Grid.Bot.Utility
             ShowWindow(hWnd, SW_MAXIMIZE);
         }
 
-        private static Stream GetScreenshotStream(GridServerArbiter.LeasedGridServerInstance inst)
+        private static Stream GetScreenshotStream(ILeasedGridServerInstance inst)
         {
             var tempFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", $"{inst.Name}");
             try
             {
-                var mainWindowHandle = Process.GetProcessById(inst.ProcessId).MainWindowHandle;
+                var mainWindowHandle = Process.GetProcessById(inst.Process.Process.Id).MainWindowHandle;
                 MaximizeGridServer(mainWindowHandle);
                 var bitMap = mainWindowHandle.GetBitmapForWindowByWindowHandle();
                 bitMap.Save(tempFileName);
@@ -172,7 +172,7 @@ namespace MFDLabs.Grid.Bot.Utility
             }
         }
 
-        public static (Stream stream, string fileName, ScreenshotStatus status, GridServerArbiter.LeasedGridServerInstance instance) ScreenshotGridServer(this SocketSlashCommand command, ulong slashCommandId)
+        public static (Stream stream, string fileName, ScreenshotStatus status, ILeasedGridServerInstance instance) ScreenshotGridServer(this SocketSlashCommand command, ulong slashCommandId)
         {
             if (!command.CheckIfHasRecentExecutions(out var slashCommandIds)) return (null, null, ScreenshotStatus.NoRecentExecutions, null);
             if (!slashCommandIds.Contains(slashCommandId)) return (null, null, ScreenshotStatus.UnknownSlashCommandId, null);

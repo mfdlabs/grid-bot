@@ -1,11 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Logging;
-using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -14,13 +12,7 @@ using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 
 using System.Linq;
-using System.Runtime.InteropServices;
-using MFDLabs.Drawing;
-using MFDLabs.Threading;
-using MFDLabs.Networking;
 using MFDLabs.Grid.Bot.Utility;
-
-using HWND = System.IntPtr;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -65,56 +57,12 @@ namespace MFDLabs.Grid.Bot.Commands
 
         #endregion Metrics
 
-        private static void MaximizeGridServer([In] HWND hWnd)
-        {
-            const int SW_MAXIMIZE = 3;
-
-            [DllImport("user32.dll")]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool ShowWindow(HWND hWnd, int nCmdShow);
-
-            ShowWindow(hWnd, SW_MAXIMIZE);
-        }
-
-        private static async Task ScreenshotSingleGridServerAndRespond(SocketMessage message)
-        {
-            var fileName = $"{NetworkingGlobal.GenerateUuidv4()}.png";
-            var tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", fileName);
-            try
-            {
-                var mainWindowHandle = ProcessHelper.GetWindowHandle("rccservice");
-                MaximizeGridServer(mainWindowHandle);
-                var bitMap = mainWindowHandle.GetBitmapForWindowByWindowHandle();
-                bitMap.Save(tempPath);
-                var stream = new MemoryStream(File.ReadAllBytes(tempPath));
-
-                await message.ReplyWithFileAsync(stream, fileName, "Grid Server Output:");
-            }
-            finally
-            {
-                tempPath.PollDeletion();
-            }
-        }
-
-        private static async Task ProcessSingleInstancedGridServerScreenshot(SocketMessage message)
-        {
-            using (message.Channel.EnterTypingState())
-            {
-                var tte = GridProcessHelper.OpenServerSafe().elapsed;
-
-                if (tte.TotalSeconds > 1.5)
-                {
-                    // Wait for 1.25s so the grid server output can be populated.
-                    TaskHelper.SetTimeoutFromMilliseconds(() => ScreenshotSingleGridServerAndRespond(message).Wait(), 1250);
-                    return;
-                }
-
-                await ScreenshotSingleGridServerAndRespond(message);
-            }
-        }
-
         public async Task Invoke(string[] contentArray, SocketMessage message, string originalCommand)
         {
+            await message.ReplyAsync("Temporarily disabled until grid-bot#113.");
+
+            return;
+
             _perfmon.TotalItemsProcessed.Increment();
             _perfmon.TotalItemsProcessedPerSecond.Increment();
 
@@ -123,12 +71,6 @@ namespace MFDLabs.Grid.Bot.Commands
 
             try
             {
-                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                {
-                    await ProcessSingleInstancedGridServerScreenshot(message);
-                    return;
-                }
-
                 if (!contentArray.Any() && message.Reference == null)
                 {
                     var embed = message.ConstructUserLookupEmbed();

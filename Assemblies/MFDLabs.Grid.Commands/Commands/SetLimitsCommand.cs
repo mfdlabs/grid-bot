@@ -1,30 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿namespace MFDLabs.Grid.Commands;
 
-namespace MFDLabs.Grid.Commands
+/// <summary>
+/// The command for setting the limits on the grid
+/// </summary>
+public class SetLimitsCommand : GridCommand
 {
-    public class SetLimitsCommand : GridCommand
-    {
-        public override string Mode => "SetLimits";
-        public override int MessageVersion => 1;
-        public SetLimitsSettings Limits { get; }
+    /// <inheritdoc cref="GridCommand.Mode"/>
+    public override string Mode => "SetLimits";
 
-        public SetLimitsCommand(SetLimitsSettings limitSettings) => Limits = limitSettings;
+    /// <inheritdoc cref="GridCommand.MessageVersion"/>
+    public override int MessageVersion => 1;
 
-        public string ToJsonString(bool useStringForNumber)
-        {
-            if (!useStringForNumber) return JsonConvert.SerializeObject(this);
-            return JsonConvert.SerializeObject(new
-            {
-                Mode,
-                MessageVersion,
-                Limits = new
-                {
-                    MaximumCores = Limits.MaximumCores.ToString(),
-                    MaximumThreads = Limits.MaximumThreads.ToString(),
-                    MaximumMemoryMB = Limits.MaximumMemoryMB.ToString(),
-                    SchedulerCpuPeriod = Limits.SchedulerCpuPeriod.ToString()
-                }
-            }, Formatting.None);
-        }
-    }
+    /// <summary>
+    /// The limits.
+    /// </summary>
+    public SetLimitsSettings Settings { get; }
+
+    /// <summary>
+    /// Construct a new instanc of <see cref="SetLimitsCommand"/>
+    /// </summary>
+    /// <param name="settings">The settings for the command</param>
+    public SetLimitsCommand(SetLimitsSettings settings) => Settings = settings;
 }
