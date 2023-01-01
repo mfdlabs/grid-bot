@@ -182,7 +182,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
                     var scriptId = NetworkingGlobal.GenerateUuidv4();
                     var filesafeScriptId = scriptId.Replace("-", "");
-                    var scriptName = GridServerCommandUtility.GetGridServerScriptPath(filesafeScriptId);
+                    var scriptName = GridServerFileHelper.GetGridServerScriptPath(filesafeScriptId);
 
                     // isAdmin allows a bypass of disabled methods and virtualized globals
                     var (command, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
