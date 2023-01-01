@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../../AssembliesStandard.targets" />
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
   
   <ItemGroup>
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-	<ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
   </ItemGroup>
 
 </Project>

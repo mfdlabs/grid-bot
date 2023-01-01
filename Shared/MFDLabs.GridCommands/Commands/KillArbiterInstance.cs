@@ -20,12 +20,6 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-            {
-                await message.ReplyAsync("Not closing any instances, we are in a single instanced environment.");
-                return;
-            }
-
             var name = messageContentArray.Join(' ');
 
             if (name.IsNullOrWhiteSpace())
@@ -39,6 +33,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 await message.ReplyAsync($"The Arbiter Instance by the name of '{name}' was not found, so it wasn't closed.");
                 return;
             }
+
             await message.ReplyAsync($"Successfully killed Arbiter Instance: '{name}'");
         }
     }

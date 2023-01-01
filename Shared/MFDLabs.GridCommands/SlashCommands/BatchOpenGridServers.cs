@@ -20,11 +20,6 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()
-                .WithName("unsafe")
-                .WithDescription("Should we queue up instances in an unsafe manner? Defaults to false.")
-                .WithType(ApplicationCommandOptionType.Boolean)
-                .WithRequired(false),
-            new SlashCommandOptionBuilder()
                 .WithName("count")
                 .WithDescription("The count of grid servers to queue up. Defaults to 1. Max 25")
                 .WithType(ApplicationCommandOptionType.Integer)
@@ -36,17 +31,8 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         {
             if (!await command.RejectIfNotAdminAsync()) return;
 
-            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-            {
-                await command.RespondEphemeralPingAsync("Not opening any instances due to single-instanced environment.");
-                return;
-            }
-
-            var unsafeParamValue = command.Data.GetOptionValue("unsafe");
             var countParamValue = command.Data.GetOptionValue("count");
 
-
-            var @unsafe = unsafeParamValue != null && unsafeParamValue.ToBoolean();
             var count = countParamValue != null ? countParamValue.ToInt32() : 1;
 
             if (count < 1)
@@ -55,15 +41,10 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                 return;
             }
 
-            if (@unsafe)
-                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstancesUnsafe(count);
-            else
-                GridServerArbiter.Singleton.BatchQueueUpArbiteredInstances(count);
+            GridServerArbiter.Singleton.BatchCreateLeasedInstances(count: count);
 
-            if (@unsafe)
-                await command.RespondEphemeralPingAsync($"Successfully enqueued {count} of grid server instances for immediate startup.");
-            else
-                await command.RespondEphemeralPingAsync($"Successfully opened {count} of grid server instances.");
+
+            await command.RespondEphemeralPingAsync($"Successfully opened {count} of grid server instances.");
         }
     }
 }

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../AssembliesStandard.targets" />
+
+  <PropertyGroup>
+    <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Grid.Shared\MFDLabs.Grid.Shared.csproj" />
+    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>

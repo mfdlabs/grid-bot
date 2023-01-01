@@ -25,8 +25,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 var ver = sock.Receive(ref sender);
 
                 Logger.Singleton.Warning("Received a shutdown request.");
-                GridProcessHelper.KillAllGridServersSafe();
-                GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe();
+                GridServerArbiter.Singleton.KillAllInstances();
 
                 var message = $"Deploying new version ({Encoding.ASCII.GetString(ver)})";
 

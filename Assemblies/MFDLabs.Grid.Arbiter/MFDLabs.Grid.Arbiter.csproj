@@ -4,19 +4,25 @@
 
   <PropertyGroup>
     <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
-    <ProjectReference Include="..\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-    <ProjectReference Include="..\MFDLabs.ErrorHandling\MFDLabs.ErrorHandling.csproj" />
+    <ProjectReference Include="..\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
     <ProjectReference Include="..\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.HealthCheck.Client\MFDLabs.Grid.HealthCheck.Client.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.PortManagement\MFDLabs.Grid.PortManagement.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.ProcessManagement\MFDLabs.Grid.ProcessManagement.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.Shared\MFDLabs.Grid.Shared.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.WebServer\MFDLabs.Grid.WebServer.csproj" />
     <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
     <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.6.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
   </ItemGroup>
 
@@ -29,6 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
@@ -37,8 +48,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Properties\Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
+      <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>

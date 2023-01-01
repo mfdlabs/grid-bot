@@ -19,24 +19,15 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-            {
-                await message.ReplyAsync("Not closing any instances, we are in a single instanced environment.");
-                return;
-            }
 
-            if (!bool.TryParse(messageContentArray.ElementAtOrDefault(0), out var @unsafe))
-                @unsafe = false;
-
-            var totalItemsKilled = @unsafe
-                ? GridServerArbiter.Singleton.KillAllOpenInstancesUnsafe()
-                : GridServerArbiter.Singleton.KillAllOpenInstances();
+            var totalItemsKilled = GridServerArbiter.Singleton.KillAllInstances();
 
             if (totalItemsKilled == 0)
             {
                 await message.ReplyAsync("No instances were killed because no instances were open!");
                 return;
             }
+            
             await message.ReplyAsync($"Successfully closed {totalItemsKilled} arbiter instances.");
         }
     }

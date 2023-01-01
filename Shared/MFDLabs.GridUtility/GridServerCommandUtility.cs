@@ -142,7 +142,6 @@ namespace MFDLabs.Grid.Bot.Utility
             try
             {
                 var result = GridServerArbiter.Singleton.BatchJobEx(
-                    "Render Queue",
                     new Job()
                     {
                         id = NetworkingGlobal.GenerateUuidv4(),
@@ -186,28 +185,30 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static LuaValue[] LaunchSimpleGame(string jobId, long placeId, long universeId)
         {
-            return GridServerArbiter.Singleton.OpenJobEx(
-                "Game Server Queue",
-                new Job() { id = jobId, expirationInSeconds = 20000 },
-                new ScriptExecution()
-                {
-                    name = "Execute Script",
-                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
-                }
-            );
+            return GridServerArbiter.Singleton
+                .GetOrCreatePersistentInstance("Game Server Queue")
+                .OpenJobEx(
+                    new Job() { id = jobId, expirationInSeconds = 20000 },
+                    new ScriptExecution()
+                    {
+                        name = "Execute Script",
+                        script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
+                    }
+                );
         }
 
-        public static Task<LuaValue[]> LaunchSimpleGameAsync(string jobId, long placeId, long universeId)
+        public static async Task<LuaValue[]> LaunchSimpleGameAsync(string jobId, long placeId, long universeId)
         {
-            return GridServerArbiter.Singleton.OpenJobExAsync(
-                "Game Server Queue",
-                new Job() { id = jobId, expirationInSeconds = 20000 },
-                new ScriptExecution()
-                {
-                    name = "Execute Script",
-                    script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
-                }
-            );
+            return await GridServerArbiter.Singleton
+                .GetOrCreatePersistentInstance("Game Server Queue")
+                .OpenJobExAsync(
+                    new Job() { id = jobId, expirationInSeconds = 20000 },
+                    new ScriptExecution()
+                    {
+                        name = "Execute Script",
+                        script = JsonScriptingUtility.GetSharedGameServerScript(jobId, placeId, universeId).Item1
+                    }
+                );
         }
 
         private static string GetFileName(long userId, long placeId, ThumbnailSettings settings)

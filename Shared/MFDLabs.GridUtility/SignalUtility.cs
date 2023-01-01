@@ -22,11 +22,10 @@ namespace MFDLabs.Grid.Bot.Utility
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
-				ShutdownUdpReceiver.Stop();
+                ShutdownUdpReceiver.Stop();
                 if (killBot)
                     await BotGlobal.TryLogout();
-                GridProcessHelper.KillAllGridServersSafe();
-                GridProcessHelper.KillServerSafe();
+                try { GridServerArbiter.Singleton.KillAllInstances(); } catch { }
                 Logger.TryClearLocalLog(false);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
@@ -42,9 +41,8 @@ namespace MFDLabs.Grid.Bot.Utility
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
                 ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
-				ShutdownUdpReceiver.Stop();
-                if (!global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                    GridServerArbiter.Singleton.KillAllOpenInstances();
+                ShutdownUdpReceiver.Stop();
+                try { GridServerArbiter.Singleton.KillAllInstances(); } catch { }
                 if (killBot)
                     await BotGlobal.TryLogout();
                 Logger.TryClearLocalLog(true);
@@ -68,16 +66,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 if (!restartServers) return;
 
-                if (global::MFDLabs.Grid.Properties.Settings.Default.SingleInstancedGridServer)
-                {
-                    GridProcessHelper.KillAllGridServersSafe();
-                    GridProcessHelper.KillServerSafe();
-                    GridProcessHelper.OpenServerSafe();
-                }
-                else
-                {
-                    GridProcessHelper.KillAllGridServersSafe();
-                }
+                try { GridServerArbiter.Singleton.KillAllInstances(); } catch { }
 
                 PerformanceServer.Stop();
                 PerformanceServer.Start();

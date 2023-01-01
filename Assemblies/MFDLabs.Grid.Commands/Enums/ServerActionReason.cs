@@ -1,8 +1,17 @@
-﻿namespace MFDLabs.Grid.Commands
+﻿namespace MFDLabs.Grid.Commands;
+
+/// <summary>
+/// Reasoning for a server action.
+/// </summary>
+public enum ServerActionReason
 {
-    public enum ServerActionReason
-    {
-        Roblox,
-        Developer
-    }
+    /// <summary>
+    /// Moderation action.
+    /// </summary>
+    Roblox,
+
+    /// <summary>
+    /// Developer has requested the shutdown.
+    /// </summary>
+    Developer
 }

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../AssembliesStandard.targets" />
+
+  <PropertyGroup>
+    <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.6.0" />
+    <PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
+    <PackageReference Include="PInvoke.IPHlpApi" Version="0.7.124" />
+    <PackageReference Include="PInvoke.Kernel32" Version="0.7.124" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MFDLabs.Grid.PortManagement\MFDLabs.Grid.PortManagement.csproj" />
+    <ProjectReference Include="..\MFDLabs.Grid.Shared\MFDLabs.Grid.Shared.csproj" />
+    <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+  </ItemGroup>
+
+</Project>
