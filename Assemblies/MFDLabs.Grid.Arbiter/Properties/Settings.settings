@@ -9,7 +9,7 @@
       <Value Profile="(Default)">robloxup</Value>
     </Setting>
     <Setting Name="WebServerWorkspacePath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Roblox\WebSrv</Value>
+      <Value Profile="(Default)">K:\deploy\github.vmminfra.dev\mfdlabs\grid-service-websrv</Value>
     </Setting>
     <Setting Name="GridServerRegistryKeyName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\ROBLOX Corporation\Roblox</Value>

@@ -82,10 +82,6 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
         public async Task Invoke(SocketSlashCommand command)
         {
-            await command.RespondEphemeralAsync("Temporarily disabled until grid-bot#113.");
-
-            return;
-
             _perfmon.TotalItemsProcessed.Increment();
             _perfmon.TotalItemsProcessedPerSecond.Increment();
 

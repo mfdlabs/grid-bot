@@ -43,7 +43,7 @@ namespace MFDLabs.Grid.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Roblox\\WebSrv")]
+        [global::System.Configuration.DefaultSettingValueAttribute("K:\\deploy\\github.vmminfra.dev\\mfdlabs\\grid-service-websrv")]
         public string WebServerWorkspacePath {
             get {
                 return ((string)(this["WebServerWorkspacePath"]));

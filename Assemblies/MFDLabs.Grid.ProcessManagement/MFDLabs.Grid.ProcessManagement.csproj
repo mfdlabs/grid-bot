@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CliWrap" Version="3.6.0" />
     <PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
     <PackageReference Include="PInvoke.IPHlpApi" Version="0.7.124" />
     <PackageReference Include="PInvoke.Kernel32" Version="0.7.124" />

@@ -7,8 +7,6 @@ using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-using CliWrap;
-
 using Logging;
 
 #nullable enable
@@ -88,24 +86,24 @@ public class GridServerProcess : IGridServerProcess, IDisposable
         if (TcpHealthCheck.GetProcessByHostnameAndPort(IPAddress.Loopback.ToString(), port, out var proc))
             return new GridServerProcess(proc, new IPEndPoint(IPAddress.Loopback, port));
 
-        var command = Cli.Wrap(executableName)
-            .WithValidation(CommandResultValidation.None);
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = executableName,
+            UseShellExecute = true,
+            CreateNoWindow = true
+        };
 
         if (!string.IsNullOrEmpty(workingDirectory))
-#pragma warning disable CS8604 // Possible null reference argument.
-            command = command.WithWorkingDirectory(workingDirectory);
-#pragma warning restore CS8604 // Possible null reference argument.
+            startInfo.WorkingDirectory = workingDirectory;
         else
-            command = command.WithWorkingDirectory(Directory.GetCurrentDirectory());
+            startInfo.WorkingDirectory = Directory.GetCurrentDirectory();
 
         if (!string.IsNullOrEmpty(args))
-#pragma warning disable CS8604 // Possible null reference argument.
-            command = command.WithArguments(args); // exclusive for linux because the container args are unique
-#pragma warning restore CS8604 // Possible null reference argument.
+            startInfo.Arguments = args;
         else
-            command = command.WithArguments($"{port} -Console -Verbose");
+            startInfo.Arguments = $"{port} -Console -Verbose";
 
-        var process = Process.GetProcessById(command.ExecuteAsync().ProcessId);
+        var process = Process.Start(startInfo);
 
         return new GridServerProcess(process, new IPEndPoint(IPAddress.Loopback, port));
     }
