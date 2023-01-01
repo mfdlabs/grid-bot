@@ -7,7 +7,7 @@ using MFDLabs.Configuration.Providers;
 namespace MFDLabs.Grid.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
-    public sealed partial class Settings
+    internal sealed partial class Settings
     {
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)
         {
