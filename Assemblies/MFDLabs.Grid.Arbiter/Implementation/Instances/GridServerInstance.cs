@@ -421,7 +421,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 #if DEBUG || DEBUG_LOGGING_IN_PROD
         Logger.Error("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this, exception.ToString());
 #else
-        _logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", lastMethod, this, ex.Message);
+        Logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this, exception.Message);
 #endif
         return;
     }
