@@ -2,11 +2,9 @@
 
 using System;
 using System.IO;
-
-using CliWrap;
+using System.Diagnostics;
 
 using Logging;
-using MFDLabs.Instrumentation;
 
 /// <summary>
 /// Deployment status for the Web Server.
@@ -73,16 +71,20 @@ public class WebServerDeployer : IWebServerDeployer
 
         _runningWebServerLaunch = true;
 
-        var command = Cli.Wrap("npm");
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "npm",
+            UseShellExecute = true,
+            CreateNoWindow = true,
+            WorkingDirectory = _webServerPath,
+        };
 
         if (_buildBeforeRun)
-            command = command.WithArguments("run Build-And-Run");
+            startInfo.Arguments = "run Build-And-Run";
         else
-            command = command.WithArguments("start");
+            startInfo.Arguments = "start";
 
-        command = command.WithWorkingDirectory(_webServerPath);
-
-        command.ExecuteAsync();
+        Process.Start(startInfo);
     }
 
     private void CheckWorkspace()
