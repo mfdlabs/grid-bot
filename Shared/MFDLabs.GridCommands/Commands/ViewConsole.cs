@@ -59,10 +59,6 @@ namespace MFDLabs.Grid.Bot.Commands
 
         public async Task Invoke(string[] contentArray, SocketMessage message, string originalCommand)
         {
-            await message.ReplyAsync("Temporarily disabled until grid-bot#113.");
-
-            return;
-
             _perfmon.TotalItemsProcessed.Increment();
             _perfmon.TotalItemsProcessedPerSecond.Increment();
 
