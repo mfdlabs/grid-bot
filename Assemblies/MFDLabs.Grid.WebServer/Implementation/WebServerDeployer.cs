@@ -34,7 +34,8 @@ public class WebServerDeployer : IWebServerDeployer
     private readonly string _webServerPath;
     private readonly ILogger _logger;
     private readonly IHealthCheckClient _healthCheckClient;
-
+    
+    private Process _process;
     private bool _runningWebServerLaunch = false;
 
     /// <summary>
@@ -77,6 +78,7 @@ public class WebServerDeployer : IWebServerDeployer
             UseShellExecute = true,
             CreateNoWindow = true,
             WorkingDirectory = _webServerPath,
+            WindowStyle = ProcessWindowStyle.Maximized
         };
 
         if (_buildBeforeRun)
@@ -96,6 +98,28 @@ public class WebServerDeployer : IWebServerDeployer
             _logger.Error("Unable to launch the web server because it could not be found at the path: '{0}'", _webServerPath);
             throw new InvalidOperationException(Properties.Resources.CouldNotFindWebServer);
         }
+    }
+
+    /// <inheritdoc cref="IWebServerDeployer.Process"/>
+    public Process Process => _process;
+
+    /// <inheritdoc cref="IWebServerDeployer.StopWebServer"/>
+    public void StopWebServer()
+    {
+        _logger.Info("Stopping the web server");
+
+        if (_process == null)
+        {
+            _logger.Warning("The web server was not running");
+            return;
+        }
+
+        _process.Kill();
+        _process.Dispose();
+
+        _process = null;
+
+        _logger.Info("Web server stopped");
     }
 
     /// <inheritdoc cref="IWebServerDeployer.LaunchWebServer(int)"/>
