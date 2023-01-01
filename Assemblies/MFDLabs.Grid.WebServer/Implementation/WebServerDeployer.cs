@@ -86,7 +86,7 @@ public class WebServerDeployer : IWebServerDeployer
         else
             startInfo.Arguments = "start";
 
-        Process.Start(startInfo);
+        _process = Process.Start(startInfo);
     }
 
     private void CheckWorkspace()
