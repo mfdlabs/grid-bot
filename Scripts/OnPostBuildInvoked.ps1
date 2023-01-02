@@ -77,29 +77,6 @@ IF (Test-Path "$($ProjectDir)Lua") {
     Copy-Item -Path "$($ProjectDir)Lua" -Destination $luaScriptsDir -Recurse -Force
 }
 
-# Delete all translation scripts at the output
-$translationScriptsDirectories = @(
-    "$($ProjectDir)$($OutDir)cs\",
-    "$($ProjectDir)$($OutDir)de\",
-    "$($ProjectDir)$($OutDir)es\",
-    "$($ProjectDir)$($OutDir)fr\",
-    "$($ProjectDir)$($OutDir)it\",
-    "$($ProjectDir)$($OutDir)ja\",
-    "$($ProjectDir)$($OutDir)ko\",
-    "$($ProjectDir)$($OutDir)pl\",
-    "$($ProjectDir)$($OutDir)pt-BR\",
-    "$($ProjectDir)$($OutDir)ru\",
-    "$($ProjectDir)$($OutDir)tr\",
-    "$($ProjectDir)$($OutDir)zh-Hans\",
-    "$($ProjectDir)$($OutDir)zh-Hant\"
-);
-
-foreach ($translationScriptsDirectory in $translationScriptsDirectories) {
-    if (Test-Path $translationScriptsDirectory) {
-        Remove-Item -Path $translationScriptsDirectory -Recurse -Force
-    }
-}
-
 Write-Host "Finished pre-cleanup, should deploy: $(IF ($isDeployment) { "true" } ELSE { "false" })" -ForegroundColor Green;
 
 IF ($isDeployment) {
