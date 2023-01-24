@@ -11,6 +11,8 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
+#define DEBUG_LOGGING_IN_PROD
+
 namespace MFDLabs.Grid;
 
 using System;
@@ -234,6 +236,8 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             GridServerDeployer.KillProcess(_gridServerProcess, out _); // We do not care about the result or exception.
 
         GridServerArbiter.RemoveInstance(this);
+
+        _availableWaitHandle?.Dispose();
 
         _isDisposed = true;
     }
