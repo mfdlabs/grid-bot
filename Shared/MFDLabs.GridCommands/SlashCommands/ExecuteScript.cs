@@ -46,14 +46,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             .WithDescription("Execute a Luau script from an uploaded attachment.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("contents", ApplicationCommandOptionType.Attachment, "The Luau script attachment.", true)
-            .AddOption("withConsole", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false),
+            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false),
 
         new SlashCommandOptionBuilder()
             .WithName("text")
             .WithDescription("Execute a Luau script directly on the command line.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("contents", ApplicationCommandOptionType.String, "The Luau script contents.", true)
-            .AddOption("withConsole", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false)
+            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false)
     };
 
     private sealed class ExecuteScriptSlashCommandPerformanceMonitor
@@ -280,7 +280,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
             var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
 
-            var wantsConsole = subcommand.GetOptionValue("withConsole")?.ToString() == "true";
+            var wantsConsole = subcommand.GetOptionValue("with_console")?.ToString() == "true";
 
             try
             {
