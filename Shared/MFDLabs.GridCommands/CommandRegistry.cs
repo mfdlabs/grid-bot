@@ -597,6 +597,10 @@ namespace MFDLabs.Grid.Bot.Registries
 
             switch (ex)
             {
+                case CircuitBreakerException _:
+                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToDetailedString());
+                    await command.RespondEphemeralPingAsync(ex.Message);
+                    return;
                 case NotSupportedException _:
                     Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
