@@ -27,6 +27,10 @@ if (not isAdmin) then
     local last = nil
 
     function Capsule:__index(k)
+        if typeof(k) ~= "string" then
+            k = tostring(k)
+        end
+
         k = k:gsub("[^%w%s_]+", "")
         if k:lower() == "getservice" then
             return function(...)
