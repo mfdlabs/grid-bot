@@ -230,9 +230,17 @@ end
 
 local result = wrapped_return();
 
+if type(result) == "table" then
+    for i, v in ipairs(result) do
+        if typeof(v) == "Instance" then
+            result[i] = v:GetFullName()
+        end
+    end
+end
+
 if type(result) == "userdata" or type(result) == "table" then
     if typeof(result) == "Instance" then
-        result = result.Name or tostring(result)
+        result = result:GetFullName() or tostring(result)
     else
         result = game:GetService("HttpService"):JSONEncode(result)
     end
