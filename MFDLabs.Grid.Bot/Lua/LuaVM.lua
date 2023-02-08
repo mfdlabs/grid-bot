@@ -221,3 +221,21 @@ if (not isAdmin) then
     local new = getfenv(1)
     setfenv(1, new)
 end
+
+function wrapped_return()
+
+{0}
+
+end
+
+local result = wrapped_return();
+
+if type(result) == "userdata" then
+    if typeof(result) == "Instance" then
+        result = result.Name or tostring(result)
+    else
+        result = game:GetService("HttpService"):JSONEncode(result)
+    end
+end
+
+return result -- This will actually make the check for LUA_TARRAY redundant.
