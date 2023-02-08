@@ -222,7 +222,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                 if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
-                    script = $"{LuaUtility.SafeLuaMode}{script}";
+                    script = script.Format(LuaUtility.SafeLuaMode, script);
 
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
                     script = $"game:GetService(\"ContentProvider\"):SetBaseUrl" +
