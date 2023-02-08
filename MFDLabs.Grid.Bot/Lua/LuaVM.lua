@@ -233,7 +233,7 @@ local result = wrapped_return();
 if type(result) == "table" then
     for i, v in pairs(result) do
         if typeof(v) == "Instance" then
-            result[i] = v:GetFullName()
+            result[i] = "<instance> (%s)":format(v.Name)
         end
     end
 end
