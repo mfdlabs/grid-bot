@@ -230,7 +230,7 @@ end
 
 local result = wrapped_return();
 
-if type(result) == "userdata" then
+if type(result) == "userdata" or type(result) == "table" then
     if typeof(result) == "Instance" then
         result = result.Name or tostring(result)
     else
