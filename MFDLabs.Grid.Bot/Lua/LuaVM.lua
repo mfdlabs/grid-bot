@@ -231,7 +231,7 @@ end
 local result = wrapped_return();
 
 if type(result) == "table" then
-    for i, v in ipairs(result) do
+    for i, v in pairs(result) do
         if typeof(v) == "Instance" then
             result[i] = v:GetFullName()
         end
