@@ -21,7 +21,7 @@ if (not isAdmin) then
     local newproxy = newproxy
     local next = next
 
-    local Capsule = {}
+    local Capsule = {{}}
     Capsule.__metatable = "This debug metatable is locked."
 
     local last = nil
@@ -34,7 +34,7 @@ if (not isAdmin) then
         k = k:gsub("[^%w%s_]+", "")
         if k:lower() == "getservice" then
             return function(...)
-                local t = {...}
+                local t = {{...}}
                 local service = game:GetService(t[2])
                 if service == game:GetService("HttpService") or service ==
                     game:GetService("HttpRbxApiService") then
@@ -83,15 +83,15 @@ if (not isAdmin) then
     function Capsule:__lt(v) return self < v end
     function Capsule:__le(v) return self <= v end
     function Capsule:__len() return #self end
-    local CapsuleMT = {__index = Capsule}
+    local CapsuleMT = {{__index = Capsule}}
 
-    local original = setmetatable({}, {__mode = "k"})
-    local wrapper = setmetatable({}, {__mode = "v"})
+    local original = setmetatable({{}}, {{__mode = "k"}})
+    local wrapper = setmetatable({{}}, {{__mode = "v"}})
 
     local wrap
     local unwrap
 
-    local secureVersions = {
+    local secureVersions = {{
         [setfenv] = function(target, newWrappedEnv)
             if type(target) == "number" and target > 0 then
                 target = target + 2
@@ -119,7 +119,7 @@ if (not isAdmin) then
 
             return wrap(getfenv(target))
         end
-    }
+    }}
 
     local i, n = 1, 0
 
@@ -188,7 +188,7 @@ if (not isAdmin) then
                         end
                     end
                 elseif vType == "table" then
-                    wrapped = setmetatable({}, Capsule)
+                    wrapped = setmetatable({{}}, Capsule)
                 elseif vType == "userdata" then
                     wrapped = newproxy(true)
                     local mt = getmetatable(wrapped)
