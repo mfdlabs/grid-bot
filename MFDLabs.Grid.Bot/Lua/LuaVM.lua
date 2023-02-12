@@ -7,8 +7,11 @@ Modifications:
 --]] 
 local args = ...
 local isAdmin = args['isAdmin'] -- might be able to be hacked, but we'll see
+local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
 
-if (not isAdmin) then
+local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
+
+if shouldVirtualize then
     warn("We are in a VM state, blocking specific methods is expected.")
 
     local setfenv = setfenv
