@@ -234,7 +234,7 @@ local temp = {{}}
 if type(result) == "table" then
     for i, v in pairs(result) do
         if typeof(v) == "Instance" then
-            temp[i] = "<instance> (%s)":format(v.Name)
+            temp[i] = ("<instance> (%s)"):format(v.Name)
         end
     end
 
