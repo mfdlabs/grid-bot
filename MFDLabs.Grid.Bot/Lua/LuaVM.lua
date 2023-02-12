@@ -235,12 +235,7 @@ local httpService = game:GetService("HttpService")
 
 if type(result) == "table" then
     table.foreach(result, function(i, v)
-        table.insert(temp, i)
-        if typeof(v) == "Instance" then
-            temp[i] = ("<instance> (%s)"):format(v.Name)
-        else
-            temp[i] = v
-        end
+        temp[i] = v
     end)
 
     result = temp
