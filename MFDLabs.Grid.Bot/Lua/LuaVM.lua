@@ -229,7 +229,7 @@ function wrapped_return()
 end
 
 local result = wrapped_return();
-local temp = {}
+local temp = {{}}
 
 if type(result) == "table" then
     for i, v in pairs(result) do
