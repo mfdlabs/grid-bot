@@ -229,17 +229,6 @@ function wrapped_return()
 end
 
 local result = wrapped_return();
-local temp = {{}}
-
-local httpService = game:GetService("HttpService")
-
-if type(result) == "table" then
-    table.foreach(result, function(i, v)
-        temp[i] = v
-    end)
-
-    result = temp
-end
 
 if type(result) == "userdata" or type(result) == "table" then
     if typeof(result) == "Instance" then
