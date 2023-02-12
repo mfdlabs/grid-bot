@@ -98,8 +98,6 @@ if shouldVirtualize then
 
     local secureVersions = {{
         [setfenv] = function(target, newWrappedEnv)
-            if (isAdmin) then print(target, newWrappedEnv) end
-
             if type(target) == "number" and target > 0 then
                 target = target + 2
             elseif target == wrapper[target] then
@@ -118,8 +116,6 @@ if shouldVirtualize then
         end,
 
         [getfenv] = function(target, newWrappedEnv)
-            if isAdmin then print(target, newWrappedEnv) end
-
             if type(target) == "number" and target > 0 then
                 target = target + 1
             elseif target == wrapper[target] then
@@ -141,7 +137,6 @@ if shouldVirtualize then
         end
 
         local value = select(i, ...)
-        if (isAdmin) then print(i, value) end
         if value then
             if type(value) == "function" then
                 local wrappedFunc = wrapper[value]
@@ -183,7 +178,6 @@ if shouldVirtualize then
         end
 
         local value = select(i, ...)
-        if (isAdmin) then print(i, value) end
         if value then
             local wrapped = wrapper[value]
 
