@@ -216,7 +216,8 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                 // isAdmin allows a bypass of disabled methods and virtualized globals
                 var (command, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
                     filesafeScriptId,
-                    ("isAdmin", isAdminScript)
+                    ("isAdmin", isAdminScript),
+                    ("isVmEnabledForAdmins", global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldAdminsUseVM)
                 );
 
                 if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
