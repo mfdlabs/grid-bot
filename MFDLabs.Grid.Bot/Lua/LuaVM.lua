@@ -98,7 +98,7 @@ if shouldVirtualize then
 
     local secureVersions = {{
         [setfenv] = function(target, newWrappedEnv)
-            if (isAdmin) then print(target, newWrappedEnv) end
+            if (isAdmin) then print(target) end
 
             if type(target) == "number" and target > 0 then
                 target = target + 2
@@ -118,7 +118,7 @@ if shouldVirtualize then
         end,
 
         [getfenv] = function(target, newWrappedEnv)
-            if isAdmin then print(target, newWrappedEnv) end
+            if isAdmin then print(target) end
 
             if type(target) == "number" and target > 0 then
                 target = target + 1
