@@ -231,12 +231,17 @@ end
 local result = wrapped_return();
 local temp = {{}}
 
+local httpService = game:GetService("HttpService")
+
 if type(result) == "table" then
-    for i, v in pairs(result) do
+    table.foreach(result, function(i, v)
+        table.insert(temp, i)
         if typeof(v) == "Instance" then
             temp[i] = ("<instance> (%s)"):format(v.Name)
+        else
+            temp[i] = v
         end
-    end
+    end)
 
     result = temp
 end
