@@ -30,7 +30,7 @@ if shouldVirtualize then
     local last = nil
 
     function Capsule:__index(k)
-        if isAdmin then print(k) end
+        if isAdmin then print(k, tostring(last)) end
 
         if typeof(k) ~= "string" then
             k = tostring(k)
