@@ -27,6 +27,8 @@ if (not isAdmin) then
     local last = nil
 
     function Capsule:__index(k)
+        if isAdmin then print(k) end
+
         if typeof(k) ~= "string" then
             k = tostring(k)
         end
@@ -93,6 +95,8 @@ if (not isAdmin) then
 
     local secureVersions = {{
         [setfenv] = function(target, newWrappedEnv)
+            if (isAdmin) then print(target, newWrappedEnv) end
+
             if type(target) == "number" and target > 0 then
                 target = target + 2
             elseif target == wrapper[target] then
@@ -111,6 +115,8 @@ if (not isAdmin) then
         end,
 
         [getfenv] = function(target, newWrappedEnv)
+            if isAdmin then print(target, newWrappedEnv) end
+
             if type(target) == "number" and target > 0 then
                 target = target + 1
             elseif target == wrapper[target] then
@@ -124,6 +130,8 @@ if (not isAdmin) then
     local i, n = 1, 0
 
     function unwrap(...)
+        if (isAdmin) then print(...) end
+
         if i > n then
             i = 1
             n = select("#", ...)
@@ -165,6 +173,8 @@ if (not isAdmin) then
     end
 
     function wrap(...)
+        if (isAdmin) then print(...) end
+
         if i > n then
             i = 1
             n = select("#", ...)
