@@ -17,7 +17,7 @@ if isAdmin then
     DebugService.__index = DebugService;
     DebugService.__metatable = "This metatable is locked";
     function DebugService:__tostring()
-        return "DebugService;
+        return "DebugService";
     end
 
     function DebugService.new()
