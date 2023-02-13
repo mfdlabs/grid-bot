@@ -11,6 +11,64 @@ local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
 
 local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
 
+local DebugService = nil
+if isAdmin then
+    DebugService = {{}};
+    DebugService.__index = DebugService;
+    DebugService.__metatable = "This metatable is locked";
+
+    function DebugService.new()
+        local service = {{
+            _last = nil,
+            _capsule = nil,
+            _wrap = nil,
+            _unwrap = nil,
+            _original = nil,
+            _wrapper = nil
+        }};
+
+        setmetatable(service, DebugService);
+
+        return service;
+    end
+
+    function DebugService:setLast(last)
+        self._last = last
+    end
+
+    function DebugService:getLast()
+        return self._last
+    end
+
+    function DebugService:setMeta(capsule, original, wrapper)
+        self._capsule = capsule
+        self._original = orginal
+        self._wrapped = wrapped
+    end
+
+    function DebugService:getMeta()
+        return {
+            capsule = self._capsule,
+            original = self._original,
+            wrapped = self._wrapped
+        }
+    end
+
+    function DebugService:setWrappers(wrap, unwrap)
+        self._wrap = wrap
+        self._unwrap = unwrap
+    end
+
+    function DebugService:wrap(...)
+        return self._wrap(...)
+    end
+
+    function DebugService:unwrap(...)
+        return self._unwrap(...)
+    end
+end
+
+
 if shouldVirtualize then
     warn("We are in a VM state, blocking specific methods is expected.")
 
@@ -23,6 +81,8 @@ if shouldVirtualize then
     local tostring = tostring
     local newproxy = newproxy
     local next = next
+
+    local debugService = isAdmin and DebugService.new() or nil
 
     local Capsule = {{}}
     Capsule.__metatable = "This debug metatable is locked."
@@ -40,6 +100,11 @@ if shouldVirtualize then
         if k:lower() == "getservice" then
             return function(...)
                 local t = {{...}}
+
+                if isAdmin and t == "DebugService" then
+                    return debugService
+                end
+
                 local service = game:GetService(t[2])
                 if service == game:GetService("HttpService") or service ==
                     game:GetService("HttpRbxApiService") then
@@ -71,6 +136,9 @@ if shouldVirtualize then
             end
         end
         last = self[k]
+
+        if isAdmin then debugService:setLast(last) end
+
         return self[k]
     end
     function Capsule:__newindex(k, v) self[k] = v end
@@ -92,6 +160,10 @@ if shouldVirtualize then
 
     local original = setmetatable({{}}, {{__mode = "k"}})
     local wrapper = setmetatable({{}}, {{__mode = "v"}})
+
+    if isAdmin then
+        debugService:setMeta(Capsule, original, wrapper);
+    end
 
     local wrap
     local unwrap
@@ -218,6 +290,10 @@ if shouldVirtualize then
         else
             return value
         end
+    end
+
+    if isAdmin then
+        debugService:setWrappers(wrap, unwrap)
     end
 
     for key, metamethod in next, Capsule do Capsule[key] = wrap(metamethod) end
