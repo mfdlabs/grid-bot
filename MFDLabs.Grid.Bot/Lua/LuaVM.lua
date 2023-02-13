@@ -101,7 +101,7 @@ if shouldVirtualize then
             return function(...)
                 local t = {{...}}
 
-                if isAdmin and t == "DebugService" then
+                if isAdmin and t[2] == "DebugService" then
                     return debugService
                 end
 
