@@ -8,6 +8,22 @@
 
 */
 
+/*
+
+Notes from feature/grid-server-recovery-pt2:
+
+- Cases where auto-recovery can occur:
+    - EndpointNotFoundException
+    - CommunicationException but not for the following:
+        - The fault returned was invalid.
+    - TimeoutException
+    - A potential deadlock was detected.
+    - FaultException in the following cases:
+        - Cannot batch job while another job is running.
+        - Batch job timed out.
+
+*/
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -16,6 +32,7 @@
 namespace MFDLabs.Grid;
 
 using System;
+using System.Net;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
@@ -102,7 +119,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     private readonly bool _isPoolable;
     private readonly bool _isPersistent;
     private readonly int _maxAttemptsToCallSoap;
-    private readonly EventWaitHandle _availableWaitHandle;
+    private readonly TaskCompletionSource<bool> _availableWaitHandle;
 
     /// <summary>
     /// Performance monitor for inherited classes.
@@ -214,7 +231,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
         _gridServerProcess = gridServerProcess;
 
-        _availableWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+        _availableWaitHandle = new TaskCompletionSource<bool>();
 
         if (startNow && !(gridServerProcess != null && gridServerProcess.IsOpen))
             Task.Run(TryStart);
@@ -237,7 +254,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
         GridServerArbiter.RemoveInstance(this);
 
-        _availableWaitHandle?.Dispose();
+        _availableWaitHandle.TrySetResult(false);
 
         _isDisposed = true;
     }
@@ -271,7 +288,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         lock (_availableLock)
             _isAvailable = true;
 
-        _availableWaitHandle.Set();
+        _availableWaitHandle.TrySetResult(true);
     }
 
     /// <inheritdoc cref="IGridServerInstance.Lock"/>
@@ -280,7 +297,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         lock (_availableLock)
             _isAvailable = false;
 
-        _availableWaitHandle.Reset();
+        _availableWaitHandle.TrySetResult(false);
     }
 
     /// <inheritdoc cref="IGridServerInstance.LockAndTryStart"/>
@@ -299,9 +316,27 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     {
         if (IsAvailable) return true;
 
-        var didRecieve = _availableWaitHandle.WaitOne(timeout);
+        var didRecieve = _availableWaitHandle.Task.Wait(timeout);
 
-        return didRecieve && IsAvailable;
+        return didRecieve && IsAvailable && _availableWaitHandle.Task.Result;
+    }
+
+    /// <inheritdoc cref="IGridServerInstance.TryStartNewProcess(bool)"/>
+    public virtual bool TryStartNewProcess(bool force = false)
+    {
+        if (!force && _gridServerProcess != null)
+            WaitForAvailable(TimeSpan.FromSeconds(10)); // make setting
+
+        if (_gridServerProcess != null)
+        {
+
+            GridServerDeployer.KillProcess(_gridServerProcess, out var ex);
+            if (ex is not null) return false;
+
+            _gridServerProcess = null;
+        }
+
+        return TryStart();
     }
 
     #endregion |LifeCycle Managment Helpers|
@@ -338,7 +373,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             for (var i = 0; i < _maxAttemptsToCallSoap; i++)
             {
-                var result = ActuallyInvoke<T>(methodToInvoke, method, out var didFail, args);
+                var result = ActuallyInvoke<T>(methodToInvoke, method, i + 1, out var didFail, args);
 
                 if (!didFail)
                     return result;
@@ -383,7 +418,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             for (var i = 0; i < _maxAttemptsToCallSoap; i++)
             {
-                var (didFail, result) = await ActuallyInvokeAsync<T>(methodToInvoke, method, args);
+                var (didFail, result) = await ActuallyInvokeAsync<T>(methodToInvoke, method, i + 1, args);
 
                 if (!didFail)
                     return result;
@@ -404,46 +439,33 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </summary>
     /// <param name="method">The name of the SOAP method that threw an exception.</param>
     /// <param name="exception">The exception that was thrown.</param>
-    protected virtual void HandleException(string method, Exception exception)
+    /// <param name="currentTry">The current attempt number.</param>
+    protected virtual void HandleException(string method, Exception exception, int currentTry)
     {
         PerformanceMonitor.TotalInvocationsThatFailed.Increment();
 
-        if (exception is TargetInvocationException e)
+        if (IsReasonForRecovery(exception))
         {
-            switch (e.InnerException)
-            {
-                case EndpointNotFoundException:
-                    HandleEndpointNotFoundException(method);
+            // Make a new process and try again, otherwise just throw the exception
+            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.Message);
 
-                    break;
-                case FaultException:
-                case TimeoutException:
-                    throw e.InnerException;
-            }
+            TryStartNewProcess();
+        }
+
+        if (exception is TargetInvocationException && exception.InnerException is FaultException)
+        {
+            // Re-throw the inner exception
+            throw exception.InnerException;
         }
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-        Logger.Error("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this, exception.ToString());
+        Logger.Error("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException.ToString());
 #else
-        Logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this, exception.Message);
+        Logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException.Message);
 #endif
         return;
     }
-
-    private void HandleEndpointNotFoundException(string method)
-    {
-        Logger.Warning(
-            "The grid server instance SOAP method '{0}' on '{1}' threw an EndpointNotFoundException, was it open? Did transport fail? Open and retry...",
-            method,
-            this
-        );
-
-        if (!TryStart())
-            throw new ApplicationException($"Unable to open grid server instance '{_name}'.");
-
-        return;
-    }
-
+    
     private void TryGetBaseMethodToInvoke(IEnumerable<object> args, bool isAsync, string lastMethod, out MethodInfo methodToInvoke)
     {
         methodToInvoke = typeof(ComputeCloudServiceSoapClient).GetMethod(
@@ -462,7 +484,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             throw new ApplicationException($"The method '{lastMethod}' is not async.");
     }
 
-    private T ActuallyInvoke<T>(MethodInfo methodToInvoke, string lastMethod, out bool didFail, params object[] args)
+    private T ActuallyInvoke<T>(MethodInfo methodToInvoke, string lastMethod, int currentTry, out bool didFail, params object[] args)
     {
         didFail = true;
 
@@ -481,13 +503,13 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         }
         catch (Exception ex)
         {
-            HandleException(lastMethod, ex);
+            HandleException(lastMethod, ex, currentTry);
 
             return default(T);
         }
     }
 
-    private async Task<(bool didFail, T result)> ActuallyInvokeAsync<T>(MethodInfo methodToInvoke, string lastMethod, params object[] args)
+    private async Task<(bool didFail, T result)> ActuallyInvokeAsync<T>(MethodInfo methodToInvoke, string lastMethod, int currentTry, params object[] args)
     {
         try
         {
@@ -502,13 +524,62 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         }
         catch (Exception ex)
         {
-            HandleException(lastMethod, ex);
+            HandleException(lastMethod, ex, currentTry);
 
             return (false, default(T));
         }
     }
 
     #endregion |Invocation Helpers|
+
+    #region |Recovery Methods|
+
+    private const string BatchJobTimedOutMessage = "BatchJob Timeout";
+    private const string BatchJobAlreadyRunningMessage = "Cannot invoke BatchJob while another job is running";
+
+    /// <summary>
+    /// Determines if the specified exception is a reason for recovery.
+    /// </summary>
+    /// <param name="exception">The exception to check.</param>
+    /// <returns>True if the exception is a reason for recovery, false otherwise.</returns>
+    /// <remarks>
+    /// Default cases for recovery are:
+    /// - EndpointNotFoundException
+    /// - TimeoutException
+    /// - FaultException with message "BatchJob Timeout" or "Cannot invoke BatchJob while another job is running"
+    /// - CommunicationException with inner exception of type WebException
+    /// </remarks>
+    protected virtual bool IsReasonForRecovery(Exception exception)
+    {
+        if (exception is TargetInvocationException e)
+        {
+            switch (e.InnerException)
+            {
+                case EndpointNotFoundException:
+                case TimeoutException:
+                    return true;
+
+                case FaultException ex:
+                    var message = ex.Message;
+
+                    switch (message)
+                    {
+                        case BatchJobTimedOutMessage:
+                        case BatchJobAlreadyRunningMessage:
+                            return true;
+                    }
+
+                    break;
+
+                case CommunicationException ex:
+                    return ex.InnerException is WebException;
+            }
+        }
+
+        return false;
+    }
+
+    #endregion
 
     #region |SOAP Methods|
 
