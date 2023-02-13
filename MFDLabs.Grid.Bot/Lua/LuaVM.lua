@@ -47,11 +47,11 @@ if isAdmin then
     end
 
     function DebugService:getMeta()
-        return {
+        return {{
             capsule = self._capsule,
             original = self._original,
             wrapped = self._wrapped
-        }
+        }};
     end
 
     function DebugService:setWrappers(wrap, unwrap)
