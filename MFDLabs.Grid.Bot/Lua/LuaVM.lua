@@ -16,6 +16,9 @@ if isAdmin then
     DebugService = {{}};
     DebugService.__index = DebugService;
     DebugService.__metatable = "This metatable is locked";
+    function DebugService:__tostring()
+        return "DebugService;
+    end
 
     function DebugService.new()
         local service = {{
@@ -311,7 +314,7 @@ end)()
 
 if typeof(result) == "Instance" then
     result = tostring(result)
-elseif typeof(result) == "table"
+elseif typeof(result) == "table" then
     result = game:GetService("HttpService"):JSONEncode(result)
 else
     result = tostring(result)
