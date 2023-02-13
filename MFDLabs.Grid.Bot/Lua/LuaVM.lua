@@ -303,20 +303,18 @@ if shouldVirtualize then
     setfenv(1, new)
 end
 
-function wrapped_return()
+local result = (function()
 
 {0}
 
-end
+end)()
 
-local result = wrapped_return();
-
-if type(result) == "userdata" or type(result) == "table" then
-    if typeof(result) == "Instance" then
-        result = result:GetFullName() or tostring(result)
-    else
-        result = game:GetService("HttpService"):JSONEncode(result)
-    end
+if typeof(result) == "Instance" then
+    result = tostring(result)
+elseif typeof(result) == "table"
+    result = game:GetService("HttpService"):JSONEncode(result)
+else
+    result = tostring(result)
 end
 
 return result -- This will actually make the check for LUA_TARRAY redundant.
