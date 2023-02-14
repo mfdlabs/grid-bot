@@ -8,10 +8,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
 using Logging;
+using Drawing;
 using FileSystem;
 using Networking;
 using Diagnostics;
@@ -25,7 +27,6 @@ using Extensions;
 using PerformanceMonitors;
 
 using HWND = System.IntPtr;
-using MFDLabs.Drawing;
 
 internal class ExecuteScript : IStateSpecificCommandHandler
 {
@@ -334,6 +335,56 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                             await message.ReplyAsync(
                                 "The code you supplied executed for too long, please try again later."
                             );
+
+                        return;
+                    }
+
+                    if (ex is FaultException fault)
+                    {
+                        if (fault.Message.Length + 8 > EmbedBuilder.MaxDescriptionLength)
+                        {
+                            // Respond with file instead
+                            if (wantsConsole)
+                            {
+                                await message.ReplyWithFileAsync(
+                                    screenshot,
+                                    screenshotName,
+                                    "An error occured while executing your script:"
+                                );
+                                await message.ReplyWithFileAsync(
+                                    new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                                    instance.Name + "txt"
+                                );
+                            }
+                            else
+                                await message.ReplyWithFileAsync(
+                                    new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                                    instance.Name + "txt",
+                                    "An error occured while executing your script:"
+                                );
+                        }
+                        else
+                        {
+                            var embed = new EmbedBuilder()
+                                .WithColor(0xff, 0x00, 0x00)
+                                .WithTitle("Luau Error")
+                                .WithAuthor(message.Author)
+                                .WithDescription($"```\n{fault.Message}\n```")
+                                .Build();
+
+                            if (wantsConsole)
+                                await message.ReplyWithFileAsync(
+                                    screenshot,
+                                    screenshotName,
+                                    "An error occured while executing your script:",
+                                    embed: embed
+                                );
+                            else
+                                await message.ReplyAsync(
+                                    "An error occured while executing your script:",
+                                    embed: embed
+                                );
+                        }
 
                         return;
                     }
