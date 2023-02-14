@@ -300,12 +300,12 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                         _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
 
                         if (wantsConsole)
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 screenshot,
                                 screenshotName
                             );
 
-                        await command.RespondWithFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(result)),
+                        await command.RespondWithFilePublicAsync(new MemoryStream(Encoding.UTF8.GetBytes(result)),
                             "execute-result.txt"
                         );
                         return;
@@ -320,13 +320,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                             .Build();
 
                     if (wantsConsole)
-                        await command.RespondWithFileAsync(
+                        await command.RespondWithFilePublicAsync(
                             screenshot,
                             screenshotName,
                             embed: embed
                         );
                     else
-                        await command.RespondAsync(
+                        await command.RespondPublicAsync(
                             embed: embed
                         );
 
@@ -334,13 +334,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 }
 
                 if (wantsConsole)
-                    await command.RespondWithFileAsync(
+                    await command.RespondWithFilePublicAsync(
                         screenshot,
                         screenshotName,
                         "Executed script with no return!"
                     );
                 else
-                    await command.RespondAsync(
+                    await command.RespondPublicAsync(
                        "Executed script with no return!"
                     );
             }
@@ -364,13 +364,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                     if (!command.User.IsOwner()) command.User.IncrementExceptionLimit();
 
                     if (wantsConsole)
-                        await command.RespondWithFileAsync(
+                        await command.RespondWithFilePublicAsync(
                             screenshot,
                             screenshotName,
                             "The code you supplied executed for too long, please try again later."
                         );
                     else
-                        await command.RespondAsync(
+                        await command.RespondPublicAsync(
                             "The code you supplied executed for too long, please try again later."
                         );
 
@@ -384,18 +384,18 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                         // Respond with file instead
                         if (wantsConsole)
                         {
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 screenshot,
                                 screenshotName,
                                 "An error occured while executing your script:"
                             );
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
                                 instance.Name + "txt"
                             );
                         }
                         else
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
                                 instance.Name + "txt",
                                 "An error occured while executing your script:"
@@ -411,14 +411,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                             .Build();
 
                         if (wantsConsole)
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 screenshot,
                                 screenshotName,
                                 "An error occured while executing your script:",
                                 embed: embed
                             );
                         else
-                            await command.RespondAsync(
+                            await command.RespondPublicAsync(
                                 "An error occured while executing your script:",
                                 embed: embed
                             );
