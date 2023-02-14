@@ -316,7 +316,7 @@ if typeof(result) == "Instance" then
     result = tostring(result)
 elseif typeof(result) == "table" then
     result = game:GetService("HttpService"):JSONEncode(result)
-else
+elseif result ~= nil then
     result = tostring(result)
 end
 
