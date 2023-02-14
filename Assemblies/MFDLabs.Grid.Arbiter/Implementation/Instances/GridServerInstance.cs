@@ -375,7 +375,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             for (var i = 0; i < _maxAttemptsToCallSoap; i++)
             {
-                var result = ActuallyInvoke<T>(methodToInvoke, method, i + 1, out var didFail, args);
+                var result = ActuallyInvoke<T>(methodToInvoke, method, out var didFail, args);
 
                 if (!didFail)
                     return result;
@@ -383,7 +383,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             PerformanceMonitor.TotalInvocationsThatFailed.Increment();
 
-            throw new TimeoutException($"The SOAP method '{method}' on '{this}' reached its max attempts to give a result.");
+            throw new TimeoutException($"The SOAP method '{method}' on '{this.Name}' reached its max attempts to give a result.");
         }
         finally
         {
@@ -420,7 +420,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             for (var i = 0; i < _maxAttemptsToCallSoap; i++)
             {
-                var (didFail, result) = await ActuallyInvokeAsync<T>(methodToInvoke, method, i + 1, args);
+                var (didFail, result) = await ActuallyInvokeAsync<T>(methodToInvoke, method, args);
 
                 if (!didFail)
                     return result;
@@ -428,7 +428,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
             PerformanceMonitor.TotalInvocationsThatFailed.Increment();
 
-            throw new TimeoutException($"The SOAP method '{method}' on '{this}' reached its max attempts to give a result.");
+            throw new TimeoutException($"The SOAP method '{method}' on '{this.Name}' reached its max attempts to give a result.");
         }
         finally
         {
@@ -442,7 +442,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// <param name="method">The name of the SOAP method that threw an exception.</param>
     /// <param name="exception">The exception that was thrown.</param>
     /// <param name="currentTry">The current attempt number.</param>
-    protected virtual void HandleException(string method, Exception exception, int currentTry)
+    protected virtual void HandleException(string method, Exception exception)
     {
         PerformanceMonitor.TotalInvocationsThatFailed.Increment();
 
@@ -486,7 +486,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             throw new ApplicationException($"The method '{lastMethod}' is not async.");
     }
 
-    private T ActuallyInvoke<T>(MethodInfo methodToInvoke, string lastMethod, int currentTry, out bool didFail, params object[] args)
+    private T ActuallyInvoke<T>(MethodInfo methodToInvoke, string lastMethod, out bool didFail, params object[] args)
     {
         didFail = true;
 
@@ -505,13 +505,13 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         }
         catch (Exception ex)
         {
-            HandleException(lastMethod, ex, currentTry);
+            HandleException(lastMethod, ex);
 
             return default(T);
         }
     }
 
-    private async Task<(bool didFail, T result)> ActuallyInvokeAsync<T>(MethodInfo methodToInvoke, string lastMethod, int currentTry, params object[] args)
+    private async Task<(bool didFail, T result)> ActuallyInvokeAsync<T>(MethodInfo methodToInvoke, string lastMethod, params object[] args)
     {
         try
         {
@@ -526,7 +526,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         }
         catch (Exception ex)
         {
-            HandleException(lastMethod, ex, currentTry);
+            HandleException(lastMethod, ex);
 
             return (false, default(T));
         }
