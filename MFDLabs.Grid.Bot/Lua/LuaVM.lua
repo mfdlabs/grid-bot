@@ -1,1 +1,323 @@
-﻿local a=...local b=a['isAdmin']if not b then warn("We are in a VM state, blocking specific methods is expected.")local setfenv=setfenv;local getfenv=getfenv;local setmetatable=setmetatable;local getmetatable=getmetatable;local type=type;local select=select;local tostring=tostring;local newproxy=newproxy;local next=next;local c={}c.__metatable="This debug metatable is locked."local d=nil;function c:__index(e)e=e:gsub("[^%w%s_]+","")if e:lower()=="getservice"then return function(...)local f={...}local g=game:GetService(f[2])if g==game:GetService("HttpService")or g==game:GetService("HttpRbxApiService")then d=g end;return g end end;if d==game or d==game:GetService("HttpService")or d==game:GetService("HttpRbxApiService")then if e:lower()=="postasyncfullurl"or e:lower()=="requestasyncfullurl"or e:lower()=="getasyncfullurl"or e:lower()=="postasync"or e:lower()=="requestasync"or e:lower()=="getasync"or e:lower()=="requestasync"or e:lower()=="httppostasync"or e:lower()=="httppost"or e:lower()=="httpgetasync"or e:lower()=="httpget"or e:lower()=="requestinternal"then return function(...)error(string.format("The method by the name of '%s' is disabled.",e))end end elseif typeof(d)=="Instance"then if d:IsA("NetworkClient")or d:IsA("NetworkMarker")or d:IsA("NetworkPeer")or d:IsA("NetworkReplicator")or d:IsA("NetworkServer")or d:IsA("NetworkSettings")then return nil end end;d=self[e]return self[e]end;function c:__newindex(e,h)self[e]=h end;function c:__call(...)self(...)end;function c:__concat(h)return self..h end;function c:__unm()return-self end;function c:__add(h)return self+h end;function c:__sub(h)return self-h end;function c:__mul(h)return self*h end;function c:__div(h)return self/h end;function c:__mod(h)return self%h end;function c:__pow(h)return self^h end;function c:__tostring()return tostring(self)end;function c:__eq(h)return self==h end;function c:__lt(h)return self<h end;function c:__le(h)return self<=h end;function c:__len()return#self end;local i={__index=c}local j=setmetatable({},{__mode="k"})local k=setmetatable({},{__mode="v"})local l;local m;local n={[setfenv]=function(o,p)if type(o)=="number"and o>0 then o=o+2 elseif o==k[o]then o=j[o]end;local q,r=pcall(getfenv,o)local s=p;if not q or r==k[r]then s=p else s=j[p]end;return l(setfenv(o,s))end,[getfenv]=function(o,p)if type(o)=="number"and o>0 then o=o+1 elseif o==k[o]then o=j[o]end;return l(getfenv(o))end}local t,u=1,0;function m(...)if t>u then t=1;u=select("#",...)if u==0 then return end end;local v=select(t,...)if v then if type(v)=="function"then local w=k[v]if w then local x=j[w]if x==v then return w else return x end else w=function(...)return m(v(l(...)))end;k[w]=w;k[v]=w;j[w]=v;return w end elseif k[v]then v=j[k[v]]end end;t=t+1;if t<=u then return v,m(...)else return v end end;function l(...)if t>u then t=1;u=select("#",...)if u==0 then return end end;local v=select(t,...)if v then local y=k[v]if not y then local z=type(v)if z=="function"then if n[v]then y=n[v]else local A=v;y=function(...)return l(A(m(...)))end end elseif z=="table"then y=setmetatable({},c)elseif z=="userdata"then y=newproxy(true)local B=getmetatable(y)for C,v in next,c do B[C]=v end else y=v end;k[v]=y;k[y]=y;j[y]=v end;v=y end;t=t+1;if t<=u then return v,l(...)else return v end end;for C,D in next,c do c[C]=l(D)end;local E=setfenv(1,l(getfenv(1)))local F=getfenv(1)setfenv(1,F)end;
+--[[
+File Name: SafeLuaMode.lua
+Written By: Nikita Petko
+Description: Disables specific things in the datamodel, by virtualizing the function environment
+Modifications:
+	21/11/2021 01:16 => Removed the game to script check because it was returning nil (we aren't running under a script so it's nil)
+--]] 
+local args = ...
+local isAdmin = args['isAdmin'] -- might be able to be hacked, but we'll see
+local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
+
+local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
+
+local DebugService = nil
+if isAdmin then
+    DebugService = {{}};
+    DebugService.__index = DebugService;
+    DebugService.__metatable = "This metatable is locked";
+    function DebugService:__tostring()
+        return "DebugService";
+    end
+
+    function DebugService.new()
+        local service = {{
+            _last = nil,
+            _capsule = nil,
+            _wrap = nil,
+            _unwrap = nil,
+            _original = nil,
+            _wrapper = nil
+        }};
+
+        setmetatable(service, DebugService);
+
+        return service;
+    end
+
+    function DebugService:setLast(last)
+        self._last = last
+    end
+
+    function DebugService:getLast()
+        return self._last
+    end
+
+    function DebugService:setMeta(capsule, original, wrapper)
+        self._capsule = capsule
+        self._original = orginal
+        self._wrapped = wrapped
+    end
+
+    function DebugService:getMeta()
+        return {{
+            capsule = self._capsule,
+            original = self._original,
+            wrapped = self._wrapped
+        }};
+    end
+
+    function DebugService:setWrappers(wrap, unwrap)
+        self._wrap = wrap
+        self._unwrap = unwrap
+    end
+
+    function DebugService:wrap(...)
+        return self._wrap(...)
+    end
+
+    function DebugService:unwrap(...)
+        return self._unwrap(...)
+    end
+end
+
+
+if shouldVirtualize then
+    warn("We are in a VM state, blocking specific methods is expected.")
+
+    local setfenv = setfenv
+    local getfenv = getfenv
+    local setmetatable = setmetatable
+    local getmetatable = getmetatable
+    local type = type
+    local select = select
+    local tostring = tostring
+    local newproxy = newproxy
+    local next = next
+
+    local debugService = isAdmin and DebugService.new() or nil
+
+    local Capsule = {{}}
+    Capsule.__metatable = "This debug metatable is locked."
+
+    local last = nil
+
+    function Capsule:__index(k)
+        if isAdmin then print(k, tostring(last)) end
+
+        if typeof(k) ~= "string" then
+            k = tostring(k)
+        end
+
+        k = k:gsub("[^%w%s_]+", "")
+        if k:lower() == "getservice" then
+            return function(...)
+                local t = {{...}}
+
+                if isAdmin and t[2] == "DebugService" then
+                    return debugService
+                end
+
+                local service = game:GetService(t[2])
+                if service == game:GetService("HttpService") or service ==
+                    game:GetService("HttpRbxApiService") then
+                    last = service
+                end
+                return service
+            end
+        end
+        -- todo: clean up the check, because it looks kludgy
+        if last == game or last == game:GetService("HttpService") or last ==
+            game:GetService("HttpRbxApiService") then
+            if k:lower() == "postasyncfullurl" or k:lower() ==
+                "requestasyncfullurl" or k:lower() == "getasyncfullurl" or
+                k:lower() == "postasync" or k:lower() == "requestasync" or
+                k:lower() == "getasync" or k:lower() == "requestasync" or
+                k:lower() == "httppostasync" or k:lower() == "httppost" or
+                k:lower() == "httpgetasync" or k:lower() == "httpget" or
+                k:lower() == "requestinternal" then
+                return function(...)
+                    error(string.format(
+                              "The method by the name of '%s' is disabled.", k))
+                end
+            end
+        elseif typeof(last) == "Instance" then
+            if last:IsA("NetworkClient") or last:IsA("NetworkMarker") or
+                last:IsA("NetworkPeer") or last:IsA("NetworkReplicator") or
+                last:IsA("NetworkServer") or last:IsA("NetworkSettings") then
+                return nil
+            end
+        end
+        last = self[k]
+
+        if isAdmin then debugService:setLast(last) end
+
+        return self[k]
+    end
+    function Capsule:__newindex(k, v) self[k] = v end
+    function Capsule:__call(...) self(...) end
+    function Capsule:__concat(v) return self .. v end
+    function Capsule:__unm() return -self end
+    function Capsule:__add(v) return self + v end
+    function Capsule:__sub(v) return self - v end
+    function Capsule:__mul(v) return self * v end
+    function Capsule:__div(v) return self / v end
+    function Capsule:__mod(v) return self % v end
+    function Capsule:__pow(v) return self ^ v end
+    function Capsule:__tostring() return tostring(self) end
+    function Capsule:__eq(v) return self == v end
+    function Capsule:__lt(v) return self < v end
+    function Capsule:__le(v) return self <= v end
+    function Capsule:__len() return #self end
+    local CapsuleMT = {{__index = Capsule}}
+
+    local original = setmetatable({{}}, {{__mode = "k"}})
+    local wrapper = setmetatable({{}}, {{__mode = "v"}})
+
+    if isAdmin then
+        debugService:setMeta(Capsule, original, wrapper);
+    end
+
+    local wrap
+    local unwrap
+
+    local secureVersions = {{
+        [setfenv] = function(target, newWrappedEnv)
+            if type(target) == "number" and target > 0 then
+                target = target + 2
+            elseif target == wrapper[target] then
+                target = original[target]
+            end
+
+            local success, oldEnv = pcall(getfenv, target)
+            local newEnv = newWrappedEnv
+            if not success or oldEnv == wrapper[oldEnv] then
+                newEnv = newWrappedEnv
+            else
+                newEnv = original[newWrappedEnv]
+            end
+
+            return wrap(setfenv(target, newEnv))
+        end,
+
+        [getfenv] = function(target, newWrappedEnv)
+            if type(target) == "number" and target > 0 then
+                target = target + 1
+            elseif target == wrapper[target] then
+                target = original[target]
+            end
+
+            return wrap(getfenv(target))
+        end
+    }}
+
+    local i, n = 1, 0
+
+    function unwrap(...)
+        if i > n then
+            i = 1
+            n = select("#", ...)
+
+            if n == 0 then return end
+        end
+
+        local value = select(i, ...)
+        if value then
+            if type(value) == "function" then
+                local wrappedFunc = wrapper[value]
+                if wrappedFunc then
+                    local originalFunc = original[wrappedFunc]
+                    if originalFunc == value then
+                        return wrappedFunc
+                    else
+                        return originalFunc
+                    end
+                else
+                    wrappedFunc = function(...)
+                        return unwrap(value(wrap(...)))
+                    end
+                    wrapper[wrappedFunc] = wrappedFunc
+                    wrapper[value] = wrappedFunc
+                    original[wrappedFunc] = value
+                    return wrappedFunc
+                end
+            elseif wrapper[value] then
+                value = original[wrapper[value]]
+            end
+        end
+
+        i = i + 1
+        if i <= n then
+            return value, unwrap(...)
+        else
+            return value
+        end
+    end
+
+    function wrap(...)
+        if i > n then
+            i = 1
+            n = select("#", ...)
+
+            if n == 0 then return end
+        end
+
+        local value = select(i, ...)
+        if value then
+            local wrapped = wrapper[value]
+
+            if not wrapped then
+                local vType = type(value)
+                if vType == "function" then
+                    if secureVersions[value] then
+                        wrapped = secureVersions[value]
+                    else
+                        local func = value
+                        wrapped = function(...)
+                            return wrap(func(unwrap(...)))
+                        end
+                    end
+                elseif vType == "table" then
+                    wrapped = setmetatable({{}}, Capsule)
+                elseif vType == "userdata" then
+                    wrapped = newproxy(true)
+                    local mt = getmetatable(wrapped)
+                    for key, value in next, Capsule do
+                        mt[key] = value
+                    end
+                else
+                    wrapped = value
+                end
+
+                wrapper[value] = wrapped
+                wrapper[wrapped] = wrapped
+                original[wrapped] = value
+            end
+
+            value = wrapped
+        end
+
+        i = i + 1
+        if i <= n then
+            return value, wrap(...)
+        else
+            return value
+        end
+    end
+
+    if isAdmin then
+        debugService:setWrappers(wrap, unwrap)
+    end
+
+    for key, metamethod in next, Capsule do Capsule[key] = wrap(metamethod) end
+
+    local ret = setfenv(1, wrap(getfenv(1)))
+    local new = getfenv(1)
+    setfenv(1, new)
+end
+
+local result = (function()
+
+{0}
+
+end)()
+
+if typeof(result) == "Instance" then
+    result = tostring(result)
+elseif typeof(result) == "table" then
+    result = game:GetService("HttpService"):JSONEncode(result)
+elseif result ~= nil then
+    result = tostring(result)
+end
+
+return result -- This will actually make the check for LUA_TARRAY redundant.

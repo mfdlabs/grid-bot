@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
+using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
@@ -28,8 +29,6 @@ using Extensions;
 using PerformanceMonitors;
 
 using HWND = System.IntPtr;
-using System.ServiceModel.Channels;
-
 
 internal class ExecuteScript : IStateSpecificSlashCommandHandler
 {
@@ -46,14 +45,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             .WithDescription("Execute a Luau script from an uploaded attachment.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("contents", ApplicationCommandOptionType.Attachment, "The Luau script attachment.", true)
-            .AddOption("withConsole", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false),
+            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false),
 
         new SlashCommandOptionBuilder()
             .WithName("text")
             .WithDescription("Execute a Luau script directly on the command line.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("contents", ApplicationCommandOptionType.String, "The Luau script contents.", true)
-            .AddOption("withConsole", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false)
+            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false)
     };
 
     private sealed class ExecuteScriptSlashCommandPerformanceMonitor
@@ -257,13 +256,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             // isAdmin allows a bypass of disabled methods and virtualized globals
             var (gserverCommand, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
                 filesafeScriptId,
-                ("isAdmin", isAdminScript)
+                ("isAdmin", isAdminScript),
+                ("isVmEnabledForAdmins", global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldAdminsUseVM)
             );
 
             if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
-                script = $"{LuaUtility.SafeLuaMode}{script}";
+                script = string.Format(LuaUtility.SafeLuaMode, script);
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
                 script = $"game:GetService(\"ContentProvider\"):SetBaseUrl" +
@@ -280,7 +280,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
             var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
 
-            var wantsConsole = subcommand.GetOptionValue("withConsole")?.ToString() == "true";
+            var wantsConsole = subcommand.GetOptionValue("with_console")?.ToString() == "true";
 
             try
             {
@@ -300,12 +300,12 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                         _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
 
                         if (wantsConsole)
-                            await command.RespondWithFileAsync(
+                            await command.RespondWithFilePublicAsync(
                                 screenshot,
                                 screenshotName
                             );
 
-                        await command.RespondWithFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(result)),
+                        await command.RespondWithFilePublicAsync(new MemoryStream(Encoding.UTF8.GetBytes(result)),
                             "execute-result.txt"
                         );
                         return;
@@ -320,13 +320,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                             .Build();
 
                     if (wantsConsole)
-                        await command.RespondWithFileAsync(
+                        await command.RespondWithFilePublicAsync(
                             screenshot,
                             screenshotName,
                             embed: embed
                         );
                     else
-                        await command.RespondAsync(
+                        await command.RespondPublicAsync(
                             embed: embed
                         );
 
@@ -334,13 +334,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 }
 
                 if (wantsConsole)
-                    await command.RespondWithFileAsync(
+                    await command.RespondWithFilePublicAsync(
                         screenshot,
                         screenshotName,
                         "Executed script with no return!"
                     );
                 else
-                    await command.RespondAsync(
+                    await command.RespondPublicAsync(
                        "Executed script with no return!"
                     );
             }
@@ -364,15 +364,65 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                     if (!command.User.IsOwner()) command.User.IncrementExceptionLimit();
 
                     if (wantsConsole)
-                        await command.RespondWithFileAsync(
+                        await command.RespondWithFilePublicAsync(
                             screenshot,
                             screenshotName,
                             "The code you supplied executed for too long, please try again later."
                         );
                     else
-                        await command.RespondAsync(
+                        await command.RespondPublicAsync(
                             "The code you supplied executed for too long, please try again later."
                         );
+
+                    return;
+                }
+
+                if (ex is FaultException fault)
+                {
+                    if (fault.Message.Length + 8 > EmbedBuilder.MaxDescriptionLength)
+                    {
+                        // Respond with file instead
+                        if (wantsConsole)
+                        {
+                            await command.RespondWithFilePublicAsync(
+                                screenshot,
+                                screenshotName,
+                                "An error occured while executing your script:"
+                            );
+                            await command.RespondWithFilePublicAsync(
+                                new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                                instance.Name + "txt"
+                            );
+                        }
+                        else
+                            await command.RespondWithFilePublicAsync(
+                                new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                                instance.Name + "txt",
+                                "An error occured while executing your script:"
+                            );
+                    }
+                    else
+                    {
+                        var embed = new EmbedBuilder()
+                            .WithColor(0xff, 0x00, 0x00)
+                            .WithTitle("Luau Error")
+                            .WithAuthor(command.User)
+                            .WithDescription($"```\n{fault.Message}\n```")
+                            .Build();
+
+                        if (wantsConsole)
+                            await command.RespondWithFilePublicAsync(
+                                screenshot,
+                                screenshotName,
+                                "An error occured while executing your script:",
+                                embed: embed
+                            );
+                        else
+                            await command.RespondPublicAsync(
+                                "An error occured while executing your script:",
+                                embed: embed
+                            );
+                    }
 
                     return;
                 }

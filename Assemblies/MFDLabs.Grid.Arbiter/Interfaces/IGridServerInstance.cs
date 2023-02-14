@@ -92,8 +92,14 @@ public interface IGridServerInstance : IDisposable
     /// <returns>True if the instance is available, false otherwise.</returns>
     bool WaitForAvailable(TimeSpan timeout);
 
-    #endregion |Lifecycle Management|
+    /// <summary>
+    /// Gets a different process instance.
+    /// </summary>
+    /// <param name="force">Force a new process instance. Basically bypasses waiting for the instance to be available.</param>
+    /// <returns>True if the process was started, false otherwise. False should be treated as a failure.</returns>
+    bool TryStartNewProcess(bool force = false);
 
+    #endregion |Lifecycle Management|
 
     #region |SOAP Methods|
 

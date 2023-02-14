@@ -813,5 +813,14 @@ namespace MFDLabs.Grid.Bot.Properties {
                 return ((global::System.TimeSpan)(this["CommandCircuitBreakerWrapperRetryInterval"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShouldAdminsUseVM {
+            get {
+                return ((bool)(this["ShouldAdminsUseVM"]));
+            }
+        }
     }
 }
