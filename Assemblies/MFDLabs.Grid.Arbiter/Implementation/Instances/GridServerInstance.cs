@@ -449,7 +449,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         if (IsReasonForRecovery(exception))
         {
             // Make a new process and try again, otherwise just throw the exception
-            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.Message);
+            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.InnerException.Message);
 
             TryStartNewProcess();
         }
