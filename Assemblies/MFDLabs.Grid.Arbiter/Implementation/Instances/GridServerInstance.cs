@@ -119,7 +119,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     private readonly bool _isPoolable;
     private readonly bool _isPersistent;
     private readonly int _maxAttemptsToCallSoap;
-    private readonly TaskCompletionSource<bool> _availableWaitHandle;
+    private TaskCompletionSource<bool> _availableWaitHandle;
 
     /// <summary>
     /// Performance monitor for inherited classes.
@@ -232,6 +232,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         _gridServerProcess = gridServerProcess;
 
         _availableWaitHandle = new TaskCompletionSource<bool>();
+        _availableWaitHandle.TrySetResult(true);
 
         if (startNow && !(gridServerProcess != null && gridServerProcess.IsOpen))
             Task.Run(TryStart);
@@ -254,7 +255,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
         GridServerArbiter.RemoveInstance(this);
 
-        _availableWaitHandle.TrySetResult(false);
+        _availableWaitHandle.TrySetResult(true);
 
         _isDisposed = true;
     }
@@ -297,7 +298,8 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         lock (_availableLock)
             _isAvailable = false;
 
-        _availableWaitHandle.TrySetResult(false);
+        // Reset the wait handle task.
+        _availableWaitHandle = new TaskCompletionSource<bool>();
     }
 
     /// <inheritdoc cref="IGridServerInstance.LockAndTryStart"/>
