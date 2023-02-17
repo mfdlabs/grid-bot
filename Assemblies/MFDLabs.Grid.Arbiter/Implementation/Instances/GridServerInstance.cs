@@ -449,7 +449,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         if (IsReasonForRecovery(exception))
         {
             // Make a new process and try again, otherwise just throw the exception
-            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.InnerException.Message);
+            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.InnerException?.Message ?? exception.Message);
 
             TryStartNewProcess();
         }
@@ -553,29 +553,27 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </remarks>
     protected virtual bool IsReasonForRecovery(Exception exception)
     {
-        if (exception is TargetInvocationException e)
+        var ex = exception is TargetInvocationException ? exception.InnerException : exception;
+        
+        switch (ex)
         {
-            switch (e.InnerException)
-            {
-                case EndpointNotFoundException:
-                case TimeoutException:
-                    return true;
+            case EndpointNotFoundException:
+            case TimeoutException:
+                return true;
 
-                case FaultException ex:
-                    var message = ex.Message;
+            case FaultException ex:
+                var message = ex.Message;
 
-                    switch (message)
-                    {
-                        case BatchJobTimedOutMessage:
-                        case BatchJobAlreadyRunningMessage:
-                            return true;
-                    }
+                switch (message)
+                {
+                    case BatchJobTimedOutMessage:
+                    case BatchJobAlreadyRunningMessage:
+                        return true;
+                }
+                break;
 
-                    break;
-
-                case CommunicationException ex:
-                    return ex.InnerException is WebException;
-            }
+            case CommunicationException ex:
+                return ex.InnerException is WebException;
         }
 
         return false;
