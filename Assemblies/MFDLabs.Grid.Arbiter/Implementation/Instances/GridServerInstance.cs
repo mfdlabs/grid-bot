@@ -553,9 +553,9 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </remarks>
     protected virtual bool IsReasonForRecovery(Exception exception)
     {
-        var ex = exception is TargetInvocationException ? exception.InnerException : exception;
+        exception = exception is TargetInvocationException ? exception.InnerException : exception;
         
-        switch (ex)
+        switch (exception)
         {
             case EndpointNotFoundException:
             case TimeoutException:
