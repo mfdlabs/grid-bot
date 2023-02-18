@@ -520,15 +520,15 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             PerformanceMonitor.TotalInvocationsThatSucceeded.Increment();
 
             if (typeof(T) == typeof(VoidResult))
-                return (true, default(T));
+                return (false, default(T));
 
-            return (true, returnValue);
+            return (false, returnValue);
         }
         catch (Exception ex)
         {
             HandleException(lastMethod, ex);
 
-            return (false, default(T));
+            return (true, default(T));
         }
     }
 
