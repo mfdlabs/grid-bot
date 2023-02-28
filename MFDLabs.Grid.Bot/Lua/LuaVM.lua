@@ -36,7 +36,9 @@ local blacklistedProps = {{
 	httpgetasync = {{"datamodel"}},
 	httppost = {{"datamodel"}},
 	httppostasync = {{"datamodel"}},
-	run = {{"runservice"}}
+	run = {{"runservice"}},
+	loadasset = {{"insertservice"}},
+	load = {{"datamodel"}}
 }};
 
 local DebugService = nil
@@ -199,13 +201,13 @@ if shouldVirtualize then
         if _is_blacklisted(last, k) then
 			if typeof(last) == "Instance" then
 				error(string.format(
-						"The method '%s:%s' is inaccessible.", 
+						"'%s.%s' is inaccessible.", 
 						last:GetFullName(),
 						k
 					))
 			else
 				error(string.format(
-						"The method '%s' is inaccessible.", 
+						"'%s' is inaccessible.", 
 						k
 					))
 			end
