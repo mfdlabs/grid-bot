@@ -121,7 +121,6 @@ if shouldVirtualize then
     Capsule.__metatable = "This debug metatable is locked."
 
     local last = nil
-	local lastService = nil
 	
 	function _is_blacklisted_service(serviceName)
 		local name = serviceName:lower()
@@ -135,13 +134,11 @@ if shouldVirtualize then
 		return table.find(blacklistedInstanceTypes, name) ~= nil
 	end
 	
-	function _is_blacklisted(instance, service, propName)
+	function _is_blacklisted(instance, propName)
 		local name = propName:lower()
 		local instanceName = typeof(instance) == "Instance" and 
 							 instance.ClassName:lower() or 
-								(service ~= nil and
-								 service.ClassName:lower()
-								 or "")
+							 ""
 		
 		local prop = blacklistedProps[name]
 		
@@ -164,7 +161,7 @@ if shouldVirtualize then
                 local t = {{...}}
 
                 if isAdmin and t[2] == "DebugService" then
-					lastService = debugService
+					last = debugService
                     return debugService
                 end
 				
@@ -177,7 +174,7 @@ if shouldVirtualize then
 
                 local service = game:GetService(t[2])
 				
-                lastService = service
+                last = service
 				
                 return service
             end
@@ -203,15 +200,8 @@ if shouldVirtualize then
 		end
 		
         -- todo: clean up the check, because it looks kludgy
-        if _is_blacklisted(last, lastService, k) then
-			if lastService ~= nil then
-				error(string.format(
-						"'%s.%s' service member is inaccessible.", 
-						last:GetFullName(),
-						k
-					))
-			
-			elseif typeof(last) == "Instance" then
+        if _is_blacklisted(last, k) then
+			if typeof(last) == "Instance" then
 				error(string.format(
 						"'%s.%s' is inaccessible.", 
 						last:GetFullName(),
