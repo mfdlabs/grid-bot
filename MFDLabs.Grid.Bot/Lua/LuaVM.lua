@@ -138,7 +138,7 @@ if shouldVirtualize then
 		
 		local prop = blacklistedProps[name]
 		
-		return prop ~= nil and (#prop == 0 or table.find(prop, instanceName ~= nil)
+		return prop ~= nil and (#prop == 0 or table.find(prop, instanceName) ~= nil)
 	end
 
     function Capsule:__index(k)
