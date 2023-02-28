@@ -11,6 +11,34 @@ local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
 
 local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
 
+local blacklistedServices = {{
+	"httprbxapiservice"
+}}
+
+local blacklistedInstanceTypes = {{
+	"script",
+	"modulescript",
+	"corescript",
+	"networkclient",
+	"networkmarker",
+	"networkserver",
+	"networkpeer",
+	"networkreplicator",
+	"networksettings"
+}}
+
+local blacklistedProps = {{
+	getasync = {{"httpservice"}},
+	postasync = {{"httpservice"}},
+	requestasync = {{"httpservice"}},
+	requestinternal = {{"httpservice"}},
+	httpget = {{"datamodel"}},
+	httpgetasync = {{"datamodel"}},
+	httppost = {{"datamodel"}},
+	httppostasync = {{"datamodel"}},
+	run = {{"runservice"}}
+}};
+
 local DebugService = nil
 if isAdmin then
     DebugService = {{}};
@@ -91,6 +119,27 @@ if shouldVirtualize then
     Capsule.__metatable = "This debug metatable is locked."
 
     local last = nil
+	
+	function _is_blacklisted_service(serviceName)
+		local name = serviceName:lower()
+		
+		return table.find(blacklistedServices, name) ~= nil
+	end
+	
+	function _is_blacklisted_instance(instanceName)
+		local name = instanceName:lower()
+		
+		return table.find(blacklistedInstanceTypes, name) ~= nil
+	end
+	
+	function _is_blacklisted(instance, propName)
+		local name = propName:lower()
+		local instanceName = typeof(instance) == "Instance" and instance.ClassName:lower() or ""
+		
+		local prop = blacklistedProps[name]
+		
+		return prop ~= nil and (#prop == 0 or table.find(prop, instanceName ~= nil)
+	end
 
     function Capsule:__index(k)
         if isAdmin then print(k, tostring(last)) end
@@ -100,50 +149,75 @@ if shouldVirtualize then
         end
 
         k = k:gsub("[^%w%s_]+", "")
-        if k:lower() == "getservice" then
+		
+		local lower = k:lower()
+		
+        if lower == "getservice" then
             return function(...)
                 local t = {{...}}
 
                 if isAdmin and t[2] == "DebugService" then
+					last = debugService
                     return debugService
                 end
+				
+				if _is_blacklisted_service(t[2]) then
+					error(string.format(
+							"The service by the name of '%s' is inaccessible.", 
+							t[2]
+						))
+				end
 
                 local service = game:GetService(t[2])
-                if service == game:GetService("HttpService") or service ==
-                    game:GetService("HttpRbxApiService") then
-                    last = service
-                end
+				
+                last = service
+				
                 return service
             end
         end
+		
+		if lower == "new" and last == "Instance" then
+			return function(...)
+                local t = {{...}}
+
+				if _is_blacklisted_instance(t[1]) then
+					error(string.format(
+							"The instance type by the name of '%s' is inaccessible.", 
+							t[1]
+						))
+				end
+
+                local inst = Instance.new(t[1])
+				
+                last = inst
+				
+                return inst
+            end
+		end
+		
         -- todo: clean up the check, because it looks kludgy
-        if last == game or last == game:GetService("HttpService") or last ==
-            game:GetService("HttpRbxApiService") then
-            if k:lower() == "postasyncfullurl" or k:lower() ==
-                "requestasyncfullurl" or k:lower() == "getasyncfullurl" or
-                k:lower() == "postasync" or k:lower() == "requestasync" or
-                k:lower() == "getasync" or k:lower() == "requestasync" or
-                k:lower() == "httppostasync" or k:lower() == "httppost" or
-                k:lower() == "httpgetasync" or k:lower() == "httpget" or
-                k:lower() == "requestinternal" then
-                return function(...)
-                    error(string.format(
-                              "The method by the name of '%s' is disabled.", k))
-                end
-            end
-        elseif typeof(last) == "Instance" then
-            if last:IsA("NetworkClient") or last:IsA("NetworkMarker") or
-                last:IsA("NetworkPeer") or last:IsA("NetworkReplicator") or
-                last:IsA("NetworkServer") or last:IsA("NetworkSettings") then
-                return nil
-            end
-        end
+        if _is_blacklisted(last, k) then
+			if typeof(last) == "Instance" then
+				error(string.format(
+						"The method '%s:%s' is inaccessible.", 
+						last:GetFullName(),
+						k
+					))
+			else
+				error(string.format(
+						"The method '%s' is inaccessible.", 
+						k
+					))
+			end
+		end
+		
         last = self[k]
 
         if isAdmin then debugService:setLast(last) end
 
         return self[k]
     end
+	
     function Capsule:__newindex(k, v) self[k] = v end
     function Capsule:__call(...) self(...) end
     function Capsule:__concat(v) return self .. v end
@@ -307,6 +381,14 @@ if shouldVirtualize then
 end
 
 local result = (function()
+
+	local isAdmin = nil
+	local isVmEnabledForAdmins = nil
+	local args = nil
+	local shouldVirtualize = nil
+	local blacklistedServices = nil
+	local blacklistedInstanceTypes = nil
+	local blacklistedProps = nil
 
 {0}
 
