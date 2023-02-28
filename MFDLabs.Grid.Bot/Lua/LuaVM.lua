@@ -176,7 +176,7 @@ if shouldVirtualize then
             end
         end
 		
-		if lower == "new" and last == "Instance" then
+		if lower == "new" and last == Instance then
 			return function(...)
                 local t = {{...}}
 
