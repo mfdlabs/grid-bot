@@ -156,7 +156,7 @@ if shouldVirtualize then
 		
 		local lower = k:lower()
 		
-        if lower == "getservice" or lower == "service" then
+        if lower == "getservice" or lower == "service" or lower == "findservice" then
             return function(...)
                 local t = {{...}}
 
@@ -172,7 +172,7 @@ if shouldVirtualize then
 						))
 				end
 
-                local service = game:GetService(t[2])
+                local service = game[k](game, t[2])
 				
                 last = service
 				
