@@ -9,7 +9,7 @@ either in a GitHub issue, or in a an email thread with primary developers or oth
 
 ### Issues
 
-Unless the change is tied to a hot-fix, all pull requests musth have an issue related to them.
+Unless the change is tied to a hot-fix, all pull requests must have an issue related to them.
 
 ### Labels
 
@@ -40,6 +40,7 @@ Please note that as this project is under MFDLABS, branch naming rules for this 
 > **fix** -> *Refers to a single bug fix.* <br />
 > **enhancement** -> *Refers to changes or enhancements made to already existing repository files.* <br />
 > **dev** -> *Use this to refer to an entire branch prefix of releases dedicated to a team (as in it will be merged here before it gets merged to master)* <br />
+> **hotfix** -> *Use this when implementing crucial hotfixes into production.* <br />
 >
 > <hr />
 > 
