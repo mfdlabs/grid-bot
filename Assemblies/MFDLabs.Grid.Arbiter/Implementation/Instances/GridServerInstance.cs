@@ -449,7 +449,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         if (IsReasonForRecovery(exception))
         {
             // Make a new process and try again, otherwise just throw the exception
-            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.Message);
+            Logger.Warning("Restarting process for '{0}' because of exception: {1}", this.Name, exception.InnerException?.Message ?? exception.Message);
 
             TryStartNewProcess();
         }
@@ -461,9 +461,9 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         }
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-        Logger.Error("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException.ToString());
+        Logger.Error("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException?.ToString() ?? exception.ToString());
 #else
-        Logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException.Message);
+        Logger.Warning("Exception occurred when trying to execute SOAP method '{0}' on '{1}': {2}. Retrying...", method, this.Name, exception.InnerException?.Message ?? exception.Message);
 #endif
         return;
     }
@@ -520,15 +520,15 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             PerformanceMonitor.TotalInvocationsThatSucceeded.Increment();
 
             if (typeof(T) == typeof(VoidResult))
-                return (true, default(T));
+                return (false, default(T));
 
-            return (true, returnValue);
+            return (false, returnValue);
         }
         catch (Exception ex)
         {
             HandleException(lastMethod, ex);
 
-            return (false, default(T));
+            return (true, default(T));
         }
     }
 
@@ -553,29 +553,27 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </remarks>
     protected virtual bool IsReasonForRecovery(Exception exception)
     {
-        if (exception is TargetInvocationException e)
+        exception = exception is TargetInvocationException ? exception.InnerException : exception;
+        
+        switch (exception)
         {
-            switch (e.InnerException)
-            {
-                case EndpointNotFoundException:
-                case TimeoutException:
-                    return true;
+            case EndpointNotFoundException:
+            case TimeoutException:
+                return true;
 
-                case FaultException ex:
-                    var message = ex.Message;
+            case FaultException ex:
+                var message = ex.Message;
 
-                    switch (message)
-                    {
-                        case BatchJobTimedOutMessage:
-                        case BatchJobAlreadyRunningMessage:
-                            return true;
-                    }
+                switch (message)
+                {
+                    case BatchJobTimedOutMessage:
+                    case BatchJobAlreadyRunningMessage:
+                        return true;
+                }
+                break;
 
-                    break;
-
-                case CommunicationException ex:
-                    return ex.InnerException is WebException;
-            }
+            case CommunicationException ex:
+                return ex.InnerException is WebException;
         }
 
         return false;

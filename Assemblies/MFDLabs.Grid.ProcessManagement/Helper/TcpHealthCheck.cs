@@ -59,9 +59,12 @@ internal static class TcpHealthCheck
 
         if (row != null)
         {
-            process = Process.GetProcessById((int)row.ProcessId);
+            try {
+                process = Process.GetProcessById((int)row.ProcessId);
 
-            return true;
+                return true;
+            }
+            catch { }
         }
 
         return false;
