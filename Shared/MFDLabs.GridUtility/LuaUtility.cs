@@ -4,18 +4,26 @@ using System.IO;
 using MFDLabs.Grid.ComputeCloud;
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using System.Text.RegularExpressions;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
     public static class LuaUtility
     {
-        public static string SafeLuaMode
-#if DEBUG
-            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.formatted.lua"));
-#else
-            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.lua"));
-#endif
+        public static string SafeLuaMode => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.lua")));
 
+        private static string FixFormatString(string input)
+        {
+            //language=regex
+            const string partRegex = @"{{(\d{1,2})}}";
+
+            input = input.Replace("{", "{{");
+            input = input.Replace("}", "}}");
+
+            input = Regex.Replace(input, partRegex, (m) => { return $"{{{m.Groups[1]}}}"; });
+
+            return input;
+        }
 
         public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
 
