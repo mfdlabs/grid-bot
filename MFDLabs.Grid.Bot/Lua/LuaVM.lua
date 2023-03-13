@@ -26,6 +26,9 @@ do
 	--[[ Type Definitions ]]	
 	type VirtualizedObject = {
 		_type: string;
+		_proxy: any;
+		
+		get_proxy: (self: VirtualizedObject) -> any;
 		
 		__index: (self: any, key: any) -> any;		
 		__newindex: (self: any, key: any, value: any) -> any;
@@ -46,12 +49,10 @@ do
 	}
 	
 	type VirtualizedSignal = {
-		_proxy: any;
 		_signal: RBXScriptSignal;
 	} & VirtualizedObject
 	
 	type VirtualizedInstance = {
-		_proxy: any;
 		_instance: Instance;	
 	} & VirtualizedObject
 	
@@ -96,6 +97,10 @@ do
 			_type = 'RBXScriptSignal',
 			_proxy = newproxy(true),
 			_signal = signal,
+			
+			get_proxy = function(self: VirtualizedObject): any
+				return self._proxy
+			end,
 
 			__index = function(self: VirtualizedSignal, key: any): any				
 				if key:lower() == "connect" or key:lower() == "connectparallel" or key:lower() == "once" then
@@ -161,6 +166,10 @@ do
 			_proxy = newproxy(true),
 			_instance = instance,
 			
+			get_proxy = function(self: VirtualizedObject): any
+				return self._proxy
+			end,
+			
 			__index = function(self: VirtualizedInstance, key: any): any
 				if type(key) == string then
 					if instance_data:is_class_property_blocked(self._instance.ClassName, key) then
@@ -180,7 +189,7 @@ do
 						return unpack(function_return)
 					end
 				elseif typeof(value) == "RBXScriptSignal" then
-					return instance_data:get_wrapped_signal(value, self._instance:GetFullName() .. key)
+					return instance_data:get_wrapped_signal(value, self._instance:GetFullName() .. key):get_proxy()
 				else
 					return instance_data:get_wrapped_value(value)
 				end
@@ -251,9 +260,7 @@ do
 					end
 				end
 				
-				return self:get_wrapped_instance(value)
-			elseif typeof(value) == "RBXScriptSignal" then
-				return VirtualizeSignal(value)
+				return self:get_wrapped_instance(value):get_proxy()
 			elseif typeof(value) == "table" then
 				local output = {}
 				for _, item in value do
@@ -404,10 +411,13 @@ do
 		"pcall", "print", "rawequal", "rawget", "rawset", "select", "tonumber", "tostring", "unpack", "xpcall"
 	})
 	environment_data:add_native_globals({ -- [[ Roblox Globals ]]
-		"delay", "elapsedTime", "gcinfo", "spawn", "stats", "tick", "time", "wait", "warn", "Enum", "shared", "task"
+		"delay", "elapsedTime", "gcinfo", "spawn", "stats", "tick", "time", "wait", "warn", "Enum", "shared"
 	})
-	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game))
-	environment_data:apply_global({"workspace", "Workspace"}, instance_data:get_wrapped_instance(workspace))
+	environment_data:add_native_globals({ -- [[ Libraries ]]
+		"bit32", "coroutine", "math", "os", "string", "table", "task", "utf8"
+	})
+	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game):get_proxy())
+	environment_data:apply_global({"workspace", "Workspace"}, instance_data:get_wrapped_instance(workspace):get_proxy())
 	environment_data:apply_global({"typeof"}, function(value: any)
 		local object = instance_data:get_proxy(value) 
 		if object then
@@ -423,7 +433,7 @@ do
 				return error(("The instance type by the name of '%s' is disabled."):format(instance_type))
 			end
 			
-			return instance_data:get_wrapped_instance(Instance.new(instance_type))
+			return instance_data:get_wrapped_instance(Instance.new(instance_type)):get_proxy()
 		end,
 	})
 	
