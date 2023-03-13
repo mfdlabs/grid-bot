@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
-using System.IO;
-using MFDLabs.Grid.ComputeCloud;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
-using System.Text.RegularExpressions;
+using MFDLabs.Grid.ComputeCloud;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
