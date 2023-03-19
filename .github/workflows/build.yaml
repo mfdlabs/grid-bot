@@ -1,0 +1,87 @@
+name: Build Release
+on: 
+  workflow_dispatch:
+      inputs:
+        commit:
+          description: 'The commit to run the workflow on'
+          required: false
+          default: ''
+          type: commit
+
+env:
+  BASE_VEX_PATH: K:\vex\v4
+  MASTER_BRANCH: master
+
+defaults:
+  run:
+    working-directory: K:\vex\v4
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+    - name: Get Build Information
+      id: build
+      run: |
+        $GIT_BRANCH = $env:GITHUB_REF.replace('refs/heads/', '')
+        echo "::set-output name=branch::$GIT_BRANCH"
+
+        IF ($GIT_BRANCH = "master") {
+          echo "::set-output name=config::ReleaseGrid"
+          echo "::set-output name=release::true"
+        } ELSE {
+          echo "::set-output name=config::DebugGrid"
+        }
+    - uses: actions/checkout@v3
+      name: Checkout Repository
+      with:
+        ref: ${{ github.event.inputs.commit || github.ref }}
+        repository: mfdlabs/grid-bot
+        path: build-run-${{ github.run_id }}
+    - name: Make Build Directories
+      id: path
+      run: |
+        cd $env:GITHUB_WORKSPACE\build-run-${{ github.run_id }}
+        $gitSha = git rev-parse HEAD
+        $buildPath = Join-Path (Join-Path $env:BASE_VEX_PATH ${{ github.repository }}) $gitSha
+
+        if (Test-Path $buildPath) {
+          rm -Force -r $buildPath
+        }
+
+        mkdir $buildPath
+        echo "::set-output name=path::$buildPath"
+    - run: Get-Item -Path (Join-Path $env:GITHUB_WORKSPACE/build-run-${{ github.run_id }} *) | Move-Item -Destination ${{ steps.path.outputs.path }}
+    - name: Compile Grid Bot
+      run: |
+        cd ${{ steps.path.outputs.path }}
+
+        $msbuildLocation = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe;
+        IF (!(Test-Path $msbuildLocation)) {
+            & Write-Host "MSBuild is not installed on this build agent." -ForegroundColor Red
+            Exit
+        }
+
+        $dotNetLocation = "${env:ProgramFiles}\dotnet\dotnet.exe"
+        IF (!(Test-Path $dotNetLocation)) {
+            & Write-Host "Dotnet is not installed on this build agent." -ForegroundColor Red
+            Exit
+        }
+        
+        Set-Alias build $msbuildLocation
+        Set-Alias net $dotNetLocation
+
+        $sdks = Get-ChildItem -Force "C:\Program Files\dotnet\sdk"
+        if (($sdks | Measure-Object).Count -eq 0) {
+            & Write-Host "No .NET SDKs were found" -ForegroundColor Red
+            Exit
+        }
+
+        $env:MSBuildSDKsPath = "C:\Program Files\dotnet\sdk\{0}\Sdks" -f $sdks[0].Name
+        $env:PATH += ";C:\Program Files\dotnet"
+
+        & net restore MFDLabs.Grid.sln
+        & build MFDLabs.Grid.sln /p:Configuration="${{ steps.build.outputs.config }}"
+    - name: Generate Artifacts
+      run: |
+        echo 'a'
