@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./lib/libvault_config/Cargo.toml"
+    ]
+}

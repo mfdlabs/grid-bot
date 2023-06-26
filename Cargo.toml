@@ -1,0 +1,24 @@
+[package]
+name = "grid-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = ["lib/*"]
+
+[dependencies]
+env_logger = "0.10.0"
+log = "0.4.19"
+
+[dependencies.tokio]
+version = "1.28.2"
+features = ["macros", "signal", "rt-multi-thread"]
+
+[dependencies.vault_config]
+path = "./lib/libvault_config"
+
+[dependencies.serenity]
+version = "0.11.5"
+features = ["cache", "framework", "standard_framework", "rustls_backend"]

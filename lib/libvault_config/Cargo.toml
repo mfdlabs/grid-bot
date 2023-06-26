@@ -1,0 +1,12 @@
+[package]
+name = "vault_config"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+futures-executor = "0.3.28"
+log = "0.4.19"
+vaultrs = { version = "0.7.0", default-features = false, features = [
+    "native-tls"
+] }
