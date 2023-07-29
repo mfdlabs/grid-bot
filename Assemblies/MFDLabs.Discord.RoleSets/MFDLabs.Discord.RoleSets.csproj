@@ -3,7 +3,7 @@
   <Import Project="../../AssembliesStandard.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="3.8.1" />
+    <PackageReference Include="Discord.Net.Core" Version="3.11.0" />
   </ItemGroup>
 
   <ItemGroup>
