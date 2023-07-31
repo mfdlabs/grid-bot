@@ -5,18 +5,19 @@
 //
 // Supports KV v1 and v2. As well as Token and AppRole authentication.
 
-use crate::refresh_ahead::RefreshAhead;
+use std::{collections::HashMap, sync::Arc};
 
-use std::{collections::HashMap, time::Duration};
+use tokio::sync::Mutex;
 
 // vaultrs
 use vaultrs::{
+    auth::approle::*,
     client::{VaultClient, VaultClientSettingsBuilder},
     kv2,
 };
 
-// futures_executor
-use futures_executor::block_on;
+// chrono
+use chrono::{DateTime, Duration, Utc};
 
 use log::debug;
 
@@ -28,7 +29,15 @@ pub enum ConfigError {
 
 /// Struct that handles fetching of configuration from vault
 pub struct VaultConfigProvider {
-    data: RefreshAhead<HashMap<String, String>>,
+    data: Arc<Mutex<HashMap<String, String>>>,
+    expiration: Arc<Mutex<DateTime<Utc>>>,
+    interval: Duration,
+    client: VaultClient,
+    mount: String,
+    path: String,
+
+    // Whether or not the config has changed locally, allow mutation of the config
+    changed_locally: Arc<Mutex<bool>>
 }
 
 impl VaultConfigProvider {
@@ -40,47 +49,122 @@ impl VaultConfigProvider {
     /// * `mount` - The mount point of the KV engine
     /// * `path` - The path to the configuration in vault
     /// * `interval` - The interval to refresh the configuration at
-    pub fn new(address: &str, token: &str, mount: &str, path: &str, interval: Duration) -> Self {
-        let client = VaultClient::new(
-            VaultClientSettingsBuilder::default()
-                .address(address)
-                .token(token)
-                .build()
-                .unwrap(),
-        )
-        .unwrap();
+    /// * `is_kv2` - Whether or not the KV engine is v2
+    pub async fn new(
+        address: &str,
+        credential: &str,
+        mount: &str,
+        path: &str,
+        interval: Duration,
+    ) -> Self {
+        let client = Self::get_client_based_on_credential(address, credential).await;
 
-        let mount_copy = mount.to_string();
-        let path_copy = path.to_string();
-
-        let data = RefreshAhead::new(
-            Self::fetch_config(&client, mount, path),
-            move || Self::fetch_config(&client, mount_copy.as_str(), path_copy.as_str()),
-            interval,
-        );
+        let data = Arc::new(Mutex::new(HashMap::new()));
 
         debug!(
             "Initialized vault config provider with url: {}, mount: {}, path: {}",
             address, mount, path
         );
 
-        Self { data }
+        Self {
+            data,
+            client,
+            expiration: Arc::new(Mutex::new(Utc::now())),
+            interval,
+            mount: mount.to_string(),
+            path: path.to_string(),
+            changed_locally: Arc::new(Mutex::new(false))
+        }
     }
 
-    fn fetch_config(client: &VaultClient, mount: &str, path: &str) -> HashMap<String, String> {
-        block_on(async {
-            kv2::read::<HashMap<String, String>>(client, mount, path)
-                .await
-                .unwrap()
-        })
+    async fn get_client_based_on_credential(address: &str, credential: &str) -> VaultClient {
+        // 2 different clients for token and approle
+        // Token credential is just the raw token
+        // AppRole in the form of role_id:secret_id:{optional: mount}
+
+        if credential.contains(":") {
+            let parts: Vec<&str> = credential.split(":").collect();
+            let role_id = parts[0];
+            let secret_id = parts[1];
+            let mount = if parts.len() == 3 {
+                parts[2]
+            } else {
+                "approle"
+            };
+
+            let temp = VaultClient::new(
+                VaultClientSettingsBuilder::default()
+                    .address(address)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap();
+
+            login(&temp, mount, role_id, secret_id).await.unwrap();
+
+            temp
+        } else {
+            VaultClient::new(
+                VaultClientSettingsBuilder::default()
+                    .address(address)
+                    .token(credential)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+        }
     }
 
-    fn convert_value<T>(value: &str) -> T
-    where
-        T: std::str::FromStr,
-        <T as std::str::FromStr>::Err: std::fmt::Debug,
-    {
-        value.parse::<T>().unwrap()
+    async fn fetch_config(&self) -> HashMap<String, String> {
+        kv2::read::<HashMap<String, String>>(&self.client, self.mount.as_str(), self.path.as_str())
+            .await
+            .unwrap()
+    }
+
+    async fn refresh_if_needed(&self) {
+        let mut expiration = self.expiration.lock().await;
+
+        if *expiration < Utc::now() {
+            debug!(
+                "The configuration is expired, fetching new configuration from vault at: {}/{}",
+                self.mount, self.path
+            );
+
+            if self.write_to_vault_if_changed().await {
+                *expiration = Utc::now() + self.interval;
+                return;
+            }
+
+            let data = self.fetch_config().await;
+            let mut data_lock = self.data.lock().await;
+
+            *data_lock = data;
+
+            *expiration = Utc::now() + self.interval;
+
+            debug!("Configuration refreshed, next refresh at: {}", expiration);
+        }
+    }
+
+    async fn write_to_vault_if_changed(&self) -> bool {
+        let mut changed_locally = self.changed_locally.lock().await;
+
+        if !*changed_locally {
+            return false;
+        }
+
+        debug!(
+            "Writing new configuration to vault at: {}/{}",
+            self.mount, self.path
+        );
+
+        let data = self.data.lock().await.clone();
+
+        kv2::set(&self.client, self.mount.as_str(), self.path.as_str(), &data).await.unwrap();
+
+        *changed_locally = false;
+
+        true
     }
 
     /// Gets the configuration value for the specified key
@@ -90,18 +174,42 @@ impl VaultConfigProvider {
     ///
     /// # Arguments
     /// * `key` - The key to get the value for
-    pub fn get<T>(&self, key: &str) -> Result<T, ConfigError>
+    pub async fn get<T>(&self, key: &str) -> Result<T, ConfigError>
     where
         T: std::str::FromStr,
         <T as std::str::FromStr>::Err: std::fmt::Debug,
     {
-        let data = self.data.get();
+        self.refresh_if_needed().await;
+
+        let data = self.data.lock().await;
 
         let value = data.get(key);
 
         match value {
             None => Err(ConfigError::KeyNotFound(key.to_string())),
-            Some(value) => Ok(Self::convert_value(value)),
+            Some(value) => Ok(value.parse().unwrap()),
         }
+    }
+
+    /// Sets the configuration value for the specified key
+    /// This will persist the value to vault after the next refresh
+    ///
+    /// # Type parameters
+    /// * `T` - The type to convert to
+    ///
+    /// # Arguments
+    /// * `key` - The key to set the value for
+    /// * `value` - The value to set
+    pub async fn set<T>(&mut self, key: &str, value: T)
+    where
+        T: std::string::ToString,
+    {
+        let mut data = self.data.lock().await;
+
+        data.insert(key.to_string(), value.to_string());
+
+        let mut changed_locally = self.changed_locally.lock().await;
+
+        *changed_locally = true;
     }
 }

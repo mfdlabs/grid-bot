@@ -9,11 +9,12 @@ edition = "2021"
 members = ["lib/*"]
 
 [dependencies]
+chrono = "0.4.26"
 env_logger = "0.10.0"
 log = "0.4.19"
 
 [dependencies.tokio]
-version = "1.28.2"
+version = "1.29.0"
 features = ["macros", "signal", "rt-multi-thread"]
 
 [dependencies.vault_config]
