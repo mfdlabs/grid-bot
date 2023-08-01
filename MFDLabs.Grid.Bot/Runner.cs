@@ -163,8 +163,7 @@ namespace MFDLabs.Grid.Bot
                             GatewayIntents.GuildMessages
                             | GatewayIntents.DirectMessages
                             | GatewayIntents.Guilds
-                            | GatewayIntents.MessageContent
-                            | GatewayIntents.All,
+                            | GatewayIntents.MessageContent,
                         HandlerTimeout = null,
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                         LogLevel = LogSeverity.Debug,

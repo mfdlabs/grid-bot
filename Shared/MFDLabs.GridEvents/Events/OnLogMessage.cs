@@ -13,7 +13,9 @@ namespace MFDLabs.Grid.Bot.Events
         {
             if (message.Exception != null)
             {
+#if !DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS
                 if (message.Exception?.InnerException is WebSocketClosedException) return Task.CompletedTask;
+#endif
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                 if (!(message.Exception is TaskCanceledException &&
