@@ -25,8 +25,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
         {
             using (await command.DeferPublicAsync())
             {
-
-
                 await command.User.FireEventAsync(typeof(OnSlashCommandReceivedWorkQueue).FullName, command.Channel.Name);
 
                 var userIsAdmin = command.User.IsAdmin();
@@ -57,16 +55,9 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
                 if (userIsBlacklisted)
                 {
-                    Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", command.User.Id, command.User.Username, command.User.Discriminator);
+                    Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot.", command.User.Id, command.User.Username, command.User.Discriminator);
 
-                    try
-                    {
-                        await command.User.SendDirectMessageAsync($"you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
-                    }
-                    catch
-                    {
-                        Logger.Singleton.Warning("We tried to DM the user, but their DMs may not be available.");
-                    }
+                    await command.RespondEphemeralPingAsync("you are unable to use this bot as you've been blacklisted, to have your case reviewed, please refer to https://grid-bot.ops.vmminfra.net/moderation#appealing-blacklisting for more information.");
 
                     return;
                 }
