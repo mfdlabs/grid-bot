@@ -78,6 +78,9 @@ namespace MFDLabs.Grid.Bot.Commands
             }
         }
 
+        // language=regex
+        private const string GoodUsernameRegex = @"^[A-Za-z0-9_]{3,20}$";
+
         private static IEnumerable<string> BlacklistedUsernames =>
                 (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
@@ -196,6 +199,19 @@ namespace MFDLabs.Grid.Bot.Commands
 
                                     if (!username.IsNullOrEmpty())
                                     {
+                                        if (!username.IsMatch(GoodUsernameRegex))
+                                        {
+                                            Logger.Singleton.Warning("Invalid username '{0}'", username);
+
+                                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
+                                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
+
+                                            failure = true;
+
+                                            message.Reply("The username you presented contains invalid charcters!");
+                                            return;
+                                        }
+
                                         Logger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
                                         var nullableUserId = UserUtility.GetUserIdByUsername(username);
 

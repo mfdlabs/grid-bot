@@ -17,6 +17,7 @@ using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
+using System.ServiceModel.Channels;
 
 namespace MFDLabs.Grid.Bot.SlashCommands
 {
@@ -99,6 +100,9 @@ namespace MFDLabs.Grid.Bot.SlashCommands
             }
         }
 
+        // language=regex
+        private const string GoodUsernameRegex = @"^[A-Za-z0-9_]{3,20}$";
+
         private static IEnumerable<string> BlacklistedUsernames =>
                 (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
@@ -153,6 +157,18 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
                         Logger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
                         item.RespondEphemeralPing($"Missing required parameter 'user_name'.");
+                        return long.MinValue;
+                    }
+
+                    if (!username.IsMatch(GoodUsernameRegex))
+                    {
+                        Logger.Singleton.Warning("Invalid username '{0}'", username);
+
+                        _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
+                        _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
+                        failure = true;
+
+                        item.RespondEphemeralPing("The username you presented contains invalid charcters!");
                         return long.MinValue;
                     }
 
