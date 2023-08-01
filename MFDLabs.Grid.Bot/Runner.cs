@@ -163,13 +163,14 @@ namespace MFDLabs.Grid.Bot
                             GatewayIntents.GuildMessages
                             | GatewayIntents.DirectMessages
                             | GatewayIntents.Guilds
-                            | GatewayIntents.MessageContent,
-                        LogGatewayIntentWarnings = false,
-#if DISCORD_SHARDING_ENABLED
-                        TotalShards = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShardedClientTotalNumberOfShards,
-#endif
+                            | GatewayIntents.MessageContent
+                            | GatewayIntents.All,
+                        HandlerTimeout = null,
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                         LogLevel = LogSeverity.Debug,
+#else
+                        LogGatewayIntentWarnings = false,
+                        SuppressUnknownDispatchWarnings = true,
 #endif
                     }
                 )
@@ -217,6 +218,7 @@ namespace MFDLabs.Grid.Bot
 
             if (!args.Contains("--no-gateway"))
                 await BotGlobal.SingletonLaunch();
+
             await Task.Delay(-1);
         }
     }

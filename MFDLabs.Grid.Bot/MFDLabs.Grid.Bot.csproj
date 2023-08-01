@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDeploy' ">
@@ -25,12 +25,12 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;WE_ON_THE_GRID;DEBUG_LOGGING_IN_PROD</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;WE_ON_THE_GRID</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">

@@ -3,7 +3,7 @@
   <Import Project="../../SharedProjects.targets" />
 
   <PropertyGroup>
-    <DefineConstants>DISCORD_SHARDING_ENABLED</DefineConstants>
+    <DefineConstants>$(DefineConstants);DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,12 +7,12 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' ">
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>WE_ON_THE_GRID</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' ">
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>WE_ON_THE_GRID</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
   </PropertyGroup>
   
 </Project>

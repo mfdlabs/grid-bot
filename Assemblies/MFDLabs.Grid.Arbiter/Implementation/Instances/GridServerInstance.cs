@@ -441,7 +441,6 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </summary>
     /// <param name="method">The name of the SOAP method that threw an exception.</param>
     /// <param name="exception">The exception that was thrown.</param>
-    /// <param name="currentTry">The current attempt number.</param>
     protected virtual void HandleException(string method, Exception exception)
     {
         PerformanceMonitor.TotalInvocationsThatFailed.Increment();

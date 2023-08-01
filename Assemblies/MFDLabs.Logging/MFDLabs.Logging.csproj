@@ -5,7 +5,7 @@
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     
-    <DefineConstants>CONCURRENT_LOGGING_ENABLED</DefineConstants>
+    <DefineConstants>$(DefineConstants);CONCURRENT_LOGGING_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">

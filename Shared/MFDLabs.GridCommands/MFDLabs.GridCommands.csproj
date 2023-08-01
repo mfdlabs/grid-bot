@@ -3,7 +3,7 @@
   <Import Project="../../SharedProjects.targets" />
 
   <PropertyGroup>
-    <DefineConstants>WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
