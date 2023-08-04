@@ -1,142 +1,73 @@
-use serenity::framework::standard::macros::hook;
-use serenity::model::user::OnlineStatus;
-use vault_config::VaultConfigProvider;
-
-use serenity::async_trait;
-use serenity::framework::standard::StandardFramework;
-use serenity::model::channel::Message;
-use serenity::model::prelude::{Activity, Ready};
-use serenity::prelude::*;
-
-use chrono::Duration;
-
 #[macro_use]
-extern crate log;
+extern crate tracing;
 
-// tokio::main
+mod vault;
 
-struct Handler {
-    config: VaultConfigProvider,
-}
+use std::env;
+use std::time::Duration;
 
-#[async_trait]
-impl EventHandler for Handler {
-    // For now just read prefix from config
-    async fn message(&self, ctx: Context, msg: Message) {
-        let prefix = self.config.get::<String>("prefix").await.unwrap();
-        let notice = self
-            .config
-            .get::<String>("notice")
-            .await
-            .unwrap_or("".to_string());
+use anyhow::{Error, Result};
+use poise::serenity_prelude::*;
+use poise::{Framework, FrameworkOptions};
 
-        if msg.content.starts_with(&prefix) {
-            // Get the command name
-            let command_name = msg.content.split_whitespace().next().unwrap();
+use crate::vault::Provider;
 
-            if command_name.len() > prefix.len()
-                && command_name
-                    .chars()
-                    .nth(prefix.len())
-                    .unwrap()
-                    .is_alphanumeric()
-            {
-                info!("Received command: {}", command_name);
+pub type Context<'a> = poise::Context<'a, Data, Error>;
+pub type ApplicationContext<'a> = poise::ApplicationContext<'a, Data, Error>;
 
-                msg.reply_mention(ctx.http, notice).await.unwrap();
-            }
-        }
-    }
+pub struct Data {}
 
-    // On ready, print some information to standard out
-    async fn ready(&self, ctx: Context, ready: Ready) {
-        info!("{} is connected!", ready.user.name);
+#[poise::command(slash_command, prefix_command)]
+async fn debug(ctx: Context<'_>) -> Result<()> {
+    ctx.say("Hello, world!").await?;
 
-        // Set the activity
-        let activity = self
-            .config
-            .get::<String>("activity").await
-            .unwrap_or("".to_string());
-
-        ctx.set_presence(
-            Some(Activity::playing(activity)),
-            OnlineStatus::DoNotDisturb,
-        )
-        .await;
-    }
-}
-
-#[hook]
-async fn before(_: &Context, msg: &Message, command_name: &str) -> bool {
-    info!(
-        "Got command '{}' by user '{}'",
-        command_name, msg.author.name
-    );
-
-    true
+    Ok(())
 }
 
 #[tokio::main]
 async fn main() {
-    let vault_addr =
-        std::env::var("VAULT_ADDR").unwrap_or_else(|_| "http://localhost:8200".to_string());
-    let vault_token = std::env::var("VAULT_TOKEN").unwrap();
-    let vault_mount = std::env::var("VAULT_MOUNT").unwrap_or_else(|_| "kv".to_string());
-    let vault_path = std::env::var("VAULT_PATH").unwrap_or_else(|_| "config".to_string());
+    tracing_subscriber::fmt::init();
 
-    // Refresh interval
-    let refresh_interval = std::env::var("REFRESH_INTERVAL")
-        .unwrap_or_else(|_| "60".to_string())
-        .parse::<i64>()
-        .unwrap();
+    info!("Hello, world!");
 
-    let provider = VaultConfigProvider::new(
+    let vault_addr = env::var("VAULT_ADDR").expect("env variable `VAULT_ADDR` is not set");
+    let vault_token = env::var("VAULT_TOKEN").expect("env variable `VAULT_TOKEN` is not set");
+    let vault_mount = env::var("VAULT_MOUNT").expect("env variable `VAULT_MOUNT` is not set");
+    let vault_path = env::var("VAULT_PATH").expect("env variable `VAULT_PATH` is not set");
+
+    let provider = Provider::new(
         &vault_addr,
         &vault_token,
         &vault_mount,
         &vault_path,
-        Duration::seconds(refresh_interval),
-    ).await;
+        Duration::from_secs(60),
+    )
+    .await;
 
-    // If the RUST_LOG environment variable is not set, use the logging config from vault
+    let framework = Framework::builder()
+        .options(FrameworkOptions {
+            commands: vec![debug()],
+            pre_command: |ctx| {
+                Box::pin(async move {
+                    debug!("{} -> {}", ctx.author().tag(), ctx.invoked_command_name());
+                })
+            },
+            post_command: |ctx| {
+                Box::pin(async move {
+                    debug!("{} <- {}", ctx.author().tag(), ctx.invoked_command_name());
+                })
+            },
+            ..Default::default()
+        })
+        .token(provider.get::<String>("token").await.unwrap())
+        .intents(GatewayIntents::all())
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
 
-    if std::env::var("RUST_LOG").is_err() {
-        let logging_config = provider
-            .get::<String>("logging")
-            .await
-            .unwrap_or(format!("{}=info", env!("CARGO_CRATE_NAME")));
+                Ok(Data {})
+            })
+        });
 
-        std::env::set_var("RUST_LOG", logging_config);
-    }
-
-    env_logger::init();
-
-    let prefix = provider.get::<String>("prefix").await.unwrap();
-
-    let framework = StandardFramework::new()
-        .configure(|c| c.prefix(prefix))
-        .before(before);
-
-    // Login with a bot token from the environment
-    let token = provider.get::<String>("token").await.unwrap();
-
-    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = Client::builder(token, intents)
-        .event_handler(Handler { config: provider })
-        .framework(framework)
-        .await
-        .expect("Error creating client");
-
-    let shard_manager = client.shard_manager.clone();
-
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Could not register ctrl+c handler");
-        shard_manager.lock().await.shutdown_all().await;
-    });
-
-    if let Err(why) = client.start_autosharded().await {
-        error!("An error occurred while running the client: {:?}", why);
-    }
+    framework.run().await.unwrap();
 }
