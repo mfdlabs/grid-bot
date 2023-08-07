@@ -1,9 +1,8 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
-using Microsoft.Ccr.Core;
 using Discord.WebSocket;
+
 using MFDLabs.Logging;
-using MFDLabs.Concurrency;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Bot.Registries;
@@ -13,20 +12,16 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 {
     internal sealed class OnSlashCommandReceivedWorkQueue : AsyncWorkQueue<SocketSlashCommand>
     {
-        private static readonly DispatcherQueue _DispatcherQueue = new PatchedDispatcherQueue("On Slash Command Received Work Queue", new(0, "On Slash Command Received Work Queue Dispatcher"));
-
         public static readonly OnSlashCommandReceivedWorkQueue Singleton = new();
 
         public OnSlashCommandReceivedWorkQueue()
-            : base(_DispatcherQueue, OnReceive)
+            : base(OnReceive)
         { }
 
-        private static async void OnReceive(SocketSlashCommand command, SuccessFailurePort result)
+        private static async void OnReceive(SocketSlashCommand command)
         {
             using (await command.DeferPublicAsync())
             {
-                await command.User.FireEventAsync(typeof(OnSlashCommandReceivedWorkQueue).FullName, command.Channel.Name);
-
                 var userIsAdmin = command.User.IsAdmin();
                 var userIsPrivilaged = command.User.IsPrivilaged();
                 var userIsBlacklisted = command.User.IsBlacklisted();

@@ -1,34 +1,28 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.Ccr.Core;
+using System.Threading.Tasks;
+
 using Discord.WebSocket;
+
 using MFDLabs.Logging;
-using MFDLabs.Concurrency;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Properties;
 
-using Task = System.Threading.Tasks.Task;
-
 namespace MFDLabs.Grid.Bot.WorkQueues
 {
     internal sealed class OnMessageReceivedWorkQueue : AsyncWorkQueue<SocketMessage>
     {
-        private static readonly DispatcherQueue _DispatcherQueue = new PatchedDispatcherQueue("On Message Received Work Queue", new(0, "On Message Received Work Queue Dispatcher"));
-
         public static readonly OnMessageReceivedWorkQueue Singleton = new();
 
         public OnMessageReceivedWorkQueue()
-            : base(_DispatcherQueue, OnReceive)
+            : base(OnReceive)
         { }
 
-        private static async void OnReceive(SocketMessage message, SuccessFailurePort result)
+        private static async void OnReceive(SocketMessage message)
         {
-            await message.Author.FireEventAsync(typeof(OnMessageReceivedWorkQueue).FullName, message.Channel.Name);
-            await message.Author.PageViewedAsync($"{typeof(OnMessageReceivedWorkQueue).FullName}({message.Channel.Name})");
-
             var userIsAdmin = message.Author.IsAdmin();
             var userIsPrivilaged = message.Author.IsPrivilaged();
             var userIsBlacklisted = message.Author.IsBlacklisted();
@@ -61,7 +55,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
             if (userIsBlacklisted)
             {
-                await message.Author.FireEventAsync("Fatality", "They tried to use the bot while blacklisted");
                 Logger.Singleton.Warning("A blacklisted user {0}('{1}#{2}') tried to use the bot, attempt to DM that they are blacklisted.", message.Author.Id, message.Author.Username, message.Author.Discriminator);
 
                 try
@@ -78,7 +71,6 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
             if (messageContent.ToLower().Contains("@everyone") || messageContent.ToLower().Contains("@here") && !userIsAdmin)
             {
-                await message.Author.FireEventAsync("Fatality", "They tried to ping @everyone or @here");
                 await message.ReplyAsync("You are unable to use the following mentions in your command.");
                 return;
             }
