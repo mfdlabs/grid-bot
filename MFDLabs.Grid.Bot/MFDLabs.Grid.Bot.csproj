@@ -63,6 +63,15 @@
     </None>
   </ItemGroup>
 
+  <Target Name="ForceGenerationOfBindingRedirects"
+          AfterTargets="ResolveAssemblyReferences"
+          BeforeTargets="GenerateBindingRedirects"
+          Condition="'$(AutoGenerateBindingRedirects)' == 'true'">
+    <PropertyGroup>
+      <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    </PropertyGroup>
+  </Target>
+
   <ItemGroup>
     <Compile Remove="Deploy\**" />
     <EmbeddedResource Remove="Deploy\**" />
