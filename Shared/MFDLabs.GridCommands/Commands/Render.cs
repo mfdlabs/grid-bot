@@ -20,10 +20,9 @@ namespace MFDLabs.Grid.Bot.Commands
     internal class Render : IStateSpecificCommandHandler
     {
         public string CommandName => "Render User";
-        public string CommandDescription => $"If no arguments are given, it will try to get the Roblox ID " +
-                                            $"for the author and render them.\nLayout: " +
+        public string CommandDescription => $"Renders a Roblox user!\nLayout: " +
                                             $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render " +
-                                            $"robloxUserID?|discordUserMention?|...userName?";
+                                            $"robloxUserID?|...userName?";
         public string[] CommandAliases => new[] { "r", "render" };
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
@@ -124,31 +123,6 @@ namespace MFDLabs.Grid.Bot.Commands
                         var isAuthorCheck = false;
                         long userId = 0;
 
-                        if (contentArray.Length == 0)
-                        {
-#if FEATURE_RBXDISCORDUSERS_CLIENT
-                            isAuthorCheck = true;
-
-                            var nullableUserId = message.Author.GetRobloxId();
-
-                            if (!nullableUserId.HasValue)
-                            {
-                                _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
-                                failure = true;
-
-                                Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", message.Author.ToString());
-                                message.Reply("You have no Roblox account associated with you.");
-                                return;
-                            }
-
-                            userId = nullableUserId.Value;
-#else
-                            message.Reply("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                            return;
-#endif
-                        }
-
                         string username = null;
 
                         if (!isAuthorCheck)
@@ -158,27 +132,8 @@ namespace MFDLabs.Grid.Bot.Commands
 
                                 if (message.MentionedUsers.Count > 0)
                                 {
-#if FEATURE_RBXDISCORDUSERS_CLIENT
-                                    var user = message.MentionedUsers.ElementAt(0);
-                                    // we have mentioned a user.
-                                    var nullableUserId = user.GetRobloxId();
-
-                                    if (!nullableUserId.HasValue)
-                                    {
-                                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
-                                        failure = true;
-
-                                        Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", user.ToString());
-                                        message.Reply($"The user you mentioned, '{user.Username}', had no Roblox account associated with them.");
-                                        return;
-                                    }
-
-                                    userId = nullableUserId.Value;
-#else
                                     message.Reply("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
                                     return;
-#endif
                                 }
                                 else
                                 {

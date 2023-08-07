@@ -39,16 +39,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                 .WithName("roblox_name")
                 .WithDescription("Render a user by their Roblox Username.")
                 .WithType(ApplicationCommandOptionType.SubCommand)
-                .AddOption("user_name", ApplicationCommandOptionType.String, "The user name of the Roblox user.", true),
-            new SlashCommandOptionBuilder()
-                .WithName("discord_user")
-                .WithDescription("Render a user by their Discord Account.")
-                .WithType(ApplicationCommandOptionType.SubCommand)
-                .AddOption("user", ApplicationCommandOptionType.User, "The user ref to render.", true),
-            new SlashCommandOptionBuilder()
-                .WithName("self")
-                .WithDescription("Render yourself!")
-                .WithType(ApplicationCommandOptionType.SubCommand),
+                .AddOption("user_name", ApplicationCommandOptionType.String, "The user name of the Roblox user.", true)
         };
         private sealed class RenderSlashCommandPerformanceMonitor
         {
@@ -200,69 +191,6 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                     userId = nullableUserIdRemote.Value;
 
                     break;
-
-                case "discord_user":
-
-#if FEATURE_RBXDISCORDUSERS_CLIENT
-
-                    var userRef = (IUser)subCommand.GetOptionValue("user");
-                    if (userRef == null)
-                    {
-                        _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                        _perfmon.TotalItemsProcessedThatHadInvalidUserIDsPerSecond.Increment();
-
-                        Logger.Singleton.Warning("Null User Ref given for /render discord_user, this is not expected.");
-                        item.RespondEphemeralPing("Internal exception while rendering.");
-                        return long.MinValue;
-                    }
-
-                    var nullableUserIdFromUser = userRef.GetRobloxId();
-
-                    if (!nullableUserIdFromUser.HasValue)
-                    {
-                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
-                        failure = true;
-
-                        Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", userRef.ToString());
-                        item.RespondEphemeralPing($"The user you mentioned, '{userRef.Username}', had no Roblox account associated with them.");
-                        return long.MinValue;
-                    }
-
-                    userId = nullableUserIdFromUser.Value;
-
-                    break;
-
-#else
-                    item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                    return long.MinValue;
-#endif
-
-                case "self":
-
-#if FEATURE_RBXDISCORDUSERS_CLIENT
-
-                    var nullableUserIdFromAuthor = item.User.GetRobloxId();
-
-                    if (!nullableUserIdFromAuthor.HasValue)
-                    {
-                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                        _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
-                        failure = true;
-
-                        Logger.Singleton.Warning("The ID for the discord user '{0}' was null, they were either banned or do not exist.", item.User.ToString());
-                        item.RespondEphemeralPing("You have no Roblox account associated with you.");
-                        return long.MinValue;
-                    }
-
-                    userId = nullableUserIdFromAuthor.Value;
-
-                    break;
-
-#else
-                    item.RespondEphemeralPing("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                    return long.MinValue;
-#endif
             }
 
             return userId;
