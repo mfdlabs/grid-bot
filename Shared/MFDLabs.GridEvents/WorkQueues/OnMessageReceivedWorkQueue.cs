@@ -6,6 +6,7 @@ using Discord.WebSocket;
 
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Extensions;
@@ -23,6 +24,8 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static async void OnReceive(SocketMessage message)
         {
+            if (!BotRegistry.Ready) return; // We do not want to process if not ready, this is crucial!
+
             var userIsAdmin = message.Author.IsAdmin();
             var userIsPrivilaged = message.Author.IsPrivilaged();
             var userIsBlacklisted = message.Author.IsBlacklisted();

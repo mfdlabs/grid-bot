@@ -4,6 +4,7 @@ using Discord.WebSocket;
 
 using MFDLabs.Logging;
 using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Grid.Bot.Extensions;
@@ -20,6 +21,8 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static async void OnReceive(SocketSlashCommand command)
         {
+            if (!BotRegistry.Ready) return; // We do not want to process if not ready, this is crucial!
+
             using (await command.DeferPublicAsync())
             {
                 var userIsAdmin = command.User.IsAdmin();

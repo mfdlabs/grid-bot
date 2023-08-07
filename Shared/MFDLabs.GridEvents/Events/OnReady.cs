@@ -41,6 +41,8 @@ namespace MFDLabs.Grid.Bot.Events
             {
                 Logger.Singleton.Debug("Final shard ready!");
 
+                BotRegistry.Ready = true;
+
                 if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                     CommandRegistry.RegisterOnce();
 
