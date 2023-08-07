@@ -20,7 +20,7 @@ public abstract class HealthCheckClientBase : IHealthCheckClient
     /// <param name="baseUrl">The baseUrl</param>
     protected HealthCheckClientBase(string baseUrl)
     {
-        if (string.IsNullOrEmpty(baseUrl))
+        if (string.IsNullOrEmpty(baseUrl)) throw new ArgumentException("baseUrl cannot be null or empty!", nameof(baseUrl));
 
         _baseUrl = baseUrl;
     }

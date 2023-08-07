@@ -309,8 +309,13 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
         if (IsOpened) return;
 
-        while (!TryStart())
-            Thread.Sleep(1000);
+        for (int i = 1; i < _maxAttemptsToCallSoap; i++)
+        {
+            if (!TryStart()) Thread.Sleep(1000);
+            else return;
+        }
+
+        throw new TimeoutException($"Failed to start process for '{this.Name}' after {_maxAttemptsToCallSoap} attempts.");
     }
 
     /// <inheritdoc cref="IGridServerInstance.WaitForAvailable"/>
