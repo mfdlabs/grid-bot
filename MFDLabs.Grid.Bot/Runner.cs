@@ -164,7 +164,7 @@ namespace MFDLabs.Grid.Bot
                             | GatewayIntents.DirectMessages
                             | GatewayIntents.Guilds
                             | GatewayIntents.MessageContent,
-                        HandlerTimeout = null,
+						ConnectionTimeout = int.MaxValue, // Temp until discord-net/Discord.Net#2743 is fixed
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                         LogLevel = LogSeverity.Debug,
 #else
