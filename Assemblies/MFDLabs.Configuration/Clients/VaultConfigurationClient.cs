@@ -111,11 +111,14 @@ namespace MFDLabs.Configuration.Clients.Vault
                                 mountPoint: BaseMountPoint
                             ).Sync()
                         select secret.Data.Data
+                        let name = (JsonElement?)values["Name"]
+                        let updated = (JsonElement?)values["Updated"]
+                        let value = (JsonElement?)values["Value"]
                     select new Setting
                     {
-                        Name = ((JsonElement)values["Name"]).GetString(),
-                        Updated = ((JsonElement)values["Updated"]).GetDateTime(),
-                        Value = ((JsonElement)values["Value"]).GetString()
+                        Name = name?.GetString(),
+                        Updated = updated?.GetDateTime() ?? DateTime.Now,
+                        Value = value?.GetString()
                     }).Cast<ISetting>().ToArray();
         }
 
@@ -133,11 +136,14 @@ namespace MFDLabs.Configuration.Clients.Vault
                                 mountPoint: BaseMountPoint
                             ).Sync()
                         select secret.Data.Data
+                    let name = (JsonElement?)values["Name"]
+                    let updated = (JsonElement?)values["Updated"]
+                    let value = (JsonElement?)values["Value"]
                     select new Setting
                     {
-                        Name = ((JsonElement)values["Name"]).GetString(),
-                        Updated = ((JsonElement)values["Updated"]).GetDateTime(),
-                        Value = ((JsonElement)values["Value"]).GetString()
+                        Name = name?.GetString(),
+                        Updated = updated?.GetDateTime() ?? DateTime.Now,
+                        Value = value?.GetString()
                     }).Cast<ISetting>().ToArray();
         }
 
