@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Net;
-using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Events
@@ -23,7 +21,8 @@ namespace MFDLabs.Grid.Bot.Events
                     Logger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
                         message.Source,
                         message.Message,
-                        message.Exception.ToDetailedString());
+                        message.Exception.ToString()
+                    );
 #endif
                 return Task.CompletedTask;
             }
