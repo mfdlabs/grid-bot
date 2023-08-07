@@ -71,7 +71,7 @@ namespace MFDLabs.Grid.Bot.Commands
             if (!wasMention)
             {
                 IUser u;
-                if ((u = await BotGlobal.Client.GetUserAsync(uid)) == null)
+                if ((u = await BotRegistry.Client.GetUserAsync(uid)) == null)
                 {
                     await message.ReplyAsync($"The user '{uid}' was not found.");
                     return;

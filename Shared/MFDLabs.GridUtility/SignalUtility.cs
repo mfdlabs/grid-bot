@@ -1,5 +1,4 @@
 ﻿using System;
-using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
 using MFDLabs.Grid.Bot.Properties;
@@ -18,13 +17,10 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGINT", "Shutdown via SIGINT");
-                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
-                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
                 ShutdownUdpReceiver.Stop();
                 if (killBot)
-                    await BotGlobal.TryLogout();
+                    await BotRegistry.TryLogout();
                 try { GridServerArbiter.Singleton.KillAllInstances(); } catch { }
                 Logger.TryClearLocalLog(false);
                 Environment.Exit(0);
@@ -37,14 +33,11 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("Shutdown", "SIGUSR1", "Shutdown via SIGINT");
-                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot");
-                ConsulServiceRegistrationUtility.DeregisterService("MFDLabs.Grid.Bot.PerfmonServerV2");
                 PerformanceServer.Stop();
                 ShutdownUdpReceiver.Stop();
                 try { GridServerArbiter.Singleton.KillAllInstances(); } catch { }
                 if (killBot)
-                    await BotGlobal.TryLogout();
+                    await BotRegistry.TryLogout();
                 Logger.TryClearLocalLog(true);
                 Environment.Exit(0);
             }, TimeSpan.FromSeconds(1));
@@ -56,13 +49,10 @@ namespace MFDLabs.Grid.Bot.Utility
 
             TaskHelper.SetTimeout(async () =>
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync("Restart", "SIGUSR2",
-                    "Restart via SIGINT");
-
                 if (killBot)
-                    await BotGlobal.TryLogout();
+                    await BotRegistry.TryLogout();
                 Logger.TryClearLocalLog(true);
-                await BotGlobal.SingletonLaunch();
+                await BotRegistry.SingletonLaunch();
 
                 if (!restartServers) return;
 

@@ -6,9 +6,10 @@ using MFDLabs.Configuration.Extensions;
 
 namespace MFDLabs.Grid.Bot.Global
 {
-    public static class BotGlobal
+    public static class BotRegistry
     {
 #if DISCORD_SHARDING_ENABLED
+        public static bool Ready { get; set; }
         public static DiscordShardedClient Client { get; private set; }
 
         public static void Initialize(DiscordShardedClient client) => Client = client;

@@ -20,7 +20,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var guilds = BotGlobal.Client.Guilds;
+            var guilds = BotRegistry.Client.Guilds;
 
             var returnString = "";
 

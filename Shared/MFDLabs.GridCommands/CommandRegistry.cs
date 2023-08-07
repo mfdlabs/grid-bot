@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using MFDLabs.Diagnostics;
-using MFDLabs.ErrorHandling.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Guards;
 using MFDLabs.Grid.Bot.Interfaces;
@@ -304,14 +303,6 @@ namespace MFDLabs.Grid.Bot.Registries
                 channelId
             );
 
-            await command.User.PageViewedAsync($"{typeof(CommandRegistry).FullName}SlashCommands({channelName})");
-
-            await command.User.FireEventAsync(
-                "SlashCommandExecuted",
-                $"Try execute the slash command '{commandAlias}' with the arguments '{(!args.IsNullOrEmpty() ? args.EscapeNewLines().Escape() : "No command arguments.")}' " +
-                $"from '{username}' ({userId}) in guild '{guildName}' ({guildId}) - channel '{channelName}' ({channelId})."
-            );
-
             var sw = Stopwatch.StartNew();
 
             try
@@ -322,8 +313,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (cmd == null)
                 {
-                    await command.User.FireEventAsync("SlashCommandNotFound", $"{channelId} {commandAlias}");
-
                     InstrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
 
@@ -346,7 +335,6 @@ namespace MFDLabs.Grid.Bot.Registries
                 {
                     var disabledMessage = (from c in _disabledSlashCommandsReasons select c.Item2).FirstOrDefault();
 
-                    await command.User.FireEventAsync("SlashCommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
                     InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
                     Logger.Singleton.Warning("The slash command '{0}' is disabled. {1}",
                         commandAlias,
@@ -419,7 +407,7 @@ namespace MFDLabs.Grid.Bot.Registries
                         cmdInternal = await guildChannel.Guild.GetApplicationCommandAsync(cmd.CommandId);
                     }
 
-                    cmdInternal ??= await BotGlobal.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
+                    cmdInternal ??= await BotRegistry.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
 
                     await cmdInternal.DeleteAsync();
                 }
@@ -464,19 +452,9 @@ namespace MFDLabs.Grid.Bot.Registries
                 channelId
             );
 
-            await message.Author.PageViewedAsync($"{typeof(CommandRegistry).FullName}({channelName})");
-
-            await message.Author.FireEventAsync(
-                "CommandExecuted",
-                $"Tried to execute the command '{commandAlias}' with the arguments " +
-                $"'{(messageContent.Length > 0 ? messageContent.Join(' ').EscapeNewLines().Escape() : "No command arguments.")}' " +
-                $"in guild '{guildName}' ({guildId}) - channel '{channelName}' ({channelId})."
-            );
-
             if (commandAlias.IsNullOrWhiteSpace())
             {
                 Logger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
-                await message.Author.FireEventAsync("InvalidCommand", "Got prefix but command alias was empty");
                 return;
             }
 
@@ -487,7 +465,6 @@ namespace MFDLabs.Grid.Bot.Registries
             )
             {
                 Logger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
-                await message.Author.FireEventAsync("InvalidCommand", "The command did not contain alphabet characters.");
                 // should we reply here?
                 return;
             }
@@ -502,7 +479,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
                 if (command == null)
                 {
-                    await message.Author.FireEventAsync("CommandNotFound", $"{channelId} {commandAlias}");
                     InstrumentationPerfmon.CommandsThatDidNotExist.Increment();
                     InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     Counters.RequestFailedCountN++;
@@ -525,7 +501,6 @@ namespace MFDLabs.Grid.Bot.Registries
                         (from cmd in _disabledCommandsReasons where cmd.Item1 == command select cmd.Item2)
                         .FirstOrDefault();
 
-                    await message.Author.FireEventAsync("CommandDisabled", $"{channelId} {commandAlias} {disabledMessage ?? ""}");
                     InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
                     Logger.Singleton.Warning("The command '{0}' is disabled. {1}",
                         commandAlias,
@@ -591,21 +566,20 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
             Counters.RequestFailedCountN++;
-            await command.User.FireEventAsync("SlashCommandException", $"The command {alias} threw: {ex.ToDetailedString()}");
 
             var exceptionId = Guid.NewGuid();
 
             switch (ex)
             {
                 case CircuitBreakerException _:
-                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToDetailedString());
+                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToString());
                     await command.RespondEphemeralPingAsync(ex.Message);
                     return;
                 case NotSupportedException _:
                     Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
                 case ApplicationException _:
-                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
+                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
                     await command.RespondEphemeralPingAsync($"The command threw an exception: {ex.Message}");
                     return;
                 case TimeoutException _:
@@ -666,11 +640,11 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InstrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
 
-            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToDetailedString());
+            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
-                var detail = ex.ToDetailedString();
+                var detail = ex.ToString();
                 if (detail.Length > EmbedBuilder.MaxDescriptionLength)
                 {
                     await command.RespondEphemeralPingAsync(UnhandledExceptionOccurredFromCommand);
@@ -681,7 +655,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 InstrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
                 await command.RespondEphemeralPingAsync(
                     UnhandledExceptionOccurredFromCommand,
-                    embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
+                    embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
                 );
                 return;
             }
@@ -699,7 +673,6 @@ namespace MFDLabs.Grid.Bot.Registries
         {
             InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
             Counters.RequestFailedCountN++;
-            await message.Author.FireEventAsync("CommandException", $"The command {alias} threw: {ex.ToDetailedString()}");
 
             var exceptionId = Guid.NewGuid();
 
@@ -709,14 +682,14 @@ namespace MFDLabs.Grid.Bot.Registries
             switch (ex)
             {
                 case CircuitBreakerException _:
-                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToDetailedString());
+                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToString());
                     await message.ReplyAsync(ex.Message);
                     return;
                 case NotSupportedException _:
                     Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
                 case ApplicationException _:
-                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToDetailedString());
+                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
                     await message.ReplyAsync($"The command threw an exception: {ex.Message}");
                     return;
                 case TimeoutException _:
@@ -781,11 +754,12 @@ namespace MFDLabs.Grid.Bot.Registries
 
             Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}",
                 exceptionId.ToString(),
-                ex.ToDetailedString());
+                ex.ToString()
+            );
 
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
-                var detail = ex.ToDetailedString();
+                var detail = ex.ToString();
                 if (detail.Length > EmbedBuilder.MaxDescriptionLength)
                 {
                     await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt", UnhandledExceptionOccurredFromCommand);
@@ -795,7 +769,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 InstrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
                 await message.ReplyAsync(
                     UnhandledExceptionOccurredFromCommand,
-                    embed: new EmbedBuilder().WithDescription($"```\n{ex.ToDetail()}\n```").Build()
+                    embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
                 );
                 return;
             }
@@ -930,7 +904,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                                         if (trueCommandHandler.GuildId != null)
                                         {
-                                            var guild = BotGlobal.Client.GetGuild(trueCommandHandler.GuildId.Value);
+                                            var guild = BotRegistry.Client.GetGuild(trueCommandHandler.GuildId.Value);
 
                                             if (guild == null)
                                             {
@@ -947,7 +921,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                         }
                                         else
                                         {
-                                            BotGlobal.Client.CreateGlobalApplicationCommand(builder.Build());
+                                            BotRegistry.Client.CreateGlobalApplicationCommand(builder.Build());
                                         }
 
                                         StateSpecificSlashCommandHandlers.Add(trueCommandHandler);
@@ -1098,27 +1072,6 @@ namespace MFDLabs.Grid.Bot.Registries
         public static (Modes, CountersData) GetMetrics()
         {
             return (CalculateModes(), Counters);
-        }
-
-        public static void LogMetricsReport()
-        {
-            Logger.Singleton.Warning(
-                "Command Registry metrics report for at ({0}",
-                DateTimeGlobal.GetUtcNowAsIso()
-            );
-            Logger.Singleton.Log("=====================================================================================");
-            Logger.Singleton.Log("Total command request count: {0}", Counters.RequestCountN);
-            Logger.Singleton.Log("Total succeeded command request count: {0}", Counters.RequestSucceededCountN);
-            Logger.Singleton.Log("Total failed command request count: {0}", Counters.RequestFailedCountN);
-
-            var modes = CalculateModes();
-
-            Logger.Singleton.Log("Average request channel: '{0}' with average of {1}", modes.Channels.Item, modes.Channels.Average);
-            Logger.Singleton.Log("Average request guild: '{0}' with average of {1}", modes.Servers.Item, modes.Servers.Average);
-            Logger.Singleton.Log("Average request user: '{0}' with average of {1}", modes.Users.Item, modes.Users.Average);
-            Logger.Singleton.Log("Average request command name: '{0}' with average of {1}", modes.Commands.Item, modes.Commands.Average);
-
-            Logger.Singleton.Log("=====================================================================================");
         }
 
         private static void InsertIntoAverages(string channelName, string serverName, string userName, string commandName)

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using MFDLabs.Analytics.Google;
 using MFDLabs.Diagnostics;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
@@ -97,16 +96,6 @@ namespace MFDLabs.Grid.Bot.Extensions
         public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
         public static bool IsPrivilaged(this IUser user) => AdminUtility.UserIsPrivilaged(user);
         public static bool IsOwner(this IUser user) => AdminUtility.UserIsOwner(user);
-        public static Task<long?> GetRobloxIdAsync(this IUser user) => UserUtility.GetRobloxIdByIUserAsync(user);
-        public static long? GetRobloxId(this IUser user) => UserUtility.GetRobloxIdByIUser(user);
-        public static void PageViewed(this IUser user, string location)
-            => GoogleAnalyticsManager.TrackPageView(user.Id.ToString(), location);
-        public static Task PageViewedAsync(this IUser user, string location)
-            => GoogleAnalyticsManager.TrackPageViewAsync(user.Id.ToString(), location);
-        public static void FireEvent(this IUser user, string @event, string extraContext = "none") 
-            => GoogleAnalyticsManager.TrackEvent(user.Id.ToString(), "UserAction", @event, extraContext);
-        public static Task FireEventAsync(this IUser user, string @event, string extraContext = "none") 
-            => GoogleAnalyticsManager.TrackEventAsync(user.Id.ToString(), "UserAction", @event, extraContext);
         public static async Task<IUserMessage> SendDirectMessageAsync(
             this IUser user,
             string text = null,
@@ -116,7 +105,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageReference messageReference = null
         )
         {
-            var dmChannel = await BotGlobal.Client.GetDMChannelAsync(user.Id);
+            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
             if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
             return await dmChannel?.SendMessageAsync(
                 text,
@@ -138,7 +127,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageReference messageReference = null
         )
         {
-            var dmChannel = await BotGlobal.Client.GetDMChannelAsync(user.Id);
+            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
             if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
             return await dmChannel?.SendFileAsync(
                 fileName,
@@ -163,7 +152,7 @@ namespace MFDLabs.Grid.Bot.Extensions
             MessageReference messageReference = null
         )
         {
-            var dmChannel = await BotGlobal.Client.GetDMChannelAsync(user.Id);
+            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
             if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
             return await dmChannel?.SendFileAsync(
                 stream,

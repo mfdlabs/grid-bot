@@ -68,7 +68,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 i++;
             }
 
-            var guild = BotGlobal.Client.GetGuild(guildId);
+            var guild = BotRegistry.Client.GetGuild(guildId);
             if (guild == null)
             {
                 await message.ReplyAsync($"Unknown guild '{guildId}'.");

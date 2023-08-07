@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Concurrency\MFDLabs.Concurrency.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />

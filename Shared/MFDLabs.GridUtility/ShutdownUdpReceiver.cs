@@ -34,8 +34,8 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
 
-                global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb).Wait();
-                global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb).Wait();
+                global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
                     $"Maintenance is enabled: {message}",
                     null,
                     ActivityType.Playing

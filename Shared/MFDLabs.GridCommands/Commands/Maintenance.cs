@@ -60,8 +60,8 @@ namespace MFDLabs.Grid.Bot.Commands
 
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = false;
 
-                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
-                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                    global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb);
+                    global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
                         GetStatusText(optionalMessage),
                         null,
                         ActivityType.Playing
@@ -89,12 +89,12 @@ namespace MFDLabs.Grid.Bot.Commands
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = true;
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
 
-                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetStatusAsync(
+                    global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetStatusAsync(
                         global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
                     );
 
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
-                        global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                        global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
                             global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
                             global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
                             global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
@@ -126,7 +126,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = optionalMessageForUpdate;
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
 
-                    global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(
+                    global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
                         GetStatusText(optionalMessageForUpdate),
                         null,
                         ActivityType.Playing
@@ -148,7 +148,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
 
                     if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
-                        global::MFDLabs.Grid.Bot.Global.BotGlobal.Client.SetGameAsync(GetStatusText(null), null, ActivityType.Playing);
+                        global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(GetStatusText(null), null, ActivityType.Playing);
 
                     await message.ReplyAsync("Sucessfully removed the maintenance text!");
 

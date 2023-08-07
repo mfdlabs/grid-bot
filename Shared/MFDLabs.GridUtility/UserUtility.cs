@@ -1,56 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using MFDLabs.Discord.RbxUsers.Client;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Http.Client;
+using System.Collections.Generic;
+
 using MFDLabs.Users.Client;
 using MFDLabs.Threading.Extensions;
-using MFDLabs.Users.Client.Models.Users;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
     public static class UserUtility
     {
         private static readonly IUsersClient SharedUsersClient = new UsersClient(
-            PerfmonCounterRegistryProvider.Registry,
-            new UsersClientConfig(
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRemoteURL,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceMaxRedirects,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRequestTimeout,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceMaxCircuitBreakerFailuresBeforeTrip,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceCircuitBreakerRetryInterval
-            )
+            global::MFDLabs.Grid.Bot.Properties.Settings.Default.UsersServiceRemoteURL
         );
-
-        private static readonly IRbxDiscordUsersClient SharedDiscordUsersClient = new RbxDiscordUsersClient(
-            PerfmonCounterRegistryProvider.Registry,
-            new RbxDiscordUsersClientConfig(
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRemoteURL,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxRedirects,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceRequestTimeout,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.RbxDiscordUsersServiceCircuitBreakerRetryInterval
-            )
-        );
-
-        public static async Task<long?> GetRobloxIdByIUserAsync(IUser user)
-        {
-            try
-            {
-                var result = await SharedDiscordUsersClient.ResolveRobloxUserByIdAsync(user.Id, CancellationToken.None);
-                if (result.Username == null) return null;
-                return result.Id;
-            }
-            catch (HttpRequestFailedException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound) { return null; }
-            catch (Exception ex) { global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true); return null; }
-        }
-
-        public static long? GetRobloxIdByIUser(IUser user) => GetRobloxIdByIUserAsync(user).Sync();
 
         public static bool GetIsUserBanned(long id) => GetIsUserBannedAsync(id).Sync();
 
