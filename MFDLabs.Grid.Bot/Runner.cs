@@ -14,7 +14,6 @@ using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Events;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Analytics.Google;
 using MFDLabs.Grid.Bot.Properties;
 using MFDLabs.Grid.Bot.Registries;
 using MFDLabs.Configuration.Extensions;
@@ -37,12 +36,8 @@ namespace MFDLabs.Grid.Bot
 
         public static void OnGlobalException(Exception ex)
         {
-            GoogleAnalyticsManager.TrackNetworkEvent(
-                "Startup",
-                "Error",
-                $"Startup Failure: {ex.Message}."
-            );
             Logger.Singleton.LifecycleEvent(PrimaryTaskError);
+
             PerformanceServer.Stop();
         }
 
@@ -50,34 +45,14 @@ namespace MFDLabs.Grid.Bot
         {
             Logger.Singleton.LifecycleEvent(BadActorMessage);
 
-            GoogleAnalyticsManager.Initialize(
-                PerfmonCounterRegistryProvider.Registry,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsTrackerID,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsMetricsID,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsApiSecret,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.GoogleAnalyticsEnableServerSideValidation
-            );
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
-            {
-                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Debug Mode Enabled");
                 Logger.Singleton.Warning(DebugMode);
-            }
 #endif
+
             if (SystemGlobal.ContextIsAdministrator() &&
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
-            {
-                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Warning", "Administrator Context");
                 Logger.Singleton.Warning(AdminMode);
-            }
-
-            GoogleAnalyticsManager.TrackNetworkEvent(
-                "Startup",
-                "Info",
-                $"Process '{SystemGlobal.CurrentProcess.Id:x}' " +
-                $"opened with file name '{SystemGlobal.CurrentProcess.ProcessName}' at path " +
-                $"'{Directory.GetCurrentDirectory()}' (version {SystemGlobal.AssemblyVersion})."
-            );
 
             if (args.Contains("--write-settings"))
             {
@@ -106,27 +81,8 @@ namespace MFDLabs.Grid.Bot
                 SystemGlobal.GetMachineId()
             );
 
-            ConsulServiceRegistrationUtility.RegisterService("MFDLabs.Grid.Bot", true, null, null, new[] { "C#", ".NET" });
-            ConsulServiceRegistrationUtility.RegisterSubService(
-                "MFDLabs.Grid.Bot",
-                "MFDLabs.Grid.Bot.PerfmonServerV2",
-                false,
-                NetworkingGlobal.GetLocalIp(),
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
-                new[] { "perf", "node-perf", "perf-counter-v2" }
-            );
-            ConsulServiceRegistrationUtility.RegisterServiceHttpCheck(
-                "MFDLabs.Grid.Bot.PerfmonServerV2",
-                "Counter Server Health Check",
-                $"http://{NetworkingGlobal.GetLocalIp()}:{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort)}",
-                "Health For Counter Server"
-            );
-
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
-            {
-                GoogleAnalyticsManager.TrackNetworkEvent("Startup", "Info", "Performance Server Started");
                 PerformanceServer.Start();
-            }
 
             InvokeAsync(args).Wait();
 
@@ -140,18 +96,13 @@ namespace MFDLabs.Grid.Bot
 
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>().IsNullOrWhiteSpace())
             {
-                await GoogleAnalyticsManager.TrackNetworkEventAsync(
-                    "MainTask",
-                    "Error",
-                    "MainTask Failure: No Bot Token."
-                );
                 Logger.Singleton.Error(NoBotToken);
                 // Case here so backtrace can catch potential hackers trying to use this without a token
                 // (they got assemblies but no configuration)
                 throw new InvalidOperationException(NoBotToken);
             }
 
-            BotGlobal.Initialize(
+            BotRegistry.Initialize(
 #if DISCORD_SHARDING_ENABLED
                 new DiscordShardedClient(
 #else
@@ -175,25 +126,17 @@ namespace MFDLabs.Grid.Bot
                 )
             );
 
-            BotGlobal.Client.Log += OnLogMessage.Invoke;
-            BotGlobal.Client.LoggedIn += OnLoggedIn.Invoke;
-            BotGlobal.Client.LoggedOut += OnLoggedOut.Invoke;
-            BotGlobal.Client.MessageReceived += OnMessage.Invoke;
-            BotGlobal.Client.JoinedGuild += OnBotGlobalAddedToGuild.Invoke;
+            BotRegistry.Client.Log += OnLogMessage.Invoke;
+            BotRegistry.Client.MessageReceived += OnMessage.Invoke;
 
 #if DISCORD_SHARDING_ENABLED
-            BotGlobal.Client.ShardConnected += OnShardConnected.Invoke;
-            BotGlobal.Client.ShardLatencyUpdated += OnShardLatencyUpdated.Invoke;
-            BotGlobal.Client.ShardReady += OnShardReady.Invoke;
+            BotRegistry.Client.ShardReady += OnShardReady.Invoke;
 #else
-            BotGlobal.Client.Connected += OnConnected.Invoke;
-            BotGlobal.Client.LatencyUpdated += OnLatencyUpdated.Invoke;
-            BotGlobal.Client.Ready += OnReady.Invoke;
+            BotRegistry.Client.Ready += OnReady.Invoke;
 #endif
 
-
 #if WE_LOVE_EM_SLASH_COMMANDS
-            BotGlobal.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
+            BotRegistry.Client.SlashCommandExecuted += OnSlashCommand.Invoke;
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
@@ -216,7 +159,7 @@ namespace MFDLabs.Grid.Bot
             Task.Run(ShutdownUdpReceiver.Receive);
 
             if (!args.Contains("--no-gateway"))
-                await BotGlobal.SingletonLaunch();
+                await BotRegistry.SingletonLaunch();
 
             await Task.Delay(-1);
         }

@@ -80,8 +80,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Analytics.Google\MFDLabs.Analytics.Google.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.Backtrace\MFDLabs.Backtrace.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
     <ProjectReference Include="..\Shared\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
     <ProjectReference Include="..\Shared\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
