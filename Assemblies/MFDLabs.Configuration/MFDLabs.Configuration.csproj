@@ -3,8 +3,10 @@
   <Import Project="../../AssembliesStandard.targets" />
 
   <ItemGroup>
+    <PackageReference Include="Consul" Version="1.6.10.9" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,8 +25,6 @@
   </ItemGroup>
   
   <ItemGroup>
-	<ProjectReference Include="..\MFDLabs.Hashicorp.ConsulClient\MFDLabs.Hashicorp.ConsulClient.csproj" />
-	<ProjectReference Include="..\MFDLabs.Hashicorp.VaultClient\MFDLabs.Hashicorp.VaultClient.csproj" />
 	<ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
 	<ProjectReference Include="..\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
 	<ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />

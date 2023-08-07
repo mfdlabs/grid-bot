@@ -1,18 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Collections.Generic;
+
+using VaultSharp;
+using VaultSharp.Core;
+using VaultSharp.V1.Commons;
+using VaultSharp.V1.AuthMethods;
+using VaultSharp.V1.AuthMethods.LDAP;
+using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.AuthMethods.AppRole;
+using VaultSharp.V1.SecretsEngines.KeyValue.V2;
+
 using MFDLabs.Threading.Extensions;
 using MFDLabs.Configuration.Logging;
-using MFDLabs.Hashicorp.VaultClient;
 using MFDLabs.Configuration.Settings;
-using MFDLabs.Hashicorp.VaultClient.Core;
-using MFDLabs.Hashicorp.VaultClient.V1.Commons;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
-using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
 
 namespace MFDLabs.Configuration.Clients.Vault
 {

@@ -1,8 +1,10 @@
 ﻿using System;
+
+using Consul;
+
 using MFDLabs.Text.Extensions;
 using MFDLabs.Threading.Extensions;
 using MFDLabs.Configuration.Logging;
-using MFDLabs.Hashicorp.ConsulClient;
 
 namespace MFDLabs.Configuration
 {

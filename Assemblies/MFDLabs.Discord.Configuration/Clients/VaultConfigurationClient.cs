@@ -1,17 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
+using System.Configuration;
+using System.Collections.Generic;
+
 using Discord.WebSocket;
+
+using VaultSharp;
+using VaultSharp.V1.AuthMethods;
+using VaultSharp.V1.AuthMethods.AppRole;
+using VaultSharp.V1.AuthMethods.LDAP;
+using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.SecretsEngines.KeyValue.V2;
+
 using MFDLabs.Logging;
 using MFDLabs.Threading.Extensions;
-using MFDLabs.Hashicorp.VaultClient;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.AppRole;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.LDAP;
-using MFDLabs.Hashicorp.VaultClient.V1.AuthMethods.Token;
-using MFDLabs.Hashicorp.VaultClient.V1.SecretsEngines.KeyValue.V2;
 
 namespace MFDLabs.Discord.Configuration
 {
