@@ -2,11 +2,10 @@
 
 using System;
 using System.Net;
-using System.Text;
+using System.Net.Http;
 
-using Http;
-using Instrumentation;
 using Text.Extensions;
+using Threading.Extensions;
 
 /// <summary>
 /// Implementation of <see cref="IHealthCheckClient"/>.
@@ -18,26 +17,14 @@ public class WebServerHealthCheckClient : HealthCheckClientBase
     /// <summary>
     /// Construct a new instance of <see cref="WebServerHealthCheckClient"/>.
     /// </summary>
-    /// <param name="counterRegistry">The counter registry to use.</param>
     /// <param name="url">The url of the web server.</param>
     /// <param name="expectedHealthCheckText">The expected health check text.</param>
     /// <exception cref="ArgumentNullException"><paramref name="expectedHealthCheckText"/> cannot be null.</exception>
     public WebServerHealthCheckClient(
-        ICounterRegistry counterRegistry,
         string url,
         string expectedHealthCheckText
     )
-        : base(
-            counterRegistry,
-            new(
-                "grid-service-websrv", 
-                url,
-                global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckClientMaxRedirects,
-                global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckClientRequestTimeout,
-                global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckClientAllowedFailuresBeforeTrip,
-                global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckClientRetryInterval
-            )
-        )
+        : base(url)
     {
         _expectedText = expectedHealthCheckText ?? throw new ArgumentNullException(nameof(expectedHealthCheckText));
     }
@@ -45,13 +32,13 @@ public class WebServerHealthCheckClient : HealthCheckClientBase
     /// <inheritdoc cref="IHealthCheckClient.HealthCheckPath"/>
     public override string HealthCheckPath { get; set; } = "/";
 
-    /// <inheritdoc cref="HealthCheckClientBase.ValidateResponse(IHttpResponse)"/>
-    protected override bool ValidateResponse(IHttpResponse response)
+    /// <inheritdoc cref="HealthCheckClientBase.ValidateResponse(HttpResponseMessage)"/>
+    protected override bool ValidateResponse(HttpResponseMessage response)
     {
-        var responseText = Encoding.ASCII.GetString(response.Body);
+        var responseText = response.Content.ReadAsStringAsync().Sync();
 
         return response.StatusCode == HttpStatusCode.OK &&
-              !responseText.IsNullOrEmpty() && 
+              !responseText.IsNullOrEmpty() &&
                responseText == _expectedText;
     }
 }

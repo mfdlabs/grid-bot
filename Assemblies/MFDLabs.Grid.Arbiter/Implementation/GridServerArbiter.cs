@@ -181,7 +181,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         _portAllocator = portAllocator ?? new PortAllocator(counterRegistry, logger);
 
         var healthCheckClient = new WebServerHealthCheckClient(
-            counterRegistry,
             global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckBaseUrl,
             global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText
         );
