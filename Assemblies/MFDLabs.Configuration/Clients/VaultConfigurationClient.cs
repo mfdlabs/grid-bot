@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Text.Json;
 using System.Collections.Generic;
 
 using VaultSharp;
@@ -112,9 +113,9 @@ namespace MFDLabs.Configuration.Clients.Vault
                         select secret.Data.Data
                     select new Setting
                     {
-                        Name = (string)values["Name"],
-                        Updated = (DateTime)values["Updated"],
-                        Value = (string)values["Value"]
+                        Name = ((JsonElement)values["Name"]).GetString(),
+                        Updated = ((JsonElement)values["Updated"]).GetDateTime(),
+                        Value = ((JsonElement)values["Value"]).GetString()
                     }).Cast<ISetting>().ToArray();
         }
 
@@ -134,9 +135,9 @@ namespace MFDLabs.Configuration.Clients.Vault
                         select secret.Data.Data
                     select new Setting
                     {
-                        Name = (string)values["Name"],
-                        Updated = (DateTime)values["Updated"],
-                        Value = (string)values["Value"]
+                        Name = ((JsonElement)values["Name"]).GetString(),
+                        Updated = ((JsonElement)values["Updated"]).GetDateTime(),
+                        Value = ((JsonElement)values["Value"]).GetString()
                     }).Cast<ISetting>().ToArray();
         }
 
