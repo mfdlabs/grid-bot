@@ -1,10 +1,23 @@
 ﻿using System;
 using MFDLabs.Threading;
 
-namespace MFDLabs.Sentinels
+namespace MFDLabs.FileSystem
 {
-    public static class ExponentialBackoff
+    public enum Jitter
     {
+        None,
+        Full,
+        Equal
+    }
+
+    internal static class ExponentialBackoff
+    {
+        private const uint CeilingForMaxAttempts = 10;
+        private static readonly ThreadLocalRandom Random = new();
+
+        public static TimeSpan Multiply(this TimeSpan multiplicand, double multiplier)
+            => TimeSpan.FromTicks((long)(multiplicand.Ticks * multiplier));
+
         public static TimeSpan CalculateBackoff(uint attempt, uint maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None) 
             => CalculateBackoff(attempt, maxAttempts, baseDelay, maxDelay, jitter, () => Random.NextDouble());
 
@@ -24,8 +37,5 @@ namespace MFDLabs.Sentinels
             };
             return delay;
         }
-
-        private const uint CeilingForMaxAttempts = 10;
-        private static readonly ThreadLocalRandom Random = new ThreadLocalRandom();
     }
 }
