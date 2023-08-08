@@ -89,7 +89,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)Scripts\OnPostBuildInvoked.ps1&quot; -ConfigurationName $(ConfigurationName) -ProjectDir $(ProjectDir) -OutDir $(OutDir) -TargetName $(TargetName) -TargetExt $(TargetExt) -SolutionDir $(SolutionDir) -ProjectName $(ProjectName) -TargetFramework $(TargetFramework) -DeleteDebugSymbols $false -WriteNewGitHubRelease $true -ReleasePrefix $(TargetName)" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false -writeNewGitHubRelease $true -releasePrefix $(TargetName)" />
   </Target>
 
 </Project>
