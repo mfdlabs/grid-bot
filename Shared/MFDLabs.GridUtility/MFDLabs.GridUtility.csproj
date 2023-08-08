@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../SharedProjects.targets" />
+  <Import Project="../../targets/shared.targets" />
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>

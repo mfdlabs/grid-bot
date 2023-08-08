@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../AssembliesFramework.targets" />
+  <Import Project="../../targets/lib-framework.targets" />
   
   <ItemGroup>
     <Reference Include="System.Drawing" />

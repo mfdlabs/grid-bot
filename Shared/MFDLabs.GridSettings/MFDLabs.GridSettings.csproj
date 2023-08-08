@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../SharedGridProjects.targets" />
+  <Import Project="../../targets/shared-vault.targets" />
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="3.11.0" />

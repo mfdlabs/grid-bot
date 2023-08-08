@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
-  <Import Project="../../AssembliesBoth.targets" />
+  <Import Project="../../targets/lib-both.targets" />
 
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

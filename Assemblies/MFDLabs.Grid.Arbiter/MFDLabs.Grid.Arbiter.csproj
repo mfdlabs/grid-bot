@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../AssembliesGridBoth.targets" />
+  <Import Project="../../targets/lib-vault-both.targets" />
 
   <PropertyGroup>
     <RootNamespace>MFDLabs.Grid</RootNamespace>

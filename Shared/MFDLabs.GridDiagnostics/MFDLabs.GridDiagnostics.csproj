@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../SharedProjects.targets" />
+  <Import Project="../../targets/shared.targets" />
 
   <ItemGroup>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
