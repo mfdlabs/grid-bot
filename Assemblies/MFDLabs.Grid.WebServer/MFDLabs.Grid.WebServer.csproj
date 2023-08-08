@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MFDLabs.Grid.HealthCheck.Client\MFDLabs.Grid.HealthCheck.Client.csproj" />
-    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

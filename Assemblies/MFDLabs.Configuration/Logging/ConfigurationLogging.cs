@@ -1,5 +1,6 @@
 ﻿using System;
-using MFDLabs.Logging;
+
+using Logging;
 
 namespace MFDLabs.Configuration.Logging
 {
@@ -20,6 +21,6 @@ namespace MFDLabs.Configuration.Logging
 
         private static Action<string, object[]> _overrideOnError = (f, a) => Logger.Singleton.Error(f, a);
 		private static Action<string, object[]> _overrideOnWarning = (f, a) => Logger.Singleton.Warning(f, a);
-		private static Action<string, object[]> _overrideOnInformation = (f, a) => Logger.Singleton.Info(f, a);
+		private static Action<string, object[]> _overrideOnInformation = (f, a) => Logger.Singleton.Information(f, a);
 	}
 }

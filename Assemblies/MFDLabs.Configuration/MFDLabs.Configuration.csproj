@@ -25,7 +25,7 @@
   </ItemGroup>
   
   <ItemGroup>
-	<ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+	<ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
 	<ProjectReference Include="..\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
 	<ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
 	<ProjectReference Include="..\MFDLabs.Threading\MFDLabs.Threading.csproj" />

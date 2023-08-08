@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MFDLabs.Grid.Shared\MFDLabs.Grid.Shared.csproj" />
     <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
-    <ProjectReference Include="..\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>
