@@ -1,15 +1,18 @@
 ﻿using System;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Configuration;
 using System.Threading.Tasks;
+
 using Discord.WebSocket;
+
+using Logging;
+
+using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
-using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -243,7 +246,7 @@ namespace MFDLabs.Grid.Bot.Commands
             }
 
             saveInvoker.Invoke(settingInstanceValue, null);
-            Logger.Singleton.LifecycleEvent("Successfully set the setting '{0}' to the value of '{1}' " +
+            Logger.Singleton.Debug("Successfully set the setting '{0}' to the value of '{1}' " +
                                                   "in the settings group '{2}' in the assembly '{3}'.",
                 settingName,
                 // ReSharper disable once PossibleInvalidOperationException

@@ -2,7 +2,8 @@
 
 using Discord;
 
-using MFDLabs.Logging;
+using Logging;
+
 using MFDLabs.Threading;
 using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Global;

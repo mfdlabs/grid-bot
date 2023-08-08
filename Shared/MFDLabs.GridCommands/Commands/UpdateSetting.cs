@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
+using System.Configuration;
 using System.Threading.Tasks;
+
 using Discord.WebSocket;
+
+using Logging;
+
+using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
-using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -116,7 +119,7 @@ namespace MFDLabs.Grid.Bot.Commands
             {
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName] = transformedValue;
                 global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
-                Logger.Singleton.LifecycleEvent("Successfully set the setting " +
+                Logger.Singleton.Debug("Successfully set the setting " +
                                                       "'{0}' to the value of '{1}'.",
                     settingName,
                     // ReSharper disable once PossibleInvalidOperationException

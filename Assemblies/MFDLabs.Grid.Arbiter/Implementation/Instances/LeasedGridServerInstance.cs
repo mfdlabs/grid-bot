@@ -128,11 +128,11 @@ public class LeasedGridServerInstance : GridServerInstance, ILeasedGridServerIns
 
         lock (_expirationCheckLock)
         {
-            Logger.LifecycleEvent("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
+            Logger.Debug("Renewing instance '{0}' lease '{1}', current expiration '{2}'", Name, Lease, Expiration);
 
             _expiration = DateTime.Now.Add(_lease);
 
-            Logger.LifecycleEvent("New expiration for instance '{0}' is '{1}'", Name, Expiration);
+            Logger.Debug("New expiration for instance '{0}' is '{1}'", Name, Expiration);
 
             ScheduleExpirationCheck();
         }

@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Linq;
+using System.Collections.Concurrent;
+
 using Discord;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
+
+using Logging;
+
 using MFDLabs.Threading;
+using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
@@ -69,7 +72,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 if (exceptionCounter == 0)
                 {
-                    Logger.Singleton.Info("They had an exception counter of 0, so they were just created, return false");
+                    Logger.Singleton.Information("They had an exception counter of 0, so they were just created, return false");
                     return false;
                 }
 
@@ -80,13 +83,13 @@ namespace MFDLabs.Grid.Bot.Utility
                     return true;
                 }
 
-                Logger.Singleton.Info("The user didn't exceed the maximum before blacklist, reset their track.");
+                Logger.Singleton.Information("The user didn't exceed the maximum before blacklist, reset their track.");
                 user.UpdateOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
                 return false;
             }
 
-            Logger.Singleton.Info("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
+            Logger.Singleton.Information("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
 
 
             return exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
@@ -112,7 +115,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             if (user.CheckIfUserShouldBeBlacklisted()) return;
 
-            Logger.Singleton.Verbose("User {0} has not exceeded the exception limit, increment their count atomically.", user.Id);
+            Logger.Singleton.Debug("User {0} has not exceeded the exception limit, increment their count atomically.", user.Id);
 
             user.UpdateOrCreateTrack(null, null, true);
         }

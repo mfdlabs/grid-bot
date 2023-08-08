@@ -62,7 +62,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <Compile Remove="Deploy\**" />

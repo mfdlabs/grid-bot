@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+
 using Discord;
-using MFDLabs.Logging;
+
+using Logging;
 
 namespace MFDLabs.Grid.Bot.Events
 {
@@ -39,10 +41,10 @@ namespace MFDLabs.Grid.Bot.Events
                     Logger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Info}:
-                    Logger.Singleton.Info("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Information("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Verbose}:
-                    Logger.Singleton.Verbose("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
+                    Logger.Singleton.Debug("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
                     break;
                 case {Severity: LogSeverity.Error | LogSeverity.Critical}:
                     Logger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);

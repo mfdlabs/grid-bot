@@ -6,15 +6,18 @@ It may or may not help, it depends on if you told them to set prop on prop chang
 */
 
 
-using System.Configuration;
 using System.Linq;
+using System.Configuration;
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
+
+using Logging;
+
+using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands
 {

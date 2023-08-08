@@ -5,9 +5,12 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Threading;
 using MFDLabs.Diagnostics;
 using MFDLabs.Instrumentation;
@@ -17,7 +20,6 @@ using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using System.ServiceModel.Channels;
 
 namespace MFDLabs.Grid.Bot.SlashCommands
 {
@@ -187,7 +189,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                         return long.MinValue;
                     }
 
-                    Logger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserIdRemote.Value);
+                    Logger.Singleton.Information("The ID for the user '{0}' was {1}.", username, nullableUserIdRemote.Value);
                     userId = nullableUserIdRemote.Value;
 
                     break;
@@ -227,7 +229,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                         return;
                     }
 
-                    Logger.Singleton.Info(
+                    Logger.Singleton.Information(
                         "Trying to render the character for the user '{0}' with the place '{1}', " +
                         "and the dimensions of {2}x{3}",
                         userId,

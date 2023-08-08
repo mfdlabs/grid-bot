@@ -91,7 +91,7 @@ public class WebServerDeployer : IWebServerDeployer
 
     private void CheckWorkspace()
     {
-        _logger.Info("Checking the existance of the web server at '{0}'", _webServerPath);
+        _logger.Information("Checking the existance of the web server at '{0}'", _webServerPath);
 
         if (!Directory.Exists(_webServerPath))
         {
@@ -106,7 +106,7 @@ public class WebServerDeployer : IWebServerDeployer
     /// <inheritdoc cref="IWebServerDeployer.StopWebServer"/>
     public void StopWebServer()
     {
-        _logger.Info("Stopping the web server");
+        _logger.Information("Stopping the web server");
 
         if (_process == null)
         {
@@ -119,7 +119,7 @@ public class WebServerDeployer : IWebServerDeployer
 
         _process = null;
 
-        _logger.Info("Web server stopped");
+        _logger.Information("Web server stopped");
     }
 
     /// <inheritdoc cref="IWebServerDeployer.LaunchWebServer(int)"/>
@@ -133,13 +133,13 @@ public class WebServerDeployer : IWebServerDeployer
         if (status == HealthCheckStatus.Success)
             return;
 
-        _logger.Info("Trying to launch web server...");
+        _logger.Information("Trying to launch web server...");
 
         CheckWorkspace();
 
         for (int attempt = 0; attempt < maxAttempts; ++attempt)
         {
-            _logger.Info("Trying to contact web server at attempt No. {0}", attempt);
+            _logger.Information("Trying to contact web server at attempt No. {0}", attempt);
 
             status = _healthCheckClient.CheckHealth();
 
@@ -167,13 +167,13 @@ public class WebServerDeployer : IWebServerDeployer
         if (status == HealthCheckStatus.Failure) return WebServerDeploymentStatus.UpButIncorrectHealthCheckText;
         if (status == HealthCheckStatus.Success) return WebServerDeploymentStatus.Success;
 
-        _logger.Info("Trying to launch web server...");
+        _logger.Information("Trying to launch web server...");
 
         CheckWorkspace();
 
         for (int attempt = 0; attempt < maxAttempts; ++attempt)
         {
-            _logger.Info("Trying to contact web server at attempt No. {0}", attempt);
+            _logger.Information("Trying to contact web server at attempt No. {0}", attempt);
 
             status = _healthCheckClient.CheckHealth();
 

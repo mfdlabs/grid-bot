@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Logging;
+
+using MFDLabs.Networking;
 using MFDLabs.Grid.Commands;
 using MFDLabs.Grid.ComputeCloud;
-using MFDLabs.Logging;
-using MFDLabs.Networking;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBeMadeStatic.Global

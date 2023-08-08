@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
-using System.IO;
-using MFDLabs.Grid.ComputeCloud;
-using MFDLabs.Logging;
+using System.Collections.Generic;
+
+using Logging;
+
 using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.ComputeCloud;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
@@ -30,7 +32,7 @@ namespace MFDLabs.Grid.Bot.Utility
             if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
                 parsedScript = script.ToLower();
 
-            Logger.Singleton.Info("Check if script '{0}' contains blacklisted words.", escapedString);
+            Logger.Singleton.Information("Check if script '{0}' contains blacklisted words.", escapedString);
 
             foreach (var keyword in GetBlacklistedKeywords())
             {
@@ -46,7 +48,7 @@ namespace MFDLabs.Grid.Bot.Utility
                 return true;
             }
 
-            Logger.Singleton.Info("The script '{0}' does not contain blacklisted words.", escapedString);
+            Logger.Singleton.Information("The script '{0}' does not contain blacklisted words.", escapedString);
             return false;
         }
 

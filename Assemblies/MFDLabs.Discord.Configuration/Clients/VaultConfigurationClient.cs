@@ -13,7 +13,8 @@ using VaultSharp.V1.AuthMethods.LDAP;
 using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.SecretsEngines.KeyValue.V2;
 
-using MFDLabs.Logging;
+using Logging;
+
 using MFDLabs.Threading.Extensions;
 
 namespace MFDLabs.Discord.Configuration
@@ -75,7 +76,7 @@ namespace MFDLabs.Discord.Configuration
             _tokenStr ??= _token.LookupSelfAsync().Sync().Data.Id.Substring(0, 6);
 
             _vaultClientRefreshTimer.Change(-1, -1);
-            Logger.Singleton.Info("Renewing vault client's token, '{0}...'", _tokenStr);
+            Logger.Singleton.Information("Renewing vault client's token, '{0}...'", _tokenStr);
             _token.RenewSelfAsync().Wait();
             _vaultClientRefreshTimer.Change(TimeSpan.FromHours(0.75), TimeSpan.FromHours(0.75));
         }

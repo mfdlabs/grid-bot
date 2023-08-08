@@ -2,7 +2,8 @@
 
 using Discord.WebSocket;
 
-using MFDLabs.Logging;
+using Logging;
+
 using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Global;
 using MFDLabs.Grid.Bot.Utility;

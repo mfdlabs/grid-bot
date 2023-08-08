@@ -1,7 +1,10 @@
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
 

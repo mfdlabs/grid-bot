@@ -1,11 +1,11 @@
 ﻿using System;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Grid.Bot.Properties;
-using MFDLabs.Logging;
-using MFDLabs.Threading;
 
-// ReSharper disable AsyncVoidLambda
+using Logging;
+
+using MFDLabs.Threading;
+using MFDLabs.Grid.Bot.Global;
+using MFDLabs.Grid.Bot.Properties;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 namespace MFDLabs.Grid.Bot.Utility
 {

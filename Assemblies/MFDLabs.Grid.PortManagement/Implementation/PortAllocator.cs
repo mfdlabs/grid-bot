@@ -7,8 +7,8 @@ using System.Net.NetworkInformation;
 
 using Microsoft.Extensions.Caching.Memory;
 
+using Logging;
 using Instrumentation;
-using MFDLabs.Logging;
 
 /// <inheritdoc cref="IPortAllocator"/>
 public class PortAllocator : IPortAllocator
@@ -93,7 +93,7 @@ public class PortAllocator : IPortAllocator
                     sw.Stop();
                     _perfmon.PortAllocationSuccessesPerSecond.Increment();
                     _perfmon.PortAllocationSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
-                    _logger.Info(
+                    _logger.Information(
                         "Port {0} is chosen for the next GridServerInstance. Number of attempts = {1}, time taken = {2} ms",
                         port,
                         i + 1,

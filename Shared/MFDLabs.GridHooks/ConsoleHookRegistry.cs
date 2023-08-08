@@ -5,14 +5,15 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Logging;
+
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
 using MFDLabs.Reflection.Extensions;
 
 namespace MFDLabs.Grid.Bot.Registries
@@ -62,13 +63,13 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static void ParseAndInsertIntoConsoleHookRegistry()
         {
-            Logger.Singleton.LifecycleEvent("Begin attempt to register console hooks via Reflection.");
+            Logger.Singleton.Debug("Begin attempt to register console hooks via Reflection.");
 
             try
             {
                 var @namespace = GetHookNamespace();
 
-                Logger.Singleton.Info("Got console hook namespace '{0}'.", @namespace);
+                Logger.Singleton.Information("Got console hook namespace '{0}'.", @namespace);
 
                 var types = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(@namespace);
 
@@ -86,7 +87,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                         if (consoleHook is IConsoleHook trueConsoleHook)
                         {
-                            Logger.Singleton.Info("Parsing console hook '{0}'.", type.FullName);
+                            Logger.Singleton.Information("Parsing console hook '{0}'.", type.FullName);
 
                             if (trueConsoleHook.HookKeys.Length < 1)
                             {
@@ -110,11 +111,10 @@ namespace MFDLabs.Grid.Bot.Registries
             }
             finally
             {
-                Logger.Singleton.Verbose("Successfully initialized the ConsoleHookRegistry.");
+                Logger.Singleton.Debug("Successfully initialized the ConsoleHookRegistry.");
             }
         }
 
-        [SuppressMessage("ReSharper", "FunctionNeverReturns")]
         private static void HookThread()
         {
             while (true)

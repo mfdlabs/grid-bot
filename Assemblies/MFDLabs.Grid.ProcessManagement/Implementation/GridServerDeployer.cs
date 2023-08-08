@@ -100,7 +100,7 @@ public class GridServerDeployer : IGridServerDeployer
     public void KillAll()
     {
         _perfmon.GridServerDeployerAttemptsPerSecond.Increment();
-        _logger.Info("Kill all managed grid-server processes...");
+        _logger.Information("Kill all managed grid-server processes...");
 
         lock (_processes)
             _processes.ForEach(
@@ -133,7 +133,7 @@ public class GridServerDeployer : IGridServerDeployer
         exception = null;
 
         _perfmon.GridServerDeployerAttemptsPerSecond.Increment();
-        _logger.Info("Starting new grid-server process...");
+        _logger.Information("Starting new grid-server process...");
 
         try
         {
@@ -167,7 +167,7 @@ public class GridServerDeployer : IGridServerDeployer
     /// <inheritdoc cref="IGridServerDeployer.GetProcess(int)"/>
     public IGridServerProcess GetProcess(int port)
     {
-        _logger.Info("Try get grid-server process by port of '{0}'.", port);
+        _logger.Information("Try get grid-server process by port of '{0}'.", port);
 
         lock (_processes)
             return _processes
@@ -178,7 +178,7 @@ public class GridServerDeployer : IGridServerDeployer
     /// <inheritdoc cref="IGridServerDeployer.GetProcessByPid(int)"/>
     public IGridServerProcess GetProcessByPid(int pid)
     {
-        _logger.Info("Try get grid-server process by pid of '{0}'.", pid);
+        _logger.Information("Try get grid-server process by pid of '{0}'.", pid);
 
         lock (_processes)
             return _processes
@@ -192,7 +192,7 @@ public class GridServerDeployer : IGridServerDeployer
         exception = null;
 
         _perfmon.GridServerDeployerAttemptsPerSecond.Increment();
-        _logger.Info("Kill grid-server process by port of '{0}'.", port);
+        _logger.Information("Kill grid-server process by port of '{0}'.", port);
 
         lock (_processes)
         {
@@ -238,7 +238,7 @@ public class GridServerDeployer : IGridServerDeployer
         exception = null;
 
         _perfmon.GridServerDeployerAttemptsPerSecond.Increment();
-        _logger.Info("Kill grid-server process '{0}'.", process.ToString());
+        _logger.Information("Kill grid-server process '{0}'.", process.ToString());
 
         lock (_processes)
         {
@@ -282,7 +282,7 @@ public class GridServerDeployer : IGridServerDeployer
         exception = null;
 
         _perfmon.GridServerDeployerAttemptsPerSecond.Increment();
-        _logger.Info("Kill grid-server process by pid of '{0}'.", pid);
+        _logger.Information("Kill grid-server process by pid of '{0}'.", pid);
 
         lock (_processes)
         {
@@ -325,7 +325,7 @@ public class GridServerDeployer : IGridServerDeployer
     /// <inheritdoc cref="IGridServerDeployer.GetRandomProcess"/>
     public IGridServerProcess GetRandomProcess()
     {
-        _logger.Info("Get random grid-server process.");
+        _logger.Information("Get random grid-server process.");
         
         lock (_processes)
         {
@@ -338,7 +338,7 @@ public class GridServerDeployer : IGridServerDeployer
     /// <inheritdoc cref="IGridServerDeployer.DiscoverInstances"/>
     public IEnumerable<IGridServerProcess> DiscoverInstances()
     {
-        _logger.Info("Discovering existing processes...");
+        _logger.Information("Discovering existing processes...");
 
         var processes = GridServerProcess.DiscoverProcesses(_gridServerProcessName);
 

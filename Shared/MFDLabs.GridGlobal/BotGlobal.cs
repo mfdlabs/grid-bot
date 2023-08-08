@@ -1,7 +1,10 @@
 ﻿using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Configuration.Extensions;
 
 namespace MFDLabs.Grid.Bot.Global
@@ -35,7 +38,7 @@ namespace MFDLabs.Grid.Bot.Global
                 {
                     await Client.StopAsync().ConfigureAwait(false);
                     //await _client.LogoutAsync().ConfigureAwait(false);
-                    Logger.Singleton.Info("Bot successfully logged out and stopped!");
+                    Logger.Singleton.Information("Bot successfully logged out and stopped!");
                 }
                 catch
                 {

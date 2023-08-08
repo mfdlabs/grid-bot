@@ -395,7 +395,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                 {
                     try
                     {
-                        Logger.Singleton.LifecycleEvent(
+                        Logger.Singleton.Debug(
                             "Trying delete the script '{0}' at path '{1}'",
                             scriptId,
                             scriptName
@@ -403,7 +403,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                         scriptName.PollDeletion(
                             10,
                             ex => Logger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                            () => Logger.Singleton.LifecycleEvent(
+                            () => Logger.Singleton.Debug(
                                 "Successfully deleted the script '{0}' at path '{1}'!",
                                     scriptId,
                                     scriptName

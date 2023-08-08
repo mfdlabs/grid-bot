@@ -11,28 +11,29 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.ServiceModel;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+using System.Reflection;
+using System.Diagnostics;
+using System.ServiceModel;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Guards;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Logging;
-using MFDLabs.Reflection.Extensions;
+
+using Logging;
+
 using MFDLabs.Sentinels;
-using MFDLabs.Text.Extensions;
 using MFDLabs.Threading;
+using MFDLabs.Grid.Bot.Guards;
+using MFDLabs.Text.Extensions;
+using MFDLabs.Grid.Bot.Interfaces;
+using MFDLabs.Grid.Bot.Extensions;
+using MFDLabs.Reflection.Extensions;
+using MFDLabs.Grid.Bot.PerformanceMonitors;
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 using MFDLabs.Grid.Bot.Global;
@@ -289,7 +290,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", $"Slash Command - {commandAlias}");
             Counters.RequestCountN++;
-            Logger.Singleton.Verbose(
+            Logger.Singleton.Debug(
                 "Try execute the slash command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
                 commandAlias,
                 !args.IsNullOrEmpty()
@@ -436,7 +437,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
             Counters.RequestCountN++;
-            Logger.Singleton.Verbose(
+            Logger.Singleton.Debug(
                 "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
                 commandAlias,
                 messageContent.Length > 0
@@ -817,13 +818,13 @@ namespace MFDLabs.Grid.Bot.Registries
             lock (StateSpecificCommandHandlers)
             {
                 InstrumentationPerfmon.CommandsParsedAndInsertedIntoRegistry.Increment();
-                Logger.Singleton.LifecycleEvent("Begin attempt to register commands via Reflection");
+                Logger.Singleton.Debug("Begin attempt to register commands via Reflection");
 
                 try
                 {
                     var defaultCommandNamespace = GetDefaultCommandNamespace();
 
-                    Logger.Singleton.Info("Got default command namespace '{0}'.", defaultCommandNamespace);
+                    Logger.Singleton.Information("Got default command namespace '{0}'.", defaultCommandNamespace);
 
                     var defaultCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(defaultCommandNamespace);
 
@@ -835,7 +836,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     {
 
                         var slashCommandNamespace = GetSlashCommandNamespace();
-                        Logger.Singleton.Info("Got slash command namespace '{0}'.", slashCommandNamespace);
+                        Logger.Singleton.Information("Got slash command namespace '{0}'.", slashCommandNamespace);
                         var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
 
 
@@ -856,7 +857,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
                                         if (commandHandler is not IStateSpecificSlashCommandHandler trueCommandHandler) continue;
 
-                                        Logger.Singleton.Info("Parsing slash command '{0}'.", type.FullName);
+                                        Logger.Singleton.Information("Parsing slash command '{0}'.", type.FullName);
 
                                         if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
                                         {
@@ -960,7 +961,7 @@ namespace MFDLabs.Grid.Bot.Registries
                                     var commandHandler = Activator.CreateInstance(type);
                                     if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)
                                     {
-                                        Logger.Singleton.Info("Parsing command '{0}'.", type.FullName);
+                                        Logger.Singleton.Information("Parsing command '{0}'.", type.FullName);
 
                                         if (trueCommandHandler.CommandAliases.Length < 1)
                                         {
@@ -1029,7 +1030,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 }
                 finally
                 {
-                    Logger.Singleton.Verbose("Successfully initialized the CommandRegistry.");
+                    Logger.Singleton.Debug("Successfully initialized the CommandRegistry.");
                 }
             }
         }

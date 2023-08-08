@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Globalization;
+
+using Logging;
+
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
 
 namespace MFDLabs.Grid.Bot.Hooks
 {

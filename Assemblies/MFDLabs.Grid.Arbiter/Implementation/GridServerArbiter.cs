@@ -250,10 +250,10 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         lock (_instances)
         {
             var instanceCount = _instances.Count;
-            _logger.LifecycleEvent("Disposing of all grid server instances");
+            _logger.Debug("Disposing of all grid server instances");
             foreach (var instance in _instances.ToArray())
             {
-                _logger.LifecycleEvent("Disposing of grid server instance: {0}", instance.ToString());
+                _logger.Debug("Disposing of grid server instance: {0}", instance.ToString());
                 _portAllocator.RemovePortFromCacheIfExists(instance.Endpoint.Address.Uri.Port);
                 _instances.Remove(instance);
 
@@ -290,7 +290,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
     {
         lock (_instances)
         {
-            _logger.LifecycleEvent("Removing grid server instance: {0}", instance.ToString());
+            _logger.Debug("Removing grid server instance: {0}", instance.ToString());
 
             _portAllocator.RemovePortFromCacheIfExists(instance.Endpoint.Address.Uri.Port);
             _instances.Remove(instance);

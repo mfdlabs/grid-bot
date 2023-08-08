@@ -1,16 +1,19 @@
 ﻿using System;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Configuration;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Discord;
 using Discord.WebSocket;
+
+using Logging;
+
+using MFDLabs.Text.Extensions;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
 using MFDLabs.Reflection.Extensions;
 
 namespace MFDLabs.Grid.Bot.Commands

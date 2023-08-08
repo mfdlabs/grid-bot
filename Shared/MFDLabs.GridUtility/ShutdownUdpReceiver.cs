@@ -1,8 +1,10 @@
-﻿using Discord;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Net.Sockets;
-using MFDLabs.Logging;
+
+using Discord;
+
+using Logging;
 
 namespace MFDLabs.Grid.Bot.Utility
 {
@@ -16,7 +18,7 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             var sock = new UdpClient(new IPEndPoint(IPAddress.Loopback, 47001));
 
-            Logger.Singleton.LifecycleEvent("Receiving shutdown requests on 127.0.0.1:47001");
+            Logger.Singleton.Debug("Receiving shutdown requests on 127.0.0.1:47001");
 
             var sender = new IPEndPoint(IPAddress.Loopback, 0);
 

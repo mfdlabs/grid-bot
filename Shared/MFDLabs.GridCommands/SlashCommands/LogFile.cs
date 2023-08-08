@@ -1,12 +1,14 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
 
 namespace MFDLabs.Grid.Bot.SlashCommands
 {

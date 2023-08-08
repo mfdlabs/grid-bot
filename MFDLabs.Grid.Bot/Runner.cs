@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Networking;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
@@ -36,14 +38,14 @@ namespace MFDLabs.Grid.Bot
 
         public static void OnGlobalException(Exception ex)
         {
-            Logger.Singleton.LifecycleEvent(PrimaryTaskError);
+            Logger.Singleton.Error(PrimaryTaskError);
 
             PerformanceServer.Stop();
         }
 
         public static void Invoke(string[] args)
         {
-            Logger.Singleton.LifecycleEvent(BadActorMessage);
+            Logger.Singleton.Warning(BadActorMessage);
 
 #if DEBUG
             if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)

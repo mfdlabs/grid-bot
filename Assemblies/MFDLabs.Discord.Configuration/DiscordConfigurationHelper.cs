@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
+
 using Discord.WebSocket;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Reflection.Extensions;
 
 namespace MFDLabs.Discord.Configuration

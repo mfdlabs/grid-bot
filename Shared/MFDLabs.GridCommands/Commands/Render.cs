@@ -1,19 +1,22 @@
 ﻿using System;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Discord;
 using Discord.WebSocket;
+
+using Logging;
+
+using MFDLabs.Threading;
+using MFDLabs.Diagnostics;
+using MFDLabs.Text.Extensions;
+using MFDLabs.Instrumentation;
+using MFDLabs.Grid.Bot.Utility;
+using MFDLabs.Grid.Bot.Interfaces;
 using MFDLabs.Grid.Bot.Extensions;
 using MFDLabs.Grid.Bot.PerformanceMonitors;
-using MFDLabs.Logging;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Threading;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Instrumentation;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Interfaces;
 
 namespace MFDLabs.Grid.Bot.Commands
 {
@@ -181,7 +184,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                             return;
                                         }
 
-                                        Logger.Singleton.Info("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
+                                        Logger.Singleton.Information("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
                                         userId = nullableUserId.Value;
                                     }
                                     else
@@ -227,7 +230,7 @@ namespace MFDLabs.Grid.Bot.Commands
                             return;
                         }
 
-                        Logger.Singleton.Info(
+                        Logger.Singleton.Information(
                             "Trying to render the character for the user '{0}' with the place '{1}', " +
                             "and the dimensions of {2}x{3}",
                             userId,

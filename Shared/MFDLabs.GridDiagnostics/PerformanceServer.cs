@@ -1,7 +1,9 @@
-﻿using System.Linq;
-using System.Net;
+﻿using System.Net;
+using System.Linq;
 using System.Collections.Generic;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.Instrumentation;
 using MFDLabs.Text.Extensions;
 
@@ -37,7 +39,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
         public static void Start()
         {
-            Logger.Singleton.LifecycleEvent("Launching performance monitor server...");
+            Logger.Singleton.Debug("Launching performance monitor server...");
 
 #if !DEBUG
 
@@ -56,7 +58,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
         public static void Stop()
         {
-            Logger.Singleton.LifecycleEvent("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
+            Logger.Singleton.Debug("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
 
 #if !DEBUG
 

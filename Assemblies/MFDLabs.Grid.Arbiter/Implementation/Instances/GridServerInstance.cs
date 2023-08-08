@@ -248,7 +248,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         if (IsDisposed) return;
 
         GC.SuppressFinalize(this);
-        Logger.LifecycleEvent("Closing instance '{0}'...", _name);
+        Logger.Debug("Closing instance '{0}'...", _name);
 
         if (_gridServerProcess != null)
             GridServerDeployer.KillProcess(_gridServerProcess, out _); // We do not care about the result or exception.
