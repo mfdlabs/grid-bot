@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.CommandLine;
 using System.Threading.Tasks;
 using System.CommandLine.Parsing;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+
 using Microsoft.Win32;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
@@ -32,7 +34,7 @@ internal static class Program
         ConfigurationLogging.OverrideDefaultConfigurationLogging(
             _logger.Error,
             _logger.Warning,
-            _logger.Info
+            _logger.Information
         );
 
         // If args has -purge or --purge etc.
@@ -62,8 +64,6 @@ internal static class Program
 
     private static void Run(InvocationContext context)
     {
-        var args = from token in context.ParseResult.Tokens select token.Value;
-
         if (context.ParseResult.GetValueForOption(PurgeOption))
         {
             _logger.Warning("--purge set. Purging deployment files...");
@@ -102,7 +102,7 @@ internal static class Program
             {
                 foreach (var directory in Directory.EnumerateDirectories(deploymentPath)) // TODO: Match DeploymentId regex?
                 {
-                    _logger.LifecycleEvent("Deleting directory '{0}'...", directory);
+                    _logger.Information("Deleting directory '{0}'...", directory);
 
                     directory.PollDeletionBlocking(
                         maxAttempts: 2,
@@ -120,18 +120,18 @@ internal static class Program
                             else
                                 _logger.Warning("Could not delete directory '{0}' because '{1}'", directory, ex.Message);
                         },
-                        onSuccess: () => _logger.LifecycleEvent("Successfully deleted directory '{0}'!", directory)
+                        onSuccess: () => _logger.Information("Successfully deleted directory '{0}'!", directory)
                     );
                 }
             }
 
             if (purgeRegistryKey)
             {
-                _logger.LifecycleEvent("Deleting registry sub key 'HKLM:{0}'", versioningRegSubKey);
+                _logger.Information("Deleting registry sub key 'HKLM:{0}'", versioningRegSubKey);
                 try
                 {
                     Registry.LocalMachine.DeleteSubKeyTree(versioningRegSubKey, false);
-                    _logger.LifecycleEvent("Successfully registry sub key 'HKLM:{0}'!", versioningRegSubKey);
+                    _logger.Information("Successfully registry sub key 'HKLM:{0}'!", versioningRegSubKey);
                 }
                 catch (Exception ex)
                 {
@@ -139,7 +139,7 @@ internal static class Program
                 }
             }
 
-            _logger.Info("Purge finished!");
+            _logger.Information("Purge finished!");
 
             return;
         }

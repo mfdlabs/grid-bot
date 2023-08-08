@@ -115,10 +115,10 @@ namespace MFDLabs.Grid.AutoDeployer.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Verbose")]
-        public global::MFDLabs.Logging.LogLevel EnvironmentLogLevel {
+        [global::System.Configuration.DefaultSettingValueAttribute("Information")]
+        public global::Logging.LogLevel EnvironmentLogLevel {
             get {
-                return ((global::MFDLabs.Logging.LogLevel)(this["EnvironmentLogLevel"]));
+                return ((global::Logging.LogLevel)(this["EnvironmentLogLevel"]));
             }
         }
         

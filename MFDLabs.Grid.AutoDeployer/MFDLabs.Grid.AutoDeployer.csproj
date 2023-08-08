@@ -41,6 +41,7 @@
     <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
     <ProjectReference Include="..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
+    <ProjectReference Include="..\lib\logging\logging-windows\Logging.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>

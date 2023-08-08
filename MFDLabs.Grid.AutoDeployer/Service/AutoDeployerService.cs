@@ -12,10 +12,14 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
 using Octokit;
 using Octokit.GraphQL;
+
 using Microsoft.Win32;
-using MFDLabs.Logging;
+
+using Logging;
+
 using MFDLabs.FileSystem;
 using MFDLabs.Diagnostics;
 using MFDLabs.Text.Extensions;
@@ -96,7 +100,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         public static void Stop()
         {
-            _logger.LifecycleEvent("Stopping...");
+            _logger.Information("Stopping...");
 
             _isRunning = false;
             _versioningRegKey?.Dispose();
@@ -230,7 +234,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _cachedVersion = _versioningRegKey?.GetValue(_versioningRegVersionKeyName, null) as string;
 
             if (_cachedVersion != null)
-                _logger.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+                _logger.Information("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
 
             _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken.FromEnvironmentExpression<string>();
             var gheUrl = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
@@ -263,8 +267,8 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
             // Technically Rest API is not required, but we only use it for authentication.
 
-            _logger.LifecycleEvent("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
-            _logger.LifecycleEvent("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
+            _logger.Debug("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
+            _logger.Debug("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
 
             _isRunning = true;
 
@@ -281,7 +285,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         private static void SkippedVersionInvalidationWork()
         {
-            _logger.Info("Starting Skipped Version Invalidation Thread...");
+            _logger.Information("Starting Skipped Version Invalidation Thread...");
 
             // Invalidates the _skippedVersions list.
             // This is in case a user updates a release by fixing an error, or marks a pre-release for deployment.
@@ -447,7 +451,7 @@ SLEEP:
 
             KillAllProcessByName(name);
 
-            _logger.Info("Successfully closed process '{0}'.", name);
+            _logger.Information("Successfully closed process '{0}'.", name);
         }
 
         private static void KillAllProcessByName(string name)
@@ -556,7 +560,7 @@ SLEEP:
                 var kibRead = e.BytesReceived / 1024f;
                 var kibTotal = e.TotalBytesToReceive / 1024f;
 
-                _logger.Verbose("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
+                _logger.Debug("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
             };
 
             webClient.DownloadFileCompleted += (_, e) =>
@@ -583,7 +587,7 @@ SLEEP:
 
         private static void SkipVersion(string version)
         {
-            _logger.Info("Skipping version '{0}'...", version);
+            _logger.Warning("Skipping version '{0}'...", version);
 
             _skippedVersions.Add(version);
         }
@@ -770,7 +774,7 @@ SLEEP:
             if (currentDeployment == null) return;
 
             _cachedVersion = currentDeployment.Groups["version_string"].Value;
-            _logger.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
+            _logger.Information("Got version from directories: {0}. Updating registry.", _cachedVersion);
 
             WriteVersionToRegistry();
         }
