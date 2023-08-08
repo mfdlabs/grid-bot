@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
-    <ProjectReference Include="..\MFDLabs.Pipeline\MFDLabs.Pipeline.csproj" />
     <ProjectReference Include="..\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj" />
     <ProjectReference Include="..\MFDLabs.Text\MFDLabs.Text.csproj" />
   </ItemGroup>
