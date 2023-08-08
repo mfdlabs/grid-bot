@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
     <ProjectReference Include="..\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
     <ProjectReference Include="..\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj" />
     <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />

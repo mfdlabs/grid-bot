@@ -5,7 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
     <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
   </ItemGroup>
 

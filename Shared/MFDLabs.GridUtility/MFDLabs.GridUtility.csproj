@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Logging\MFDLabs.Logging.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
     <ProjectReference Include="..\..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj" />
     <ProjectReference Include="..\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
