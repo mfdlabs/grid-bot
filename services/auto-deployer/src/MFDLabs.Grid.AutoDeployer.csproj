@@ -35,13 +35,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
-    <ProjectReference Include="..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
-    <ProjectReference Include="..\lib\logging\logging-windows\Logging.Windows.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
+    <ProjectReference Include="..\..\..\lib\logging\logging-windows\Logging.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,7 +89,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false -writeNewGitHubRelease $true -releasePrefix $(TargetName)" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)../../scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false -writeNewGitHubRelease $true -releasePrefix $(TargetName)" />
   </Target>
 
 </Project>
