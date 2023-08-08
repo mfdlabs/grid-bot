@@ -91,13 +91,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Arbiter", "Ass
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Targets", "Targets", "{C5B21073-1767-45F8-B8A2-EF5A14F5CEC5}"
 	ProjectSection(SolutionItems) = preProject
-		AssembliesBoth.targets = AssembliesBoth.targets
-		AssembliesFramework.targets = AssembliesFramework.targets
-		AssembliesGridBoth.targets = AssembliesGridBoth.targets
-		AssembliesGridStandard.targets = AssembliesGridStandard.targets
-		AssembliesStandard.targets = AssembliesStandard.targets
-		SharedGridProjects.targets = SharedGridProjects.targets
-		SharedProjects.targets = SharedProjects.targets
+		targets\lib-both.targets = targets\lib-both.targets
+		targets\lib-framework.targets = targets\lib-framework.targets
+		targets\lib-standard.targets = targets\lib-standard.targets
+		targets\lib-vault-both.targets = targets\lib-vault-both.targets
+		targets\shared-vault.targets = targets\shared-vault.targets
+		targets\shared.targets = targets\shared.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.WebServer", "Assemblies\MFDLabs.Grid.WebServer\MFDLabs.Grid.WebServer.csproj", "{547A7E94-5788-43CA-ADAC-81163A7D82C2}"
