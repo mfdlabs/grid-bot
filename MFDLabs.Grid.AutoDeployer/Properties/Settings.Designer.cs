@@ -139,5 +139,14 @@ namespace MFDLabs.Grid.AutoDeployer.Properties {
                 return ((global::System.TimeSpan)(this["SkippedVersionInvalidationInterval"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnvironmentLoggerUseColor {
+            get {
+                return ((bool)(this["EnvironmentLoggerUseColor"]));
+            }
+        }
     }
 }

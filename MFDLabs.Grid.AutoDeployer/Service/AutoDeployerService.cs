@@ -23,7 +23,6 @@ using MFDLabs.Threading.Extensions;
 using MFDLabs.Reflection.Extensions;
 using MFDLabs.Diagnostics.Extensions;
 using MFDLabs.Configuration.Extensions;
-using MFDLabs.ErrorHandling.Extensions;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable EmptyGeneralCatchClause
@@ -36,9 +35,6 @@ using MFDLabs.ErrorHandling.Extensions;
 
 namespace MFDLabs.Grid.AutoDeployer.Service
 {
-    /// <summary>
-    /// This Service facilitates a WCF Channel that will deploy GitHub components to Nodes.
-    /// </summary>
     internal static class AutoDeployerService
     {
         private class MinimalRelease
@@ -80,6 +76,8 @@ namespace MFDLabs.Grid.AutoDeployer.Service
         private static bool _isRunning;
         private static string _cachedVersion;
         private static readonly List<string> _skippedVersions = new();
+        private static readonly CancellationTokenSource _stopSignal = new();
+        private static ILogger _logger;
 
         #region "Constants"
 
@@ -96,19 +94,23 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         #endregion
 
-        public static void Stop(object s, EventArgs e)
+        public static void Stop()
         {
-            EventLogLogger.Singleton.LifecycleEvent("Stopping...");
+            _logger.LifecycleEvent("Stopping...");
+
             _isRunning = false;
             _versioningRegKey?.Dispose();
             _markerLock?.Dispose();
+            _stopSignal?.Cancel();
         }
 
-        public static void Start(object s, EventArgs e)
+        public static void Start(ILogger logger)
         {
+            _logger = logger;
+
             try { Work(); }
-            catch (ArgumentException ex) { Logger.Singleton.Error(ex.Message); Stop(null, null); }
-            catch (Exception ex) { Logger.Singleton.Error(ex); Stop(null, null); }
+            catch (ArgumentException ex) { _logger.Error(ex.Message); Stop(); }
+            catch (Exception ex) { _logger.Error(ex); Stop(); }
         }
 
         private static bool CachedVersionExistsRemotely(out bool wasRatelimited, out TimeSpan? retryAfter)
@@ -152,12 +154,12 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             /* Last cases for this, we assume it is either timeout or 500. */
             catch (Exception ex) when (ex is HttpRequestException or ApiException)
             {
-                EventLogLogger.Singleton.Warning(ex.ToDetailedString());
+                _logger.Warning(ex.ToString());
                 return true;
             }
             catch (Exception ex)
             {
-                Logger.Singleton.Error(ex);
+                _logger.Error(ex);
                 return false;
             }
         }
@@ -228,7 +230,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             _cachedVersion = _versioningRegKey?.GetValue(_versioningRegVersionKeyName, null) as string;
 
             if (_cachedVersion != null)
-                EventLogLogger.Singleton.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+                _logger.Info("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
 
             _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken.FromEnvironmentExpression<string>();
             var gheUrl = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
@@ -261,18 +263,25 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
             // Technically Rest API is not required, but we only use it for authentication.
 
-            EventLogLogger.Singleton.LifecycleEvent("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
-            EventLogLogger.Singleton.LifecycleEvent("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
+            _logger.LifecycleEvent("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
+            _logger.LifecycleEvent("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
 
             _isRunning = true;
 
             BackgroundWork(Run);
             BackgroundWork(SkippedVersionInvalidationWork);
+
+            try
+            {
+                Task.Delay(-1, _stopSignal.Token).Wait();
+            }
+            catch (TaskCanceledException) {} // Ignore
+            catch (AggregateException ex) when (ex.InnerExceptions.Any(e => e is TaskCanceledException) || ex.InnerException is TaskCanceledException) {} // Ignore
         }
 
         private static void SkippedVersionInvalidationWork()
         {
-            Logger.Singleton.Info("Starting Skipped Version Invalidation Thread...");
+            _logger.Info("Starting Skipped Version Invalidation Thread...");
 
             // Invalidates the _skippedVersions list.
             // This is in case a user updates a release by fixing an error, or marks a pre-release for deployment.
@@ -308,7 +317,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                         if (r.Assets.Count != 4)
                         {
                             SkipVersion(r.TagName);
-                            EventLogLogger.Singleton.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
+                            _logger.Warning("Skipping '{0}' because it had more or less than 4 assets.", r.TagName);
                             goto SLEEP;
                         }
 
@@ -319,7 +328,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                             if (!a.Name.IsMatch(regex))
                             {
                                 SkipVersion(r.TagName);
-                                EventLogLogger.Singleton.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
+                                _logger.Warning("Skipping '{0}' because the asset '{1}' didn't match '{2}'.", r.TagName, a.Name, regex);
                                 goto SLEEP;
                             }
                         }
@@ -328,7 +337,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                         if (ProcessHelper.GetProcessByName(_primaryDeploymentExecutable.ToLower().Replace(".exe", ""), out _))
                         {
                             InvokeMaintenanceCommandOnPreviousExe(r.TagName);
-                            EventLogLogger.Singleton.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
+                            _logger.Warning("Invoked upgrade message onto bot, sleep for 15 seconds to ensure it receives it.");
                             Thread.Sleep(TimeSpan.FromSeconds(15));
                         }
 #endif
@@ -355,7 +364,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                         {
                             SkipVersion(r.TagName);
                             versionDeploymentPath.PollDeletionBlocking();
-                            EventLogLogger.Singleton.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
+                            _logger.Error("Unable to deploy version '{0}': The file '{1}' was not found.", r.TagName, primaryExe);
                             goto SLEEP;
                         }
 
@@ -372,8 +381,8 @@ SLEEP:
             }
             catch (Exception ex)
             {
-                EventLogLogger.Singleton.Error(ex);
-                Stop(null, null);
+                _logger.Error(ex);
+                Stop();
             }
         }
 
@@ -385,7 +394,7 @@ SLEEP:
             if (_cachedVersion == null || (CachedVersionExistsOnSystem() && CachedVersionExistsRemotely(out remoteVersionCheckWasRatelimited, out retryAfter)))
                 return;
 
-            EventLogLogger.Singleton.Warning("Unkown version '{0}' found in registry key HKLM:{1}.{2}.", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
+            _logger.Warning("Unkown version '{0}' found in registry key HKLM:{1}.{2}.", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
             _cachedVersion = null;
             _versioningRegKey.DeleteValue(_versioningRegVersionKeyName);
         }
@@ -426,19 +435,19 @@ SLEEP:
         {
             if (!ProcessHelper.GetProcessByName(name.ToLower().Replace(".exe", ""), out var pr))
             {
-                Logger.Singleton.Warning("The process '{0}' is not running, ignoring...", name);
+                _logger.Warning("The process '{0}' is not running, ignoring...", name);
                 return;
             }
 
             if (!SystemGlobal.ContextIsAdministrator() && pr.IsElevated())
             {
-                Logger.Singleton.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
+                _logger.Warning("The process '{0}' is running on a higher context than the current process, ignoring...", name);
                 return;
             }
 
             KillAllProcessByName(name);
 
-            Logger.Singleton.Info("Successfully closed process '{0}'.", name);
+            _logger.Info("Successfully closed process '{0}'.", name);
         }
 
         private static void KillAllProcessByName(string name)
@@ -483,7 +492,7 @@ SLEEP:
             foreach (var asset in assets)
             {
                 var fqp = Path.Combine(_deploymentPath, asset.Name);
-                EventLogLogger.Singleton.Debug("Deleting asset '{0}' from '{1}'", asset.Name, _deploymentPath);
+                _logger.Debug("Deleting asset '{0}' from '{1}'", asset.Name, _deploymentPath);
                 fqp.PollDeletionBlocking();
             }
         }
@@ -505,7 +514,7 @@ SLEEP:
 
             if (!File.Exists(unpackerFile))
             {
-                EventLogLogger.Singleton.Error("Unkown unpacker script: {0}. Skipping version...", unpackerFile);
+                _logger.Error("Unkown unpacker script: {0}. Skipping version...", unpackerFile);
                 return false;
             }
 
@@ -521,13 +530,13 @@ SLEEP:
 
             if (proc.ExitCode != 0)
             {
-                EventLogLogger.Singleton.Error("Unpacker script '{0}' failed with exit code '{1}'. Skipping version...", unpackerFile, proc.ExitCode);
+                _logger.Error("Unpacker script '{0}' failed with exit code '{1}'. Skipping version...", unpackerFile, proc.ExitCode);
                 return false;
             }
 
             if (!Directory.Exists(versionDeploymentPath))
             {
-                EventLogLogger.Singleton.Error("Unpacker script '{0}' failed: The output deployment was not created at '{1}'. Skipping version...", unpackerFile, versionDeploymentPath);
+                _logger.Error("Unpacker script '{0}' failed: The output deployment was not created at '{1}'. Skipping version...", unpackerFile, versionDeploymentPath);
                 return false;
             }
 
@@ -547,14 +556,14 @@ SLEEP:
                 var kibRead = e.BytesReceived / 1024f;
                 var kibTotal = e.TotalBytesToReceive / 1024f;
 
-                Logger.Singleton.Verbose("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
+                _logger.Verbose("Downloading {0} {1}% ({2}KiB/{3}KiB)...", name, e.ProgressPercentage, kibRead, kibTotal);
             };
 
             webClient.DownloadFileCompleted += (_, e) =>
             {
                 if (e.Error != null)
                 {
-                    EventLogLogger.Singleton.Error("Failed to download '{0}': {1}", uri, e.Error.Message);
+                    _logger.Error("Failed to download '{0}': {1}", uri, e.Error.Message);
                     waitHandle.Set();
                     waitHandle.Dispose();
                     return;
@@ -574,7 +583,7 @@ SLEEP:
 
         private static void SkipVersion(string version)
         {
-            EventLogLogger.Singleton.Info("Skipping version '{0}'...", version);
+            _logger.Info("Skipping version '{0}'...", version);
 
             _skippedVersions.Add(version);
         }
@@ -593,7 +602,7 @@ SLEEP:
 
                     if (wasRatelimited && retryAfter.HasValue)
                     {
-                        EventLogLogger.Singleton.Warning("Ratelimited by GitHub API. Yield for {0} seconds...", retryAfter);
+                        _logger.Warning("Ratelimited by GitHub API. Yield for {0} seconds...", retryAfter);
                         Thread.Sleep(retryAfter.Value);
                         return false;
                     }
@@ -680,7 +689,7 @@ SLEEP:
                     if (isOldRelease && !isRollback)
                     {
                         // Skip this release and ignore the rest of the page
-                        EventLogLogger.Singleton.Warning("{0} is older than the current version {1} but was not marked for roll-back. Skipping...", latestReleaseVersion, _cachedVersion);
+                        _logger.Warning("{0} is older than the current version {1} but was not marked for roll-back. Skipping...", latestReleaseVersion, _cachedVersion);
                         SkipVersion(latestReleaseVersion);
                         return false;
                     }
@@ -689,13 +698,13 @@ SLEEP:
                     {
                         if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                         {
-                            EventLogLogger.Singleton.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
+                            _logger.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
                             SkipVersion(latestReleaseVersion);
                             nextPageCursor = latestRelease.NextPageCursor;
                             continue;
                         }
 
-                        EventLogLogger.Singleton.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
+                        _logger.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
                     }
 
                     var groups = latestRelease.Name.Match(DeploymentIdRegex, RegexOptions.Compiled | RegexOptions.IgnoreCase).Groups;
@@ -703,7 +712,7 @@ SLEEP:
 
                     if (appNameGroup.Success && !appNameGroup.Value.IsMatch(_deploymentAppName, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     {
-                        EventLogLogger.Singleton.Warning("'{0}' was marked as for app '{1}' but we are deploying for app '{2}', skipping...", latestReleaseVersion, appNameGroup.Value, _deploymentAppName);
+                        _logger.Warning("'{0}' was marked as for app '{1}' but we are deploying for app '{2}', skipping...", latestReleaseVersion, appNameGroup.Value, _deploymentAppName);
                         SkipVersion(latestReleaseVersion);
                         nextPageCursor = latestRelease.NextPageCursor;
                         continue;
@@ -711,14 +720,14 @@ SLEEP:
 
                     // We assume no app prefix means the app name is the same as the release name
 
-                    EventLogLogger.Singleton.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3} Is Old-Release: {4} Is Rollback: {5}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease, isOldRelease, isRollback);
+                    _logger.Debug("Got new release from repository {0}/{1}: {2}. Is Pre-Release: {3} Is Old-Release: {4} Is Rollback: {5}", _githubOrgOrAccountName, _githubRepositoryName, latestReleaseVersion, latestRelease.Prerelease, isOldRelease, isRollback);
 
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                EventLogLogger.Singleton.Error(ex);
+                _logger.Error(ex);
 
                 latestRelease = null;
 
@@ -741,7 +750,7 @@ SLEEP:
 
             if (!directoryMatches.Any())
             {
-                EventLogLogger.Singleton.Warning("Not overwriting registry version as there was no deployments found at path '{0}'.", _deploymentPath);
+                _logger.Warning("Not overwriting registry version as there was no deployments found at path '{0}'.", _deploymentPath);
                 return;
             }
 
@@ -761,7 +770,7 @@ SLEEP:
             if (currentDeployment == null) return;
 
             _cachedVersion = currentDeployment.Groups["version_string"].Value;
-            EventLogLogger.Singleton.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
+            _logger.Info("Got version from directories: {0}. Updating registry.", _cachedVersion);
 
             WriteVersionToRegistry();
         }
@@ -795,19 +804,19 @@ SLEEP:
 
             if (winDir.IsSubDir(deploymentPath))
             {
-                EventLogLogger.Singleton.Error("Cannot create deployment directory as it is reserved by Windows.");
+                _logger.Error("Cannot create deployment directory as it is reserved by Windows.");
                 Environment.Exit(1);
             }
 
             if (File.Exists(deploymentPath))
             {
-                EventLogLogger.Singleton.Error("Unable to determine deployment directory, it exists already and is a file.");
+                _logger.Error("Unable to determine deployment directory, it exists already and is a file.");
                 Environment.Exit(1);
             }
 
             if (!global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.CreateDeploymentPathIfNotExists)
             {
-                EventLogLogger.Singleton.Error("Unable to determine deployment directory, it does not exist and the setting CreateDeploymentPathIfNotExists is false.");
+                _logger.Error("Unable to determine deployment directory, it does not exist and the setting CreateDeploymentPathIfNotExists is false.");
                 Environment.Exit(1);
             }
 
@@ -815,6 +824,6 @@ SLEEP:
             File.WriteAllText(markerFileName, "");
         }
 
-        private static void BackgroundWork(Action action) => Task.Factory.StartNew(() => { try { action(); } catch (Exception ex) { EventLogLogger.Singleton.Error(ex); } });
+        private static void BackgroundWork(Action action) => Task.Factory.StartNew(() => { try { action(); } catch (Exception ex) { _logger.Error(ex); } });
     }
 }
