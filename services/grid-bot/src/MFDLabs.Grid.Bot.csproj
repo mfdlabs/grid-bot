@@ -81,13 +81,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridEvents\MFDLabs.GridEvents.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridHooks\MFDLabs.GridHooks.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
-    <ProjectReference Include="..\..\..\Shared\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\commands\Shared.Commands.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\diagnostics\Shared.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\events\Shared.Events.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\global\Shared.Global.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\hooks\Shared.Hooks.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\settings\Shared.Settings.csproj" />
+    <ProjectReference Include="..\..\..\lib\shared\utility\Shared.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>

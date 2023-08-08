@@ -71,21 +71,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Discord.Configurati
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{9685C904-F110-4634-8A25-7B10B4AE559E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridCommands", "..\..\Shared\MFDLabs.GridCommands\MFDLabs.GridCommands.csproj", "{11B2B199-B7A2-4281-B0A0-4F6761DDBE12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Commands", "..\..\lib\shared\commands\Shared.Commands.csproj", "{11B2B199-B7A2-4281-B0A0-4F6761DDBE12}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridDiagnostics", "..\..\Shared\MFDLabs.GridDiagnostics\MFDLabs.GridDiagnostics.csproj", "{C0966EA1-BCBD-4ED5-B595-8981EB068196}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Diagnostics", "..\..\lib\shared\diagnostics\Shared.Diagnostics.csproj", "{C0966EA1-BCBD-4ED5-B595-8981EB068196}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridEvents", "..\..\Shared\MFDLabs.GridEvents\MFDLabs.GridEvents.csproj", "{3F8E771E-5F6D-491F-8246-0C8F94DBFAA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Events", "..\..\lib\shared\events\Shared.Events.csproj", "{3F8E771E-5F6D-491F-8246-0C8F94DBFAA1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridExtensions", "..\..\Shared\MFDLabs.GridExtensions\MFDLabs.GridExtensions.csproj", "{224537F8-1E03-4282-B384-732E3D2B7BE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Extensions", "..\..\lib\shared\extensions\Shared.Extensions.csproj", "{224537F8-1E03-4282-B384-732E3D2B7BE9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridGlobal", "..\..\Shared\MFDLabs.GridGlobal\MFDLabs.GridGlobal.csproj", "{64C43450-DC5F-49CF-B721-ADE097430E2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Global", "..\..\lib\shared\global\Shared.Global.csproj", "{64C43450-DC5F-49CF-B721-ADE097430E2A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridHooks", "..\..\Shared\MFDLabs.GridHooks\MFDLabs.GridHooks.csproj", "{2AC87D4B-D2E6-47F7-9635-4D79DA282CEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Hooks", "..\..\lib\shared\hooks\Shared.Hooks.csproj", "{2AC87D4B-D2E6-47F7-9635-4D79DA282CEF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridSettings", "..\..\Shared\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj", "{0823C57E-7AEC-461C-8AEA-EB2F3F00460D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Settings", "..\..\lib\shared\settings\Shared.Settings.csproj", "{0823C57E-7AEC-461C-8AEA-EB2F3F00460D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.GridUtility", "..\..\Shared\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj", "{6E5501FF-76F9-4A22-B04A-C27C7F636E43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Utility", "..\..\lib\shared\utility\Shared.Utility.csproj", "{6E5501FF-76F9-4A22-B04A-C27C7F636E43}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Arbiter", "..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj", "{70A7CD06-3B31-40D2-817D-F937C89050EA}"
 EndProject

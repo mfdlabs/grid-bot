@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../targets/shared-vault.targets" />
+  <Import Project="../../../targets/shared-vault.targets" />
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="3.11.0" />
@@ -8,8 +8,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
-    <ProjectReference Include="..\..\Assemblies\MFDLabs.Discord.Configuration\MFDLabs.Discord.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Discord.Configuration\MFDLabs.Discord.Configuration.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">

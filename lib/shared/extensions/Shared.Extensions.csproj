@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../targets/shared.targets" />
+  <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.GridUtility\MFDLabs.GridUtility.csproj" />
-	<ProjectReference Include="..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
+    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
+	<ProjectReference Include="..\..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
   </ItemGroup>
 
 </Project>

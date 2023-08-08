@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../targets/shared.targets" />
+  <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);DISCORD_SHARDING_ENABLED</DefineConstants>
@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="..\MFDLabs.GridSettings\MFDLabs.GridSettings.csproj" />
+    <ProjectReference Include="../../../lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\settings\Shared.Settings.csproj" />
   </ItemGroup>
 
 </Project>

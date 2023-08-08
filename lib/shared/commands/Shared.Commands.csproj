@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/shared.targets" />
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj" />
+    <ProjectReference Include="..\diagnostics\Shared.Diagnostics.csproj" />
+    <ProjectReference Include="..\extensions\Shared.Extensions.csproj" />
+    <ProjectReference Include="..\global\Shared.Global.csproj" />
+    <ProjectReference Include="..\hooks\Shared.Hooks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+  </ItemGroup>
+
+</Project>

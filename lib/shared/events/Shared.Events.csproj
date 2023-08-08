@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/shared.targets" />
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;DEBUG_LOGGING_IN_PROD;DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\commands\Shared.Commands.csproj" />
+    <ProjectReference Include="..\extensions\Shared.Extensions.csproj" />
+    <ProjectReference Include="..\settings\Shared.Settings.csproj" />
+    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
+  </ItemGroup>
+
+</Project>

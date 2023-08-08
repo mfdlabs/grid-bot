@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/shared.targets" />
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
+    <ProjectReference Include="../../../lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj" />
+    <ProjectReference Include="..\diagnostics\Shared.Diagnostics.csproj" />
+    <ProjectReference Include="..\global\Shared.Global.csproj" />
+    <ProjectReference Include="..\settings\Shared.Settings.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Backtrace" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj" />
+  </ItemGroup>
+
+</Project>
