@@ -62,11 +62,7 @@
                 }
 
                 global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
-#if DEBUG || DEBUG_LOGGING_IN_PROD
                 global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
-#else
-                global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", (e.ExceptionObject as global::System.Exception).Message);
-#endif
                 global::System.Console.ResetColor();
 
                 if (AssemblyIsLoaded("MFDLabs.Backtrace") && AssemblyIsLoaded("MFDLabs.GridSettings") && AssemblyIsLoaded("MFDLabs.GridUtility"))

@@ -62,14 +62,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-
-  <Target Name="ForceGenerationOfBindingRedirects"
-          AfterTargets="ResolveAssemblyReferences"
-          BeforeTargets="GenerateBindingRedirects"
-          Condition="'$(AutoGenerateBindingRedirects)' == 'true'">
-    <PropertyGroup>
-      <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    </PropertyGroup>
   </Target>
 
   <ItemGroup>
