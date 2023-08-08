@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Logging
+namespace Logging
 {
     /// <summary>
     /// Base contract for a logger class.
@@ -67,51 +67,6 @@ namespace MFDLabs.Logging
         void Log(Func<string> messageGetter);
 
         /// <summary>
-        /// Log a debug message.
-        /// </summary>
-        /// <param name="format">The message format</param>
-        /// <param name="args">Optional arguments.</param>
-        void Debug(string format, params object[] args);
-
-        /// <summary>
-        /// Log a debug message.
-        /// </summary>
-        /// <param name="messageGetter">A function that returns a message</param>
-        void Debug(Func<string> messageGetter);
-
-        /// <summary>
-        /// Log an error message.
-        /// </summary>
-        /// <param name="ex">An exception to format.</param>
-        void Error(Exception ex);
-
-        /// <summary>
-        /// Log an error message.
-        /// </summary>
-        /// <param name="format">The message format</param>
-        /// <param name="args">Optional arguments.</param>
-        void Error(string format, params object[] args);
-
-        /// <summary>
-        /// Log an error message.
-        /// </summary>
-        /// <param name="messageGetter">A function that returns a message</param>
-        void Error(Func<string> messageGetter);
-
-        /// <summary>
-        /// Log an information message.
-        /// </summary>
-        /// <param name="format">The message format</param>
-        /// <param name="args">Optional arguments.</param>
-        void Info(string format, params object[] args);
-
-        /// <summary>
-        /// Log an information message.
-        /// </summary>
-        /// <param name="messageGetter">A function that returns a message</param>
-        void Info(Func<string> messageGetter);
-
-        /// <summary>
         /// Log a warning message.
         /// </summary>
         /// <param name="format">The message format</param>
@@ -138,29 +93,48 @@ namespace MFDLabs.Logging
         void Trace(Func<string> messageGetter);
 
         /// <summary>
-        /// Log a verbose message.
+        /// Log a debug message.
         /// </summary>
         /// <param name="format">The message format</param>
         /// <param name="args">Optional arguments.</param>
-        void Verbose(string format, params object[] args);
+        void Debug(string format, params object[] args);
 
         /// <summary>
-        /// Log a verbose message.
+        /// Log a debug message.
         /// </summary>
         /// <param name="messageGetter">A function that returns a message</param>
-        void Verbose(Func<string> messageGetter);
+        void Debug(Func<string> messageGetter);
 
         /// <summary>
-        /// Log a life cycle event message.
+        /// Log an information message.
         /// </summary>
         /// <param name="format">The message format</param>
         /// <param name="args">Optional arguments.</param>
-        void LifecycleEvent(string format, params object[] args);
+        void Information(string format, params object[] args);
 
         /// <summary>
-        /// Log a life cycle event message.
+        /// Log an information message.
         /// </summary>
         /// <param name="messageGetter">A function that returns a message</param>
-        void LifecycleEvent(Func<string> messageGetter);
+        void Information(Func<string> messageGetter);
+
+        /// <summary>
+        /// Log an error message.
+        /// </summary>
+        /// <param name="ex">An exception to format.</param>
+        void Error(Exception ex);
+
+        /// <summary>
+        /// Log an error message.
+        /// </summary>
+        /// <param name="format">The message format</param>
+        /// <param name="args">Optional arguments.</param>
+        void Error(string format, params object[] args);
+
+        /// <summary>
+        /// Log an error message.
+        /// </summary>
+        /// <param name="messageGetter">A function that returns a message</param>
+        void Error(Func<string> messageGetter);
     }
 }

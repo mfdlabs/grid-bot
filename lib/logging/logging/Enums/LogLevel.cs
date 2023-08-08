@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Logging
+﻿namespace Logging
 {
     /// <summary>
     /// Represents the logging level.
@@ -9,11 +9,6 @@
         /// No-Op
         /// </summary>
         None,
-
-        /// <summary>
-        /// LC-Event
-        /// </summary>
-        LifecycleEvent,
 
         /// <summary>
         /// Error messagw
@@ -31,8 +26,13 @@
         Information,
 
         /// <summary>
-        /// Verbose
+        /// Debug
         /// </summary>
-        Verbose
+        Debug,
+
+        /// <summary>
+        /// Trace
+        /// </summary>
+        Trace
     }
 }

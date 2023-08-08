@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Logging;
+﻿namespace Logging;
 
 using System;
 using System.Diagnostics;
@@ -21,8 +21,8 @@ public class EventLogLogger : Logger
             LogLevel.Error => EventLogEntryType.Error,
             LogLevel.Warning => EventLogEntryType.Warning,
             LogLevel.Information => EventLogEntryType.Information,
-            LogLevel.Verbose => EventLogEntryType.Information,
-            LogLevel.LifecycleEvent => EventLogEntryType.Information,
+            LogLevel.Debug => EventLogEntryType.Information,
+            LogLevel.Trace => EventLogEntryType.Information,
             _ => EventLogEntryType.Information
         };
 
@@ -139,11 +139,11 @@ public class EventLogLogger : Logger
         => _singleton ??= new EventLogLogger(
                 typeof(EventLogLogger).Namespace,
                 typeof(EventLogLogger).Name,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLogLevel,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogToFileSystem,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogToConsole,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerCutLogPrefix,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogThreadId,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogWithColor
+                global::Logging.Properties.Settings.Default.DefaultLogLevel,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogToFileSystem,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogToConsole,
+                global::Logging.Properties.Settings.Default.DefaultLoggerCutLogPrefix,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogThreadId,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogWithColor
             );
 }

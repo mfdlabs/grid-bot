@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MFDLabs.Logging.Properties {
+namespace Logging.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -44,9 +44,9 @@ namespace MFDLabs.Logging.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Verbose")]
-        public global::MFDLabs.Logging.LogLevel DefaultLogLevel {
+        public global::Logging.LogLevel DefaultLogLevel {
             get {
-                return ((global::MFDLabs.Logging.LogLevel)(this["DefaultLogLevel"]));
+                return ((global::Logging.LogLevel)(this["DefaultLogLevel"]));
             }
         }
         

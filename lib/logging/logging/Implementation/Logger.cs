@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Logging;
+﻿namespace Logging;
 
 using System;
 using System.IO;
@@ -28,7 +28,7 @@ using PInvoke;
 /// <inheritdoc cref="ILogger"/>
 public class Logger : ILogger, IDisposable
 {
-    private class LockedFileStream : Stream, IDisposable
+    internal class LockedFileStream : Stream, IDisposable
     {
         private readonly FileStream _lock;
         private readonly StreamWriter _writer;
@@ -181,8 +181,8 @@ public class Logger : ILogger, IDisposable
 
             try
             {
-                if (!string.IsNullOrEmpty(global::MFDLabs.Logging.Properties.Settings.Default.DefaultLogFileDirectory))
-                    Logger._logFileBaseDirectoryBacking = Path.Combine(global::MFDLabs.Logging.Properties.Settings.Default.DefaultLogFileDirectory);
+                if (!string.IsNullOrEmpty(global::Logging.Properties.Settings.Default.DefaultLogFileDirectory))
+                    Logger._logFileBaseDirectoryBacking = Path.Combine(global::Logging.Properties.Settings.Default.DefaultLogFileDirectory);
 
                 return Logger._logFileBaseDirectoryBacking = Path.DirectorySeparatorChar == '/'
                     ? Path.Combine(Path.GetTempPath(), "mfdlabs", "logs")
@@ -650,7 +650,7 @@ public class Logger : ILogger, IDisposable
     {
         Logger.Singleton.Log("Try clear local log files...");
 
-        if (global::MFDLabs.Logging.Properties.Settings.Default.PersistLocalLogs)
+        if (global::Logging.Properties.Settings.Default.PersistLocalLogs)
         {
             if (@override)
             {
@@ -782,13 +782,13 @@ public class Logger : ILogger, IDisposable
     /// </remarks>
     public static Logger Singleton
         => Logger._singleton ??= new(
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerName,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLogLevel,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogToFileSystem,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogToConsole,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerCutLogPrefix,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogThreadId,
-                global::MFDLabs.Logging.Properties.Settings.Default.DefaultLoggerLogWithColor
+                global::Logging.Properties.Settings.Default.DefaultLoggerName,
+                global::Logging.Properties.Settings.Default.DefaultLogLevel,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogToFileSystem,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogToConsole,
+                global::Logging.Properties.Settings.Default.DefaultLoggerCutLogPrefix,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogThreadId,
+                global::Logging.Properties.Settings.Default.DefaultLoggerLogWithColor
             );
 
     /// <summary>
@@ -917,12 +917,12 @@ public class Logger : ILogger, IDisposable
     /// <inheritdoc cref="ILogger.Log(string, object[])"/>
     public void Log(string format, params object[] args)
     {
-        if (format == null) throw new ArgumentNullException(nameof(format));
+        if (string.IsNullOrEmpty(format)) throw new ArgumentNullException(nameof(format));
         if (args == null) throw new ArgumentNullException(nameof(args));
 
         if (!this._checkLogLevel(LogLevel.Information)) return;
 
-        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, format, args);
+        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightWhite, format, args);
     }
 
     /// <inheritdoc cref="ILogger.Log(Func{string})"/>
@@ -932,18 +932,68 @@ public class Logger : ILogger, IDisposable
 
         if (!this._checkLogLevel(LogLevel.Information)) return;
 
-        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, messageGetter());
+        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightWhite, messageGetter());
+    }
+
+    /// <inheritdoc cref="ILogger.Warning(string, object[])"/>
+    public void Warning(string format, params object[] args)
+    {
+        if (string.IsNullOrEmpty(format)) throw new ArgumentNullException(nameof(format));
+        if (args == null) throw new ArgumentNullException(nameof(args));
+
+        if (!this._checkLogLevel(LogLevel.Warning)) return;
+
+        this._queueOrLog(LogLevel.Warning, Logger.LogColor.BrightYellow, format, args);
+    }
+
+    /// <inheritdoc cref="ILogger.Warning(Func{string})"/>
+    public void Warning(Func<string> messageGetter)
+    {
+        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
+
+        if (!this._checkLogLevel(LogLevel.Warning)) return;
+
+        this._queueOrLog(LogLevel.Warning, Logger.LogColor.BrightYellow, messageGetter());
+    }
+
+    /// <inheritdoc cref="ILogger.Trace(string, object[])"/>
+    public void Trace(string format, params object[] args)
+    {
+        if (string.IsNullOrEmpty(format)) throw new ArgumentNullException(nameof(format));
+        if (args == null) throw new ArgumentNullException(nameof(args));
+
+        if (!this._checkLogLevel(LogLevel.Trace)) return;
+
+        var formattedMessage = args is { Length: 0 }
+            ? format
+            : string.Format(format, args);
+
+        var message = string.Format("{0}\n{1}", formattedMessage, Environment.StackTrace);
+
+        this._queueOrLog(LogLevel.Trace, Logger.LogColor.BrightMagenta, message);
+    }
+
+    /// <inheritdoc cref="ILogger.Trace(Func{string})"/>
+    public void Trace(Func<string> messageGetter)
+    {
+        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
+
+        if (!this._checkLogLevel(LogLevel.Trace)) return;
+
+        var message = string.Format("{0}\n{1}", messageGetter(), Environment.StackTrace);
+
+        this._queueOrLog(LogLevel.Trace, Logger.LogColor.BrightMagenta, message);
     }
 
     /// <inheritdoc cref="ILogger.Debug(string, object[])"/>
     public void Debug(string format, params object[] args)
     {
-        if (format == null) throw new ArgumentNullException(nameof(format));
+        if (string.IsNullOrEmpty(format)) throw new ArgumentNullException(nameof(format));
         if (args == null) throw new ArgumentNullException(nameof(args));
 
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
+        if (!this._checkLogLevel(LogLevel.Debug)) return;
 
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, format, args);
+        this._queueOrLog(LogLevel.Debug, Logger.LogColor.BrightMagenta, format, args);
     }
 
     /// <inheritdoc cref="ILogger.Debug(Func{string})"/>
@@ -951,9 +1001,30 @@ public class Logger : ILogger, IDisposable
     {
         if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
 
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
+        if (!this._checkLogLevel(LogLevel.Debug)) return;
 
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, messageGetter());
+        this._queueOrLog(LogLevel.Debug, Logger.LogColor.BrightMagenta, messageGetter());
+    }
+
+    /// <inheritdoc cref="ILogger.Information(string, object[])"/>
+    public void Information(string format, params object[] args)
+    {
+        if (string.IsNullOrEmpty(format)) throw new ArgumentNullException(nameof(format));
+        if (args == null) throw new ArgumentNullException(nameof(args));
+
+        if (!this._checkLogLevel(LogLevel.Information)) return;
+
+        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, format, args);
+    }
+
+    /// <inheritdoc cref="ILogger.Information(Func{string})"/>
+    public void Information(Func<string> messageGetter)
+    {
+        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
+
+        if (!this._checkLogLevel(LogLevel.Information)) return;
+
+        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, messageGetter());
     }
 
     /// <inheritdoc cref="ILogger.Error(Exception)"/>
@@ -985,119 +1056,6 @@ public class Logger : ILogger, IDisposable
         if (!this._checkLogLevel(LogLevel.Error)) return;
 
         this._queueOrLog(LogLevel.Error, Logger.LogColor.BrightRed, messageGetter());
-    }
-
-    /// <inheritdoc cref="ILogger.Info(string, object[])"/>
-    public void Info(string format, params object[] args)
-    {
-        if (format == null) throw new ArgumentNullException(nameof(format));
-        if (args == null) throw new ArgumentNullException(nameof(args));
-
-        if (!this._checkLogLevel(LogLevel.Information)) return;
-
-        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, format, args);
-    }
-
-    /// <inheritdoc cref="ILogger.Info(Func{string})"/>
-    public void Info(Func<string> messageGetter)
-    {
-        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
-
-        if (!this._checkLogLevel(LogLevel.Information)) return;
-
-        this._queueOrLog(LogLevel.Information, Logger.LogColor.BrightBlue, messageGetter());
-    }
-
-    /// <inheritdoc cref="ILogger.Warning(string, object[])"/>
-    public void Warning(string format, params object[] args)
-    {
-        if (format == null) throw new ArgumentNullException(nameof(format));
-        if (args == null) throw new ArgumentNullException(nameof(args));
-
-        if (!this._checkLogLevel(LogLevel.Warning)) return;
-
-        this._queueOrLog(LogLevel.Warning, Logger.LogColor.BrightYellow, format, args);
-    }
-
-    /// <inheritdoc cref="ILogger.Warning(Func{string})"/>
-    public void Warning(Func<string> messageGetter)
-    {
-        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
-
-        if (!this._checkLogLevel(LogLevel.Warning)) return;
-
-        this._queueOrLog(LogLevel.Warning, Logger.LogColor.BrightYellow, messageGetter());
-    }
-
-    /// <inheritdoc cref="ILogger.Trace(string, object[])"/>
-    public void Trace(string format, params object[] args)
-    {
-        if (format == null) throw new ArgumentNullException(nameof(format));
-        if (args == null) throw new ArgumentNullException(nameof(args));
-
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
-
-        var formattedMessage = args is { Length: 0 }
-            ? format
-            : string.Format(format, args);
-
-        var message = string.Format("{0}\n{1}", formattedMessage, new StackTrace(true).ToString());
-
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, message);
-    }
-
-    /// <inheritdoc cref="ILogger.Trace(Func{string})"/>
-    public void Trace(Func<string> messageGetter)
-    {
-        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
-
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
-
-        var message = string.Format("{0}\n{1}", messageGetter(), new StackTrace(true).ToString());
-
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightMagenta, message);
-    }
-
-    /// <inheritdoc cref="ILogger.Verbose(string, object[])"/>
-    public void Verbose(string format, params object[] args)
-    {
-        if (format == null) throw new ArgumentNullException(nameof(format));
-        if (args == null) throw new ArgumentNullException(nameof(args));
-
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
-
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightCyan, format, args);
-    }
-
-    /// <inheritdoc cref="ILogger.Verbose(Func{string})"/>
-    public void Verbose(Func<string> messageGetter)
-    {
-        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
-
-        if (!this._checkLogLevel(LogLevel.Verbose)) return;
-
-        this._queueOrLog(LogLevel.Verbose, Logger.LogColor.BrightCyan, messageGetter());
-    }
-
-    /// <inheritdoc cref="ILogger.LifecycleEvent(string, object[])"/>
-    public void LifecycleEvent(string format, params object[] args)
-    {
-        if (format == null) throw new ArgumentNullException(nameof(format));
-        if (args == null) throw new ArgumentNullException(nameof(args));
-
-        if (!this._checkLogLevel(LogLevel.LifecycleEvent)) return;
-
-        this._queueOrLog(LogLevel.LifecycleEvent, Logger.LogColor.BrightGreen, format, args);
-    }
-
-    /// <inheritdoc cref="ILogger.LifecycleEvent(Func{string})"/>
-    public void LifecycleEvent(Func<string> messageGetter)
-    {
-        if (messageGetter == null) throw new ArgumentNullException(nameof(messageGetter));
-
-        if (!this._checkLogLevel(LogLevel.LifecycleEvent)) return;
-
-        this._queueOrLog(LogLevel.LifecycleEvent, Logger.LogColor.BrightGreen, messageGetter());
     }
 
     /// <inheritdoc cref="IDisposable.Dispose"/>
