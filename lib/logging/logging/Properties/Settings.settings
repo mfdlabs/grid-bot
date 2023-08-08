@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MFDLabs.Logging.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Logging.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="DefaultLoggerName" Type="System.String" Scope="Application">
@@ -8,8 +8,8 @@
     <Setting Name="PersistLocalLogs" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DefaultLogLevel" Type="MFDLabs.Logging.LogLevel" Scope="Application">
-      <Value Profile="(Default)">Verbose</Value>
+    <Setting Name="DefaultLogLevel" Type="Logging.LogLevel" Scope="Application">
+      <Value Profile="(Default)">Debug</Value>
     </Setting>
     <Setting Name="DefaultLoggerLogToFileSystem" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

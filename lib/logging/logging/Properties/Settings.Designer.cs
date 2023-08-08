@@ -43,7 +43,7 @@ namespace Logging.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Verbose")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
         public global::Logging.LogLevel DefaultLogLevel {
             get {
                 return ((global::Logging.LogLevel)(this["DefaultLogLevel"]));
