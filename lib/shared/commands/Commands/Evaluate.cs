@@ -68,15 +68,15 @@ namespace MFDLabs.Grid.Bot.Commands
                             .WithImports(
                                 "System",
                                 "System.Linq",
-                                "System.Collections.Generic",
                                 "System.Threading.Tasks",
+                                "System.Collections.Generic",
+
                                 "Discord",
                                 "Discord.WebSocket",
-                                "MFDLabs.ErrorHandling.Extensions",
+
+                                "MFDLabs.Grid",
                                 "MFDLabs.Grid.Bot.Extensions",
-                                "MFDLabs.Text.Extensions",
-                                "MFDLabs.Diagnostics",
-                                "MFDLabs.Grid"
+                                "MFDLabs.Text.Extensions"
                             ),
                         new Globals { messageContentArray = messageContentArray, message = message, originalCommand = originalCommand, scriptContents = scriptContents }
                     );
