@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+	<ProjectReference Include="..\..\reflection\reflection\Reflection.csproj" />
+	<ProjectReference Include="..\..\text\text\Text.csproj" />
+	<ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>

@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
-	<ProjectReference Include="..\..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+	<ProjectReference Include="..\..\threading\threading\Threading.csproj" />
   </ItemGroup>
 
 </Project>

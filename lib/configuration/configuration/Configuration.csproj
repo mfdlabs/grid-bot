@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+
+  <ItemGroup>
+    <PackageReference Include="Consul" Version="1.6.10.9" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+	<ProjectReference Include="../../logging/logging/Logging.csproj" />
+	<ProjectReference Include="..\..\reflection\reflection\Reflection.csproj" />
+	<ProjectReference Include="..\..\text\text\Text.csproj" />
+	<ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+  </ItemGroup>
+
+</Project>

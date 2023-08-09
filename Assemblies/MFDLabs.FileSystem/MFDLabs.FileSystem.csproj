@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="../../targets/lib-standard.targets" />
-
-  <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.Threading\MFDLabs.Threading.csproj" />
-  </ItemGroup>
-
-</Project>

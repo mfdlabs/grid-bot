@@ -7,17 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj" />
+    <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj" />
-    <ProjectReference Include="..\diagnostics\Shared.Diagnostics.csproj" />
-    <ProjectReference Include="..\extensions\Shared.Extensions.csproj" />
-    <ProjectReference Include="..\global\Shared.Global.csproj" />
-    <ProjectReference Include="..\hooks\Shared.Hooks.csproj" />
+    <ProjectReference Include="..\..\file-system\file-system\FileSystem.csproj" />
+    <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
+    <ProjectReference Include="..\..\reflection\reflection\Reflection.csproj" />
+    <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />
+    <ProjectReference Include="../extensions/Shared.Extensions.csproj" />
+    <ProjectReference Include="../global/Shared.Global.csproj" />
+    <ProjectReference Include="../hooks/Shared.Hooks.csproj" />
   </ItemGroup>
 
   <ItemGroup>

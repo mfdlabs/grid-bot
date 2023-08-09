@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+
+  <PropertyGroup>
+    <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\text\text\Text.csproj" />
+    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+  </ItemGroup>
+
+</Project>

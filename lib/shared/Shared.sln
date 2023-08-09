@@ -21,47 +21,47 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Settings", "settings
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Utility", "utility\Shared.Utility.csproj", "{9AE06C5B-9922-499E-996A-1FB8E7A860E7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Drawing", "..\..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj", "{63A2B0C6-1040-4F99-B0F6-0A650D45637D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Drawing", "..\drawing\drawing\Drawing.csproj", "{63A2B0C6-1040-4F99-B0F6-0A650D45637D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Configuration", "..\..\Assemblies\MFDLabs.Configuration\MFDLabs.Configuration.csproj", "{A3F9FDC3-2828-4E99-9286-384F894FE85E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Configuration", "..\configuration\configuration\Configuration.csproj", "{A3F9FDC3-2828-4E99-9286-384F894FE85E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.FileSystem", "..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj", "{395FAA85-9A90-44E7-9F22-29F3F3D90D55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystem", "..\file-system\file-system\FileSystem.csproj", "{395FAA85-9A90-44E7-9F22-29F3F3D90D55}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Arbiter", "..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj", "{6AB0B790-7E2B-4D0E-982D-CF0623C3D26A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Arbiter", "..\grid\arbiter\Grid.Arbiter.csproj", "{6AB0B790-7E2B-4D0E-982D-CF0623C3D26A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.ComputeCloud", "..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj", "{BF90DF9D-5A93-4F5D-BC57-6489D8EE454A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.ComputeCloud", "..\grid\compute-cloud\Grid.ComputeCloud.csproj", "{BF90DF9D-5A93-4F5D-BC57-6489D8EE454A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.HealthCheck.Client", "..\..\Assemblies\MFDLabs.Grid.HealthCheck.Client\MFDLabs.Grid.HealthCheck.Client.csproj", "{31806155-7727-41E2-B73D-49849692BFCA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.HealthCheck.Client", "..\grid\health-check-client\Grid.HealthCheck.Client.csproj", "{31806155-7727-41E2-B73D-49849692BFCA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backing", "backing", "{EF578111-BE53-414E-A7F0-B7D015781664}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.PortManagement", "..\..\Assemblies\MFDLabs.Grid.PortManagement\MFDLabs.Grid.PortManagement.csproj", "{E8D45FA4-B4DC-413F-8D98-FDAF3015BDC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.PortManagement", "..\grid\port-management\Grid.PortManagement.csproj", "{E8D45FA4-B4DC-413F-8D98-FDAF3015BDC6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.ProcessManagement", "..\..\Assemblies\MFDLabs.Grid.ProcessManagement\MFDLabs.Grid.ProcessManagement.csproj", "{E49E7EEB-E3E9-4BFF-A4E1-86C565DFD4D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.ProcessManagement", "..\grid\process-management\Grid.ProcessManagement.csproj", "{E49E7EEB-E3E9-4BFF-A4E1-86C565DFD4D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.Shared", "..\..\Assemblies\MFDLabs.Grid.Shared\MFDLabs.Grid.Shared.csproj", "{EAD95E47-08C6-4951-82CE-57E2BEDE14B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Shared", "..\grid\shared\Grid.Shared.csproj", "{EAD95E47-08C6-4951-82CE-57E2BEDE14B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Grid.WebServer", "..\..\Assemblies\MFDLabs.Grid.WebServer\MFDLabs.Grid.WebServer.csproj", "{06CE70CD-332C-48B7-8101-F87BC2B9E0AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.WebServer", "..\grid\web-server\Grid.WebServer.csproj", "{06CE70CD-332C-48B7-8101-F87BC2B9E0AC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Instrumentation", "..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj", "{A4F6D617-3C00-4773-96AE-F40CFCD65FAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Instrumentation", "..\instrumentation\instrumentation\Instrumentation.csproj", "{A4F6D617-3C00-4773-96AE-F40CFCD65FAA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Reflection", "..\..\Assemblies\MFDLabs.Reflection\MFDLabs.Reflection.csproj", "{5F009449-2088-4C2D-B6F3-E6C872A2DAC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reflection", "..\reflection\reflection\Reflection.csproj", "{5F009449-2088-4C2D-B6F3-E6C872A2DAC5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Sentinels", "..\..\Assemblies\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj", "{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Text", "..\text\text\Text.csproj", "{D5E1943A-74F3-42B2-9AF1-C688EDE1B293}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Text", "..\..\Assemblies\MFDLabs.Text\MFDLabs.Text.csproj", "{D5E1943A-74F3-42B2-9AF1-C688EDE1B293}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Networking", "..\..\Assemblies\MFDLabs.Networking\MFDLabs.Networking.csproj", "{B7206385-6419-4764-90E4-EE2C26763220}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Networking", "..\networking\networking\Networking.csproj", "{B7206385-6419-4764-90E4-EE2C26763220}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logging", "..\logging\logging\Logging.csproj", "{6219E32E-F755-4B19-A879-8C4FC63559F3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Diagnostics", "..\..\Assemblies\MFDLabs.Diagnostics\MFDLabs.Diagnostics.csproj", "{34666DD6-0E07-48D4-B43E-1A5DFABAF307}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics", "..\diagnostics\diagnostics\Diagnostics.csproj", "{34666DD6-0E07-48D4-B43E-1A5DFABAF307}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Threading", "..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj", "{DE9151A2-1EDF-4A81-A1D5-188EF27FBF8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Threading", "..\threading\threading\Threading.csproj", "{DE9151A2-1EDF-4A81-A1D5-188EF27FBF8C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Users.Client", "..\..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj", "{787A87E4-E548-4E04-9A4C-E8C8C225281C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Users.Client", "..\clients\users-client\Users.Client.csproj", "{787A87E4-E548-4E04-9A4C-E8C8C225281C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFDLabs.Discord.Configuration", "..\..\Assemblies\MFDLabs.Discord.Configuration\MFDLabs.Discord.Configuration.csproj", "{16D3D929-7DE1-48C4-9051-598373157845}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Configuration.Discord", "..\configuration\discord-configuration\Configuration.Discord.csproj", "{16D3D929-7DE1-48C4-9051-598373157845}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Commands", "..\grid\commands\Grid.Commands.csproj", "{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -231,14 +231,6 @@ Global
 		{5F009449-2088-4C2D-B6F3-E6C872A2DAC5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5F009449-2088-4C2D-B6F3-E6C872A2DAC5}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
 		{5F009449-2088-4C2D-B6F3-E6C872A2DAC5}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.DebugGrid|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.DebugGrid|Any CPU.Build.0 = Debug|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
 		{D5E1943A-74F3-42B2-9AF1-C688EDE1B293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D5E1943A-74F3-42B2-9AF1-C688EDE1B293}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5E1943A-74F3-42B2-9AF1-C688EDE1B293}.DebugGrid|Any CPU.ActiveCfg = Debug|Any CPU
@@ -295,6 +287,14 @@ Global
 		{16D3D929-7DE1-48C4-9051-598373157845}.Release|Any CPU.Build.0 = Release|Any CPU
 		{16D3D929-7DE1-48C4-9051-598373157845}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
 		{16D3D929-7DE1-48C4-9051-598373157845}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.DebugGrid|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.DebugGrid|Any CPU.Build.0 = Debug|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.ReleaseGrid|Any CPU.ActiveCfg = Release|Any CPU
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4}.ReleaseGrid|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -313,7 +313,6 @@ Global
 		{06CE70CD-332C-48B7-8101-F87BC2B9E0AC} = {EF578111-BE53-414E-A7F0-B7D015781664}
 		{A4F6D617-3C00-4773-96AE-F40CFCD65FAA} = {198274B1-0273-42D9-967B-DF01C3320585}
 		{5F009449-2088-4C2D-B6F3-E6C872A2DAC5} = {198274B1-0273-42D9-967B-DF01C3320585}
-		{DAF98B7B-6FC9-4CB8-8506-06F8043FFABA} = {198274B1-0273-42D9-967B-DF01C3320585}
 		{D5E1943A-74F3-42B2-9AF1-C688EDE1B293} = {198274B1-0273-42D9-967B-DF01C3320585}
 		{B7206385-6419-4764-90E4-EE2C26763220} = {EF578111-BE53-414E-A7F0-B7D015781664}
 		{6219E32E-F755-4B19-A879-8C4FC63559F3} = {198274B1-0273-42D9-967B-DF01C3320585}
@@ -321,6 +320,7 @@ Global
 		{DE9151A2-1EDF-4A81-A1D5-188EF27FBF8C} = {198274B1-0273-42D9-967B-DF01C3320585}
 		{787A87E4-E548-4E04-9A4C-E8C8C225281C} = {198274B1-0273-42D9-967B-DF01C3320585}
 		{16D3D929-7DE1-48C4-9051-598373157845} = {198274B1-0273-42D9-967B-DF01C3320585}
+		{6DCFDE7D-4A10-4F8A-AFC1-175B564F3DB4} = {198274B1-0273-42D9-967B-DF01C3320585}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AA2A2CA3-2A17-4613-A2BA-360AA0F151F7}

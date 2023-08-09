@@ -80,7 +80,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
+    <ProjectReference Include="..\..\..\lib\grid\arbiter\Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\..\lib\shared\commands\Shared.Commands.csproj" />
     <ProjectReference Include="..\..\..\lib\shared\diagnostics\Shared.Diagnostics.csproj" />
     <ProjectReference Include="..\..\..\lib\shared\events\Shared.Events.csproj" />

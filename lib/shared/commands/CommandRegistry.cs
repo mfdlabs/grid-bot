@@ -26,7 +26,6 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Sentinels;
 using MFDLabs.Threading;
 using MFDLabs.Grid.Bot.Guards;
 using MFDLabs.Text.Extensions;
@@ -572,10 +571,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
             switch (ex)
             {
-                case CircuitBreakerException _:
-                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToString());
-                    await command.RespondEphemeralPingAsync(ex.Message);
-                    return;
                 case NotSupportedException _:
                     Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;
@@ -682,10 +677,6 @@ namespace MFDLabs.Grid.Bot.Registries
 
             switch (ex)
             {
-                case CircuitBreakerException _:
-                    Logger.Singleton.Warning("CircuitBreakerException '{0}'", ex.ToString());
-                    await message.ReplyAsync(ex.Message);
-                    return;
                 case NotSupportedException _:
                     Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
                     return;

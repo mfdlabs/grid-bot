@@ -7,17 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.FileSystem\MFDLabs.FileSystem.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Arbiter\MFDLabs.Grid.Arbiter.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.Commands\MFDLabs.Grid.Commands.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Grid.ComputeCloud\MFDLabs.Grid.ComputeCloud.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Instrumentation\MFDLabs.Instrumentation.csproj" />
-    <ProjectReference Include="../../../lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Threading\MFDLabs.Threading.csproj" />
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Users.Client\MFDLabs.Users.Client.csproj" />
-    <ProjectReference Include="..\diagnostics\Shared.Diagnostics.csproj" />
-    <ProjectReference Include="..\global\Shared.Global.csproj" />
-    <ProjectReference Include="..\settings\Shared.Settings.csproj" />
+    <ProjectReference Include="..\..\file-system\file-system\FileSystem.csproj" />
+    <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
+    <ProjectReference Include="..\..\grid\commands\Grid.Commands.csproj" />
+    <ProjectReference Include="..\..\grid\compute-cloud\Grid.ComputeCloud.csproj" />
+    <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
+    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+    <ProjectReference Include="..\..\clients\users-client\Users.Client.csproj" />
+    <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />
+    <ProjectReference Include="../global/Shared.Global.csproj" />
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <ProjectReference Include="..\..\..\Assemblies\MFDLabs.Drawing\MFDLabs.Drawing.csproj" />
+    <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 
 </Project>

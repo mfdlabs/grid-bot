@@ -11,11 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="..\commands\Shared.Commands.csproj" />
-    <ProjectReference Include="..\extensions\Shared.Extensions.csproj" />
-    <ProjectReference Include="..\settings\Shared.Settings.csproj" />
-    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
+    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="../commands/Shared.Commands.csproj" />
+    <ProjectReference Include="../extensions/Shared.Extensions.csproj" />
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
 
 </Project>

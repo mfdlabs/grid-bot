@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+  
+  <ItemGroup>
+    <PackageReference Include="prometheus-net" Version="5.0.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\networking\networking\Networking.csproj" />
+    <ProjectReference Include="..\..\text\text\Text.csproj" />
+  </ItemGroup>
+
+</Project>
