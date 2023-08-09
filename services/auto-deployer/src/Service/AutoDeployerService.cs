@@ -508,13 +508,13 @@ SLEEP:
                 (
                     from f in release.Assets
                     where f.Name.IsMatch(
-                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?\.Unpacker\.ps1"
+                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?\.unpacker\.ps1"
                     )
                     select f
                 ).FirstOrDefault()?.Name!
             );
 
-            versionDeploymentPath = unpackerFile.Replace(".Unpacker.ps1", "");
+            versionDeploymentPath = unpackerFile.Replace(".unpacker.ps1", "");
 
             if (!File.Exists(unpackerFile))
             {
