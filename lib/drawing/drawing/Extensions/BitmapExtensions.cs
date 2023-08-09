@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using MFDLabs.Drawing.Extensions;
-using MFDLabs.Drawing.Models;
-using MFDLabs.Drawing.NativeWin32;
+using Drawing.Extensions;
+using Drawing.Models;
+using Drawing.NativeWin32;
 
-namespace MFDLabs.Drawing
+namespace Drawing
 {
     public static class BitmapExtensions
     {

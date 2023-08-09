@@ -4,10 +4,10 @@ using Discord;
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Registries;
+using Threading;
+using Text.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Registries;
 
 #if DISCORD_SHARDING_ENABLED
 using Discord.WebSocket;
@@ -15,7 +15,7 @@ using Discord.WebSocket;
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-namespace MFDLabs.Grid.Bot.Events
+namespace Grid.Bot.Events
 {
 #if DISCORD_SHARDING_ENABLED
     public static class OnShardReady
@@ -44,26 +44,26 @@ namespace MFDLabs.Grid.Bot.Events
 
                 BotRegistry.Ready = true;
 
-                if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
+                if (global::Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                     CommandRegistry.RegisterOnce();
 
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+                if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
                 {
-                    var text = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+                    var text = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
                     BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb);
                     BotRegistry.Client.SetGameAsync(GetStatusText(text), null, ActivityType.Playing);
                     return;
                 }
 
                 BotRegistry.Client.SetStatusAsync(
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
+                    global::Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
                 );
 
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
+                if (!global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
                     BotRegistry.Client.SetGameAsync(
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
+                        global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
+                        global::Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
+                        global::Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
                     );
             }
         }
@@ -79,7 +79,7 @@ namespace MFDLabs.Grid.Bot.Events
         public static async Task Invoke()
         {
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
+            if (global::Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
                 CommandRegistry.RegisterOnce();
 
             Logger.Singleton.Debug(
@@ -88,23 +88,23 @@ namespace MFDLabs.Grid.Bot.Events
                 BotGlobal.Client.CurrentUser.Discriminator
             );
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+            if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
             {
-                var text = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+                var text = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
                 await BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
                 await BotGlobal.Client.SetGameAsync(GetStatusText(text), null, ActivityType.Playing);
                 return;
             }
 
             await BotGlobal.Client.SetStatusAsync(
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
+                global::Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
             );
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
+            if (!global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
                 await BotGlobal.Client.SetGameAsync(
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
+                    global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
+                    global::Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
+                    global::Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
                 );
         }
     }

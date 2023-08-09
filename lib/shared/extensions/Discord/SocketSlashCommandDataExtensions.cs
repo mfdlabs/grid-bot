@@ -5,7 +5,7 @@ using System.Linq;
 using Discord;
 using Discord.WebSocket;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class SocketSlashCommandDataExtensions
     {

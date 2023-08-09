@@ -6,7 +6,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
-    <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
+    <RootNamespace>Grid.Bot</RootNamespace>
 	
 	<Configurations>debug;release</Configurations>
   </PropertyGroup>

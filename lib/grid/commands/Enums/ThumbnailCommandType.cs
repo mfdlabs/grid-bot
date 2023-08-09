@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Commands;
+﻿namespace Grid.Commands;
 
 /// <summary>
 /// The thumbnail command type.

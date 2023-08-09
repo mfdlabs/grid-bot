@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
 	public static class RandomFactory 
 	{

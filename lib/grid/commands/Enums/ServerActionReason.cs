@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Commands;
+﻿namespace Grid.Commands;
 
 /// <summary>
 /// Reasoning for a server action.

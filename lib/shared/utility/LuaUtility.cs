@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.ComputeCloud;
+using Text.Extensions;
+using Grid.ComputeCloud;
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     public static class LuaUtility
     {
@@ -29,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             var escapedString = script.EscapeNewLines().Escape();
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
+            if (!global::Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
                 parsedScript = script.ToLower();
 
             Logger.Singleton.Information("Check if script '{0}' contains blacklisted words.", escapedString);
@@ -37,7 +37,7 @@ namespace MFDLabs.Grid.Bot.Utility
             foreach (var keyword in GetBlacklistedKeywords())
             {
                 var parsedKeyword = keyword;
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
+                if (!global::Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
                     parsedKeyword = keyword.ToLower();
                 
                 if (!parsedScript.Contains(parsedKeyword)) continue;
@@ -54,7 +54,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         private static IEnumerable<string> GetBlacklistedKeywords() 
             =>
-                (from keyword in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords
+                (from keyword in global::Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords
                         .Split(',')
                     where !keyword.IsNullOrEmpty()
                     select keyword);

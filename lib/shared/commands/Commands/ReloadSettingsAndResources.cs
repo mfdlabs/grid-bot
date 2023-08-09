@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class ReloadSettingsAndResources : IStateSpecificCommandHandler
     {
@@ -19,7 +19,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            global::MFDLabs.Grid.Bot.Properties.Settings.Default.Reload();
+            global::Grid.Bot.Properties.Settings.Default.Reload();
             await message.ReplyAsync($"Successfully reloaded all settings " +
                                      $"from {Assembly.GetEntryAssembly().GetName().Name}.exe.config");
         }

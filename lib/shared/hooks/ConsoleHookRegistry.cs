@@ -13,10 +13,10 @@ using System.Collections.Generic;
 
 using Logging;
 
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Reflection.Extensions;
+using Grid.Bot.Interfaces;
+using Reflection.Extensions;
 
-namespace MFDLabs.Grid.Bot.Registries
+namespace Grid.Bot.Registries
 {
     public static class ConsoleHookRegistry
     {
@@ -27,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static readonly ICollection<IConsoleHook> ConsoleHooks = new List<IConsoleHook>();
 
-        private static string GetHookNamespace() => "MFDLabs.Grid.Bot.Hooks";
+        private static string GetHookNamespace() => "Grid.Bot.Hooks";
 
         /* TODO: Use reflection to shorten the code in here! */
         public static void Register()

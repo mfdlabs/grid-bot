@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Instrumentation
+﻿namespace Instrumentation
 {
     public sealed class NoOpCounter : IRateOfCountsPerSecondCounter, IAverageValueCounter, IMaximumValueCounter, IRawValueCounter, IFractionCounter, IPercentileCounter
     {

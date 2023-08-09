@@ -15,9 +15,9 @@ using VaultSharp.V1.SecretsEngines.KeyValue.V2;
 
 using Logging;
 
-using MFDLabs.Threading.Extensions;
+using Threading.Extensions;
 
-namespace MFDLabs.Discord.Configuration
+namespace Discord.Configuration
 {
     internal static class IKeyValueSecretsEngineV2Extensions
     {

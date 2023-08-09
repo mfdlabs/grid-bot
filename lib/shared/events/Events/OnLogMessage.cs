@@ -5,7 +5,7 @@ using Discord;
 
 using Logging;
 
-namespace MFDLabs.Grid.Bot.Events
+namespace Grid.Bot.Events
 {
     public static class OnLogMessage
     {
@@ -19,7 +19,7 @@ namespace MFDLabs.Grid.Bot.Events
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
                 if (!(message.Exception is TaskCanceledException &&
-                      !global::MFDLabs.Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
+                      !global::Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
                     Logger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
                         message.Source,
                         message.Message,
@@ -29,7 +29,7 @@ namespace MFDLabs.Grid.Bot.Events
                 return Task.CompletedTask;
             }
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
+            if (!global::Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
                 return Task.CompletedTask;
             
             switch (message)

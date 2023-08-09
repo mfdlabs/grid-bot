@@ -2,17 +2,17 @@
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
-using MFDLabs.Networking;
-using MFDLabs.Text.Extensions;
+using Networking;
+using Text.Extensions;
 
 #if NETFRAMEWORK
 using System.Security.Principal;
-using MFDLabs.Diagnostics.Extensions;
+using Diagnostics.Extensions;
 #else
 using System.Runtime.InteropServices;
 #endif
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
     public static class SystemGlobal
     {
@@ -42,7 +42,7 @@ namespace MFDLabs.Diagnostics
         public static extern uint getuid();
 #endif
         
-        // TODO: Pull out to MFDLabs.Security
+        // TODO: Pull out to Security
         public static bool ContextIsAdministrator()
         {
 #if NETFRAMEWORK

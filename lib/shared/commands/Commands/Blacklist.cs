@@ -2,12 +2,12 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Interfaces;
+using Text.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class Blacklist : IStateSpecificCommandHandler
     {
@@ -16,7 +16,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                             "This is not persistent, unless this instance has either of the " +
                                             "following enviroment variables defined: USE_VAULT_SETTINGS_PROVIDER, WE_ON_THE_RUN, " +
                                             "WE_ARE_AN_ACTOR\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateblacklistedusers " +
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}updateblacklistedusers " +
                                             $"add/remove userMention|userID";
         public string[] CommandAliases => new[] { "bl", "blacklist", "upbl", "upblacklist", "updateblacklistedusers" };
         public bool Internal => true;
@@ -90,7 +90,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
             }
 
-            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',').ToList();
+            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',').ToList();
 
 
             switch (subCommand?.ToLowerInvariant())
@@ -99,27 +99,27 @@ namespace MFDLabs.Grid.Bot.Commands
                     if (!blacklistedUsers.Contains(user))
                     {
                         blacklistedUsers.Add(user);
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blacklistedUsers.Join(',');
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                        global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blacklistedUsers.Join(',');
+                        global::Grid.Bot.Properties.Settings.Default.Save();
                         await message.ReplyAsync($"Successfully added '{user}' to the blacklisted users list.");
                         break;
                     }
                     await message.ReplyAsync($"The user '{user}' is already blacklisted, " +
                                              $"if you want to remove them, please re-run this command " +
-                                             $"like: '{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
+                                             $"like: '{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
                     break;
                 case "remove":
                     if (blacklistedUsers.Contains(user))
                     {
                         blacklistedUsers.Remove(user);
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blacklistedUsers.Join(',');
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                        global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blacklistedUsers.Join(',');
+                        global::Grid.Bot.Properties.Settings.Default.Save();
                         await message.ReplyAsync($"Successfully removed '{user}' to the blacklisted users list.");
                         break;
                     }
                     await message.ReplyAsync($"The user '{user}' is not blacklisted, " +
                                              $"if you want to add them, please re-run this command like: " +
-                                             $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
+                                             $"'{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
                     break;
                 default:
                     await message.ReplyAsync($"Unknown subcommand '{subCommand}', the allowed subcommands are: 'add', 'remove'.");

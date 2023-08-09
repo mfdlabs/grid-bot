@@ -8,7 +8,7 @@ using System.Diagnostics;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.GridUtility")]
+[assembly: AssemblyTitle("GridUtility")]
 [assembly: AssemblyDescription("Shared Utility for the MFDLABS.GRID.BOT")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,10 +16,10 @@ using System.Diagnostics;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.GridUtility")]
+[assembly: AssemblyProduct("GridUtility")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2022. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Grid (R)")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: AssemblyVersion("1.0.*")]
-[assembly: InternalsVisibleTo("MFDLabs.GridUtility.Unit.Test")]
+[assembly: InternalsVisibleTo("GridUtility.Unit.Test")]

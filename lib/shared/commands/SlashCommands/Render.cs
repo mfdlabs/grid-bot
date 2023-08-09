@@ -11,17 +11,17 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Diagnostics;
-using MFDLabs.Instrumentation;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Reflection.Extensions;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
+using Threading;
+using Diagnostics;
+using Instrumentation;
+using Text.Extensions;
+using Grid.Bot.Utility;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Reflection.Extensions;
+using Grid.Bot.PerformanceMonitors;
 
-namespace MFDLabs.Grid.Bot.SlashCommands
+namespace Grid.Bot.SlashCommands
 {
     internal class Render : IStateSpecificSlashCommandHandler
     {
@@ -36,7 +36,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                 .WithName("roblox_id")
                 .WithDescription("Render a user by their Roblox User ID.")
                 .WithType(ApplicationCommandOptionType.SubCommand)
-                .AddOption("id", ApplicationCommandOptionType.Integer, "The user ID of the Roblox user.", true, minValue: 1, maxValue: global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize),
+                .AddOption("id", ApplicationCommandOptionType.Integer, "The user ID of the Roblox user.", true, minValue: 1, maxValue: global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize),
             new SlashCommandOptionBuilder()
                 .WithName("roblox_name")
                 .WithDescription("Render a user by their Roblox Username.")
@@ -45,7 +45,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         };
         private sealed class RenderSlashCommandPerformanceMonitor
         {
-            private const string Category = "MFDLabs.Grid.SlashCommands.Render";
+            private const string Category = "Grid.SlashCommands.Render";
 
             public IRawValueCounter TotalItemsProcessed { get; }
             public IRateOfCountsPerSecondCounter TotalItemsProcessedPerSecond { get; }
@@ -97,7 +97,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
         private const string GoodUsernameRegex = @"^[A-Za-z0-9_]{3,20}$";
 
         private static IEnumerable<string> BlacklistedUsernames =>
-                (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
+                (from uname in global::Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
                  select uname).ToArray();
 
@@ -233,17 +233,17 @@ namespace MFDLabs.Grid.Bot.SlashCommands
                         "Trying to render the character for the user '{0}' with the place '{1}', " +
                         "and the dimensions of {2}x{3}",
                         userId,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
                     );
 
                     // get a stream and temp filename
                     var (stream, fileName) = GridServerCommandUtility.RenderUser(
                         userId,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
                     );
 
                     if (stream == null || fileName == null)

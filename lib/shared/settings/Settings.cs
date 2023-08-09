@@ -1,10 +1,10 @@
 ﻿#if USE_VAULT_SETTINGS_PROVIDER || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
 using System.Configuration;
-using MFDLabs.Configuration.Providers;
+using Configuration.Providers;
 #endif
 
 #if USE_VAULT_SETTINGS_PROVIDER
-namespace MFDLabs.Grid.Bot.Properties
+namespace Grid.Bot.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
     public sealed partial class Settings
@@ -17,7 +17,7 @@ namespace MFDLabs.Grid.Bot.Properties
     }
 }
 #elif WE_ON_THE_RUN
-namespace MFDLabs.Grid.Bot.Properties
+namespace Grid.Bot.Properties
 {
     [SettingsProvider(typeof(RemoteServiceProvider))]
     public sealed partial class Settings
@@ -30,7 +30,7 @@ namespace MFDLabs.Grid.Bot.Properties
     }
 }
 #elif WE_ARE_AN_ACTOR
-namespace MFDLabs.Grid.Bot.Properties
+namespace Grid.Bot.Properties
 {
     [SettingsProvider(typeof(DataBaseProvider))]
     public sealed partial class Settings

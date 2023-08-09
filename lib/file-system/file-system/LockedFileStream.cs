@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace MFDLabs.FileSystem
+namespace FileSystem
 {
     public class LockedFileStream : Stream, IDisposable
     {

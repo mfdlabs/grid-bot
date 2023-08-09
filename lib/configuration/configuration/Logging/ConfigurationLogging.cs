@@ -2,7 +2,7 @@
 
 using Logging;
 
-namespace MFDLabs.Configuration.Logging
+namespace Configuration.Logging
 {
 	public static class ConfigurationLogging
 	{

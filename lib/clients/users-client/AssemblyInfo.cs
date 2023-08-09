@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Users.Client")]
+[assembly: AssemblyTitle("Users.Client")]
 [assembly: AssemblyDescription("A Roblox Http client for contacting users.roblox.com")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Users.Client")]
+[assembly: AssemblyProduct("Users.Client")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2021. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Roblox (R)")]
 [assembly: ComVisible(false)]

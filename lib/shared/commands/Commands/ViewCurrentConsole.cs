@@ -3,15 +3,15 @@
 using System;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Diagnostics;
-using MFDLabs.Drawing;
-using MFDLabs.FileSystem;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.NativeWin32;
-using MFDLabs.Threading;
+using Diagnostics;
+using Drawing;
+using FileSystem;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.NativeWin32;
+using Threading;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal class ViewCurrentConsole : IStateSpecificCommandHandler
     {

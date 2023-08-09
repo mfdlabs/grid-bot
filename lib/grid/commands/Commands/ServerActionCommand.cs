@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Commands;
+﻿namespace Grid.Commands;
 
 /// <summary>
 /// The command for issuing an action on the grid

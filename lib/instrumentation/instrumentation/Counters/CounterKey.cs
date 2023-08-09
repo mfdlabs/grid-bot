@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using MFDLabs.Text.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     [DebuggerDisplay("Category={Category}, Name={Name}, Instance={Instance}")]
     public struct CounterKey : IEquatable<CounterKey>

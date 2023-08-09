@@ -6,19 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Text.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class EvaluateScript : IStateSpecificCommandHandler
     {
         public string CommandName => "Evaluate Runtime CSharp Script";
         public string CommandDescription => "Attempts to evaluate a script with the given name on the " +
-                                            $"current machine\nLayout: {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}evauluatescript scriptName.";
+                                            $"current machine\nLayout: {Grid.Bot.Properties.Settings.Default.Prefix}evauluatescript scriptName.";
         public string[] CommandAliases => new[] { "evals", "evalscript", "evauluatescript" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -67,9 +67,9 @@ namespace MFDLabs.Grid.Bot.Commands
                                 "Discord",
                                 "Discord.WebSocket",
 
-                                "MFDLabs.Grid",
-                                "MFDLabs.Grid.Bot.Extensions",
-                                "MFDLabs.Text.Extensions"
+                                "Grid",
+                                "Grid.Bot.Extensions",
+                                "Text.Extensions"
                             ),
                         new Globals { messageContentArray = messageContentArray, message = message, originalCommand = originalCommand }
                     );

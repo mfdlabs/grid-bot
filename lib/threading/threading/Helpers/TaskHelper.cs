@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace MFDLabs.Threading
+namespace Threading
 {
     [DebuggerStepThrough]
     [DebuggerDisplay("Task Helper Global")]

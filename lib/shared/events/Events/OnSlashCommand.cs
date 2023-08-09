@@ -2,9 +2,9 @@
 
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.WorkQueues;
+using Grid.Bot.WorkQueues;
 
-namespace MFDLabs.Grid.Bot.Events
+namespace Grid.Bot.Events
 {
     public static class OnSlashCommand
     {

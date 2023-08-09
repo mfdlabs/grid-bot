@@ -9,11 +9,11 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class ReloadSettingsOfAssembly : IStateSpecificCommandHandler
     {

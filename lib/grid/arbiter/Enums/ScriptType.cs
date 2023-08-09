@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 /// <summary>
 /// Represents the type of script.

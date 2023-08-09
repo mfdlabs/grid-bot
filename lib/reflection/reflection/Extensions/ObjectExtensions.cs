@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Reflection.Extensions
+namespace Reflection.Extensions
 {
     public static class ObjectExtensions
     {

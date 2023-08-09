@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MFDLabs.Instrumentation.LegacySupport
+namespace Instrumentation.LegacySupport
 {
     internal class SimpleCounterCategory : ISimpleCounterCategory
     {

@@ -6,7 +6,7 @@
     Copyright MFDLABS 2001-2022. All rights reserved.
 */
 
-namespace MFDLabs.Grid;
+namespace Grid;
 
 using System;
 using System.Net;
@@ -111,7 +111,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
     private class GridServerArbiterPerformanceMonitor
     {
-        private const string Category = "MFDLabs.Grid.Arbiter.InMemoryArbiter";
+        private const string Category = "Grid.Arbiter.InMemoryArbiter";
 
         internal IRawValueCounter TotalInvocations { get; }
         internal IRawValueCounter TotalInvocationsThatSucceeded { get; }
@@ -181,18 +181,18 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         _portAllocator = portAllocator ?? new PortAllocator(counterRegistry, logger);
 
         var healthCheckClient = new WebServerHealthCheckClient(
-            global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckBaseUrl,
-            global::MFDLabs.Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText
+            global::Grid.Properties.Settings.Default.WebServerHealthCheckBaseUrl,
+            global::Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText
         );
         _webServerDeployer = webServerDeployer ?? new WebServerDeployer(
             logger,
             healthCheckClient,
-            global::MFDLabs.Grid.Properties.Settings.Default.WebServerWorkspacePath
+            global::Grid.Properties.Settings.Default.WebServerWorkspacePath
         );
 
 
         _gridServerDeployer = gridServerDeployer ?? new GridServerDeployer(
-            global::MFDLabs.Grid.Properties.Settings.Default.GridServerExecutableName,
+            global::Grid.Properties.Settings.Default.GridServerExecutableName,
             GridServerFileHelper.GetGridServerPath(true),
             counterRegistry,
             logger,

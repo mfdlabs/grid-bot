@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     internal class CollectionConfiguration : ICollectionConfiguration
     {

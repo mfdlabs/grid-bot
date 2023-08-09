@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Hooks;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
+using Grid.Bot.Extensions;
+using Grid.Bot.Hooks;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Utility;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal class Exit : IStateSpecificCommandHandler
     {
@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             await message.ReplyAsync("911! Invoking suicide request!");
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.KillCommandShouldForce)
+            if (global::Grid.Bot.Properties.Settings.Default.KillCommandShouldForce)
             {
                 new SuicideHook().Callback('f');
                 return;

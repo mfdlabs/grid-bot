@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
     public static class DevicePlatformHelper
     {

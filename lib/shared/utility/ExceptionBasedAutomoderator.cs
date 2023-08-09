@@ -6,10 +6,10 @@ using Discord;
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Text.Extensions;
+using Threading;
+using Text.Extensions;
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
 
 
@@ -17,14 +17,14 @@ namespace MFDLabs.Grid.Bot.Utility
     {
         private static void Blacklist(this IUser user)
         {
-            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
 
             if (!blacklistedUsers.Contains(user.Id.ToString()))
             {
                 var blIds = blacklistedUsers.Split(',').ToList();
                 blIds.Add(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
 
@@ -62,9 +62,9 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static bool DetermineIfUserHasExceededExceptionLimit(this IUser user)
         {
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return false;
+            if (!global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return false;
 
-            var (exceptionCounterExpires, exceptionCounter) = user.GetOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
+            var (exceptionCounterExpires, exceptionCounter) = user.GetOrCreateTrack(0, global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
             if (exceptionCounterExpires < DateTime.Now)
             {
@@ -77,14 +77,14 @@ namespace MFDLabs.Grid.Bot.Utility
                 }
 
                 // Exlusive in case another thread had hit them just in the nick of time :/
-                if (exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist)
+                if (exceptionCounter > global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist)
                 {
                     Logger.Singleton.Warning("Their exception counter exceeded the maximum before blacklist, return true");
                     return true;
                 }
 
                 Logger.Singleton.Information("The user didn't exceed the maximum before blacklist, reset their track.");
-                user.UpdateOrCreateTrack(0, global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
+                user.UpdateOrCreateTrack(0, global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorLeaseTimeSpanAddition);
 
                 return false;
             }
@@ -92,12 +92,12 @@ namespace MFDLabs.Grid.Bot.Utility
             Logger.Singleton.Information("User's track hasn't expired, check if their exception counter exceeded the maximum before blacklist.");
 
 
-            return exceptionCounter > global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
+            return exceptionCounter > global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist;
         }
 
         public static bool CheckIfUserShouldBeBlacklisted(this IUser user)
         {
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return false;
+            if (!global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return false;
 
             if (user.DetermineIfUserHasExceededExceptionLimit())
             {
@@ -111,7 +111,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
         public static void IncrementExceptionLimit(this IUser user)
         {
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return;
+            if (!global::Grid.Bot.Properties.Settings.Default.ExceptionBasedAutomoderatorEnabled) return;
 
             if (user.CheckIfUserShouldBeBlacklisted()) return;
 

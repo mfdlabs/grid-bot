@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid
+﻿namespace Grid
 {
     /// <summary>
     /// A class to allocate ports.

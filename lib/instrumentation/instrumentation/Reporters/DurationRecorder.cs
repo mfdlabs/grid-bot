@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public class DurationRecorder : IDurationRecorder
     {

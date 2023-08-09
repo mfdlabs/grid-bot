@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Threading.Extensions;
+using Grid.Bot.Utility;
+using Text.Extensions;
+using Threading.Extensions;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class SocketMessageExtensions
     {

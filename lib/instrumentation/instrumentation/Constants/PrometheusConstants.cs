@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Instrumentation.PrometheusListener
+﻿namespace Instrumentation.PrometheusListener
 {
     internal class PrometheusConstants
     {

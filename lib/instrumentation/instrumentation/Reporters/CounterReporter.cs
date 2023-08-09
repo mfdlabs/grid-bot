@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using MFDLabs.Instrumentation.Infrastructure;
-using MFDLabs.Instrumentation.PrometheusListener;
+using Instrumentation.Infrastructure;
+using Instrumentation.PrometheusListener;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public sealed class CounterReporter : IDisposable, ICounterReporter
     {
@@ -59,7 +59,7 @@ namespace MFDLabs.Instrumentation
         }
 
         internal static readonly TimeSpan SubmissionInterval = TimeSpan.FromSeconds(30.0);
-        private static readonly CounterKey _NumberOfDataPointsSentCounterKey = new CounterKey("MFDLabs.Instrumentation", "NumberOfDataPointsSent", null);
+        private static readonly CounterKey _NumberOfDataPointsSentCounterKey = new CounterKey("Instrumentation", "NumberOfDataPointsSent", null);
         private readonly ICounterRegistry _CounterRegistry;
         private readonly Action<Exception> _ExceptionHandler;
         private readonly IConfigurationProvider _ConfigurationProvider;

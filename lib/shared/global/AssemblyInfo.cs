@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.GridGlobal")]
+[assembly: AssemblyTitle("GridGlobal")]
 [assembly: AssemblyDescription("Shared Global Bot stuff for the MFDLABS.GRID.BOT")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.GridGlobal")]
+[assembly: AssemblyProduct("GridGlobal")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2022. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Grid (R)")]
 [assembly: ComVisible(false)]

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Reflection")]
+[assembly: AssemblyTitle("Reflection")]
 [assembly: AssemblyDescription("An array of reflection helpers by MFDLABS.")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Reflection")]
+[assembly: AssemblyProduct("Reflection")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2014. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Who Owns This Sector? (R)")]
 [assembly: ComVisible(false)]

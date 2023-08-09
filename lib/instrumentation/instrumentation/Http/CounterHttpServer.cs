@@ -5,9 +5,9 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using MFDLabs.Networking.Extensions;
+using Networking.Extensions;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public sealed class CounterHttpServer
     {

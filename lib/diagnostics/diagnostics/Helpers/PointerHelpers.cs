@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Diagnostics
+﻿namespace Diagnostics
 {
     public static unsafe class PointerHelpers
     {

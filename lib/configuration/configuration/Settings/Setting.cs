@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Configuration.Settings
+namespace Configuration.Settings
 {
     public interface ISetting
     {

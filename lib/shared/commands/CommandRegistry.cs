@@ -26,21 +26,21 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Grid.Bot.Guards;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Reflection.Extensions;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
+using Threading;
+using Grid.Bot.Guards;
+using Text.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Reflection.Extensions;
+using Grid.Bot.PerformanceMonitors;
 
 #if WE_LOVE_EM_SLASH_COMMANDS
-using MFDLabs.Grid.Bot.Global;
+using Grid.Bot.Global;
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
 // ReSharper disable AsyncVoidLambda
 
-namespace MFDLabs.Grid.Bot.Registries
+namespace Grid.Bot.Registries
 {
     public static class CommandRegistry
     {
@@ -63,11 +63,11 @@ namespace MFDLabs.Grid.Bot.Registries
 
         private static readonly CommandRegistryInstrumentationPerformanceMonitor InstrumentationPerfmon = new(PerfmonCounterRegistryProvider.Registry);
 
-        private static string GetDefaultCommandNamespace() => "MFDLabs.Grid.Bot.Commands";
+        private static string GetDefaultCommandNamespace() => "Grid.Bot.Commands";
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 
-        private static string GetSlashCommandNamespace() => "MFDLabs.Grid.Bot.SlashCommands";
+        private static string GetSlashCommandNamespace() => "Grid.Bot.SlashCommands";
 
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
@@ -319,7 +319,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     Counters.RequestFailedCountN++;
 
                     Logger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
+                    if (global::Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
                         await command.RespondEphemeralPingAsync($"The slash command with the name '{commandAlias}' was not found.");
@@ -344,7 +344,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     var isAllowed = false;
                     if (command.User.IsAdmin())
                     {
-                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
+                        if (global::Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
                         {
                             InstrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
                             isAllowed = true;
@@ -459,7 +459,7 @@ namespace MFDLabs.Grid.Bot.Registries
             }
 
             if (
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
+                global::Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
                 !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$") &&
                 !message.Author.IsAdmin()
             )
@@ -483,7 +483,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
                     Counters.RequestFailedCountN++;
                     Logger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
+                    if (global::Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
                         await message.ReplyAsync($"The command with the name '{commandAlias}' was not found.");
@@ -510,7 +510,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     var isAllowed = false;
                     if (message.Author.IsAdmin())
                     {
-                        if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
+                        if (global::Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
                         {
                             InstrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
                             isAllowed = true;
@@ -589,7 +589,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
                     Logger.Singleton.Warning("The grid service was not online.");
                     await command.RespondEphemeralPingAsync($"the grid service is not currently running, " +
-                                                        $"please ask <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>" +
+                                                        $"please ask <@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>" +
                                                         $" to start the service.");
                     return;
                 case FaultException fault:
@@ -638,7 +638,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
+            if (!global::Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
                 var detail = ex.ToString();
                 if (detail.Length > EmbedBuilder.MaxDescriptionLength)
@@ -660,7 +660,7 @@ namespace MFDLabs.Grid.Bot.Registries
 
             await command.RespondEphemeralPingAsync(
                 $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
-                $"<@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
+                $"<@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
         }
 
 #endif // WE_LOVE_EM_SLASH_COMMANDS
@@ -673,7 +673,7 @@ namespace MFDLabs.Grid.Bot.Registries
             var exceptionId = Guid.NewGuid();
 
             if (ex is not FaultException)
-                global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
+                global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
 
             switch (ex)
             {
@@ -695,7 +695,7 @@ namespace MFDLabs.Grid.Bot.Registries
                     InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
                     Logger.Singleton.Warning("The grid service was not online.");
                     await message.ReplyAsync($"the grid service is not currently running, please ask " +
-                                             $"<@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start " +
+                                             $"<@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start " +
                                              $"the service.");
                     return;
                 case FaultException fault:
@@ -749,7 +749,7 @@ namespace MFDLabs.Grid.Bot.Registries
                 ex.ToString()
             );
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
+            if (!global::Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
             {
                 var detail = ex.ToString();
                 if (detail.Length > EmbedBuilder.MaxDescriptionLength)
@@ -769,7 +769,7 @@ namespace MFDLabs.Grid.Bot.Registries
             InstrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
 
             await message.ReplyAsync($"An unexpected Exception has occurred. Exception ID: {exceptionId}, " +
-                                     $"send this ID to <@!{MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
+                                     $"send this ID to <@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
         }
 
         private static IStateSpecificCommandHandler GetCommandByCommandAlias(string alias)

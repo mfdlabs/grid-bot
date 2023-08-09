@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Commands;
+﻿namespace Grid.Commands;
 
 /// <summary>
 /// Represents the type of action to perform on the server.

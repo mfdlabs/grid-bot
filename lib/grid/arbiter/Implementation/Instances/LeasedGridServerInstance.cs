@@ -8,7 +8,7 @@
 
 
 
-namespace MFDLabs.Grid;
+namespace Grid;
 
 using System;
 using System.Threading.Tasks;
@@ -40,7 +40,7 @@ public class LeasedGridServerInstance : GridServerInstance, ILeasedGridServerIns
     /// <summary>
     /// Get the default lease time for a grid server instance.
     /// </summary>
-    public static TimeSpan DefaultLease => global::MFDLabs.Grid.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
+    public static TimeSpan DefaultLease => global::Grid.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
 
     /// <inheritdoc cref="ILeasedGridServerInstance.Expiration"/>
     public DateTime Expiration => _expiration;

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Collections.Concurrent;
 
-namespace MFDLabs.Grid.Bot.WorkQueues
+namespace Grid.Bot.WorkQueues
 {
     public class AsyncWorkQueue<T>
     {

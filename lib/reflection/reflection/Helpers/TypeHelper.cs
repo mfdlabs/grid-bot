@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace MFDLabs.Reflection
+namespace Reflection
 {
     public static class TypeHelper
     {

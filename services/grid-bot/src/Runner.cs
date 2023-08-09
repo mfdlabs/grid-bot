@@ -10,18 +10,18 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Networking;
-using MFDLabs.Diagnostics;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Events;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Bot.Properties;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Configuration.Extensions;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
+using Networking;
+using Diagnostics;
+using Text.Extensions;
+using Grid.Bot.Events;
+using Grid.Bot.Global;
+using Grid.Bot.Utility;
+using Grid.Bot.Properties;
+using Grid.Bot.Registries;
+using Configuration.Extensions;
+using Grid.Bot.PerformanceMonitors;
 
-namespace MFDLabs.Grid.Bot
+namespace Grid.Bot
 {
     internal static class Runner
     {
@@ -48,19 +48,19 @@ namespace MFDLabs.Grid.Bot
             Logger.Singleton.Warning(BadActorMessage);
 
 #if DEBUG
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
+            if (global::Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutDebugMode)
                 Logger.Singleton.Warning(DebugMode);
 #endif
 
             if (SystemGlobal.ContextIsAdministrator() &&
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
+                global::Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
                 Logger.Singleton.Warning(AdminMode);
 
             if (args.Contains("--write-settings"))
             {
                 Logger.Singleton.Warning("Writing settings instead of actually launching.");
 
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default.Save();
 
                 Environment.Exit(0);
                 return;
@@ -83,7 +83,7 @@ namespace MFDLabs.Grid.Bot
                 SystemGlobal.GetMachineId()
             );
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
+            if (global::Grid.Bot.Properties.Settings.Default.ShouldLaunchCounterServer)
                 PerformanceServer.Start();
 
             InvokeAsync(args).Wait();
@@ -96,7 +96,7 @@ namespace MFDLabs.Grid.Bot
             // For Unix, skip this, as I assume we won't need this:)
             ConsoleHookRegistry.Register();
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>().IsNullOrWhiteSpace())
+            if (global::Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>().IsNullOrWhiteSpace())
             {
                 Logger.Singleton.Error(NoBotToken);
                 // Case here so backtrace can catch potential hackers trying to use this without a token
@@ -144,18 +144,18 @@ namespace MFDLabs.Grid.Bot
             var defaultHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None)
             {
                 MaxReceivedMessageSize = int.MaxValue,
-                SendTimeout = global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterDefaultTimeout
+                SendTimeout = global::Grid.Bot.Properties.Settings.Default.GridServerArbiterDefaultTimeout
             };
 
             GridServerArbiter.SetDefaultHttpBinding(defaultHttpBinding);
             GridServerArbiter.SetCounterRegistry(PerfmonCounterRegistryProvider.Registry);
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.GridServerArbiterQueueUpEnabled)
+            if (global::Grid.Bot.Properties.Settings.Default.GridServerArbiterQueueUpEnabled)
                 GridServerArbiter.Singleton.BatchCreateLeasedInstances(
                     count: 25
                 );
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
+            if (global::Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
                 GridServerArbiter.Singleton.KillAllInstances();
 
             Task.Run(ShutdownUdpReceiver.Receive);

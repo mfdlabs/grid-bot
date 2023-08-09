@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 
-namespace MFDLabs.Diagnostics.NativeWin32
+namespace Diagnostics.NativeWin32
 {
     public static class Oleacc
     {

@@ -9,12 +9,12 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Reflection.Extensions;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Reflection.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class UpdateSettingOfAssembly : IStateSpecificCommandHandler
     {
@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                             $"if the assembly is not found it throws, if the settings instance is not" +
                                             $" found it throws, if the settings instance is not an ApplicationSettingsBase child it throws, " +
             $"if the settings value cannot be converted to the real type it throws\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateofassembly " +
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}updateofassembly " +
                                             $"assemblyName settingsInstanceName settingName ...settingValue";
         public string[] CommandAliases => new[] { "upa", "updateofassembly" };
         public bool Internal => true;
@@ -121,7 +121,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (rawSettingValue.IsNullOrEmpty())
             {
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
+                if (!global::Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
                     Logger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is " +

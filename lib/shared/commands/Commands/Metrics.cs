@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Registries;
+using Diagnostics;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Registries;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal class Metrics : IStateSpecificCommandHandler
     {
@@ -22,7 +22,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             var (modes, counters) = CommandRegistry.GetMetrics();
 
-            var metricsPort = global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort;
+            var metricsPort = global::Grid.Bot.Properties.Settings.Default.CounterServerPort;
 
             var embed = new EmbedBuilder()
                 .WithTitle("Bot Instance Metrics")

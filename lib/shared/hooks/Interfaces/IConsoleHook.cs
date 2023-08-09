@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Bot.Interfaces
+﻿namespace Grid.Bot.Interfaces
 {
     public interface IConsoleHook
     {

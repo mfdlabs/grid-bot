@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Bot
+﻿namespace Grid.Bot
 {
     public static class Program
     {
@@ -40,7 +40,7 @@
                     global::System.Console.ResetColor();
 
                     if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
-                        global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()), true);
+                        global::Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()), true);
 
                     return;
                 }
@@ -66,9 +66,9 @@
                 global::System.Console.ResetColor();
 
                 if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
-                    global::MFDLabs.Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception, true);
+                    global::Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception, true);
 
-                global::MFDLabs.Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
+                global::Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
 
                 if (e.ExceptionObject is global::System.AggregateException aggregate)
                 {
@@ -86,7 +86,7 @@
                 }
             };
 
-            global::MFDLabs.Grid.Bot.Runner.Invoke(args);
+            global::Grid.Bot.Runner.Invoke(args);
         }
     }
 }

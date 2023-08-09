@@ -1,6 +1,6 @@
-﻿using MFDLabs.Instrumentation;
+﻿using Instrumentation;
 
-namespace MFDLabs.Grid.Bot.PerformanceMonitors
+namespace Grid.Bot.PerformanceMonitors
 {
     public static class PerfmonCounterRegistryProvider
     {

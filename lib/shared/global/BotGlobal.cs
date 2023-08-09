@@ -5,9 +5,9 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Configuration.Extensions;
+using Configuration.Extensions;
 
-namespace MFDLabs.Grid.Bot.Global
+namespace Grid.Bot.Global
 {
     public static class BotRegistry
     {
@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.Global
 
         public static async Task SingletonLaunch()
         {
-            await Client.LoginAsync(TokenType.Bot, global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>()).ConfigureAwait(false);
+            await Client.LoginAsync(TokenType.Bot, global::Grid.Bot.Properties.Settings.Default.BotToken.FromEnvironmentExpression<string>()).ConfigureAwait(false);
             await Client.StartAsync().ConfigureAwait(false);
         }
 

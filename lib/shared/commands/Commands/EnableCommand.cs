@@ -1,18 +1,18 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Registries;
+using Text.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class EnableCommand : IStateSpecificCommandHandler
     {
         public string CommandName => "Enabled Bot Command";
         public string CommandDescription => $"Tries to enable a command from the CommandRegistry\nLayout:" +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}enable commandName.";
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}enable commandName.";
         public string[] CommandAliases => new[] { "enable" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

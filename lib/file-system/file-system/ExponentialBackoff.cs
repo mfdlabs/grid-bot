@@ -1,7 +1,7 @@
 ﻿using System;
-using MFDLabs.Threading;
+using Threading;
 
-namespace MFDLabs.FileSystem
+namespace FileSystem
 {
     public enum Jitter
     {

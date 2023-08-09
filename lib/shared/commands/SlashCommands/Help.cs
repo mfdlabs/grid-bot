@@ -4,13 +4,13 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Registries;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Registries;
 
 /** TODO: Add functionality for Querying State Specific commands here? **/
 
-namespace MFDLabs.Grid.Bot.SlashCommands
+namespace Grid.Bot.SlashCommands
 {
     [Obsolete("This is obsolete as slash commands have their own respected documentation already.")]
     internal sealed class Help : IStateSpecificSlashCommandHandler
@@ -41,7 +41,7 @@ namespace MFDLabs.Grid.Bot.SlashCommands
 
                 if (embed == null)
                 {
-                    if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
+                    if (global::Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
                     {
                         await command.RespondEphemeralPingAsync($"The command with the name '{commandName}' was not found.");
                     }

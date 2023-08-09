@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Instrumentation.LegacySupport
+namespace Instrumentation.LegacySupport
 {
     internal class NoCountersSpecifiedForCategoryException : Exception
     {

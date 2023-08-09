@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace MFDLabs.Threading
+namespace Threading
 {
     public class SelfDisposingTimer
     {

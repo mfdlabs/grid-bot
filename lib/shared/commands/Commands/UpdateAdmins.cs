@@ -2,12 +2,12 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Interfaces;
+using Text.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class UpdateAdmins : IStateSpecificCommandHandler
     {
@@ -16,7 +16,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                             "This is not persistent, unless this instance has either of" +
                                             "the following enviroment variables defined:" +
                                             "USE_VAULT_SETTINGS_PROVIDER, WE_ON_THE_RUN, WE_ARE_AN_ACTOR\nLayout:" +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateadmins" +
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}updateadmins" +
                                             "add/remove userMention|userID";
         public string[] CommandAliases => new[] { "uadmin", "updateadmins" };
         public bool Internal => true;
@@ -90,7 +90,7 @@ namespace MFDLabs.Grid.Bot.Commands
                 }
             }
 
-            var admins = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',').ToList();
+            var admins = global::Grid.Bot.Properties.Settings.Default.Admins.Split(',').ToList();
 
 
             switch (subCommand?.ToLowerInvariant())
@@ -99,27 +99,27 @@ namespace MFDLabs.Grid.Bot.Commands
                 if (!admins.Contains(user))
                 {
                     admins.Add(user);
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = admins.Join(',');
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                    global::Grid.Bot.Properties.Settings.Default["Admins"] = admins.Join(',');
+                    global::Grid.Bot.Properties.Settings.Default.Save();
                     await message.ReplyAsync($"Successfully added '{user}' to the admin whitelist.");
                     break;
                 }
                 await message.ReplyAsync($"The user '{user}' is already an admin, if you want to remove them," +
                                          $"please re-run this command like: " +
-                                         $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
+                                         $"'{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} remove {user}'.");
                 break;
             case "remove":
                 if (admins.Contains(user))
                 {
                     admins.Remove(user);
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = admins.Join(',');
-                    global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                    global::Grid.Bot.Properties.Settings.Default["Admins"] = admins.Join(',');
+                    global::Grid.Bot.Properties.Settings.Default.Save();
                     await message.ReplyAsync($"Successfully removed '{user}' from the admin whitelist.");
                     break;
                 }
                 await message.ReplyAsync($"The user '{user}' is not an admin," +
                                          $"if you want to add them, please re-run this command like:" +
-                                         $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
+                                         $"'{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommand} add {user}'.");
                 break;
             default:
                 await message.ReplyAsync($"Unknown subcommand '{subCommand}', the allowed subcommands are: 'add', 'remove'.");

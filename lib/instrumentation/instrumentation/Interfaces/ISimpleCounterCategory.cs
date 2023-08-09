@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Instrumentation.LegacySupport
+﻿namespace Instrumentation.LegacySupport
 {
     public interface ISimpleCounterCategory
     {

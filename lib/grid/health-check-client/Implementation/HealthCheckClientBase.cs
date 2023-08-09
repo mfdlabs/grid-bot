@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 using System;
 using System.Net;
@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using MFDLabs.Threading.Extensions;
+using Threading.Extensions;
 
 /// <inheritdoc cref="IHealthCheckClient"/>
 public abstract class HealthCheckClientBase : IHealthCheckClient

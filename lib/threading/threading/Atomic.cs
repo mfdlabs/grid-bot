@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
-namespace MFDLabs.Threading
+namespace Threading
 {
     /// <summary>
     /// Represents an atomically accessible number.

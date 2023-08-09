@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid.Commands;
+﻿namespace Grid.Commands;
 
 /// <summary>
 /// The settings for <see cref="ServerActionCommand"/>

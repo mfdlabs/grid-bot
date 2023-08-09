@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace MFDLabs.Text
+namespace Text
 {
     public sealed class TextGlobal
     {

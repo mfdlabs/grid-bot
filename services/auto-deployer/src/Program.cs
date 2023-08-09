@@ -10,13 +10,13 @@ using Microsoft.Win32;
 
 using Logging;
 
-using MFDLabs.FileSystem;
-using MFDLabs.Diagnostics;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Configuration.Logging;
-using MFDLabs.Grid.AutoDeployer.Service;
+using FileSystem;
+using Diagnostics;
+using Text.Extensions;
+using Configuration.Logging;
+using Grid.AutoDeployer.Service;
 
-namespace MFDLabs.Grid.AutoDeployer;
+namespace Grid.AutoDeployer;
 
 internal static class Program
 {

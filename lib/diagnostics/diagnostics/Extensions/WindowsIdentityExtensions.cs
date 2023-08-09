@@ -2,7 +2,7 @@
 
 using System.Security.Principal;
 
-namespace MFDLabs.Diagnostics.Extensions
+namespace Diagnostics.Extensions
 {
     public static class WindowsIdentityExtensions
     {

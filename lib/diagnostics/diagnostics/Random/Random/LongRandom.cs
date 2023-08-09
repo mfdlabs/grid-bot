@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
 	internal class LongRandom
 	{

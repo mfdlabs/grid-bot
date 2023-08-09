@@ -1,7 +1,7 @@
-﻿using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
+﻿using Grid.Bot.Interfaces;
+using Grid.Bot.Utility;
 
-namespace MFDLabs.Grid.Bot.Hooks
+namespace Grid.Bot.Hooks
 {
     internal sealed class ResetHook : IConsoleHook
     {

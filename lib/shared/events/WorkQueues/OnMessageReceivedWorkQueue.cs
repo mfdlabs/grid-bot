@@ -6,14 +6,14 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Properties;
+using Text.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Utility;
+using Grid.Bot.Registries;
+using Grid.Bot.Extensions;
+using Grid.Bot.Properties;
 
-namespace MFDLabs.Grid.Bot.WorkQueues
+namespace Grid.Bot.WorkQueues
 {
     internal sealed class OnMessageReceivedWorkQueue : AsyncWorkQueue<SocketMessage>
     {
@@ -31,7 +31,7 @@ namespace MFDLabs.Grid.Bot.WorkQueues
             var userIsPrivilaged = message.Author.IsPrivilaged();
             var userIsBlacklisted = message.Author.IsBlacklisted();
 
-            if (message.Author.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
+            if (message.Author.IsBot && !global::Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
 
             if (!message.GetSetting<bool>("AllowAllChannels"))
             {
@@ -43,13 +43,13 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
             if (!ParsePrefix(ref messageContent)) return;
 
-            if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+            if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
             {
                 if (!userIsAdmin && !userIsPrivilaged)
                 {
                     Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
 
-                    var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+                    var failureMessage = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
                     if (!failureMessage.IsNullOrEmpty()) await message.ReplyAsync(failureMessage);
 
@@ -110,12 +110,12 @@ namespace MFDLabs.Grid.Bot.WorkQueues
 
         private static bool ParsePrefix(ref string message)
         {
-            if (!message.StartsWith(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix))
+            if (!message.StartsWith(global::Grid.Bot.Properties.Settings.Default.Prefix))
             {
                 return false;
             }
 
-            message = message.Substring(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix.Length);
+            message = message.Substring(global::Grid.Bot.Properties.Settings.Default.Prefix.Length);
 
             return true;
         }

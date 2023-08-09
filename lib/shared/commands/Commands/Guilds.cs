@@ -2,11 +2,11 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class Guilds : IStateSpecificCommandHandler
     {

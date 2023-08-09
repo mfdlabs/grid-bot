@@ -20,13 +20,13 @@ using Microsoft.Win32;
 
 using Logging;
 
-using MFDLabs.FileSystem;
-using MFDLabs.Diagnostics;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Threading.Extensions;
-using MFDLabs.Reflection.Extensions;
-using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.Configuration.Extensions;
+using FileSystem;
+using Diagnostics;
+using Text.Extensions;
+using Threading.Extensions;
+using Reflection.Extensions;
+using Diagnostics.Extensions;
+using Configuration.Extensions;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable EmptyGeneralCatchClause
@@ -37,7 +37,7 @@ using MFDLabs.Configuration.Extensions;
 /** TODO: Rate limit detection for not just the REST API but also the GraphQL API **/
 /** TODO: Store some stuff in the registry like skipped version. **/
 
-namespace MFDLabs.Grid.AutoDeployer.Service
+namespace Grid.AutoDeployer.Service
 {
     internal static class AutoDeployerService
     {

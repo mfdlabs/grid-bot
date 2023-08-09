@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace MFDLabs.Reflection.Extensions
+namespace Reflection.Extensions
 {
     public static class AssemblyExtensions
     {

@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class PrefixCheck : IStateSpecificCommandHandler
     {
@@ -14,6 +14,6 @@ namespace MFDLabs.Grid.Bot.Commands
         public bool IsEnabled { get; set; } = true;
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand) 
-            => await message.ReplyAsync($"The current prefix is {MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}");
+            => await message.ReplyAsync($"The current prefix is {Grid.Bot.Properties.Settings.Default.Prefix}");
     }
 }

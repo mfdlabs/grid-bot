@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 /// <summary>
 /// Represents the interface for a Random number generator.

@@ -1,12 +1,12 @@
 ﻿using System;
-using MFDLabs.Diagnostics;
-using MFDLabs.Instrumentation;
+using Diagnostics;
+using Instrumentation;
 
-namespace MFDLabs.Grid.Bot.PerformanceMonitors
+namespace Grid.Bot.PerformanceMonitors
 {
     public sealed class CommandRegistryInstrumentationPerformanceMonitor
     {
-        private const string Category = "MFDLabs.Grid.PerfmonV2";
+        private const string Category = "Grid.PerfmonV2";
 
         public IRawValueCounter CommandsPerSecond { get; }
         public IRawValueCounter FailedCommandsPerSecond { get; }

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Grid.Bot")]
+[assembly: AssemblyTitle("Grid.Bot")]
 [assembly: AssemblyDescription("A Discord.NET bot used to deploy MFDLABS enterprise grade grid servers via MAAS.")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Grid.Bot")]
+[assembly: AssemblyProduct("Grid.Bot")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2021. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Internal Tech (R)")]
 [assembly: ComVisible(false)]

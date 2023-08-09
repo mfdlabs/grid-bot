@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Diagnostics")]
+[assembly: AssemblyTitle("Diagnostics")]
 [assembly: AssemblyDescription("Stuff related for primarily processes!")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -15,7 +15,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Diagnostics")]
+[assembly: AssemblyProduct("Diagnostics")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2019. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Tech Team (R)")]
 [assembly: ComVisible(false)]

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.Text.Extensions;
+using Diagnostics.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
     [DebuggerStepThrough]
     public static class DateTimeGlobal

@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 using System;
 using System.IO;
@@ -13,7 +13,7 @@ public class GridServerDeployer : IGridServerDeployer
 {
     private class GridServerDeployerPerformanceMonitor
     {
-        private const string CategoryName = "MFDLabs.Grid.GridServerDeployer";
+        private const string CategoryName = "Grid.GridServerDeployer";
 
         internal IRateOfCountsPerSecondCounter GridServerDeployerAttemptsPerSecond { get; set; }
         internal IRateOfCountsPerSecondCounter GridServerDeployerSuccessesPerSecond { get; set; }

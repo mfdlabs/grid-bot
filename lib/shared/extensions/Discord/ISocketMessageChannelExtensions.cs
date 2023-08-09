@@ -3,10 +3,10 @@ using System.IO;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Threading.Extensions;
+using Grid.Bot.Utility;
+using Threading.Extensions;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class SocketMessageChannelExtensions
     {

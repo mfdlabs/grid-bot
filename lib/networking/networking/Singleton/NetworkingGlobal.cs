@@ -3,10 +3,10 @@ using System.Net;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using MFDLabs.Networking.Extensions;
-using MFDLabs.Text.Extensions;
+using Networking.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Networking
+namespace Networking
 {
     public static class NetworkingGlobal
     {

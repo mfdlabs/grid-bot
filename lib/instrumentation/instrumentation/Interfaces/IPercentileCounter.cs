@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Instrumentation
+﻿namespace Instrumentation
 {
     public interface IPercentileCounter
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
-using MFDLabs.Instrumentation.PrometheusListener;
+using Instrumentation.PrometheusListener;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     internal class MaximumValueCounter : CounterBase, IMaximumValueCounter
     {

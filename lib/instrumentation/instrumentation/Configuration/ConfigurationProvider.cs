@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public class ConfigurationProvider : IConfigurationProvider
     {

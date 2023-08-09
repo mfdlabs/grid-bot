@@ -6,7 +6,7 @@
     Copyright MFDLABS 2001-2022. All rights reserved.
 */
 
-namespace MFDLabs.Grid;
+namespace Grid;
 
 using System;
 

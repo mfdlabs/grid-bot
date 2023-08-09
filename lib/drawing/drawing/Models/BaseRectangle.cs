@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace MFDLabs.Drawing.Models
+namespace Drawing.Models
 {
     public struct BaseRectangle
     {

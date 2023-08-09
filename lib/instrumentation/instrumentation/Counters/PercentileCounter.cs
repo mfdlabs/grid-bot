@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using MFDLabs.Instrumentation.PrometheusListener;
+using Instrumentation.PrometheusListener;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     internal class PercentileCounter : IPercentileCounter
     {

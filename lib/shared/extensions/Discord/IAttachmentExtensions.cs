@@ -2,7 +2,7 @@
 using System.Text;
 using Discord;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class AttachmentExtensions
     {

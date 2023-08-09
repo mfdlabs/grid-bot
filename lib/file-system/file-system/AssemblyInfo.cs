@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.FileSystem")]
+[assembly: AssemblyTitle("FileSystem")]
 [assembly: AssemblyDescription("File helper")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.FileSystem")]
+[assembly: AssemblyProduct("FileSystem")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2018. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS WOAH? (R)")]
 [assembly: ComVisible(false)]

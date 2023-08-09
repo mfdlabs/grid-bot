@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 using System;
 using System.Linq;
@@ -15,7 +15,7 @@ public class PortAllocator : IPortAllocator
 {
     private class PortAllocationPerformanceMonitor
     {
-        private const string Category = "MFDLabs.Grid.PortManagement";
+        private const string Category = "Grid.PortManagement";
 
         internal IRateOfCountsPerSecondCounter PortAllocationAttemptsPerSecond { get; set; }
         internal IRateOfCountsPerSecondCounter PortAllocationSuccessesPerSecond { get; set; }

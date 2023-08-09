@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 using System.Threading;
 using System.Threading.Tasks;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MFDLabs.FileSystem
+namespace FileSystem
 {
     public sealed class FileLock : IDisposable
     {

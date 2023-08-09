@@ -10,11 +10,11 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class GetSettingOfAssembly : IStateSpecificCommandHandler
     {
@@ -23,7 +23,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                             $"assembly, if the assembly is not found it will throw, if the settings " +
                                             $"instance is not found it will throw, if the settings are not A" +
                                             $"pplicationSettingsBase, it will throw.\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getassemblysetting " +
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}getassemblysetting " +
                                             $"assemblyName settingsInstanceName settingName.";
         public string[] CommandAliases => new[] { "geta", "getassemblysetting" };
         public bool Internal => true;

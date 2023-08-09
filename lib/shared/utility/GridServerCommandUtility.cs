@@ -6,20 +6,20 @@ using System.Collections.Generic;
 
 using Logging;
 
-using MFDLabs.Networking;
-using MFDLabs.Grid.Commands;
-using MFDLabs.Grid.ComputeCloud;
+using Networking;
+using Grid.Commands;
+using Grid.ComputeCloud;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBeMadeStatic.Global
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     public static class GridServerCommandUtility
     {
         private static IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
         {
-            yield return global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAssetFetchUrl; // baseUrl
+            yield return global::Grid.Bot.Properties.Settings.Default.RemoteRenderAssetFetchUrl; // baseUrl
             yield return url; // characterAppearanceUrl
             yield return "PNG"; // fileExtension . TODO setting so I can do JPEGs also.
             yield return x; // x
@@ -48,7 +48,7 @@ namespace MFDLabs.Grid.Bot.Utility
 
             ThumbnailCommandType thumbType;
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderThumbnailTypeShouldForceCloseup)
+            if (global::Grid.Bot.Properties.Settings.Default.RenderThumbnailTypeShouldForceCloseup)
             {
                 thumbType = ThumbnailCommandType.Closeup;
             }
@@ -66,7 +66,7 @@ namespace MFDLabs.Grid.Bot.Utility
                     new Job()
                     {
                         id = NetworkingGlobal.GenerateUuidv4(),
-                        expirationInSeconds = global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderJobTimeoutInSeconds
+                        expirationInSeconds = global::Grid.Bot.Properties.Settings.Default.RenderJobTimeoutInSeconds
                     },
                     Lua.NewScript(
                         NetworkingGlobal.GenerateUuidv4(),
@@ -100,8 +100,8 @@ namespace MFDLabs.Grid.Bot.Utility
         {
             if (userId == -200000) 
                 throw new Exception("Test exception for handlers to hit.");
-            return $"https://{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderTaskAvatarFetchHost)}" +
-                   $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.RemoteRenderAvatarFetchUriPart)}?userId={userId}&placeId={placeId}";
+            return $"https://{(global::Grid.Bot.Properties.Settings.Default.RemoteRenderTaskAvatarFetchHost)}" +
+                   $"{(global::Grid.Bot.Properties.Settings.Default.RemoteRenderAvatarFetchUriPart)}?userId={userId}&placeId={placeId}";
         }
 
         public static LuaValue[] LaunchSimpleGame(string jobId, long placeId, long universeId)
@@ -147,7 +147,7 @@ namespace MFDLabs.Grid.Bot.Utility
                    $"{args[7]}_" +
                    $"{args[8]}_" +
                    $"{args[9]}_" +
-                   $"{MFDLabs.Grid.Bot.Properties.Settings.Default.RenderResultFileName}";
+                   $"{Grid.Bot.Properties.Settings.Default.RenderResultFileName}";
         }
     }
 }

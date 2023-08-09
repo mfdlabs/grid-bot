@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace MFDLabs.Drawing.Extensions
+namespace Drawing.Extensions
 {
     public static class GraphicsExtensions
     {

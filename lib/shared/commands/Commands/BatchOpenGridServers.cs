@@ -1,17 +1,17 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Utility;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Utility;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class BatchOpenGridServers : IStateSpecificCommandHandler
     {
         public string CommandName => "Batch Open Grid Servers";
         public string CommandDescription => $"Attempts to batch open grid servers\nLayout:" +
-                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}batchinstance " +
+                                            $"{(global::Grid.Bot.Properties.Settings.Default.Prefix)}batchinstance " +
                                             $"count?=1";
         public string[] CommandAliases => new[] { "batch", "batchinstance" };
         public bool Internal => true;

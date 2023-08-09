@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Networking")]
+[assembly: AssemblyTitle("Networking")]
 [assembly: AssemblyDescription("Networking related singletons")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -15,7 +15,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Networking")]
+[assembly: AssemblyProduct("Networking")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2019. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Network Team (R)")]
 [assembly: ComVisible(false)]

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace MFDLabs.Drawing
+namespace Drawing
 {
     internal static class GraphicsUtility
     {

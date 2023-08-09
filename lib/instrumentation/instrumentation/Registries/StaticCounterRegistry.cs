@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public static class StaticCounterRegistry
     {

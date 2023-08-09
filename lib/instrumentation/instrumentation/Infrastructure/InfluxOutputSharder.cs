@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MFDLabs.Instrumentation.Infrastructure
+namespace Instrumentation.Infrastructure
 {
     public class InfluxOutputSharder
     {

@@ -4,13 +4,13 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Grid.Bot.Extensions;
+using Text.Extensions;
+using Grid.Bot.Global;
+using Grid.Bot.Utility;
+using Grid.Bot.Registries;
+using Grid.Bot.Extensions;
 
-namespace MFDLabs.Grid.Bot.WorkQueues
+namespace Grid.Bot.WorkQueues
 {
     internal sealed class OnSlashCommandReceivedWorkQueue : AsyncWorkQueue<SocketSlashCommand>
     {
@@ -30,21 +30,21 @@ namespace MFDLabs.Grid.Bot.WorkQueues
                 var userIsPrivilaged = command.User.IsPrivilaged();
                 var userIsBlacklisted = command.User.IsBlacklisted();
 
-                if (command.User.IsBot && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
+                if (command.User.IsBot && !global::Grid.Bot.Properties.Settings.Default.AllowParsingForBots) return;
 
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAllChannels)
+                if (!global::Grid.Bot.Properties.Settings.Default.AllowAllChannels)
                 {
                     if (!command.Channel.IsWhitelisted() && !userIsAdmin)
                         return;
                 }
 
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.IsEnabled)
+                if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
                 {
                     if (!userIsAdmin && !userIsPrivilaged)
                     {
                         Logger.Singleton.Warning("Maintenance enabled, and someone tried to use it!!");
 
-                        var failureMessage = global::MFDLabs.Grid.Bot.Properties.Settings.Default.ReasonForDying;
+                        var failureMessage = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
 
                         if (!failureMessage.IsNullOrEmpty()) await command.RespondEphemeralPingAsync(failureMessage);
 

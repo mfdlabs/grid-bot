@@ -6,17 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Text.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class PsExec : IStateSpecificCommandHandler
     {
         public string CommandName => "Execute PowerShell";
         public string CommandDescription => $"Attempts to evaluate the given Powershell\nLayout:" +
-                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}psexec ...command.";
+                                            $"{(global::Grid.Bot.Properties.Settings.Default.Prefix)}psexec ...command.";
         public string[] CommandAliases => new[] { "ps", "psexec" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;

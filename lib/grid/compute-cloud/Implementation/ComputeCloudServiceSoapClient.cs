@@ -10,12 +10,12 @@
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-namespace MFDLabs.Grid.ComputeCloud
+namespace Grid.ComputeCloud
 {
     
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    [System.ServiceModel.ServiceContractAttribute(Namespace="http://roblox.com/", ConfigurationName="MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap")]
+    [System.ServiceModel.ServiceContractAttribute(Namespace="http://roblox.com/", ConfigurationName="Grid.ComputeCloud.ComputeCloudServiceSoap")]
     public interface ComputeCloudServiceSoap
     {
         
@@ -35,25 +35,25 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetStatus", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.Status GetStatus();
+        Grid.ComputeCloud.Status GetStatus();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetStatus", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.Status> GetStatusAsync();
+        System.Threading.Tasks.Task<Grid.ComputeCloud.Status> GetStatusAsync();
         
         // CODEGEN: Parameter 'OpenJobResult' requires additional schema information that cannot be captured using the parameter mode. The specific attribute is 'System.Xml.Serialization.XmlElementAttribute'.
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/OpenJob", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.OpenJobResponse OpenJob(MFDLabs.Grid.ComputeCloud.OpenJobRequest request);
+        Grid.ComputeCloud.OpenJobResponse OpenJob(Grid.ComputeCloud.OpenJobRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/OpenJob", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.OpenJobResponse> OpenJobAsync(MFDLabs.Grid.ComputeCloud.OpenJobRequest request);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.OpenJobResponse> OpenJobAsync(Grid.ComputeCloud.OpenJobRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/OpenJobEx", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.LuaValue[] OpenJobEx(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        Grid.ComputeCloud.LuaValue[] OpenJobEx(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/OpenJobEx", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> OpenJobExAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> OpenJobExAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/RenewLease", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
@@ -65,17 +65,17 @@ namespace MFDLabs.Grid.ComputeCloud
         // CODEGEN: Parameter 'ExecuteResult' requires additional schema information that cannot be captured using the parameter mode. The specific attribute is 'System.Xml.Serialization.XmlElementAttribute'.
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/Execute", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.ExecuteResponse Execute(MFDLabs.Grid.ComputeCloud.ExecuteRequest request);
+        Grid.ComputeCloud.ExecuteResponse Execute(Grid.ComputeCloud.ExecuteRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/Execute", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.ExecuteResponse> ExecuteAsync(MFDLabs.Grid.ComputeCloud.ExecuteRequest request);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.ExecuteResponse> ExecuteAsync(Grid.ComputeCloud.ExecuteRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/ExecuteEx", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.LuaValue[] ExecuteEx(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        Grid.ComputeCloud.LuaValue[] ExecuteEx(string jobID, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/ExecuteEx", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> ExecuteExAsync(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> ExecuteExAsync(string jobID, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/CloseJob", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
@@ -87,17 +87,17 @@ namespace MFDLabs.Grid.ComputeCloud
         // CODEGEN: Parameter 'BatchJobResult' requires additional schema information that cannot be captured using the parameter mode. The specific attribute is 'System.Xml.Serialization.XmlElementAttribute'.
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/BatchJob", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.BatchJobResponse BatchJob(MFDLabs.Grid.ComputeCloud.BatchJobRequest request);
+        Grid.ComputeCloud.BatchJobResponse BatchJob(Grid.ComputeCloud.BatchJobRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/BatchJob", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.BatchJobResponse> BatchJobAsync(MFDLabs.Grid.ComputeCloud.BatchJobRequest request);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.BatchJobResponse> BatchJobAsync(Grid.ComputeCloud.BatchJobRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/BatchJobEx", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.LuaValue[] BatchJobEx(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        Grid.ComputeCloud.LuaValue[] BatchJobEx(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/BatchJobEx", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> BatchJobExAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> BatchJobExAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetExpiration", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
@@ -109,17 +109,17 @@ namespace MFDLabs.Grid.ComputeCloud
         // CODEGEN: Parameter 'GetAllJobsResult' requires additional schema information that cannot be captured using the parameter mode. The specific attribute is 'System.Xml.Serialization.XmlElementAttribute'.
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetAllJobs", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.GetAllJobsResponse GetAllJobs(MFDLabs.Grid.ComputeCloud.GetAllJobsRequest request);
+        Grid.ComputeCloud.GetAllJobsResponse GetAllJobs(Grid.ComputeCloud.GetAllJobsRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetAllJobs", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.GetAllJobsResponse> GetAllJobsAsync(MFDLabs.Grid.ComputeCloud.GetAllJobsRequest request);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.GetAllJobsResponse> GetAllJobsAsync(Grid.ComputeCloud.GetAllJobsRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetAllJobsEx", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.Job[] GetAllJobsEx();
+        Grid.ComputeCloud.Job[] GetAllJobsEx();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/GetAllJobsEx", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.Job[]> GetAllJobsExAsync();
+        System.Threading.Tasks.Task<Grid.ComputeCloud.Job[]> GetAllJobsExAsync();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/CloseExpiredJobs", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
@@ -138,17 +138,17 @@ namespace MFDLabs.Grid.ComputeCloud
         // CODEGEN: Parameter 'DiagResult' requires additional schema information that cannot be captured using the parameter mode. The specific attribute is 'System.Xml.Serialization.XmlElementAttribute'.
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/Diag", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.DiagResponse Diag(MFDLabs.Grid.ComputeCloud.DiagRequest request);
+        Grid.ComputeCloud.DiagResponse Diag(Grid.ComputeCloud.DiagRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/Diag", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.DiagResponse> DiagAsync(MFDLabs.Grid.ComputeCloud.DiagRequest request);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.DiagResponse> DiagAsync(Grid.ComputeCloud.DiagRequest request);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/DiagEx", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute()]
-        MFDLabs.Grid.ComputeCloud.LuaValue[] DiagEx(int type, string jobID);
+        Grid.ComputeCloud.LuaValue[] DiagEx(int type, string jobID);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/DiagEx", ReplyAction="*")]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> DiagExAsync(int type, string jobID);
+        System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> DiagExAsync(int type, string jobID);
     }
     
     /// <remarks/>
@@ -470,16 +470,16 @@ namespace MFDLabs.Grid.ComputeCloud
     {
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
-        public MFDLabs.Grid.ComputeCloud.Job job;
+        public Grid.ComputeCloud.Job job;
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=1)]
-        public MFDLabs.Grid.ComputeCloud.ScriptExecution script;
+        public Grid.ComputeCloud.ScriptExecution script;
         
         public OpenJobRequest()
         {
         }
         
-        public OpenJobRequest(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public OpenJobRequest(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             this.job = job;
             this.script = script;
@@ -495,13 +495,13 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("OpenJobResult")]
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] OpenJobResult;
+        public Grid.ComputeCloud.LuaValue[] OpenJobResult;
         
         public OpenJobResponse()
         {
         }
         
-        public OpenJobResponse(MFDLabs.Grid.ComputeCloud.LuaValue[] OpenJobResult)
+        public OpenJobResponse(Grid.ComputeCloud.LuaValue[] OpenJobResult)
         {
             this.OpenJobResult = OpenJobResult;
         }
@@ -518,13 +518,13 @@ namespace MFDLabs.Grid.ComputeCloud
         public string jobID;
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=1)]
-        public MFDLabs.Grid.ComputeCloud.ScriptExecution script;
+        public Grid.ComputeCloud.ScriptExecution script;
         
         public ExecuteRequest()
         {
         }
         
-        public ExecuteRequest(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public ExecuteRequest(string jobID, Grid.ComputeCloud.ScriptExecution script)
         {
             this.jobID = jobID;
             this.script = script;
@@ -540,13 +540,13 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("ExecuteResult", IsNullable=true)]
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] ExecuteResult;
+        public Grid.ComputeCloud.LuaValue[] ExecuteResult;
         
         public ExecuteResponse()
         {
         }
         
-        public ExecuteResponse(MFDLabs.Grid.ComputeCloud.LuaValue[] ExecuteResult)
+        public ExecuteResponse(Grid.ComputeCloud.LuaValue[] ExecuteResult)
         {
             this.ExecuteResult = ExecuteResult;
         }
@@ -560,16 +560,16 @@ namespace MFDLabs.Grid.ComputeCloud
     {
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
-        public MFDLabs.Grid.ComputeCloud.Job job;
+        public Grid.ComputeCloud.Job job;
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=1)]
-        public MFDLabs.Grid.ComputeCloud.ScriptExecution script;
+        public Grid.ComputeCloud.ScriptExecution script;
         
         public BatchJobRequest()
         {
         }
         
-        public BatchJobRequest(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public BatchJobRequest(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             this.job = job;
             this.script = script;
@@ -585,13 +585,13 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("BatchJobResult", IsNullable=true)]
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] BatchJobResult;
+        public Grid.ComputeCloud.LuaValue[] BatchJobResult;
         
         public BatchJobResponse()
         {
         }
         
-        public BatchJobResponse(MFDLabs.Grid.ComputeCloud.LuaValue[] BatchJobResult)
+        public BatchJobResponse(Grid.ComputeCloud.LuaValue[] BatchJobResult)
         {
             this.BatchJobResult = BatchJobResult;
         }
@@ -618,13 +618,13 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("GetAllJobsResult", IsNullable=true)]
-        public MFDLabs.Grid.ComputeCloud.Job[] GetAllJobsResult;
+        public Grid.ComputeCloud.Job[] GetAllJobsResult;
         
         public GetAllJobsResponse()
         {
         }
         
-        public GetAllJobsResponse(MFDLabs.Grid.ComputeCloud.Job[] GetAllJobsResult)
+        public GetAllJobsResponse(Grid.ComputeCloud.Job[] GetAllJobsResult)
         {
             this.GetAllJobsResult = GetAllJobsResult;
         }
@@ -663,26 +663,26 @@ namespace MFDLabs.Grid.ComputeCloud
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://roblox.com/", Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("DiagResult", IsNullable=true)]
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] DiagResult;
+        public Grid.ComputeCloud.LuaValue[] DiagResult;
         
         public DiagResponse()
         {
         }
         
-        public DiagResponse(MFDLabs.Grid.ComputeCloud.LuaValue[] DiagResult)
+        public DiagResponse(Grid.ComputeCloud.LuaValue[] DiagResult)
         {
             this.DiagResult = DiagResult;
         }
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public interface ComputeCloudServiceSoapChannel : MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap, System.ServiceModel.IClientChannel
+    public interface ComputeCloudServiceSoapChannel : Grid.ComputeCloud.ComputeCloudServiceSoap, System.ServiceModel.IClientChannel
     {
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public partial class ComputeCloudServiceSoapClient : System.ServiceModel.ClientBase<MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap>, MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap
+    public partial class ComputeCloudServiceSoapClient : System.ServiceModel.ClientBase<Grid.ComputeCloud.ComputeCloudServiceSoap>, Grid.ComputeCloud.ComputeCloudServiceSoap
     {
         
         public ComputeCloudServiceSoapClient()
@@ -729,51 +729,51 @@ namespace MFDLabs.Grid.ComputeCloud
             return base.Channel.GetVersionAsync();
         }
         
-        public MFDLabs.Grid.ComputeCloud.Status GetStatus()
+        public Grid.ComputeCloud.Status GetStatus()
         {
             return base.Channel.GetStatus();
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.Status> GetStatusAsync()
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.Status> GetStatusAsync()
         {
             return base.Channel.GetStatusAsync();
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        MFDLabs.Grid.ComputeCloud.OpenJobResponse MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.OpenJob(MFDLabs.Grid.ComputeCloud.OpenJobRequest request)
+        Grid.ComputeCloud.OpenJobResponse Grid.ComputeCloud.ComputeCloudServiceSoap.OpenJob(Grid.ComputeCloud.OpenJobRequest request)
         {
             return base.Channel.OpenJob(request);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] OpenJob(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] OpenJob(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.OpenJobRequest inValue = new MFDLabs.Grid.ComputeCloud.OpenJobRequest();
+            Grid.ComputeCloud.OpenJobRequest inValue = new Grid.ComputeCloud.OpenJobRequest();
             inValue.job = job;
             inValue.script = script;
-            MFDLabs.Grid.ComputeCloud.OpenJobResponse retVal = ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).OpenJob(inValue);
+            Grid.ComputeCloud.OpenJobResponse retVal = ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).OpenJob(inValue);
             return retVal.OpenJobResult;
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.OpenJobResponse> MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.OpenJobAsync(MFDLabs.Grid.ComputeCloud.OpenJobRequest request)
+        System.Threading.Tasks.Task<Grid.ComputeCloud.OpenJobResponse> Grid.ComputeCloud.ComputeCloudServiceSoap.OpenJobAsync(Grid.ComputeCloud.OpenJobRequest request)
         {
             return base.Channel.OpenJobAsync(request);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.OpenJobResponse> OpenJobAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.OpenJobResponse> OpenJobAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.OpenJobRequest inValue = new MFDLabs.Grid.ComputeCloud.OpenJobRequest();
+            Grid.ComputeCloud.OpenJobRequest inValue = new Grid.ComputeCloud.OpenJobRequest();
             inValue.job = job;
             inValue.script = script;
-            return ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).OpenJobAsync(inValue);
+            return ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).OpenJobAsync(inValue);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] OpenJobEx(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] OpenJobEx(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.OpenJobEx(job, script);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> OpenJobExAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> OpenJobExAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.OpenJobExAsync(job, script);
         }
@@ -789,40 +789,40 @@ namespace MFDLabs.Grid.ComputeCloud
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        MFDLabs.Grid.ComputeCloud.ExecuteResponse MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.Execute(MFDLabs.Grid.ComputeCloud.ExecuteRequest request)
+        Grid.ComputeCloud.ExecuteResponse Grid.ComputeCloud.ComputeCloudServiceSoap.Execute(Grid.ComputeCloud.ExecuteRequest request)
         {
             return base.Channel.Execute(request);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] Execute(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] Execute(string jobID, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.ExecuteRequest inValue = new MFDLabs.Grid.ComputeCloud.ExecuteRequest();
+            Grid.ComputeCloud.ExecuteRequest inValue = new Grid.ComputeCloud.ExecuteRequest();
             inValue.jobID = jobID;
             inValue.script = script;
-            MFDLabs.Grid.ComputeCloud.ExecuteResponse retVal = ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).Execute(inValue);
+            Grid.ComputeCloud.ExecuteResponse retVal = ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).Execute(inValue);
             return retVal.ExecuteResult;
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.ExecuteResponse> MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.ExecuteAsync(MFDLabs.Grid.ComputeCloud.ExecuteRequest request)
+        System.Threading.Tasks.Task<Grid.ComputeCloud.ExecuteResponse> Grid.ComputeCloud.ComputeCloudServiceSoap.ExecuteAsync(Grid.ComputeCloud.ExecuteRequest request)
         {
             return base.Channel.ExecuteAsync(request);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.ExecuteResponse> ExecuteAsync(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.ExecuteResponse> ExecuteAsync(string jobID, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.ExecuteRequest inValue = new MFDLabs.Grid.ComputeCloud.ExecuteRequest();
+            Grid.ComputeCloud.ExecuteRequest inValue = new Grid.ComputeCloud.ExecuteRequest();
             inValue.jobID = jobID;
             inValue.script = script;
-            return ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).ExecuteAsync(inValue);
+            return ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).ExecuteAsync(inValue);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] ExecuteEx(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] ExecuteEx(string jobID, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.ExecuteEx(jobID, script);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> ExecuteExAsync(string jobID, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> ExecuteExAsync(string jobID, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.ExecuteExAsync(jobID, script);
         }
@@ -838,40 +838,40 @@ namespace MFDLabs.Grid.ComputeCloud
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        MFDLabs.Grid.ComputeCloud.BatchJobResponse MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.BatchJob(MFDLabs.Grid.ComputeCloud.BatchJobRequest request)
+        Grid.ComputeCloud.BatchJobResponse Grid.ComputeCloud.ComputeCloudServiceSoap.BatchJob(Grid.ComputeCloud.BatchJobRequest request)
         {
             return base.Channel.BatchJob(request);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] BatchJob(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] BatchJob(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.BatchJobRequest inValue = new MFDLabs.Grid.ComputeCloud.BatchJobRequest();
+            Grid.ComputeCloud.BatchJobRequest inValue = new Grid.ComputeCloud.BatchJobRequest();
             inValue.job = job;
             inValue.script = script;
-            MFDLabs.Grid.ComputeCloud.BatchJobResponse retVal = ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).BatchJob(inValue);
+            Grid.ComputeCloud.BatchJobResponse retVal = ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).BatchJob(inValue);
             return retVal.BatchJobResult;
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.BatchJobResponse> MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.BatchJobAsync(MFDLabs.Grid.ComputeCloud.BatchJobRequest request)
+        System.Threading.Tasks.Task<Grid.ComputeCloud.BatchJobResponse> Grid.ComputeCloud.ComputeCloudServiceSoap.BatchJobAsync(Grid.ComputeCloud.BatchJobRequest request)
         {
             return base.Channel.BatchJobAsync(request);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.BatchJobResponse> BatchJobAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.BatchJobResponse> BatchJobAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
-            MFDLabs.Grid.ComputeCloud.BatchJobRequest inValue = new MFDLabs.Grid.ComputeCloud.BatchJobRequest();
+            Grid.ComputeCloud.BatchJobRequest inValue = new Grid.ComputeCloud.BatchJobRequest();
             inValue.job = job;
             inValue.script = script;
-            return ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).BatchJobAsync(inValue);
+            return ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).BatchJobAsync(inValue);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] BatchJobEx(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public Grid.ComputeCloud.LuaValue[] BatchJobEx(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.BatchJobEx(job, script);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> BatchJobExAsync(MFDLabs.Grid.ComputeCloud.Job job, MFDLabs.Grid.ComputeCloud.ScriptExecution script)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> BatchJobExAsync(Grid.ComputeCloud.Job job, Grid.ComputeCloud.ScriptExecution script)
         {
             return base.Channel.BatchJobExAsync(job, script);
         }
@@ -887,36 +887,36 @@ namespace MFDLabs.Grid.ComputeCloud
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        MFDLabs.Grid.ComputeCloud.GetAllJobsResponse MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.GetAllJobs(MFDLabs.Grid.ComputeCloud.GetAllJobsRequest request)
+        Grid.ComputeCloud.GetAllJobsResponse Grid.ComputeCloud.ComputeCloudServiceSoap.GetAllJobs(Grid.ComputeCloud.GetAllJobsRequest request)
         {
             return base.Channel.GetAllJobs(request);
         }
         
-        public MFDLabs.Grid.ComputeCloud.Job[] GetAllJobs()
+        public Grid.ComputeCloud.Job[] GetAllJobs()
         {
-            MFDLabs.Grid.ComputeCloud.GetAllJobsRequest inValue = new MFDLabs.Grid.ComputeCloud.GetAllJobsRequest();
-            MFDLabs.Grid.ComputeCloud.GetAllJobsResponse retVal = ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).GetAllJobs(inValue);
+            Grid.ComputeCloud.GetAllJobsRequest inValue = new Grid.ComputeCloud.GetAllJobsRequest();
+            Grid.ComputeCloud.GetAllJobsResponse retVal = ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).GetAllJobs(inValue);
             return retVal.GetAllJobsResult;
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.GetAllJobsResponse> MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.GetAllJobsAsync(MFDLabs.Grid.ComputeCloud.GetAllJobsRequest request)
+        System.Threading.Tasks.Task<Grid.ComputeCloud.GetAllJobsResponse> Grid.ComputeCloud.ComputeCloudServiceSoap.GetAllJobsAsync(Grid.ComputeCloud.GetAllJobsRequest request)
         {
             return base.Channel.GetAllJobsAsync(request);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.GetAllJobsResponse> GetAllJobsAsync()
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.GetAllJobsResponse> GetAllJobsAsync()
         {
-            MFDLabs.Grid.ComputeCloud.GetAllJobsRequest inValue = new MFDLabs.Grid.ComputeCloud.GetAllJobsRequest();
-            return ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).GetAllJobsAsync(inValue);
+            Grid.ComputeCloud.GetAllJobsRequest inValue = new Grid.ComputeCloud.GetAllJobsRequest();
+            return ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).GetAllJobsAsync(inValue);
         }
         
-        public MFDLabs.Grid.ComputeCloud.Job[] GetAllJobsEx()
+        public Grid.ComputeCloud.Job[] GetAllJobsEx()
         {
             return base.Channel.GetAllJobsEx();
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.Job[]> GetAllJobsExAsync()
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.Job[]> GetAllJobsExAsync()
         {
             return base.Channel.GetAllJobsExAsync();
         }
@@ -942,40 +942,40 @@ namespace MFDLabs.Grid.ComputeCloud
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        MFDLabs.Grid.ComputeCloud.DiagResponse MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.Diag(MFDLabs.Grid.ComputeCloud.DiagRequest request)
+        Grid.ComputeCloud.DiagResponse Grid.ComputeCloud.ComputeCloudServiceSoap.Diag(Grid.ComputeCloud.DiagRequest request)
         {
             return base.Channel.Diag(request);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] Diag(int type, string jobID)
+        public Grid.ComputeCloud.LuaValue[] Diag(int type, string jobID)
         {
-            MFDLabs.Grid.ComputeCloud.DiagRequest inValue = new MFDLabs.Grid.ComputeCloud.DiagRequest();
+            Grid.ComputeCloud.DiagRequest inValue = new Grid.ComputeCloud.DiagRequest();
             inValue.type = type;
             inValue.jobID = jobID;
-            MFDLabs.Grid.ComputeCloud.DiagResponse retVal = ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).Diag(inValue);
+            Grid.ComputeCloud.DiagResponse retVal = ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).Diag(inValue);
             return retVal.DiagResult;
         }
         
         [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
-        System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.DiagResponse> MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap.DiagAsync(MFDLabs.Grid.ComputeCloud.DiagRequest request)
+        System.Threading.Tasks.Task<Grid.ComputeCloud.DiagResponse> Grid.ComputeCloud.ComputeCloudServiceSoap.DiagAsync(Grid.ComputeCloud.DiagRequest request)
         {
             return base.Channel.DiagAsync(request);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.DiagResponse> DiagAsync(int type, string jobID)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.DiagResponse> DiagAsync(int type, string jobID)
         {
-            MFDLabs.Grid.ComputeCloud.DiagRequest inValue = new MFDLabs.Grid.ComputeCloud.DiagRequest();
+            Grid.ComputeCloud.DiagRequest inValue = new Grid.ComputeCloud.DiagRequest();
             inValue.type = type;
             inValue.jobID = jobID;
-            return ((MFDLabs.Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).DiagAsync(inValue);
+            return ((Grid.ComputeCloud.ComputeCloudServiceSoap)(this)).DiagAsync(inValue);
         }
         
-        public MFDLabs.Grid.ComputeCloud.LuaValue[] DiagEx(int type, string jobID)
+        public Grid.ComputeCloud.LuaValue[] DiagEx(int type, string jobID)
         {
             return base.Channel.DiagEx(type, jobID);
         }
         
-        public System.Threading.Tasks.Task<MFDLabs.Grid.ComputeCloud.LuaValue[]> DiagExAsync(int type, string jobID)
+        public System.Threading.Tasks.Task<Grid.ComputeCloud.LuaValue[]> DiagExAsync(int type, string jobID)
         {
             return base.Channel.DiagExAsync(type, jobID);
         }

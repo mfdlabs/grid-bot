@@ -9,22 +9,22 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Diagnostics;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Instrumentation;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
+using Threading;
+using Diagnostics;
+using Text.Extensions;
+using Instrumentation;
+using Grid.Bot.Utility;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Grid.Bot.PerformanceMonitors;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal class Render : IStateSpecificCommandHandler
     {
         public string CommandName => "Render User";
         public string CommandDescription => $"Renders a Roblox user!\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}render " +
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}render " +
                                             $"robloxUserID?|...userName?";
         public string[] CommandAliases => new[] { "r", "render" };
         public bool Internal => false;
@@ -32,7 +32,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
         private sealed class RenderCommandPerformanceMonitor
         {
-            private const string Category = "MFDLabs.Grid.Commands.Render";
+            private const string Category = "Grid.Commands.Render";
 
             public IRawValueCounter TotalItemsProcessed { get; }
             public IRateOfCountsPerSecondCounter TotalItemsProcessedPerSecond { get; }
@@ -84,7 +84,7 @@ namespace MFDLabs.Grid.Bot.Commands
         private const string GoodUsernameRegex = @"^[A-Za-z0-9_]{3,20}$";
 
         private static IEnumerable<string> BlacklistedUsernames =>
-                (from uname in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
+                (from uname in global::Grid.Bot.Properties.Settings.Default.BlacklistedUsernamesForRendering.Split(',')
                  where !uname.IsNullOrEmpty()
                  select uname).ToArray();
 
@@ -196,7 +196,7 @@ namespace MFDLabs.Grid.Bot.Commands
                                         Logger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
                                         message.Reply($"Missing required parameter 'userID' or 'userName', " +
                                                       $"the layout is: " +
-                                                      $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
+                                                      $"{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
                                                       $"userID|userName");
                                         return;
                                     }
@@ -204,7 +204,7 @@ namespace MFDLabs.Grid.Bot.Commands
                             }
                             else
                             {
-                                if (userId > global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
+                                if (userId > global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
                                 {
                                     _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
                                     _perfmon.TotalItemsProcessedThatHadInvalidUserIDsPerSecond.Increment();
@@ -213,11 +213,11 @@ namespace MFDLabs.Grid.Bot.Commands
                                     Logger.Singleton.Warning(
                                         "The input user ID of {0} was greater than the environment's maximum user ID size of {1}.",
                                         userId,
-                                        global::MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize
+                                        global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize
                                     );
                                     message.Reply($"The userId '{userId}' is too big, expected the " +
                                                   $"userId to be less than or equal to " +
-                                                  $"'{MFDLabs.Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
+                                                  $"'{Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
                                     return;
                                 }
                             }
@@ -234,17 +234,17 @@ namespace MFDLabs.Grid.Bot.Commands
                             "Trying to render the character for the user '{0}' with the place '{1}', " +
                             "and the dimensions of {2}x{3}",
                             userId,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                            global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                            global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                            global::Grid.Bot.Properties.Settings.Default.RenderSizeY
                         );
 
                         // get a stream and temp filename
                         var (stream, fileName) = GridServerCommandUtility.RenderUser(
                             userId,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                            global::MFDLabs.Grid.Bot.Properties.Settings.Default.RenderSizeY
+                            global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                            global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                            global::Grid.Bot.Properties.Settings.Default.RenderSizeY
                         );
 
                         if (stream == null || fileName == null)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFDLabs.Diagnostics.Extensions
+namespace Diagnostics.Extensions
 {
     public static class DateTimeExtensions
     {

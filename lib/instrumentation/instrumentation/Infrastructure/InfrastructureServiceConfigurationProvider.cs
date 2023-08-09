@@ -5,9 +5,9 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Threading;
-using MFDLabs.Text.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Instrumentation.Infrastructure
+namespace Instrumentation.Infrastructure
 {
     internal class InfrastructureServiceConfigurationProvider : IDisposable, IConfigurationProvider
     {

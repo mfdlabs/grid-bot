@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid;
+﻿namespace Grid;
 
 using System;
 using System.IO;
@@ -25,8 +25,8 @@ public static class GridServerFileHelper
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             value = Registry.GetValue(
-                global::MFDLabs.Grid.Properties.Settings.Default.GridServerRegistryKeyName,
-                global::MFDLabs.Grid.Properties.Settings.Default.GridServerRegistryValueName,
+                global::Grid.Properties.Settings.Default.GridServerRegistryKeyName,
+                global::Grid.Properties.Settings.Default.GridServerRegistryValueName,
                 null
             );
         }
@@ -37,7 +37,7 @@ public static class GridServerFileHelper
 
         if (value != null) return value as string;
         if (throwIfNoGridServer)
-            throw new ApplicationException(global::MFDLabs.Grid.Properties.Resources.GridServerNotCorrectlyInstalled);
+            throw new ApplicationException(global::Grid.Properties.Resources.GridServerNotCorrectlyInstalled);
         
         return default;
     }
@@ -48,7 +48,7 @@ public static class GridServerFileHelper
     /// <param name="throwIfNoGridServer">Should an exception be thrown if the grid server is not installed?</param>
     /// <returns>The grid server's full path to the executable.</returns>
     public static string GetFullyQualifiedGridServerPath(bool throwIfNoGridServer = true)
-        => Path.Combine(GetGridServerPath(throwIfNoGridServer), global::MFDLabs.Grid.Properties.Settings.Default.GridServerExecutableName);
+        => Path.Combine(GetGridServerPath(throwIfNoGridServer), global::Grid.Properties.Settings.Default.GridServerExecutableName);
 
     /// <summary>
     /// Get the fully qualified path to a grid server Lua script.
@@ -74,7 +74,7 @@ public static class GridServerFileHelper
         if (!test) return fullPath;
 
         if (!File.Exists(fullPath))
-            throw new ApplicationException(string.Format(global::MFDLabs.Grid.Properties.Resources.CouldNotFindGridServerLuaScript, scriptName, prefix));
+            throw new ApplicationException(string.Format(global::Grid.Properties.Resources.CouldNotFindGridServerLuaScript, scriptName, prefix));
 
         return fullPath;
     }

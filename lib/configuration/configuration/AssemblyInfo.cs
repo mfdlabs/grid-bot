@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.Configuration")]
+[assembly: AssemblyTitle("Configuration")]
 [assembly: AssemblyDescription("Providers and helpers to fetch remote configurations for applications.")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.Configuration")]
+[assembly: AssemblyProduct("Configuration")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2019. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Who Owns This Sector? (R)")]
 [assembly: ComVisible(false)]

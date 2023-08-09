@@ -8,10 +8,10 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Properties;
+using Text.Extensions;
+using Grid.Bot.Properties;
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     internal static class ReplyExtensions
     {
@@ -82,28 +82,28 @@ namespace MFDLabs.Grid.Bot.Utility
     public static class AdminUtility
     {
         private static IEnumerable<string> AllowedChannelIDs =>
-            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',')
+            (from id in global::Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',')
              where !id.IsNullOrEmpty()
              select id).ToArray();
 
         private static IEnumerable<string> AdministratorUserIDs =>
-            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins.Split(',')
+            (from id in global::Grid.Bot.Properties.Settings.Default.Admins.Split(',')
              where !id.IsNullOrEmpty()
              select id).ToArray();
 
         private static IEnumerable<string> HigherPrivilagedUserIDs =>
-            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',')
+            (from id in global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',')
              where !id.IsNullOrEmpty()
              select id).ToArray();
 
         private static IEnumerable<string> BlacklistedUserIDs =>
-            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',')
+            (from id in global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',')
              where !id.IsNullOrEmpty()
              select id).ToArray();
 
         public static bool UserIsOwner(IUser user) => UserIsOwner(user.Id);
 
-        public static bool UserIsOwner(ulong id) => id == global::MFDLabs.Grid.Bot.Properties.Settings.Default.BotOwnerID;
+        public static bool UserIsOwner(ulong id) => id == global::Grid.Bot.Properties.Settings.Default.BotOwnerID;
 
         public static bool UserIsAdmin(IUser user) => UserIsAdmin(user.Id);
 

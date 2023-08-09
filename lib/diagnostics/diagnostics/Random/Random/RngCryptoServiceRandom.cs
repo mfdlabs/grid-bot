@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
 	public class RngCryptoServiceRandom : IRandom
 	{

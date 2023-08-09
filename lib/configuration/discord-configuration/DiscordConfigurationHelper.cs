@@ -5,9 +5,9 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Reflection.Extensions;
+using Reflection.Extensions;
 
-namespace MFDLabs.Discord.Configuration
+namespace Discord.Configuration
 {
     public static class DiscordConfigurationHelper
     {

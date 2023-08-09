@@ -6,7 +6,7 @@ using Discord;
 
 using Logging;
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     public sealed class ShutdownUdpReceiver
     {
@@ -31,13 +31,13 @@ namespace MFDLabs.Grid.Bot.Utility
 
                 var message = $"Deploying new version ({Encoding.ASCII.GetString(ver)})";
 
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["IsEnabled"] = false;
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["ReasonForDying"] = message;
+                global::Grid.Bot.Properties.Settings.Default["IsEnabled"] = false;
+                global::Grid.Bot.Properties.Settings.Default["ReasonForDying"] = message;
 
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default.Save();
 
-                global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb).Wait();
-                global::MFDLabs.Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
+                global::Grid.Bot.Global.BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb).Wait();
+                global::Grid.Bot.Global.BotRegistry.Client.SetGameAsync(
                     $"Maintenance is enabled: {message}",
                     null,
                     ActivityType.Playing

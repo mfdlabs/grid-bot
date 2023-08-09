@@ -2,7 +2,7 @@
 
 #nullable enable
 
-namespace MFDLabs.Threading.Extensions
+namespace Threading.Extensions
 {
     public static class TaskExtensions
     {

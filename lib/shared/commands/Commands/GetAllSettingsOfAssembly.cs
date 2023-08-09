@@ -11,12 +11,12 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Reflection.Extensions;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Reflection.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class GetAllSettingsOfAssembly : IStateSpecificCommandHandler
     {
@@ -34,7 +34,7 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (message.IsInPublicChannel() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
+            if (message.IsInPublicChannel() && !global::Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
             {
                 await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
                 return;

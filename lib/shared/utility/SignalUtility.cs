@@ -2,12 +2,12 @@
 
 using Logging;
 
-using MFDLabs.Threading;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Properties;
-using MFDLabs.Grid.Bot.PerformanceMonitors;
+using Threading;
+using Grid.Bot.Global;
+using Grid.Bot.Properties;
+using Grid.Bot.PerformanceMonitors;
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     public static class SignalUtility
     {

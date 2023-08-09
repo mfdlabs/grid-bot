@@ -3,18 +3,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Global;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class SendMessageInGuildChannel : IStateSpecificCommandHandler
     {
         public string CommandName => "Send Message In Guild Channel";
         public string CommandDescription => $"Sends a message to a guild channel\nLayout:" +
-                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}message " +
+                                            $"{(global::Grid.Bot.Properties.Settings.Default.Prefix)}message " +
                                             $"guildId channelId ...message&attachments.";
         public string[] CommandAliases => new[] { "msg", "message" };
         public bool Internal => true;

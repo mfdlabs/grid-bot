@@ -3,7 +3,7 @@
   <Import Project="../../../targets/lib-vault-both.targets" />
 
   <PropertyGroup>
-    <RootNamespace>MFDLabs.Grid</RootNamespace>
+    <RootNamespace>Grid</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Grid
+﻿namespace Grid
 {
     /// <summary>
     /// Status returned from a health check.

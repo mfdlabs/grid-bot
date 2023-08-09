@@ -6,11 +6,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class GetAllSettings : IStateSpecificCommandHandler
     {
@@ -26,13 +26,13 @@ namespace MFDLabs.Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            if (message.IsInPublicChannel() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
+            if (message.IsInPublicChannel() && !global::Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
             {
                 await message.ReplyAsync("Are you sure you want to do that? This will log sensitive things!");
                 return;
             }
             
-            var props = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Properties.Cast<SettingsProperty>();
+            var props = global::Grid.Bot.Properties.Settings.Default.Properties.Cast<SettingsProperty>();
 
             var builder = new EmbedBuilder().WithTitle("All Application Settings.");
 
@@ -48,7 +48,7 @@ namespace MFDLabs.Grid.Bot.Commands
                     count = 0;
                 }
                 
-                var value = global::MFDLabs.Grid.Bot.Properties.Settings.Default[field.Name];
+                var value = global::Grid.Bot.Properties.Settings.Default[field.Name];
 
                 builder.AddField(
                     $"{field.Name} ({field.PropertyType})",

@@ -3,21 +3,21 @@
 // WE_LOVE_THE_GRID_CONFIG -> Guild Based configuration, experimental, only debug builds have it
 
 #if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
-using MFDLabs.Discord.Configuration;
+using Discord.Configuration;
 #endif
 
-namespace MFDLabs.Grid.Bot.Properties
+namespace Grid.Bot.Properties
 {
     public static class SettingsProvider
     {
 #if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
-        private const string SettingsGroupName = "MFDLabs.Grid.Bot.Properties.Settings";
+        private const string SettingsGroupName = "Grid.Bot.Properties.Settings";
 
         static SettingsProvider()
         {
             DiscordConfigurationHelper.InitializeClient(
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.DiscordConfigurationVaultAddress,
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.DiscordConfigurationVaultToken
+                global::Grid.Bot.Properties.Settings.Default.DiscordConfigurationVaultAddress,
+                global::Grid.Bot.Properties.Settings.Default.DiscordConfigurationVaultToken
             );
         }
 #endif
@@ -27,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Properties
 #if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
             return message.GetSetting<T>(SettingsGroupName, settingName);
 #else
-            return (T)global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName];
+            return (T)global::Grid.Bot.Properties.Settings.Default[settingName];
 #endif
         }
 
@@ -36,8 +36,8 @@ namespace MFDLabs.Grid.Bot.Properties
 #if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
             message.WriteSetting<T>(SettingsGroupName, settingName, value);
 #else
-            global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName] = value;
-            global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+            global::Grid.Bot.Properties.Settings.Default[settingName] = value;
+            global::Grid.Bot.Properties.Settings.Default.Save();
 #endif
         }
     }

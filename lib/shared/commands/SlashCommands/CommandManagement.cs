@@ -3,11 +3,11 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Grid.Bot.Registries;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Grid.Bot.Registries;
 
-namespace MFDLabs.Grid.Bot.SlashCommands
+namespace Grid.Bot.SlashCommands
 {
     internal sealed class CommandManagement : IStateSpecificSlashCommandHandler
     {

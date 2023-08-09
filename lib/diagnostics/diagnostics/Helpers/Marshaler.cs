@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
     public static class Marshaler
     {

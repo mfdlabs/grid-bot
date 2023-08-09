@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Registries;
-using MFDLabs.Grid.Bot.Utility;
+using Grid.Bot.Registries;
+using Grid.Bot.Utility;
 
-namespace MFDLabs.Grid.Bot.Interfaces
+namespace Grid.Bot.Interfaces
 {
     /// <summary>
     /// Refers to a class that all commands must implement so that the <see cref="CommandRegistry"/> can parse and insert them into the <see cref="CommandRegistry"/>'s command handler state.
@@ -27,7 +27,7 @@ namespace MFDLabs.Grid.Bot.Interfaces
         string[] CommandAliases { get; }
 
         /// <summary>
-        /// Refers to if this <see cref="IStateSpecificCommandHandler"/> should be publicly documented, if true, then only users in the <see cref="MFDLabs.Grid.Bot.Properties.Settings.Admins"/> list are allowed the see documentation for this <see cref="IStateSpecificCommandHandler"/>.
+        /// Refers to if this <see cref="IStateSpecificCommandHandler"/> should be publicly documented, if true, then only users in the <see cref="Grid.Bot.Properties.Settings.Admins"/> list are allowed the see documentation for this <see cref="IStateSpecificCommandHandler"/>.
         /// <br />
         /// <b>THIS DOES NOT MEAN IT CANNOT BE CALLED, PLEASE USE THE <see cref="AdminUtility.RejectIfNotAdminAsync(SocketMessage)"/>, <see cref="AdminUtility.UserIsAdmin(string)"/> <see cref="AdminUtility.UserIsAdmin(IUser)"/>, OR <see cref="AdminUtility.UserIsAdmin(ulong)"/> TO VALIDATE IF THE USER IS IN THE GROUP.</b>
         /// </summary>

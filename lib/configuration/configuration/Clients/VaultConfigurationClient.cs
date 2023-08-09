@@ -13,11 +13,11 @@ using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.AuthMethods.AppRole;
 using VaultSharp.V1.SecretsEngines.KeyValue.V2;
 
-using MFDLabs.Threading.Extensions;
-using MFDLabs.Configuration.Logging;
-using MFDLabs.Configuration.Settings;
+using Threading.Extensions;
+using Configuration.Logging;
+using Configuration.Settings;
 
-namespace MFDLabs.Configuration.Clients.Vault
+namespace Configuration.Clients.Vault
 {
     internal static class KeyValueSecretsEngineV2Extensions
     {
@@ -91,7 +91,7 @@ namespace MFDLabs.Configuration.Clients.Vault
                 catch (Exception ex)
                 {
                     ConfigurationLogging.Error(ex.ToString());
-                    Thread.Sleep(i * global::MFDLabs.Configuration.Properties.Settings.Default.VaultConfigurationFetcherBackoffBaseMilliseconds);
+                    Thread.Sleep(i * global::Configuration.Properties.Settings.Default.VaultConfigurationFetcherBackoffBaseMilliseconds);
                 }
             }
             return Array.Empty<T>();

@@ -1,4 +1,4 @@
-﻿namespace MFDLabs.Networking.Extensions
+﻿namespace Networking.Extensions
 {
     public static class NetworkingExtensions
     {

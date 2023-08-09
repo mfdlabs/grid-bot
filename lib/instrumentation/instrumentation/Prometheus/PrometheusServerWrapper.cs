@@ -6,7 +6,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using Prometheus;
 
-namespace MFDLabs.Instrumentation.PrometheusListener
+namespace Instrumentation.PrometheusListener
 {
     public sealed class PrometheusServerWrapper
     {

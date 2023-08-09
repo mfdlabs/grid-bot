@@ -3,9 +3,9 @@ using System.Globalization;
 
 using Logging;
 
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Hooks
+namespace Grid.Bot.Hooks
 {
     internal sealed class UtcNowHook : IConsoleHook
     {

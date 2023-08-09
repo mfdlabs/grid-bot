@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Prometheus;
 
-namespace MFDLabs.Instrumentation.PrometheusListener
+namespace Instrumentation.PrometheusListener
 {
     internal class SummaryWrapper
     {

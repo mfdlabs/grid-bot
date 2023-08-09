@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Discord.WebSocket;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Networking;
+using Diagnostics;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Networking;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal class GetMachineAddress : IStateSpecificCommandHandler
     {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using MFDLabs.Text.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     public class CounterRegistry : ICounterRegistry
     {

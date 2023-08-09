@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Text.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     public class Globals
     {
@@ -26,7 +26,7 @@ namespace MFDLabs.Grid.Bot.Commands
     {
         public string CommandName => "Evaluate CSharp";
         public string CommandDescription => "Attempts to evaluate the given C# with Roslyn\nLayout:" +
-                                            $"{(global::MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix)}evaluate " +
+                                            $"{(global::Grid.Bot.Properties.Settings.Default.Prefix)}evaluate " +
                                             "...scriptContents.";
         public string[] CommandAliases => new[] { "eval", "evaluate" };
         public bool Internal => true;
@@ -74,9 +74,9 @@ namespace MFDLabs.Grid.Bot.Commands
                                 "Discord",
                                 "Discord.WebSocket",
 
-                                "MFDLabs.Grid",
-                                "MFDLabs.Grid.Bot.Extensions",
-                                "MFDLabs.Text.Extensions"
+                                "Grid",
+                                "Grid.Bot.Extensions",
+                                "Text.Extensions"
                             ),
                         new Globals { messageContentArray = messageContentArray, message = message, originalCommand = originalCommand, scriptContents = scriptContents }
                     );

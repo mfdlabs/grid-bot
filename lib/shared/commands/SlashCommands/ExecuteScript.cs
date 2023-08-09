@@ -3,7 +3,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace MFDLabs.Grid.Bot.SlashCommands;
+namespace Grid.Bot.SlashCommands;
 
 
 using System;
@@ -57,7 +57,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
 
     private sealed class ExecuteScriptSlashCommandPerformanceMonitor
     {
-        private const string Category = "MFDLabs.Grid.SlashCommands.ExecuteScript";
+        private const string Category = "Grid.SlashCommands.ExecuteScript";
 
         public IRawValueCounter TotalItemsProcessed { get; }
         public IRawValueCounter TotalItemsProcessedThatFailed { get; }
@@ -234,7 +234,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 return;
             }
 
-            if (script.ContainsUnicode() && !global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionSupportUnicode && !userIsAdmin)
+            if (script.ContainsUnicode() && !global::Grid.Bot.Properties.Settings.Default.ScriptExecutionSupportUnicode && !userIsAdmin)
             {
                 _perfmon.TotalItemsProcessedThatHadUnicode.Increment();
                 _perfmon.TotalItemsProcessedThatHadUnicodePerSecond.Increment();
@@ -247,7 +247,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 return;
             }
 
-            var isAdminScript = global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
+            var isAdminScript = global::Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
 
             var scriptId = NetworkingGlobal.GenerateUuidv4();
             var filesafeScriptId = scriptId.Replace("-", "");
@@ -257,17 +257,17 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             var (gserverCommand, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
                 filesafeScriptId,
                 ("isAdmin", isAdminScript),
-                ("isVmEnabledForAdmins", global::MFDLabs.Grid.Bot.Properties.Settings.Default.ShouldAdminsUseVM)
+                ("isVmEnabledForAdmins", global::Grid.Bot.Properties.Settings.Default.ShouldAdminsUseVM)
             );
 
             if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
+            if (global::Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
                 script = string.Format(LuaUtility.SafeLuaMode, script);
 
-            if (global::MFDLabs.Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
+            if (global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
                 script = $"game:GetService(\"ContentProvider\"):SetBaseUrl" +
-                         $"(\"{MFDLabs.Grid.Bot.Properties.Settings.Default.BaseURL}\");{script}";
+                         $"(\"{Grid.Bot.Properties.Settings.Default.BaseURL}\");{script}";
 
             var scriptEx = Lua.NewScript(
                 NetworkingGlobal.GenerateUuidv4(),
@@ -350,7 +350,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
 
                 if (ex is IOException)
                 {
-                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
+                    global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                     await command.RespondEphemeralPingAsync("There was an IO error when writing the script to the system, please try again later.");
                 }
 
@@ -450,7 +450,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 }
                 catch (Exception ex)
                 {
-                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
+                    global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                     isFailure = true;
                     Logger.Singleton.Warning(
                         "Failed to delete the user script '{0}' because '{1}'",
@@ -469,7 +469,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 }
                 catch (Exception ex)
                 {
-                    global::MFDLabs.Grid.Bot.Utility.CrashHandler.Upload(ex, true);
+                    global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
                     isFailure = true;
 
                 }

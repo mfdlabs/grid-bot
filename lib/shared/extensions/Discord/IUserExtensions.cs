@@ -2,88 +2,88 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Global;
-using MFDLabs.Grid.Bot.Utility;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Threading.Extensions;
+using Diagnostics;
+using Grid.Bot.Global;
+using Grid.Bot.Utility;
+using Text.Extensions;
+using Threading.Extensions;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class IUserExtensions
     {
         public static void Whitelist(this IUser user)
         {
-            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
 
             if (blacklistedUsers.Contains(user.Id.ToString()))
             {
                 var blIds = blacklistedUsers.Split(',').ToList();
                 blIds.Remove(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
         public static void Blacklist(this IUser user)
         {
-            var blacklistedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
 
             if (!blacklistedUsers.Contains(user.Id.ToString()))
             {
                 var blIds = blacklistedUsers.Split(',').ToList();
                 blIds.Add(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
 
         public static void Disentitle(this IUser user)
         {
-            var privilagedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
+            var privilagedUsers = global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
 
             if (privilagedUsers.Contains(user.Id.ToString()))
             {
                 var pIds = privilagedUsers.Split(',').ToList();
                 pIds.Remove(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
         public static void Entitle(this IUser user)
         {
-            var privilagedUsers = global::MFDLabs.Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
+            var privilagedUsers = global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
 
             if (!privilagedUsers.Contains(user.Id.ToString()))
             {
                 var pIds = privilagedUsers.Split(',').ToList();
                 pIds.Add(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
 
         public static void Demote(this IUser user)
         {
-            var admins = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins;
+            var admins = global::Grid.Bot.Properties.Settings.Default.Admins;
 
             if (admins.Contains(user.Id.ToString()))
             {
                 var adIds = admins.Split(',').ToList();
                 adIds.Remove(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
         public static void Promote(this IUser user)
         {
-            var admins = global::MFDLabs.Grid.Bot.Properties.Settings.Default.Admins;
+            var admins = global::Grid.Bot.Properties.Settings.Default.Admins;
 
             if (!admins.Contains(user.Id.ToString()))
             {
                 var adIds = admins.Split(',').ToList();
                 adIds.Add(user.Id.ToString());
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
+                global::Grid.Bot.Properties.Settings.Default.Save();
             }
         }
         public static bool CanExecuteByRolloutPercentage(this IUser user, int rolloutPercentage)

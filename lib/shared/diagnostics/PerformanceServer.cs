@@ -4,25 +4,25 @@ using System.Collections.Generic;
 
 using Logging;
 
-using MFDLabs.Instrumentation;
-using MFDLabs.Text.Extensions;
+using Instrumentation;
+using Text.Extensions;
 
 #if !DEBUG
-using MFDLabs.Diagnostics;
+using Diagnostics;
 #endif
 
-namespace MFDLabs.Grid.Bot.PerformanceMonitors
+namespace Grid.Bot.PerformanceMonitors
 {
     public static class PerformanceServer
     {
         private static IEnumerable<string> WhitelistedCounterServerCidrs =>
-            (from id in global::MFDLabs.Grid.Bot.Properties.Settings.Default.WhitelistedCounterServerCidrs.Split(',')
+            (from id in global::Grid.Bot.Properties.Settings.Default.WhitelistedCounterServerCidrs.Split(',')
              where !id.IsNullOrEmpty()
              select id).ToArray();
 
         private static readonly CounterHttpServer Server = new(
             PerfmonCounterRegistryProvider.Registry,
-            global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort,
+            global::Grid.Bot.Properties.Settings.Default.CounterServerPort,
             WhitelistedCounterServerCidrs,
             ex =>
             {
@@ -53,12 +53,12 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
 
             Server.Start();
             Logger.Singleton.Warning("Launched performance monitor server on host 'http://*:{0}'.",
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
+                global::Grid.Bot.Properties.Settings.Default.CounterServerPort);
         }
 
         public static void Stop()
         {
-            Logger.Singleton.Debug("Stopping performance monitor server on host 'http://*:{0}'...", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
+            Logger.Singleton.Debug("Stopping performance monitor server on host 'http://*:{0}'...", global::Grid.Bot.Properties.Settings.Default.CounterServerPort);
 
 #if !DEBUG
 
@@ -79,7 +79,7 @@ namespace MFDLabs.Grid.Bot.PerformanceMonitors
                 // ignored
             }
 
-            Logger.Singleton.Warning("Stopped performance monitor server on port {0}.", global::MFDLabs.Grid.Bot.Properties.Settings.Default.CounterServerPort);
+            Logger.Singleton.Warning("Stopped performance monitor server on port {0}.", global::Grid.Bot.Properties.Settings.Default.CounterServerPort);
         }
     }
 }

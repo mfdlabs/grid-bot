@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using MFDLabs.Text.Extensions;
+using Text.Extensions;
 
 #if NETFRAMEWORK
 using System;
@@ -8,8 +8,8 @@ using System.Security.Principal;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using PInvoke;
-using MFDLabs.Diagnostics.Extensions;
-using MFDLabs.Diagnostics.NativeWin32;
+using Diagnostics.Extensions;
+using Diagnostics.NativeWin32;
 
 // WinAPI members
 using PHANDLE = System.IntPtr;
@@ -19,7 +19,7 @@ using DWORD = System.Int32;
 using Win32Exception = System.ComponentModel.Win32Exception;
 #endif
 
-namespace MFDLabs.Diagnostics
+namespace Diagnostics
 {
     public static class ProcessHelper
     {

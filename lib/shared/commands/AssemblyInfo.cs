@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
 [assembly: CompilationRelaxations(8)]
 #endif
-[assembly: AssemblyTitle("MFDLabs.GridCommands")]
+[assembly: AssemblyTitle("GridCommands")]
 [assembly: AssemblyDescription("Shared Commands and registries for the MFDLABS.GRID.BOT, this is here so we don't have " +
                                "to copy and paste code when supporting Linux and Windows Services")]
 #if DEBUG
@@ -17,7 +17,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 [assembly: AssemblyCompany("MFDLABS")]
-[assembly: AssemblyProduct("MFDLabs.GridCommands")]
+[assembly: AssemblyProduct("GridCommands")]
 [assembly: AssemblyCopyright("Copyright © MFDLABS 2022. All rights reserved.")]
 [assembly: AssemblyTrademark("MFDLABS Grid (R)")]
 [assembly: ComVisible(false)]

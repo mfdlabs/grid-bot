@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using MFDLabs.Drawing.Models;
+using Drawing.Models;
 
-namespace MFDLabs.Drawing.NativeWin32
+namespace Drawing.NativeWin32
 {
     internal static class NativeMethods
     {

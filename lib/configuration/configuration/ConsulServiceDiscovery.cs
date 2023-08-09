@@ -2,11 +2,11 @@
 
 using Consul;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Threading.Extensions;
-using MFDLabs.Configuration.Logging;
+using Text.Extensions;
+using Threading.Extensions;
+using Configuration.Logging;
 
-namespace MFDLabs.Configuration
+namespace Configuration
 {
     internal static class ConsulServiceDiscovery
     {
@@ -14,16 +14,16 @@ namespace MFDLabs.Configuration
 
         static ConsulServiceDiscovery()
         {
-            if (global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryEnabled)
+            if (global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryEnabled)
             {
-                if (global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl.IsNullOrEmpty())
-                    throw new ArgumentNullException(nameof(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl));
+                if (global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl.IsNullOrEmpty())
+                    throw new ArgumentNullException(nameof(global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl));
 
                 var configuration = new ConsulClientConfiguration();
-                configuration.Address = new Uri(global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl);
+                configuration.Address = new Uri(global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryUrl);
 
-                if (!global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryAclToken.IsNullOrEmpty())
-                    configuration.Token = global::MFDLabs.Configuration.Properties.Settings.Default.ConsulServiceDiscoveryAclToken;
+                if (!global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryAclToken.IsNullOrEmpty())
+                    configuration.Token = global::Configuration.Properties.Settings.Default.ConsulServiceDiscoveryAclToken;
 
                 _consulClient = new ConsulClient(configuration);
             }

@@ -1,10 +1,10 @@
 ﻿using System;
-using MFDLabs.Text.Extensions;
-using MFDLabs.Reflection.Extensions;
+using Text.Extensions;
+using Reflection.Extensions;
 
 #nullable enable
 
-namespace MFDLabs.Configuration.Extensions
+namespace Configuration.Extensions
 {
     public static class SettingExtensions
     {

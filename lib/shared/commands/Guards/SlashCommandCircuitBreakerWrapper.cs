@@ -9,16 +9,16 @@ using Discord.WebSocket;
 using Polly;
 using Polly.CircuitBreaker;
 
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Guards
+namespace Grid.Bot.Guards
 {
     public class SlashCommandCircuitBreakerWrapper
     {
         private readonly IStateSpecificSlashCommandHandler _command;
         private readonly AsyncCircuitBreakerPolicy _circuitBreaker;
 
-        public TimeSpan RetryInterval { get; set; } = global::MFDLabs.Grid.Bot.Properties.Settings.Default.CommandCircuitBreakerWrapperRetryInterval;
+        public TimeSpan RetryInterval { get; set; } = global::Grid.Bot.Properties.Settings.Default.CommandCircuitBreakerWrapperRetryInterval;
         public IStateSpecificSlashCommandHandler Command => _command;
 
         public SlashCommandCircuitBreakerWrapper(IStateSpecificSlashCommandHandler cmd)

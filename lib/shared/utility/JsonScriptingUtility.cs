@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MFDLabs.Grid.Commands;
-using MFDLabs.Networking;
-using MFDLabs.Text.Extensions;
+using Grid.Commands;
+using Networking;
+using Text.Extensions;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace MFDLabs.Grid.Bot.Utility
+namespace Grid.Bot.Utility
 {
     public static class JsonScriptingUtility
     {

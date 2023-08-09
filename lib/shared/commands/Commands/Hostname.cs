@@ -2,14 +2,14 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Networking;
-using MFDLabs.Diagnostics;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Networking;
+using Diagnostics;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
 /** TODO: Bridge Datacenter information here for distributed app cells? **/
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class Hostname : IStateSpecificCommandHandler
     {

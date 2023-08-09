@@ -3,10 +3,10 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.SlashCommands
+namespace Grid.Bot.SlashCommands
 {
     internal sealed class UpdateAdmins : IStateSpecificSlashCommandHandler
     {

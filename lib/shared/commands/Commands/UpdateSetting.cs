@@ -7,21 +7,21 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
-using MFDLabs.Reflection.Extensions;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
+using Reflection.Extensions;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class UpdateSetting : IStateSpecificCommandHandler
     {
         public string CommandName => "Update Bot Instance Setting";
         public string CommandDescription => "Attempts to update the value of a setting from " +
-                                            $"'{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}', " +
+                                            $"'{typeof(global::Grid.Bot.Properties.Settings).FullName}', " +
                                             "if the setting is not found it throws, if the setting value cannot " +
                                             "be converted it will throw.\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}update settingName ...settingValue";
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}update settingName ...settingValue";
         public string[] CommandAliases => new[] { "up", "update" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -44,7 +44,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             if (rawSettingValue.IsNullOrEmpty())
             {
-                if (!global::MFDLabs.Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
+                if (!global::Grid.Bot.Properties.Settings.Default.AllowNullsWhenUpdatingSetting)
                 {
                     Logger.Singleton.Warning("The environment does not allow nulls.");
                     await message.ReplyAsync("The setting 'AllowNullsWhenUpdatingSetting' is disabled, " +
@@ -59,7 +59,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             try
             {
-                setting = global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName!];
+                setting = global::Grid.Bot.Properties.Settings.Default[settingName!];
             }
             catch (SettingsPropertyNotFoundException ex)
             {
@@ -117,8 +117,8 @@ namespace MFDLabs.Grid.Bot.Commands
 
             try
             {
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName] = transformedValue;
-                global::MFDLabs.Grid.Bot.Properties.Settings.Default.Save();
+                global::Grid.Bot.Properties.Settings.Default[settingName] = transformedValue;
+                global::Grid.Bot.Properties.Settings.Default.Save();
                 Logger.Singleton.Debug("Successfully set the setting " +
                                                       "'{0}' to the value of '{1}'.",
                     settingName,

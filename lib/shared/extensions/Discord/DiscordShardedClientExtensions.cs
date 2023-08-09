@@ -3,12 +3,12 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Threading.Extensions;
+using Threading.Extensions;
 
 // Use the first shard in order to do any gateway actions.
 // TODO: Load balance these?
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class DiscordShardedClientExtensions
     {

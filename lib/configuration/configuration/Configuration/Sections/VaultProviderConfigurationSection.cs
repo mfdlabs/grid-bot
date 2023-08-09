@@ -1,7 +1,7 @@
 ﻿using System.Configuration;
-using MFDLabs.Configuration.Elements.Vault;
+using Configuration.Elements.Vault;
 
-namespace MFDLabs.Configuration.Sections.Vault
+namespace Configuration.Sections.Vault
 {
     public class VaultProviderConfigurationSection : ConfigurationSection
     {

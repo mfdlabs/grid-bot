@@ -15,19 +15,19 @@ using Discord.WebSocket;
 
 using Logging;
 
-using MFDLabs.Text.Extensions;
-using MFDLabs.Grid.Bot.Extensions;
-using MFDLabs.Grid.Bot.Interfaces;
+using Text.Extensions;
+using Grid.Bot.Extensions;
+using Grid.Bot.Interfaces;
 
-namespace MFDLabs.Grid.Bot.Commands
+namespace Grid.Bot.Commands
 {
     internal sealed class GetSetting : IStateSpecificCommandHandler
     {
         public string CommandName => "Get Bot Instance Setting";
         public string CommandDescription => $"Tries to get a setting from the " +
-                                            $"'{typeof(global::MFDLabs.Grid.Bot.Properties.Settings).FullName}' " +
+                                            $"'{typeof(global::Grid.Bot.Properties.Settings).FullName}' " +
                                             $"by name, if it is not found it will return the raw exception message.\nLayout: " +
-                                            $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}getsetting settingName.";
+                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}getsetting settingName.";
         public string[] CommandAliases => new[] { "get", "getsetting" };
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
@@ -50,7 +50,7 @@ namespace MFDLabs.Grid.Bot.Commands
 
             try
             {
-                setting = global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName!];
+                setting = global::Grid.Bot.Properties.Settings.Default[settingName!];
             }
             catch (SettingsPropertyNotFoundException ex)
             {

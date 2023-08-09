@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using HWND = System.IntPtr;
 using BOOL = System.Boolean;
 
-namespace MFDLabs.Grid.Bot.NativeWin32
+namespace Grid.Bot.NativeWin32
 {
     internal static class NativeMethods
     {

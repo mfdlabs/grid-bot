@@ -29,7 +29,7 @@ Notes from feature/grid-server-recovery-pt2:
 
 #define DEBUG_LOGGING_IN_PROD
 
-namespace MFDLabs.Grid;
+namespace Grid;
 
 using System;
 using System.Net;
@@ -59,7 +59,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// </summary>
     protected class GridServerInstancePerformanceMonitor
     {
-        private const string Category = "MFDLabs.Grid.Arbiter.Instance";
+        private const string Category = "Grid.Arbiter.Instance";
 
         /// <summary>
         /// Total SOAP invocations.

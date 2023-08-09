@@ -2,9 +2,9 @@
 
 using Discord;
 using Discord.WebSocket;
-using MFDLabs.Threading.Extensions;
+using Threading.Extensions;
 
-namespace MFDLabs.Grid.Bot.Extensions
+namespace Grid.Bot.Extensions
 {
     public static class DiscordSocketClientExtensions
     {

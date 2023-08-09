@@ -3,9 +3,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
-using MFDLabs.Text.Extensions;
+using Text.Extensions;
 
-namespace MFDLabs.Instrumentation
+namespace Instrumentation
 {
     internal class ExtendedWebClient : WebClient
     {

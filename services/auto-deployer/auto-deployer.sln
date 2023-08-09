@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.AutoDeployer", "src\Grid.AutoDeployer.csproj", "{513A0C50-86AE-4FE8-A734-139B010D4BDD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReferenceAssemblies", "ReferenceAssemblies", "{72541B93-52D9-47CE-ACCD-9279015ABBC8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{72541B93-52D9-47CE-ACCD-9279015ABBC8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics", "..\..\lib\diagnostics\diagnostics\Diagnostics.csproj", "{BDB42EC6-1EE7-46F5-B147-985D90EBDF5D}"
 EndProject

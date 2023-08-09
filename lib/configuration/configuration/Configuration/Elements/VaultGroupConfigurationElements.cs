@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace MFDLabs.Configuration.Elements.Vault
+namespace Configuration.Elements.Vault
 {
     public class VaultGroupConfigurationElements : ConfigurationElementCollection
     {
