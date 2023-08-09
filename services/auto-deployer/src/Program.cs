@@ -27,8 +27,8 @@ internal static class Program
     {
         _logger = new Logger(
             name: "grid-auto-deployer",
-            logLevel: global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel,
-            logWithColor: global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerUseColor
+            logLevel: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel,
+            logWithColor: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerUseColor
         );
 
         ConfigurationLogging.OverrideDefaultConfigurationLogging(
@@ -68,8 +68,8 @@ internal static class Program
         {
             _logger.Warning("--purge set. Purging deployment files...");
 
-            var deploymentPath = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
-            var versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
+            var deploymentPath = global::Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
+            var versioningRegSubKey = global::Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
 
             // If null, just exit and warn.
             if (deploymentPath.IsNullOrEmpty())
