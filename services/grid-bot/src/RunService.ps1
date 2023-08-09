@@ -1,2 +1,2 @@
-﻿Start-Process .\MFDLabs.Grid.Bot.exe -WindowStyle Maximized
+﻿Start-Process .\Grid.Bot.exe -WindowStyle Maximized
 exit
