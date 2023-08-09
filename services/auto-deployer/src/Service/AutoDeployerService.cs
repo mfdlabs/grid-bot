@@ -188,15 +188,15 @@ namespace MFDLabs.Grid.AutoDeployer.Service
 
         private static void Work()
         {
-            _versioningRegSubKey = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
-            _versioningRegVersionKeyName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistryVersionKeyName;
-            _deploymentPath = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
-            _githubOrgOrAccountName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubAccountOrOrganizationName;
-            _githubRepositoryName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubRepositoryName;
-            _primaryDeploymentExecutable = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentPrimaryExecutableName;
-            _pollingInterval = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.PollingInterval;
-            _skippedVersionsInvalidationInterval = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.SkippedVersionInvalidationInterval;
-            _deploymentAppName = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.DeploymentAppName?.ToLower();
+            _versioningRegSubKey = global::Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
+            _versioningRegVersionKeyName = global::Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistryVersionKeyName;
+            _deploymentPath = global::Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
+            _githubOrgOrAccountName = global::Grid.AutoDeployer.Properties.Settings.Default.GithubAccountOrOrganizationName;
+            _githubRepositoryName = global::Grid.AutoDeployer.Properties.Settings.Default.GithubRepositoryName;
+            _primaryDeploymentExecutable = global::Grid.AutoDeployer.Properties.Settings.Default.DeploymentPrimaryExecutableName;
+            _pollingInterval = global::Grid.AutoDeployer.Properties.Settings.Default.PollingInterval;
+            _skippedVersionsInvalidationInterval = global::Grid.AutoDeployer.Properties.Settings.Default.SkippedVersionInvalidationInterval;
+            _deploymentAppName = global::Grid.AutoDeployer.Properties.Settings.Default.DeploymentAppName?.ToLower();
 
 #if !DEBUG
             if (_pollingInterval < TimeSpan.FromSeconds(30))
@@ -236,8 +236,8 @@ namespace MFDLabs.Grid.AutoDeployer.Service
             if (_cachedVersion != null)
                 _logger.Information("Got version {0} from registry key HKLM:{1}.{2}", _cachedVersion, _versioningRegSubKey, _versioningRegVersionKeyName);
 
-            _githubToken = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubToken.FromEnvironmentExpression<string>();
-            var gheUrl = global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
+            _githubToken = global::Grid.AutoDeployer.Properties.Settings.Default.GithubToken.FromEnvironmentExpression<string>();
+            var gheUrl = global::Grid.AutoDeployer.Properties.Settings.Default.GithubEnterpriseUrl;
 
             if (_githubToken.IsNullOrEmpty())
                 throw new ArgumentException("The Github Token cannot be null or empty.");
@@ -818,7 +818,7 @@ SLEEP:
                 Environment.Exit(1);
             }
 
-            if (!global::MFDLabs.Grid.AutoDeployer.Properties.Settings.Default.CreateDeploymentPathIfNotExists)
+            if (!global::Grid.AutoDeployer.Properties.Settings.Default.CreateDeploymentPathIfNotExists)
             {
                 _logger.Error("Unable to determine deployment directory, it does not exist and the setting CreateDeploymentPathIfNotExists is false.");
                 Environment.Exit(1);
