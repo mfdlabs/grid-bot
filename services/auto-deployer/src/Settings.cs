@@ -1,8 +1,8 @@
-﻿#if WE_ON_THE_GRID
+﻿#if USE_VAULT_SETTINGS_PROVIDER
 using System.Configuration;
 using MFDLabs.Configuration.Providers;
 
-namespace MFDLabs.Grid.AutoDeployer.Properties
+namespace Grid.AutoDeployer.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]
     internal sealed partial class Settings

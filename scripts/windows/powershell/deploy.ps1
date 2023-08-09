@@ -14,7 +14,9 @@ param (
     [string]$githubToken = $null,
     [string]$remoteName = "origin",
     [string]$releasePrefix = $null,
-    [bool]$skipDefer = $false
+    [bool]$skipDefer = $false,
+	[bool]$useDeploymentKindInDirs = $false,
+    [string]$gitRepositoryPath = $null
 )
 
 if ($false -eq $skipDefer) {
@@ -39,6 +41,10 @@ IF ([string]::IsNullOrEmpty($root)) {
     $root = (Get-Location).Path;
 }
 
+if ([string]::IsNullOrEmpty($gitRepositoryPath)) {
+    $gitRepositoryPath = $root;
+}
+
 IF (!$root.EndsWith("\")) {
     $root = $root + "\"
 }
@@ -61,11 +67,11 @@ IF ([string]::IsNullOrEmpty($env:GITHUB_TOKEN) -and ![string]::IsNullOrEmpty($gi
 [bool] $deleteArchivesBecauseNotFinished = $true;
 
 $location = $root
-$deploymentFolder = [System.IO.Path]::Combine($location, $deploymentKind, "Deploy");
+$deploymentFolder = IF ($useDeploymentKindInDirs) { [System.IO.Path]::Combine($location, $deploymentKind, "deploy") } ELSE { [System.IO.Path]::Combine($location, "deploy") }
 $deploymentYear = [System.IO.Path]::Combine($deploymentFolder, $date.Year);
 
 try {
-    $componentDir = IF ([string]::IsNullOrEmpty($deploymentKind)) { [System.IO.Path]::Combine($location, "bin") } ELSE { [System.IO.Path]::Combine($location, $deploymentKind, "bin") }
+    $componentDir = IF ([string]::IsNullOrEmpty($deploymentKind) -or !$useDeploymentKindInDirs) { [System.IO.Path]::Combine($location, "bin") } ELSE { [System.IO.Path]::Combine($location, $deploymentKind, "bin") }
     $componentDir = IF ([string]::IsNullOrEmpty($config)) { $componentDir } ELSE { [System.IO.Path]::Combine($componentDir, $config) }
     $componentDir = IF ([string]::IsNullOrEmpty($targetFramework)) { $componentDir } ELSE { [System.IO.Path]::Combine($componentDir, $targetFramework) }
 
@@ -97,8 +103,8 @@ try {
     [String] $branch;
 
     if ($isGitIntegrated) {
-        $branch = (Get-GitBranch -from $root);
-        $hash = (Get-GitShortHash -from $root);
+        $branch = (Get-GitBranch -from $gitRepositoryPath);
+        $hash = (Get-GitShortHash -from $gitRepositoryPath);
 
         if ($null -eq $branch) {
             $branch = "master";
@@ -137,9 +143,9 @@ try {
     Write-Host "Archive Prefix: $archivePrefix" -ForegroundColor Green
 
     $sourceArchive = "$($archivePrefix)-$($config).zip"
-    $configArchive = "$($archivePrefix)-$($config)Config.zip"
+    $configArchive = "$($archivePrefix)-$($config)-config.zip"
     $existingSourceArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config).zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
-    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)Config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+    $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)-config.zip", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
     & Write-Host "Deploying source archive $componentDir\*.pdb,*.dll,*.xml to $($sourceArchive)" -ForegroundColor Green
     & Write-Host "Deploying config archive $componentDir\*.config,appsettings.json,appsettings.*.json to $($configArchive)" -ForegroundColor Green
@@ -201,7 +207,7 @@ try {
             [System.IO.File]::Delete($configArchive)
         }
         else {
-            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)Config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
+            $existingConfigArchive = [System.IO.Directory]::GetFiles($deploymentYear, "*_$($targetFramework)-$($config)-config.mfdlabs-config-archive", [System.IO.SearchOption]::TopDirectoryOnly)[-1];
 
             if (![string]::IsNullOrEmpty($existingConfigArchive)) {
                 $fileName = Split-Path $existingConfigArchive -Leaf
@@ -250,7 +256,7 @@ try {
         $newConfigArchive = $configArchive;
 
         if ($replaceExtensions) {
-            $newConfigArchive = "$($archivePrefixName)-$($config)Config.mfdlabs-config-archive"
+            $newConfigArchive = "$($archivePrefixName)-$($config)-config.mfdlabs-config-archive"
             & Write-Host "Renaming $($configArchive) to $($newConfigArchive)" -ForegroundColor Green
             & Rename-Item -Path $configArchive -NewName $newConfigArchive
         }
@@ -289,10 +295,10 @@ powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted 
         $unpackerPs1ScriptContents = $defaultPs1ScriptToExtract.Replace("{{SOURCE_NAME}}", $outputDir).Replace("{{SOURCE_ARCHIVE}}", $outSourceArchive);
 
         if ($deployingNewConfig) {
-            [string] $outConfigArchive = "$($outputDir)Config.zip";
+            [string] $outConfigArchive = "$($outputDir)-config.zip";
 
             if ($replaceExtensions) {
-                $outConfigArchive = "$($outputDir)Config.mfdlabs-config-archive";
+                $outConfigArchive = "$($outputDir)-config.mfdlabs-config-archive";
             }
 
             $unpackerPs1ScriptContents += "`n7z x -y ""-o$outputDir"" ""$outConfigArchive"""
@@ -300,8 +306,8 @@ powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted 
 
         $unpackerPs1ScriptContents += "`nexit;";
 
-        $ps1Name = "$($outputDir).Unpacker.ps1";
-        $batName = "$($outputDir).Unpacker.bat";
+        $ps1Name = "$($outputDir).unpacker.ps1";
+        $batName = "$($outputDir).unpacker.bat";
 
         # Write the unpacker script
         [System.IO.File]::WriteAllText("$($deploymentYear)\$($ps1Name)", $unpackerPs1ScriptContents);
@@ -331,9 +337,10 @@ powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted 
         }
 
         try {
-            Write-GitHubRelease -from $root -tag $versioningTag -name $name -branch $(Get-GitBranch -from $root) -remoteName $remoteName -files $deploymentFiles.ToArray() -preRelease $preRelease -allowPreReleaseGridDeployment $allowPreReleaseGridDeployment
+            Write-GitHubRelease -from $root -tag $versioningTag -name $name -branch $(Get-GitBranch -from $gitRepositoryPath) -remoteName $remoteName -files $deploymentFiles.ToArray() -preRelease $preRelease -allowPreReleaseGridDeployment $allowPreReleaseGridDeployment -gitRepositoryPath $gitRepositoryPath
         }
         catch {
+            Write-Host "Failed to write new release, error: $_" -ForegroundColor Red
         }
     }
 }

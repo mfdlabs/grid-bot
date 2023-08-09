@@ -6,6 +6,7 @@
 
     <LangVersion>10</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Configurations>debug;release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

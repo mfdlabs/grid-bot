@@ -1,8 +1,8 @@
 # Information on deployments:
-# Release and Debug refer to vanilla builds.
-# ReleaseDeploy and DebugDeploy refer to vanilla builds, but we are creating a component archive for the application.
-# ReleaseGrid and DebugGrid refer to builds with Hashicorp Vault configuration providers.
-# ReleaseGridDeploy and DebugGridDeploy refer to builds with Hashicorp Vault configuration providers, but we are creating a component archive for the application.
+# release and debug refer to vanilla builds.
+# release-deploy and debug-deploy refer to vanilla builds, but we are creating a component archive for the application.
+# release-vault and debug-vault refer to builds with Hashicorp Vault configuration providers.
+# release-vault-deploy and debug-vault-deploy refer to builds with Hashicorp Vault configuration providers, but we are creating a component archive for the application.
 
 param (
     [string] $configurationName,
@@ -22,10 +22,10 @@ param (
 # Write-Host "$($MyInvocation.MyCommand.Name) $boundArgsStr" -ForegroundColor Green
 Write-Host "Post build invoked with Configuration '$configurationName' at Target '$targetName'" -ForegroundColor Green;
 
-$isDebug = $configurationName.StartsWith("Debug");
-$isVaultBacked = $configurationName.Contains("Grid");
-$isDeployment = $configurationName.Contains("Deploy");
-$appSettingsConfiguration = IF ($isDebug) { "Debug" } else { "Release" };
+$isDebug = $configurationName.StartsWith("debug");
+$isVaultBacked = $configurationName.Contains("-vault");
+$isDeployment = $configurationName.Contains("-deploy");
+$appSettingsConfiguration = IF ($isDebug) { "debug" } else { "release" };
 
 if ($isVaultBacked) {
 	Write-Host "Build is vault-backed, appending vault configuration postfix." -ForegroundColor Green;
@@ -70,7 +70,7 @@ IF (Test-Path $luaScriptsDir) {
 Write-Host "Finished pre-cleanup, should deploy: $(IF ($isDeployment) { "true" } ELSE { "false" })" -ForegroundColor Green;
 
 IF ($isDeployment) {
-    $deploymentConfiguration = IF ($isDebug) { "Debug" } ELSE { "Release" };
+    $deploymentConfiguration = IF ($isDebug) { "debug" } ELSE { "release" };
 
     Write-Host "Deployment configuration: $deploymentConfiguration" -ForegroundColor Green;
 
@@ -86,12 +86,12 @@ IF ($isDeployment) {
 
     # Call the deploy script
     Write-Host "Deploying..." -ForegroundColor Green;
-    $scriptName = IF ($deployScriptOverride) { $deployScriptOverride } ELSE { Join-Path -Path $solutionDir -ChildPath "scripts\windows\powershell\deploy.ps1" };
+    $scriptName = IF ($deployScriptOverride) { $deployScriptOverride } ELSE { Join-Path -Path $solutionDir -ChildPath "..\..\scripts\windows\powershell\deploy.ps1" };
     if (!(Get-Item -Path $scriptName)) {
         Write-Host "Deploy script $scriptName does not exist" -ForegroundColor Red;
         Exit 1;
     }
 
     # Invoke the deploy script
-    & "$($scriptName)" -root $solutionDir -config $deploymentConfiguration -targetFramework $targetFramework -deploymentKind $projectName -checkForExistingConfigArchive $false -writeNewRelease $writeNewGitHubRelease -preRelease $isDebug -releasePrefix $releasePrefix
+    & "$($scriptName)" -root "$solutionDir/src" -config $deploymentConfiguration -targetFramework $targetFramework -deploymentKind $projectName -checkForExistingConfigArchive $false -writeNewRelease $writeNewGitHubRelease -preRelease $isDebug -releasePrefix $releasePrefix -gitRepositoryPath "$solutionDir/../.."
 }

@@ -6,7 +6,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
-    <Configurations>Debug;Release;DebugDeploy;ReleaseDeploy;DebugGrid;ReleaseGrid;DebugGridDeploy;ReleaseGridDeploy</Configurations>
+    <Configurations>Debug;Release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
     <OutputType>Exe</OutputType>
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
@@ -15,22 +15,22 @@
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDeploy' ">
-    <OutputPath>bin\Release\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-deploy' ">
+    <OutputPath>bin\release\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugDeploy' ">
-    <OutputPath>bin\Debug\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-deploy' ">
+    <OutputPath>bin\debug\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' or '$(Configuration)' == 'ReleaseGridDeploy' ">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' or '$(Configuration)' == 'release-vault-deploy' ">
+    <OutputPath>bin\release\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' or '$(Configuration)' == 'DebugGridDeploy' ">
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' or '$(Configuration)' == 'debug-vault-deploy' ">
+    <OutputPath>bin\debug\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">

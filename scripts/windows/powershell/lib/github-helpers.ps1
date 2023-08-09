@@ -1,4 +1,4 @@
-function Write-GitHubRelease([string] $from, [string] $tag, [string] $name, [string] $branch, [string] $remoteName, [string[]] $files, [bool] $preRelease = $false, [bool] $allowPreReleaseGridDeployment = $false, [string] $githubBaseUrl = "api.github.com") {
+function Write-GitHubRelease([string] $from, [string] $tag, [string] $name, [string] $branch, [string] $remoteName, [string[]] $files, [bool] $preRelease = $false, [bool] $allowPreReleaseGridDeployment = $false, [string] $githubBaseUrl = "api.github.com", [string] $gitRepositoryPath = $null) {
     # If the environment variable GITHUB_TOKEN is not set, then we can't publish, just warn and return
     if ($null -eq $env:GITHUB_TOKEN) {
         Write-Host "GITHUB_TOKEN environment variable is not set, skipping publish" -ForegroundColor Yellow
@@ -9,7 +9,11 @@ function Write-GitHubRelease([string] $from, [string] $tag, [string] $name, [str
         throw "`$from is null or empty";
     }
 
-    if ($false -eq $(Test-GitRepository($from))) {
+    if ([string]::IsNullOrEmpty($gitRepositoryPath)) {
+        $gitRepositoryPath = $from;
+    }
+
+    if ($false -eq $(Test-GitRepository($gitRepositoryPath))) {
         return $null;
     }
 
@@ -30,8 +34,8 @@ function Write-GitHubRelease([string] $from, [string] $tag, [string] $name, [str
     }
 
     # Get the remote info, like owner and repo name
-    $owner = Get-GitRepositoryOwner -from $from -remoteName $remoteName;
-    $repoName = Get-GitRepositoryName -from $from -remoteName $remoteName;
+    $owner = Get-GitRepositoryOwner -from $gitRepositoryPath -remoteName $remoteName;
+    $repoName = Get-GitRepositoryName -from $gitRepositoryPath -remoteName $remoteName;
 
     Write-Host "Publishing release for $tag to $owner/$repoName" -ForegroundColor Green
 

@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\configuration\configuration\Configuration.csproj" />
-    <ProjectReference Include="..\compute-cloud\Grid.ComputeCloud.csproj" />
-    <ProjectReference Include="..\health-check-client\Grid.HealthCheck.Client.csproj" />
-    <ProjectReference Include="..\port-management\Grid.PortManagement.csproj" />
-    <ProjectReference Include="..\process-management\Grid.ProcessManagement.csproj" />
-    <ProjectReference Include="..\shared\Grid.Shared.csproj" />
-    <ProjectReference Include="..\web-server\Grid.WebServer.csproj" />
-    <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
+    <ProjectReference Include="../../configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="../compute-cloud/Grid.ComputeCloud.csproj" />
+    <ProjectReference Include="../health-check-client/Grid.HealthCheck.Client.csproj" />
+    <ProjectReference Include="../port-management/Grid.PortManagement.csproj" />
+    <ProjectReference Include="../process-management/Grid.ProcessManagement.csproj" />
+    <ProjectReference Include="../shared/Grid.Shared.csproj" />
+    <ProjectReference Include="../web-server/Grid.WebServer.csproj" />
+    <ProjectReference Include="../../instrumentation/instrumentation/Instrumentation.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
   </ItemGroup>
 
@@ -35,12 +35,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
+    <Compile Update="Properties/Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Update="Properties\Settings.Designer.cs">
+    <Compile Update="Properties/Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -48,14 +48,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties/Resources.resx">
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Properties\Settings.settings">
+    <None Update="Properties/Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>

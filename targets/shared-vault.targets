@@ -2,17 +2,17 @@
   <Import Project="./shared.targets" />
 
   <PropertyGroup>
-    <Configurations>Debug;Release;DebugGrid;ReleaseGrid</Configurations>
+    <Configurations>debug;release;debug-vault;release-vault</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseGrid' ">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' ">
+    <OutputPath>bin\release\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'DebugGrid' ">
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);WE_ON_THE_GRID</DefineConstants>
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' ">
+    <OutputPath>bin\debug\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
   
 </Project>

@@ -2,7 +2,7 @@
 
 // WE_LOVE_THE_GRID_CONFIG -> Guild Based configuration, experimental, only debug builds have it
 
-#if WE_ON_THE_GRID && WE_LOVE_THE_GRID_CONFIG
+#if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
 using MFDLabs.Discord.Configuration;
 #endif
 
@@ -10,7 +10,7 @@ namespace MFDLabs.Grid.Bot.Properties
 {
     public static class SettingsProvider
     {
-#if WE_ON_THE_GRID && WE_LOVE_THE_GRID_CONFIG
+#if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
         private const string SettingsGroupName = "MFDLabs.Grid.Bot.Properties.Settings";
 
         static SettingsProvider()
@@ -24,7 +24,7 @@ namespace MFDLabs.Grid.Bot.Properties
 
         public static T GetSetting<T>(this SocketMessage message, string settingName)
         {
-#if WE_ON_THE_GRID && WE_LOVE_THE_GRID_CONFIG
+#if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
             return message.GetSetting<T>(SettingsGroupName, settingName);
 #else
             return (T)global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName];
@@ -33,7 +33,7 @@ namespace MFDLabs.Grid.Bot.Properties
 
         public static void WriteSetting<T>(this SocketMessage message, string settingName, T value)
         {
-#if WE_ON_THE_GRID && WE_LOVE_THE_GRID_CONFIG
+#if USE_VAULT_SETTINGS_PROVIDER && WE_LOVE_THE_GRID_CONFIG
             message.WriteSetting<T>(SettingsGroupName, settingName, value);
 #else
             global::MFDLabs.Grid.Bot.Properties.Settings.Default[settingName] = value;

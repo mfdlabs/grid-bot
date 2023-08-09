@@ -14,7 +14,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public string CommandName => "Update Blacklisted Users List";
         public string CommandDescription => "Updates the blacklisted users list. " +
                                             "This is not persistent, unless this instance has either of the " +
-                                            "following enviroment variables defined: WE_ON_THE_GRID, WE_ON_THE_RUN, " +
+                                            "following enviroment variables defined: USE_VAULT_SETTINGS_PROVIDER, WE_ON_THE_RUN, " +
                                             "WE_ARE_AN_ACTOR\nLayout: " +
                                             $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateblacklistedusers " +
                                             $"add/remove userMention|userID";

@@ -1,9 +1,9 @@
-﻿#if WE_ON_THE_GRID || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
+﻿#if USE_VAULT_SETTINGS_PROVIDER || WE_ON_THE_RUN || WE_ARE_AN_ACTOR
 using System.Configuration;
 using MFDLabs.Configuration.Providers;
 #endif
 
-#if WE_ON_THE_GRID
+#if USE_VAULT_SETTINGS_PROVIDER
 namespace MFDLabs.Grid.Bot.Properties
 {
     [SettingsProvider(typeof(VaultProvider))]

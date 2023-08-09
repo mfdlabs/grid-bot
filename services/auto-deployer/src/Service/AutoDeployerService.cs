@@ -59,7 +59,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
         }
 
         // language=regex
-        private const string DeploymentIdRegex = @"(?<app_prefix>(?<app_prefix_name>[a-zA-Z0-9\-_\.]{1,500})_)?(?<version_string>(?<date>(?<year>\d{4,})\.(?<month>\d{2}).(?<day>\d{2}))-(?<time>(?<hour>\d{2}).(?<minute>\d{2}).(?<second>\d{2}))_(?<branch>[a-zA-Z0-9\-_]{1,255})_(?<commit_sha>[a-f0-9]{7}))_?(?<dotnet_configuration>(?<dotnet_version>(?i)(?<dotnet_brand>net(?i)(?<dotnet_extended_brand>standard|coreapp)?)(?<dotnet_version_id>(?<dotnet_version_id_right>[0-9]{1,3}\.?){1,2}))-(?i)(?<dotnet_build_configuration>release|debug)(?i)(?<config_archive_extended_text>config(?i)(uration)?)?)?";
+        private const string DeploymentIdRegex = @"(?<app_prefix>(?<app_prefix_name>[a-zA-Z0-9\-_\.]{1,500})_)?(?<version_string>(?<date>(?<year>\d{4,})\.(?<month>\d{2}).(?<day>\d{2}))-(?<time>(?<hour>\d{2}).(?<minute>\d{2}).(?<second>\d{2}))_(?<branch>[a-zA-Z0-9\-_]{1,255})_(?<commit_sha>[a-f0-9]{7}))_?(?<dotnet_configuration>(?<dotnet_version>(?i)(?<dotnet_brand>net(?i)(?<dotnet_extended_brand>standard|coreapp)?)(?<dotnet_version_id>(?<dotnet_version_id_right>[0-9]{1,3}\.?){1,2}))-(?i)(?<dotnet_build_configuration>release|debug)(?i)(?<config_archive_extended_text>-config(?i)(uration)?)?)?";
 
         // language=regex
         /// <summary>
@@ -325,7 +325,7 @@ namespace MFDLabs.Grid.AutoDeployer.Service
                             goto SLEEP;
                         }
 
-                        var regex = $@"{r.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
+                        var regex = $@"{r.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?(?i)(\.mfdlabs-(config-)?archive|Unpacker\.(ps1|bat))?";
 
                         foreach (var a in r.Assets)
                         {
@@ -508,7 +508,7 @@ SLEEP:
                 (
                     from f in release.Assets
                     where f.Name.IsMatch(
-                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(config(?i)(uration)?)?)?\.Unpacker\.ps1"
+                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?\.Unpacker\.ps1"
                     )
                     select f
                 ).FirstOrDefault()?.Name!

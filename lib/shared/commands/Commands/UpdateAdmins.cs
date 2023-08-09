@@ -15,7 +15,7 @@ namespace MFDLabs.Grid.Bot.Commands
         public string CommandDescription => "Updates the administrator list." +
                                             "This is not persistent, unless this instance has either of" +
                                             "the following enviroment variables defined:" +
-                                            "WE_ON_THE_GRID, WE_ON_THE_RUN, WE_ARE_AN_ACTOR\nLayout:" +
+                                            "USE_VAULT_SETTINGS_PROVIDER, WE_ON_THE_RUN, WE_ARE_AN_ACTOR\nLayout:" +
                                             $"{MFDLabs.Grid.Bot.Properties.Settings.Default.Prefix}updateadmins" +
                                             "add/remove userMention|userID";
         public string[] CommandAliases => new[] { "uadmin", "updateadmins" };

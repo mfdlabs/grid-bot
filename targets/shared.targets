@@ -7,5 +7,7 @@
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
     <RootNamespace>MFDLabs.Grid.Bot</RootNamespace>
+	
+	<Configurations>debug;release</Configurations>
   </PropertyGroup>
 </Project>

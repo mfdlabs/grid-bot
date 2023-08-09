@@ -5,5 +5,7 @@
     <Deterministic>False</Deterministic>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <LangVersion>10</LangVersion>
+	
+	<Configurations>debug;release</Configurations>
   </PropertyGroup>
 </Project>
