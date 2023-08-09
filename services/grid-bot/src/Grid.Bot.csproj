@@ -91,10 +91,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="runservice.bat">
+    <None Update="run-service.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>run-service.ps1</DependentUpon>
     </None>
-    <None Update="RunService.ps1">
+    <None Update="run-service.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
