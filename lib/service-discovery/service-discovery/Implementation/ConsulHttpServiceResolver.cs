@@ -130,6 +130,8 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
 
         int failures = 0;
 
+        _Logger.Debug("ConsulHttpServiceResolver: RefreshInterval = {0}", _Settings.ConsulRefreshInterval);
+
         while (true)
         {
             _CancellationTokenSource = new();
@@ -169,8 +171,10 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                 await Task.Delay(DetermineBackoffDelayTime(failures, _Settings.ConsulBackoffBase, _Settings.MaximumConsulBackoff)).ConfigureAwait(false);
                 failures++;
             }
-
-            Thread.Sleep(_Settings.ConsulRefreshInterval);
+            finally
+            {
+                Thread.Sleep(_Settings.ConsulRefreshInterval);
+            }
         }
     }
 
