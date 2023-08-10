@@ -3,6 +3,10 @@
   <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
+    <Description>Library containg extensions to aid in interacting with Discord.Net</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 

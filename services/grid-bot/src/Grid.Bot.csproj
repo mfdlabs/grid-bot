@@ -1,83 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../targets/service.targets" />
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <LangVersion>10</LangVersion>
-    <Configurations>Debug;Release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
-    <OutputType>Exe</OutputType>
-    <ApplicationIcon>app.ico</ApplicationIcon>
-  </PropertyGroup>
+    <Description>Primary executable for the MFDLABS grid-bot.</Description>
+    <RepositoryUrl>https://github.vmminfra.dev/mfdlabs/grid-bot</RepositoryUrl>
 
-  <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'release-deploy' ">
-    <OutputPath>bin\release\</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'debug-deploy' ">
-    <OutputPath>bin\debug\</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' or '$(Configuration)' == 'release-vault-deploy' ">
-    <OutputPath>bin\release\</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' or '$(Configuration)' == 'debug-vault-deploy' ">
-    <OutputPath>bin\debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="App.config">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="App.debug.config">
-      <DependentUpon>App.config</DependentUpon>
-    </None>
-    <None Update="App.debug-vault.config">
-      <DependentUpon>App.Debug.config</DependentUpon>
-    </None>
-    <None Update="App.release.config">
-      <DependentUpon>App.config</DependentUpon>
-    </None>
-    <None Update="App.release-vault.config">
-      <DependentUpon>App.Release.config</DependentUpon>
-    </None>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Deploy\**" />
-    <EmbeddedResource Remove="Deploy\**" />
-    <None Remove="Deploy\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="app.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\lib\grid\arbiter\Grid.Arbiter.csproj" />
@@ -89,19 +18,5 @@
     <ProjectReference Include="..\..\..\lib\shared\settings\Shared.Settings.csproj" />
     <ProjectReference Include="..\..\..\lib\shared\utility\Shared.Utility.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="run-service.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <DependentUpon>run-service.ps1</DependentUpon>
-    </None>
-    <None Update="run-service.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)../../scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false" />
-  </Target>
 
 </Project>

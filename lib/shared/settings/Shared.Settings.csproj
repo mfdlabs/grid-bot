@@ -2,6 +2,10 @@
 
   <Import Project="../../../targets/shared-vault.targets" />
 
+  <PropertyGroup>
+    <Description>Shared library containing settings used by the grid-bot</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="3.11.0" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
@@ -12,11 +16,7 @@
     <ProjectReference Include="..\..\configuration\discord-configuration\Configuration.Discord.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETFramework' ">
+  <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 

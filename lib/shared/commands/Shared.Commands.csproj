@@ -3,10 +3,14 @@
   <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
+    <Description>Shared library for commands used by grid-bot registered dynamically.</Description>
+  </PropertyGroup>
+  
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+  <ItemGroup>
     <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 

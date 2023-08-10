@@ -1,12 +1,11 @@
 <!-- This one is special because it is for both Standard and Framework. Only to be used if your assembly has windows specific flags it needs. -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="./copyright.targets"/>
+
   <PropertyGroup>
-    <TargetFrameworks>net48;netstandard2.0</TargetFrameworks>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
     <LangVersion>10</LangVersion>
-	
-	<Configurations>debug;release</Configurations>
+
+    <Configurations>debug;release</Configurations>
   </PropertyGroup>
 </Project>

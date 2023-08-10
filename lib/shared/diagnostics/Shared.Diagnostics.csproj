@@ -2,6 +2,10 @@
 
   <Import Project="../../../targets/shared.targets" />
 
+  <PropertyGroup>
+    <Description>Shared performance monitors used by grid-bot.</Description>
+  </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\diagnostics\diagnostics\Diagnostics.csproj" />
     <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />

@@ -3,6 +3,10 @@
   <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
+    <Description>Shared library containing a registry that stores the current bot.</Description>
+  </PropertyGroup>
+  
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 

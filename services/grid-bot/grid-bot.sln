@@ -83,10 +83,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Arbiter", "..\..\lib\g
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Targets", "Targets", "{C5B21073-1767-45F8-B8A2-EF5A14F5CEC5}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\targets\copyright.targets = ..\..\targets\copyright.targets
 		..\..\targets\lib-both.targets = ..\..\targets\lib-both.targets
 		..\..\targets\lib-framework.targets = ..\..\targets\lib-framework.targets
 		..\..\targets\lib-standard.targets = ..\..\targets\lib-standard.targets
 		..\..\targets\lib-vault-both.targets = ..\..\targets\lib-vault-both.targets
+		..\..\targets\service.targets = ..\..\targets\service.targets
 		..\..\targets\shared-vault.targets = ..\..\targets\shared-vault.targets
 		..\..\targets\shared.targets = ..\..\targets\shared.targets
 	EndProjectSection

@@ -2,6 +2,10 @@
 
   <Import Project="../../../targets/lib-standard.targets" />
 
+  <PropertyGroup>
+    <Description>Library used for IP address parsing and more!</Description>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>

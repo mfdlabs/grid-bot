@@ -2,6 +2,10 @@
 
   <Import Project="../../../targets/shared.targets" />
 
+  <PropertyGroup>
+    <Description>Library for registering objects that listen for character input from the console and execute a specific action.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />

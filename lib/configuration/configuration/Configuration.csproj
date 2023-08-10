@@ -2,6 +2,10 @@
 
   <Import Project="../../../targets/lib-standard.targets" />
 
+  <PropertyGroup>
+    <Description>Providers and helpers to fetch remote configurations for applications.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Consul" Version="1.6.10.9" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />

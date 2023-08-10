@@ -1,31 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../targets/service.targets" />
 
   <PropertyGroup>
-    <TargetFramework>net481</TargetFramework>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <LangVersion>10</LangVersion>
-    <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'release-deploy' ">
-    <OutputPath>bin/release/</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'debug-deploy' ">
-    <OutputPath>bin/debug/</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' or '$(Configuration)' == 'release-vault-deploy' ">
-    <OutputPath>bin/release/</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' or '$(Configuration)' == 'debug-vault-deploy' ">
-    <OutputPath>bin/debug/</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+    <Description>A service that polls Github Cloud or Github Enterprise for new releases on a repository.</Description>
+	
+	<ExtraPostBuildArguments>-releasePrefix auto-deployer</ExtraPostBuildArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -53,46 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="App.config">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="App.debug.config">
-      <DependentUpon>App.config</DependentUpon>
-    </None>
-    <None Update="App.debug-vault.config">
-      <DependentUpon>App.debug.config</DependentUpon>
-    </None>
-    <None Update="App.release.config">
-      <DependentUpon>App.config</DependentUpon>
-    </None>
-    <None Update="App.release-vault.config">
-      <DependentUpon>App.release.config</DependentUpon>
-    </None>
     <None Update="Properties/Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="deploy\**" />
-    <Content Remove="deploy/**" />
-    <EmbeddedResource Remove="deploy\**" />
-    <None Remove="deploy\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="run-service.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <DependentUpon>run-service.ps1</DependentUpon>
-    </None>
-    <None Update="run-service.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)../../scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false -writeNewGitHubRelease $true -releasePrefix $(TargetName)" />
-  </Target>
 
 </Project>

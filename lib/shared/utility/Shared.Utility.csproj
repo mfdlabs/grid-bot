@@ -3,6 +3,10 @@
   <Import Project="../../../targets/shared.targets" />
 
   <PropertyGroup>
+    <Description>Shared utility classes used by the grid-bot</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
@@ -27,7 +31,7 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+  <ItemGroup>
     <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 

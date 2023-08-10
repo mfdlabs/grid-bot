@@ -2,7 +2,7 @@
   <Import Project="./shared.targets" />
 
   <PropertyGroup>
-    <Configurations>debug;release;debug-vault;release-vault</Configurations>
+    <Configurations>$(Configurations);debug-vault;release-vault</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' ">
