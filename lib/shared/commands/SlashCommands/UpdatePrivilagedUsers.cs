@@ -11,10 +11,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class UpdatePrivilagedUsers : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Adds or removes a user to/from the privilaged user list.";
-        public string CommandAlias => "privilaged_users";
+        public string Name => "privilaged_users";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

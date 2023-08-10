@@ -15,10 +15,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class Hostname : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Get Machine Host Name";
-        public string CommandAlias => "hostname";
+        public string Name => "hostname";
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => null;
 
         public async Task Invoke(SocketSlashCommand command)

@@ -1,5 +1,6 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS && DISCORD_SHARDING_ENABLED
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -18,6 +19,14 @@ namespace Grid.Bot.Extensions
             RequestOptions options = null
         ) 
             => client.GetShard(0).CreateGlobalApplicationCommandAsync(properties, options).Sync();
+
+        public static IReadOnlyCollection<SocketApplicationCommand> GetGlobalApplicationCommands(
+            this DiscordShardedClient client,
+            bool withLocalizations = false, 
+            string locale = null,
+            RequestOptions options = null
+        )
+            => client.GetShard(0).GetGlobalApplicationCommandsAsync(withLocalizations, locale, options).Sync();
 
         public static ValueTask<SocketApplicationCommand> GetGlobalApplicationCommandAsync(this DiscordShardedClient client, ulong id, RequestOptions requestOptions = null)
             => client.GetShard(0).GetGlobalApplicationCommandAsync(id, requestOptions);

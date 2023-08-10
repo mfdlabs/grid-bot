@@ -12,10 +12,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class CommandManagement : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Enables or disables a slash command";
-        public string CommandAlias => "command";
+        public string Name => "command";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

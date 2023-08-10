@@ -13,10 +13,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class DeploymentId : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Get Deployment ID";
-        public string CommandAlias => "deployment";
+        public string Name => "deployment";
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => null;
 
         public async Task Invoke(SocketSlashCommand command)

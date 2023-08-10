@@ -20,7 +20,6 @@ namespace Grid.Bot.SlashCommands
         public bool Internal => false;
         // Set this if we want legacy help messages
         public bool IsEnabled { get; set; } = false;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             // TODO: Make this list all the current command names so we can have it as a range operator

@@ -11,10 +11,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class UpdateAdmins : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Adds or removes a user to/from the admins user list.";
-        public string CommandAlias => "admins";
+        public string Name => "admins";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

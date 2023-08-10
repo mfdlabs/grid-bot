@@ -11,10 +11,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class UpdateBlacklist : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Adds or removes a user to/from the blacklist.";
-        public string CommandAlias => "blacklist";
+        public string Name => "blacklist";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

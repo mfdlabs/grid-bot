@@ -156,7 +156,7 @@ namespace Grid.Bot.Registries
 
             var builder = new EmbedBuilder
             {
-                Title = $"{command.CommandAlias} Documentation",
+                Title = $"{command.Name} Documentation",
                 Color = isDisabled ? new Color(0xff, 0x00, 0x00) : new Color(0x00, 0xff, 0x00)
             };
             builder.AddField(
@@ -400,14 +400,7 @@ namespace Grid.Bot.Registries
             {
                 try
                 {
-                    SocketApplicationCommand cmdInternal = null;
-
-                    if (cmd.Channel is SocketGuildChannel guildChannel)
-                    {
-                        cmdInternal = await guildChannel.Guild.GetApplicationCommandAsync(cmd.CommandId);
-                    }
-
-                    cmdInternal ??= await BotRegistry.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
+                    var cmdInternal = await BotRegistry.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
 
                     await cmdInternal.DeleteAsync();
                 }
@@ -791,14 +784,14 @@ namespace Grid.Bot.Registries
         private static IStateSpecificSlashCommandHandler GetSlashCommandByCommandAlias(string alias)
         {
             lock (StateSpecificSlashCommandHandlers)
-                return (from command in StateSpecificSlashCommandHandlers where command.CommandAlias == alias select command).FirstOrDefault();
+                return (from command in StateSpecificSlashCommandHandlers where command.Name == alias select command).FirstOrDefault();
         }
 
         private static SlashCommandCircuitBreakerWrapper GetSlashCommandWrapperByCommand(IStateSpecificSlashCommandHandler command)
         {
             lock (SlashCommandCircuitBreakerWrappers)
                 return (from wrapper in SlashCommandCircuitBreakerWrappers
-                        where wrapper.Command.CommandAlias == command.CommandAlias
+                        where wrapper.Command.Name == command.Name
                         select wrapper).FirstOrDefault();
         }
 
@@ -820,6 +813,8 @@ namespace Grid.Bot.Registries
                     var defaultCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(defaultCommandNamespace);
 
 #if WE_LOVE_EM_SLASH_COMMANDS
+
+                    var registeredCommands = BotRegistry.Client.GetGlobalApplicationCommands();
 
                     // Queue up a thread here because slash command
                     // registration can block the main thread
@@ -850,7 +845,7 @@ namespace Grid.Bot.Registries
 
                                         Logger.Singleton.Information("Parsing slash command '{0}'.", type.FullName);
 
-                                        if (trueCommandHandler.CommandAlias.IsNullOrEmpty())
+                                        if (trueCommandHandler.Name.IsNullOrEmpty())
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
                                             Logger.Singleton.Error(
@@ -862,13 +857,13 @@ namespace Grid.Bot.Registries
                                             continue;
                                         }
 
-                                        if (GetSlashCommandByCommandAlias(trueCommandHandler.CommandAlias) != null)
+                                        if (GetSlashCommandByCommandAlias(trueCommandHandler.Name) != null)
                                         {
                                             InstrumentationPerfmon.StateSpecificCommandAliasesThatAlreadyExisted.Increment();
                                             Logger.Singleton.Error(
                                                 "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
                                                 type.FullName,
-                                                trueCommandHandler.CommandAlias
+                                                trueCommandHandler.Name
                                             );
                                             continue;
                                         }
@@ -887,37 +882,34 @@ namespace Grid.Bot.Registries
 
                                         var builder = new SlashCommandBuilder();
 
-                                        builder.WithName(trueCommandHandler.CommandAlias);
+                                        builder.WithName(trueCommandHandler.Name);
                                         builder.WithDescription(trueCommandHandler.CommandDescription);
                                         builder.WithDefaultPermission(true); // command is enabled by default
 
                                         if (trueCommandHandler.Options != null)
                                             builder.AddOptions(trueCommandHandler.Options);
 
-                                        if (trueCommandHandler.GuildId != null)
-                                        {
-                                            var guild = BotRegistry.Client.GetGuild(trueCommandHandler.GuildId.Value);
-
-                                            if (guild == null)
-                                            {
-                                                Logger.Singleton.Trace(
-                                                    "Exception when reading '{0}': Unknown Guild '{1}'",
-                                                    type.FullName,
-                                                    trueCommandHandler.GuildId
-                                                );
-
-                                                continue;
-                                            }
-
-                                            guild.CreateApplicationCommand(builder.Build());
-                                        }
-                                        else
-                                        {
-                                            BotRegistry.Client.CreateGlobalApplicationCommand(builder.Build());
-                                        }
-
                                         StateSpecificSlashCommandHandlers.Add(trueCommandHandler);
                                         SlashCommandCircuitBreakerWrappers.Add(new SlashCommandCircuitBreakerWrapper(trueCommandHandler));
+
+                                        var cmd = builder.Build();
+                                        var existingCommand = registeredCommands.Where(cmd => cmd.Name == trueCommandHandler.Name).FirstOrDefault();
+
+                                        if (existingCommand != null)
+                                        {
+                                            // We check to see if everything is the same
+                                            if (existingCommand.Description != trueCommandHandler.CommandDescription) goto REGISTER;
+                                            if (cmd.Options.IsSpecified && !CheckOptionsIdentical(cmd.Options.Value, existingCommand.Options)) goto REGISTER;
+
+                                            Logger.Singleton.Warning("Slash command '{0}' exists and is identical, not re-registering!", trueCommandHandler.Name);
+
+                                            continue;
+                                        }
+
+REGISTER:
+                                        Logger.Singleton.Information("Registered slash command '{0}' via Discord API", trueCommandHandler.Name);
+
+                                        BotRegistry.Client.CreateGlobalApplicationCommand(builder.Build());
                                     }
                                     else
                                     {
@@ -928,6 +920,17 @@ namespace Grid.Bot.Registries
                                 {
                                     InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
                                     Logger.Singleton.Error(ex);
+                                }
+                            }
+
+                            var unregisteredCommands = registeredCommands.Where(cmd => !StateSpecificSlashCommandHandlers.Any(ssCmd => ssCmd.Name == cmd.Name));
+                            if (unregisteredCommands.Any())
+                            {
+                                foreach (var cmd in unregisteredCommands)
+                                {
+                                    Logger.Singleton.Debug("Slash command '{0}' no longer exists, deleting!", cmd.Name);
+
+                                    cmd.DeleteAsync();
                                 }
                             }
                         }
@@ -1025,6 +1028,56 @@ namespace Grid.Bot.Registries
                 }
             }
         }
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+        private static bool CheckOptionsIdentical(List<ApplicationCommandOptionProperties> options, IReadOnlyCollection<SocketApplicationCommandOption> existingOptions)
+        {
+            foreach (var option in options)
+            {
+                var existingOption = existingOptions.Where(op => op.Name == option.Name).FirstOrDefault();
+                if (existingOption == null) return false;
+
+                if (option.Options.Any()) return CheckOptionsIdentical(option.Options, existingOption.Options);
+
+                if (option.ChannelTypes != null)
+                    if (!option.ChannelTypes.Any(ct => existingOption.ChannelTypes.Contains(ct))) return false;
+                else
+                    if (existingOption.ChannelTypes.Any()) return false;
+
+                if (!CheckChoicesIdentical(option.Choices, existingOption.Choices)) return false;
+
+                if (option.Description != existingOption.Description) return false;
+                if (option.IsAutocomplete != existingOption.IsAutocomplete.OrDefault(false)) return false;
+                if (option.IsDefault.OrDefault(false) != existingOption.IsDefault.OrDefault(false)) return false;
+                if (option.IsRequired.OrDefault(false) != existingOption.IsRequired.OrDefault(false)) return false;
+                if (option.MaxLength.OrDefault(0) != existingOption.MaxLength.OrDefault(0)) return false;
+                if (option.MaxValue.OrDefault(0) != existingOption.MaxValue.OrDefault(0)) return false;
+                if (option.MinLength.OrDefault(0) != existingOption.MinLength.OrDefault(0)) return false;
+                if (option.MinValue.OrDefault(0) != existingOption.MinValue.OrDefault(0)) return false;
+                if (option.Type != existingOption.Type) return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckChoicesIdentical(List<ApplicationCommandOptionChoiceProperties> choices, IReadOnlyCollection<SocketApplicationCommandChoice> existingChoices)
+        {
+            if (choices != null)
+            {
+                foreach (var choice in choices)
+                {
+                    var existingChoice = existingChoices.Where(c => c.Name == choice.Name).FirstOrDefault();
+                    if (existingChoice == null) return false;
+
+                    if (choice.Value != existingChoice.Value) return false;
+                }
+            }
+            else
+                if (existingChoices.Any()) return false;
+
+            return true;
+        }
+#endif
 
         public static void Unregister()
         {

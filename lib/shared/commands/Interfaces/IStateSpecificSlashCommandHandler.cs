@@ -22,7 +22,7 @@ namespace Grid.Bot.Interfaces
         /// <summary>
         /// Refers to the name of the <see cref="IStateSpecificSlashCommandHandler"/>
         /// </summary>
-        string CommandAlias { get; }
+        string Name { get; }
 
         /// <summary>
         /// Refers to if this <see cref="IStateSpecificSlashCommandHandler"/> should be publicly documented, if true, then only users in the <see cref="Grid.Bot.Properties.Settings.Admins"/> list are allowed the see documentation for this <see cref="IStateSpecificSlashCommandHandler"/>.
@@ -39,11 +39,6 @@ namespace Grid.Bot.Interfaces
         /// Refers to if this <see cref="IStateSpecificSlashCommandHandler"/> is enabled or not, only used in the <see cref="CommandRegistry"/>
         /// </summary>
         bool IsEnabled { get; set; }
-
-        /// <summary>
-        /// Refers to the Guild ID, if this is set, this <see cref="IStateSpecificSlashCommandHandler"/> will be scoped to the guild of that ID, it will throw if the guild is not found!
-        /// </summary>
-        ulong? GuildId { get; }
 
         /// <summary>
         /// Refers to the options for this <see cref="IStateSpecificSlashCommandHandler"/>, these are the "arguments"

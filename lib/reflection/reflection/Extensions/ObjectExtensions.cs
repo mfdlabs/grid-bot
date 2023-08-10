@@ -32,6 +32,6 @@ namespace Reflection.Extensions
         public static uint ToUInt32(this object obj) => Convert.ToUInt32(obj);
         public static ulong ToUInt64(this object obj, IFormatProvider provider) => Convert.ToUInt64(obj, provider);
         public static ulong ToUInt64(this object obj) => Convert.ToUInt64(obj);
-
+        public static T OrDefault<T>(this T obj, T @default = default) => obj ?? @default;
     }
 }

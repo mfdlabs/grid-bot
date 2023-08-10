@@ -15,10 +15,9 @@ namespace Grid.Bot.SlashCommands
     internal class Maintenance : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Enables or disables Maintenance";
-        public string CommandAlias => "maintenance";
+        public string Name => "maintenance";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

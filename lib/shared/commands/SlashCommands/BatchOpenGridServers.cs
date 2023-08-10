@@ -13,10 +13,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class BatchOpenGridServers : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Attempts to batch open grid servers";
-        public string CommandAlias => "batchinstance";
+        public string Name => "batchinstance";
         public bool Internal => true;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()

@@ -15,10 +15,9 @@ namespace Grid.Bot.SlashCommands
     internal sealed class LogFile : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Get Log File Name";
-        public string CommandAlias => "log-file-name";
+        public string Name => "log-file-name";
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => null;
 
         public async Task Invoke(SocketSlashCommand command)

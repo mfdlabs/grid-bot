@@ -29,10 +29,9 @@ namespace Grid.Bot.SlashCommands
     internal class Render : IStateSpecificSlashCommandHandler
     {
         public string CommandDescription => "Renders a roblox user.";
-        public string CommandAlias => "render";
+        public string Name => "render";
         public bool Internal => false;
         public bool IsEnabled { get; set; } = true;
-        public ulong? GuildId => null;
         public SlashCommandOptionBuilder[] Options => new[]
         {
             new SlashCommandOptionBuilder()
