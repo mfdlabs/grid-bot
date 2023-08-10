@@ -24,6 +24,7 @@ namespace Grid.Bot.Utility
         {
             var consulClientProvider = new LocalConsulClientProvider(global::Grid.Bot.Properties.Settings.Default);
             var serviceResolver = new ConsulHttpServiceResolver(
+                global::Grid.Bot.Properties.Settings.Default,
                 Logger.Singleton,
                 consulClientProvider,
                 global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersConsulServiceName),

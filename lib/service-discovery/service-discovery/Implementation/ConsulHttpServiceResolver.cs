@@ -125,7 +125,6 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
 
     private async void RefreshThread()
     {
-        ulong? lastIndex = null;
         string lastServiceName = null;
 
         int failures = 0;
@@ -147,10 +146,9 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                     );
 
                     lastServiceName = _ServiceNameSetting.Value;
-                    lastIndex = null;
                 }
 
-                lastIndex = await DoRefreshAsync(lastServiceName, lastIndex, _CancellationTokenSource.Token).ConfigureAwait(false);
+                await DoRefreshAsync(lastServiceName, _CancellationTokenSource.Token).ConfigureAwait(false);
 
                 failures = 0;
             }
@@ -167,7 +165,6 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                     ex
                 );
 
-                lastIndex = null;
                 await Task.Delay(DetermineBackoffDelayTime(failures, _Settings.ConsulBackoffBase, _Settings.MaximumConsulBackoff)).ConfigureAwait(false);
                 failures++;
             }
@@ -178,15 +175,11 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
         }
     }
 
-    private async Task<ulong?> DoRefreshAsync(string serviceName, ulong? lastIndex, CancellationToken cancellationToken)
+    private async Task DoRefreshAsync(string serviceName, CancellationToken cancellationToken)
     {
         var queryOptions = new QueryOptions();
 
-        if (lastIndex != null)
-        {
-            queryOptions.WaitTime = _Settings.ConsulLongPollingMaxWaitTime;
-            queryOptions.WaitIndex = lastIndex.Value;
-        }
+        _Logger.Debug("DoRefreshAsync: ServiceName = {0}", serviceName);
 
         var queryResult = await _ConsulClientProvider.Client.Health.Service(
             serviceName,
@@ -208,8 +201,6 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                ? () => string.Format("Fetched new endpoints for {0}: {1}", serviceName, string.Join(", ", endpoints))
                : () => string.Format("Endpoints for {0} have not changed.", serviceName)
         );
-
-        return queryResult.LastIndex;
     }
 
     private IEnumerable<IPEndPoint> ParseCatalogServiceResults(IEnumerable<ServiceEntry> catalogServices)
