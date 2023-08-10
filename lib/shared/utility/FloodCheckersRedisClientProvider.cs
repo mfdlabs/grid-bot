@@ -16,9 +16,9 @@ namespace Grid.Bot.Utility
 
         private const string _floodCheckersRedisPerformanceCategory = "Grid.FloodCheckers.Redis";
 
-        private static IRedisClientProvider _redisClientProvider;
+        private static IRedisClient _redisClient;
 
-        public static IRedisClient RedisClient => _redisClientProvider.Client;
+        public static IRedisClient RedisClient => _redisClient;
 
         public static void SetUp()
         {
@@ -32,14 +32,14 @@ namespace Grid.Bot.Utility
                 global::Grid.Bot.Properties.Settings.Default.FloodCheckersRedisUseServiceDiscovery
             );
 
-            _redisClientProvider = new HybridRedisClientProvider(
+            _redisClient = new HybridRedisClientProvider(
                 Logger.Singleton,
                 StaticCounterRegistry.Instance,
                 serviceResolver,
                 _floodCheckersRedisPerformanceCategory,
                 global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersRedisUseServiceDiscovery),
                 global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersRedisEndpoints)
-            );
+            ).Client;
         }
     }
 }
