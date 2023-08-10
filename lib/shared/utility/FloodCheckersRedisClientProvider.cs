@@ -4,6 +4,8 @@ using Configuration;
 using Instrumentation;
 using ServiceDiscovery;
 
+using Grid.Bot.PerformanceMonitors;
+
 namespace Grid.Bot.Utility
 {
     public static class FloodCheckersRedisClientProvider
@@ -34,7 +36,7 @@ namespace Grid.Bot.Utility
 
             _redisClient = new HybridRedisClientProvider(
                 Logger.Singleton,
-                StaticCounterRegistry.Instance,
+                PerfmonCounterRegistryProvider.Registry,
                 serviceResolver,
                 _floodCheckersRedisPerformanceCategory,
                 global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersRedisUseServiceDiscovery),
