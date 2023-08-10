@@ -12,6 +12,7 @@ using System.Text;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 using Logging;
@@ -22,6 +23,8 @@ using Diagnostics;
 using ComputeCloud;
 using Text.Extensions;
 using Instrumentation;
+using FloodCheckers.Core;
+using FloodCheckers.Redis;
 
 using Utility;
 using Interfaces;
@@ -29,6 +32,8 @@ using Extensions;
 using PerformanceMonitors;
 
 using HWND = System.IntPtr;
+using System.ServiceModel.Channels;
+
 
 internal class ExecuteScript : IStateSpecificSlashCommandHandler
 {
@@ -113,6 +118,32 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
 
     #endregion Metrics
 
+    private const string _floodCheckerCategory = "Grid.SlashCommands.ExecuteScript.FloodChecking";
+
+    private static readonly IFloodChecker _scriptExecutionFloodChecker = new RedisRollingWindowFloodChecker(
+        _floodCheckerCategory,
+        nameof(ExecuteScript),
+        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerLimit,
+        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerWindow,
+        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckingEnabled,
+        Logger.Singleton,
+        FloodCheckersRedisClientProvider.RedisClient
+    );
+    private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
+
+    private static IFloodChecker GetPerUserFloodChecker(ulong userId)
+    {
+        return new RedisRollingWindowFloodChecker(
+            _floodCheckerCategory,
+            $"{nameof(ScriptExecution)}:{userId}",
+            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerLimit,
+            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerWindow,
+            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckingEnabled,
+            Logger.Singleton,
+            FloodCheckersRedisClientProvider.RedisClient
+        );
+    }
+
     private static bool GetScriptContents(
         ref SocketSlashCommand item,
         ref SocketSlashCommandDataOption subcommand,
@@ -196,6 +227,25 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         try
         {
             var userIsAdmin = command.User.IsAdmin();
+
+            if (_scriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
+            {
+                await command.RespondEphemeralAsync("Too many people are using this command at once, please wait a few moments and try again.");
+                isFailure = true;
+                return;
+            }
+
+            _scriptExecutionFloodChecker.UpdateCount();
+
+            var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(command.User.Id, GetPerUserFloodChecker);
+            if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
+            {
+                await command.RespondEphemeralAsync("You are sending script execution commands too quickly, please wait a few moments and try again.");
+                isFailure = true;
+                return;
+            }
+
+            perUserFloodChecker.UpdateCount();
 
             var subcommand = command.Data.GetSubCommand();
 

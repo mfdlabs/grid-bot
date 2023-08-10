@@ -9,7 +9,6 @@ using System.Collections.Specialized;
 using Threading;
 using Text.Extensions;
 using Configuration.Logging;
-using Configuration.Extensions;
 using Configuration.Clients.Vault;
 using Configuration.Sections.Vault;
 using Configuration.Elements.Vault;

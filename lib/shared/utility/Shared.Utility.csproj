@@ -17,6 +17,8 @@
     <ProjectReference Include="..\..\grid\compute-cloud\Grid.ComputeCloud.csproj" />
     <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
+    <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
     <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
     <ProjectReference Include="..\..\clients\users-client\Users.Client.csproj" />
     <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />

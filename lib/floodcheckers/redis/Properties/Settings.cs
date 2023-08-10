@@ -1,16 +1,15 @@
-﻿#if USE_VAULT_SETTINGS_PROVIDER
-using System.Configuration;
+﻿using System.Configuration;
+
+#if USE_VAULT_SETTINGS_PROVIDER
 using Configuration.Providers;
 #endif
 
-using IServiceDiscoverySettings = global::ServiceDiscovery.Properties.ISettings;
-
-namespace Grid.Bot.Properties
+namespace FloodCheckers.Redis.Properties
 {
 #if USE_VAULT_SETTINGS_PROVIDER
     [SettingsProvider(typeof(VaultProvider))]
 #endif
-    public sealed partial class Settings : IServiceDiscoverySettings
+    internal sealed partial class Settings : ISettings
     {
 #if USE_VAULT_SETTINGS_PROVIDER
         protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)

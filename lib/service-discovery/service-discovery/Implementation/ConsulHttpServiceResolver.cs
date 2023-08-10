@@ -35,6 +35,7 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
     /// <param name="consulClientProvider">The <see cref="IConsulClientProvider"/></param>
     /// <param name="serviceNameSetting">The <see cref="ISingleSetting{T}"/></param>
     /// <param name="environmentName">The name of the environment.</param>
+    /// <param name="shouldStartRefreshThread">Should we start refreshing immediately?</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="consulClientProvider"/> cannot be null.
@@ -46,23 +47,42 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
         ILogger logger,
         IConsulClientProvider consulClientProvider,
         ISingleSetting<string> serviceNameSetting,
-        string environmentName
+        string environmentName,
+        bool shouldStartRefreshThread = true
     ) : this(
             global::ServiceDiscovery.Properties.Settings.Default,
             logger,
             consulClientProvider,
             serviceNameSetting,
-            environmentName
+            environmentName,
+            shouldStartRefreshThread
         )
     {
     }
 
-    internal ConsulHttpServiceResolver(
+    /// <summary>
+    /// Construct a new instance of <see cref="ConsulHttpServiceResolver"/>
+    /// </summary>
+    /// <param name="settings">The <see cref="ISettings"/></param>
+    /// <param name="logger">The <see cref="ILogger"/></param>
+    /// <param name="consulClientProvider">The <see cref="IConsulClientProvider"/></param>
+    /// <param name="serviceNameSetting">The <see cref="ISingleSetting{T}"/></param>
+    /// <param name="environmentName">The name of the environment.</param>
+    /// <param name="shouldStartRefreshThread">Should we start refreshing immediately?</param>
+    /// <exception cref="ArgumentNullException">
+    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="logger"/> cannot be null.
+    /// - <paramref name="consulClientProvider"/> cannot be null.
+    /// - <paramref name="serviceNameSetting"/> cannot be null.
+    /// - <paramref name="environmentName"/> cannot be null.
+    /// </exception>
+    public ConsulHttpServiceResolver(
         ISettings settings,
         ILogger logger,
         IConsulClientProvider consulClientProvider,
         ISingleSetting<string> serviceNameSetting,
-        string environmentName
+        string environmentName,
+        bool shouldStartRefreshThread = true
     )
     {
         _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -76,7 +96,8 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
         _ServiceNameSetting.PropertyChanged += (sender, args) => _CancellationTokenSource?.Cancel();
         _ConsulClientProvider.PropertyChanged += (sender, args) => _CancellationTokenSource?.Cancel();
 
-        _Thread = StartRefreshThread();
+        if (shouldStartRefreshThread)
+            _Thread = StartRefreshThread();
     }
 
     /// <inheritdoc cref="IServiceResolver.EndPoints"/>
@@ -191,7 +212,7 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                select new IPEndPoint(IPAddress.Parse(s.Node.Address), s.Service.Port);
     }
 
-    private TimeSpan DetermineBackoffDelayTime(int failures, TimeSpan backoffBase, TimeSpan maxBackoff) 
+    private TimeSpan DetermineBackoffDelayTime(int failures, TimeSpan backoffBase, TimeSpan maxBackoff)
         => TimeSpan.FromTicks(Math.Min(backoffBase.Ticks * failures, maxBackoff.Ticks));
 
     private bool UpdateEndpointsIfChanged(IEnumerable<IPEndPoint> newEndPoints)

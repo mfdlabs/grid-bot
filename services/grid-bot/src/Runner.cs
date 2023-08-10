@@ -12,13 +12,13 @@ using Logging;
 
 using Networking;
 using Diagnostics;
+using Configuration;
 using Text.Extensions;
 using Grid.Bot.Events;
 using Grid.Bot.Global;
 using Grid.Bot.Utility;
 using Grid.Bot.Properties;
 using Grid.Bot.Registries;
-using Configuration.Extensions;
 using Grid.Bot.PerformanceMonitors;
 
 namespace Grid.Bot
@@ -159,6 +159,8 @@ namespace Grid.Bot
                 GridServerArbiter.Singleton.KillAllInstances();
 
             Task.Run(ShutdownUdpReceiver.Receive);
+
+            FloodCheckersRedisClientProvider.SetUp();
 
             if (!args.Contains("--no-gateway"))
                 await BotRegistry.SingletonLaunch();

@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MFDLabs.Grid.Bot.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Grid.Bot.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="BotToken" Type="System.String" Scope="Application">
@@ -46,18 +46,6 @@
     </Setting>
     <Setting Name="UsersServiceRemoteURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="UsersServiceMaxRedirects" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="UsersServiceRequestTimeout" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="UsersServiceMaxCircuitBreakerFailuresBeforeTrip" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="UsersServiceCircuitBreakerRetryInterval" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
     <Setting Name="MaxUserIDSize" Type="System.Int64" Scope="Application">
       <Value Profile="(Default)">0</Value>
@@ -110,19 +98,10 @@
     <Setting Name="OnLaunchWarnAboutDebugMode" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="GridServerRegistryKeyName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="GridServerRegistryValueName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="AllowAdminScripts" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="OnLaunchWarnAboutAdminMode" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="ExecuteCommandsInNewThread" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ScriptExecutionPrependBaseURL" Type="System.Boolean" Scope="Application">
@@ -130,9 +109,6 @@
     </Setting>
     <Setting Name="BaseURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="NewThreadsOnlyAvailableForAdmins" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="AllowNullsWhenUpdatingSetting" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
@@ -158,32 +134,11 @@
     <Setting Name="UserUtilityShouldResolveBannedUsers" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="OpenGridServerAtStartup" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="DebugAllowTaskCanceledExceptions" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="HigherPrivilagedUsers" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="RbxDiscordUsersServiceRemoteURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="RbxDiscordUsersServiceMaxRedirects" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="RbxDiscordUsersServiceRequestTimeout" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="RbxDiscordUsersServiceCircuitBreakerRetryInterval" Type="System.TimeSpan" Scope="Application">
-      <Value Profile="(Default)">00:00:00</Value>
-    </Setting>
-    <Setting Name="GoogleAnalyticsTrackerID" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">UA-201817978-5</Value>
     </Setting>
     <Setting Name="CommandRegistryOnlyMatchAlphabetCharactersForCommandName" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
@@ -215,15 +170,6 @@
     <Setting Name="BlacklistedDiscordUserIds" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ConsulServiceRegistrationEnabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="ConsulServiceRegistrationUrl" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://localhost:8500</Value>
-    </Setting>
-    <Setting Name="ConsulServiceRegistrationAclToken" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="ExceptionBasedAutomoderatorLeaseTimeSpanAddition" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:00</Value>
     </Setting>
@@ -233,41 +179,74 @@
     <Setting Name="ExceptionBasedAutomoderatorEnabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="RenderWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="NewViewGridServerConsoleWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="NewScriptExecutionWorkQueueRolloutPercentage" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
     <Setting Name="GridServerArbiterQueueUpEnabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ShardedClientTotalNumberOfShards" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">2</Value>
-    </Setting>
     <Setting Name="WhitelistedCounterServerCidrs" Type="System.String" Scope="Application">
       <Value Profile="(Default)">127.0.0.0/8,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12</Value>
-    </Setting>
-    <Setting Name="GoogleAnalyticsMetricsID" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">G-1DBF9PK9KT</Value>
-    </Setting>
-    <Setting Name="GoogleAnalyticsApiSecret" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">AFJlwquBQqOW_KvPCG5DlQ</Value>
-    </Setting>
-    <Setting Name="GoogleAnalyticsEnableServerSideValidation" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="ScreenshotUtilityLaunchGridServerOnLeaseExpired" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="CommandCircuitBreakerWrapperRetryInterval" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:05</Value>
     </Setting>
     <Setting Name="ShouldAdminsUseVM" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ConsulAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://localhost:8500</Value>
+    </Setting>
+    <Setting Name="ConsulBackoffBase" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:05:00</Value>
+    </Setting>
+    <Setting Name="ConsulLongPollingMaxWaitTime" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00.1000000</Value>
+    </Setting>
+    <Setting Name="MaximumConsulBackoff" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:30</Value>
+    </Setting>
+    <Setting Name="FloodCheckersRedisEndpoints" Type="Redis.RedisEndpoints" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="FloodCheckersRedisUseServiceDiscovery" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="FloodCheckersConsulServiceName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">floodcheckers-redis</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
     </Setting>
   </Settings>
 </SettingsFile>

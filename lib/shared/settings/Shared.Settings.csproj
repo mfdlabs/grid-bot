@@ -14,6 +14,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\configuration\configuration\Configuration.csproj" />
     <ProjectReference Include="..\..\configuration\discord-configuration\Configuration.Discord.csproj" />
+    <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
+    <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,6 +17,10 @@ using Grid.Bot.Utility;
 using Grid.Bot.Interfaces;
 using Grid.Bot.Extensions;
 using Grid.Bot.PerformanceMonitors;
+using FloodCheckers.Core;
+using FloodCheckers.Redis;
+using Grid.ComputeCloud;
+using System.Collections.Concurrent;
 
 namespace Grid.Bot.Commands
 {
@@ -90,9 +94,31 @@ namespace Grid.Bot.Commands
 
         #region Concurrency
 
-        private static readonly object _renderLock = new();
-        private static bool _processingItem;
-        private static Atomic<int> _itemCount = 0;
+        private const string _floodCheckerCategory = "Grid.Commands.Render.FloodChecking";
+
+        private static readonly IFloodChecker _renderFloodChecker = new RedisRollingWindowFloodChecker(
+            _floodCheckerCategory,
+            nameof(Render),
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerLimit,
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerWindow,
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckingEnabled,
+            Logger.Singleton,
+            FloodCheckersRedisClientProvider.RedisClient
+        );
+        private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
+
+        private static IFloodChecker GetPerUserFloodChecker(ulong userId)
+        {
+            return new RedisRollingWindowFloodChecker(
+                _floodCheckerCategory,
+                $"{nameof(Render)}:{userId}",
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerLimit,
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerWindow,
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckingEnabled,
+                Logger.Singleton,
+                FloodCheckersRedisClientProvider.RedisClient
+            );
+        }
 
         #endregion Concurrency
 
@@ -112,161 +138,156 @@ namespace Grid.Bot.Commands
 
             try
             {
-                _itemCount++;
-
                 using (message.Channel.EnterTypingState())
                 {
-                    if (_processingItem)
-                        await message.ReplyAsync($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
+                    var userIsAdmin = message.Author.IsAdmin();
 
-                    lock (_renderLock)
+                    if (_renderFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
                     {
-                        _processingItem = true;
-
-                        var isAuthorCheck = false;
-                        long userId = 0;
-
-                        string username = null;
-
-                        if (!isAuthorCheck)
-                            if (!long.TryParse(contentArray.ElementAtOrDefault(0), out userId))
-                            {
-                                _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-
-                                if (message.MentionedUsers.Count > 0)
-                                {
-                                    message.Reply("Calling the render command like this is deprecated until further notice. Please see https://github.com/mfdlabs/grid-bot-support/discussions/13.");
-                                    return;
-                                }
-                                else
-                                {
-                                    Logger.Singleton.Warning("The first parameter of the command was " +
-                                                                   "not a valid Int64, trying to get the userID " +
-                                                                   "by username lookup.");
-                                    username = contentArray.Join(' ').EscapeNewLines().Escape();
-
-                                    if (BlacklistedUsernames.Contains(username))
-                                    {
-                                        _perfmon.TotalItemsProcessedThatHadBlacklistedUsernames.Increment();
-                                        _perfmon.TotalItemsProcessedThatHadBlacklistedUsernamesPerSecond.Increment();
-                                        failure = true;
-
-                                        message.Reply($"The username '{username}' is a blacklisted username, please try again later.");
-                                        return;
-                                    }
-
-                                    if (!username.IsNullOrEmpty())
-                                    {
-                                        if (!username.IsMatch(GoodUsernameRegex))
-                                        {
-                                            Logger.Singleton.Warning("Invalid username '{0}'", username);
-
-                                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
-                                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
-
-                                            failure = true;
-
-                                            message.Reply("The username you presented contains invalid charcters!");
-                                            return;
-                                        }
-
-                                        Logger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
-                                        var nullableUserId = UserUtility.GetUserIdByUsername(username);
-
-                                        if (!nullableUserId.HasValue)
-                                        {
-                                            _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
-                                            _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
-                                            failure = true;
-
-                                            Logger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
-                                            message.Reply($"The user by the username of '{username}' was not found.");
-                                            return;
-                                        }
-
-                                        Logger.Singleton.Information("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
-                                        userId = nullableUserId.Value;
-                                    }
-                                    else
-                                    {
-                                        _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
-                                        _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
-                                        failure = true;
-
-                                        Logger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
-                                        message.Reply($"Missing required parameter 'userID' or 'userName', " +
-                                                      $"the layout is: " +
-                                                      $"{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
-                                                      $"userID|userName");
-                                        return;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (userId > global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
-                                {
-                                    _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
-                                    _perfmon.TotalItemsProcessedThatHadInvalidUserIDsPerSecond.Increment();
-                                    failure = true;
-
-                                    Logger.Singleton.Warning(
-                                        "The input user ID of {0} was greater than the environment's maximum user ID size of {1}.",
-                                        userId,
-                                        global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize
-                                    );
-                                    message.Reply($"The userId '{userId}' is too big, expected the " +
-                                                  $"userId to be less than or equal to " +
-                                                  $"'{Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
-                                    return;
-                                }
-                            }
-
-                        if (UserUtility.GetIsUserBanned(userId))
-                        {
-                            Logger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
-                            var user = userId == default ? username : userId.ToString();
-                            message.Reply($"The user '{user}' is banned or does not exist.");
-                            return;
-                        }
-
-                        Logger.Singleton.Information(
-                            "Trying to render the character for the user '{0}' with the place '{1}', " +
-                            "and the dimensions of {2}x{3}",
-                            userId,
-                            global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                            global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                            global::Grid.Bot.Properties.Settings.Default.RenderSizeY
-                        );
-
-                        // get a stream and temp filename
-                        var (stream, fileName) = GridServerCommandUtility.RenderUser(
-                            userId,
-                            global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                            global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                            global::Grid.Bot.Properties.Settings.Default.RenderSizeY
-                        );
-
-                        if (stream == null || fileName == null)
-                        {
-                            failure = true;
-                            message.Reply("Internal failure when processing item render.");
-
-                            return;
-                        }
-
-                        using (stream)
-                            message.ReplyWithFile(
-                                stream,
-                                fileName
-                            );
+                        message.Reply("Too many people are using this command at once, please wait a few moments and try again.");
+                        return;
                     }
+
+                    _renderFloodChecker.UpdateCount();
+
+                    var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(message.Author.Id, GetPerUserFloodChecker);
+                    if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
+                    {
+                        message.Reply("You are sending render commands too quickly, please wait a few moments and try again.");
+                        return;
+                    }
+
+                    perUserFloodChecker.UpdateCount();
+
+                    string username = null;
+
+                    if (!long.TryParse(contentArray.ElementAtOrDefault(0), out var userId))
+                    {
+                        _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
+
+                        Logger.Singleton.Warning("The first parameter of the command was " +
+                                                       "not a valid Int64, trying to get the userID " +
+                                                       "by username lookup.");
+                        username = contentArray.Join(' ').EscapeNewLines().Escape();
+
+                        if (BlacklistedUsernames.Contains(username))
+                        {
+                            _perfmon.TotalItemsProcessedThatHadBlacklistedUsernames.Increment();
+                            _perfmon.TotalItemsProcessedThatHadBlacklistedUsernamesPerSecond.Increment();
+                            failure = true;
+
+                            message.Reply($"The username '{username}' is a blacklisted username, please try again later.");
+                            return;
+                        }
+
+                        if (!username.IsNullOrEmpty())
+                        {
+                            if (!username.IsMatch(GoodUsernameRegex))
+                            {
+                                Logger.Singleton.Warning("Invalid username '{0}'", username);
+
+                                _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
+                                _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
+
+                                failure = true;
+
+                                message.Reply("The username you presented contains invalid charcters!");
+                                return;
+                            }
+
+                            Logger.Singleton.Debug("Trying to get the ID of the user by this username '{0}'", username);
+                            var nullableUserId = UserUtility.GetUserIdByUsername(username);
+
+                            if (!nullableUserId.HasValue)
+                            {
+                                _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccount.Increment();
+                                _perfmon.TotalItemsProcessedThatHadUsernamesThatDidNotCorrespondToAnAccountPerSecond.Increment();
+                                failure = true;
+
+                                Logger.Singleton.Warning("The ID for the user '{0}' was null, they were either banned or do not exist.", username);
+                                message.Reply($"The user by the username of '{username}' was not found.");
+                                return;
+                            }
+
+                            Logger.Singleton.Information("The ID for the user '{0}' was {1}.", username, nullableUserId.Value);
+                            userId = nullableUserId.Value;
+                        }
+                        else
+                        {
+                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernames.Increment();
+                            _perfmon.TotalItemsProcessedThatHadNullOrEmptyUsernamesPerSecond.Increment();
+                            failure = true;
+
+                            Logger.Singleton.Warning("The user's input username was null or empty, they clearly do not know how to input text.");
+                            message.Reply($"Missing required parameter 'userID' or 'userName', " +
+                                          $"the layout is: " +
+                                          $"{Grid.Bot.Properties.Settings.Default.Prefix}{originalCommandName} " +
+                                          $"userID|userName");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (userId > global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize)
+                        {
+                            _perfmon.TotalItemsProcessedThatHadInvalidUserIDs.Increment();
+                            _perfmon.TotalItemsProcessedThatHadInvalidUserIDsPerSecond.Increment();
+                            failure = true;
+
+                            Logger.Singleton.Warning(
+                                "The input user ID of {0} was greater than the environment's maximum user ID size of {1}.",
+                                userId,
+                                global::Grid.Bot.Properties.Settings.Default.MaxUserIDSize
+                            );
+                            message.Reply($"The userId '{userId}' is too big, expected the " +
+                                          $"userId to be less than or equal to " +
+                                          $"'{Grid.Bot.Properties.Settings.Default.MaxUserIDSize}'");
+                            return;
+                        }
+                    }
+
+                    if (UserUtility.GetIsUserBanned(userId))
+                    {
+                        Logger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
+                        var user = userId == default ? username : userId.ToString();
+                        message.Reply($"The user '{user}' is banned or does not exist.");
+                        return;
+                    }
+
+                    Logger.Singleton.Information(
+                        "Trying to render the character for the user '{0}' with the place '{1}', " +
+                        "and the dimensions of {2}x{3}",
+                        userId,
+                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
+                    );
+
+                    // get a stream and temp filename
+                    var (stream, fileName) = GridServerCommandUtility.RenderUser(
+                        userId,
+                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
+                    );
+
+                    if (stream == null || fileName == null)
+                    {
+                        failure = true;
+                        message.Reply("Internal failure when processing item render.");
+
+                        return;
+                    }
+
+                    using (stream)
+                        message.ReplyWithFile(
+                            stream,
+                            fileName
+                        );
                 }
             }
             finally
             {
-                _itemCount--;
-                _processingItem = false;
                 sw.Stop();
                 Logger.Singleton.Debug("Took {0}s to execute render command.", sw.Elapsed.TotalSeconds.ToString("f7"));
 

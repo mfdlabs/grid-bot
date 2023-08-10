@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\file-system\file-system\FileSystem.csproj" />
+    <ProjectReference Include="..\..\floodcheckers\core\FloodCheckers.Core.csproj" />
+    <ProjectReference Include="..\..\floodcheckers\redis\FloodCheckers.Redis.csproj" />
     <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\reflection\reflection\Reflection.csproj" />
     <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />

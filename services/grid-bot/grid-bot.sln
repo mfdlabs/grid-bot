@@ -118,6 +118,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceDiscovery", "..\..\l
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redis", "..\..\lib\redis\redis\Redis.csproj", "{923E10F3-D8CA-4C05-B847-5C6B687AE903}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FloodCheckers", "FloodCheckers", "{6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloodCheckers.Core", "..\..\lib\floodcheckers\core\FloodCheckers.Core.csproj", "{246A2F21-F492-4D13-A5A9-A218FD429F52}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloodCheckers.Redis", "..\..\lib\floodcheckers\redis\FloodCheckers.Redis.csproj", "{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		debug|Any CPU = debug|Any CPU
@@ -642,6 +648,38 @@ Global
 		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault|Any CPU.Build.0 = release|Any CPU
 		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
 		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-vault|Any CPU.ActiveCfg = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-vault|Any CPU.Build.0 = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-vault-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.debug-vault-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release|Any CPU.ActiveCfg = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release|Any CPU.Build.0 = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-deploy|Any CPU.Build.0 = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-vault|Any CPU.ActiveCfg = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-vault|Any CPU.Build.0 = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{246A2F21-F492-4D13-A5A9-A218FD429F52}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-deploy|Any CPU.ActiveCfg = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-deploy|Any CPU.Build.0 = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-vault|Any CPU.ActiveCfg = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-vault|Any CPU.Build.0 = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-vault-deploy|Any CPU.ActiveCfg = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.debug-vault-deploy|Any CPU.Build.0 = debug-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release|Any CPU.ActiveCfg = release|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release|Any CPU.Build.0 = release|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-deploy|Any CPU.ActiveCfg = release-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-deploy|Any CPU.Build.0 = release-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault|Any CPU.ActiveCfg = release-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault|Any CPU.Build.0 = release-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault-deploy|Any CPU.ActiveCfg = release-vault|Any CPU
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault-deploy|Any CPU.Build.0 = release-vault|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -690,6 +728,9 @@ Global
 		{BDA02670-A190-49D0-979C-B272114D15DB} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
 		{A280C402-9F6A-44D1-A069-259356E8461B} = {BDA02670-A190-49D0-979C-B272114D15DB}
 		{923E10F3-D8CA-4C05-B847-5C6B687AE903} = {FE8CC31A-E896-409A-9A98-D0730AAC18ED}
+		{6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
+		{246A2F21-F492-4D13-A5A9-A218FD429F52} = {6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797}
+		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9} = {6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}

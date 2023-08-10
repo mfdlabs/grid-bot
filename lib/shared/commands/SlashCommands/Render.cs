@@ -20,6 +20,9 @@ using Grid.Bot.Interfaces;
 using Grid.Bot.Extensions;
 using Reflection.Extensions;
 using Grid.Bot.PerformanceMonitors;
+using FloodCheckers.Core;
+using FloodCheckers.Redis;
+using System.Collections.Concurrent;
 
 namespace Grid.Bot.SlashCommands
 {
@@ -103,9 +106,31 @@ namespace Grid.Bot.SlashCommands
 
         #region Concurrency
 
-        private static readonly object _renderLock = new();
-        private static bool _processingItem;
-        private static Atomic<int> _itemCount = 0;
+        private const string _floodCheckerCategory = "Grid.Commands.Render.FloodChecking";
+
+        private static readonly IFloodChecker _renderFloodChecker = new RedisRollingWindowFloodChecker(
+            _floodCheckerCategory,
+            nameof(Render),
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerLimit,
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerWindow,
+            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckingEnabled,
+            Logger.Singleton,
+            FloodCheckersRedisClientProvider.RedisClient
+        );
+        private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
+
+        private static IFloodChecker GetPerUserFloodChecker(ulong userId)
+        {
+            return new RedisRollingWindowFloodChecker(
+                _floodCheckerCategory,
+                $"{nameof(Render)}:{userId}",
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerLimit,
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerWindow,
+                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckingEnabled,
+                Logger.Singleton,
+                FloodCheckersRedisClientProvider.RedisClient
+            );
+        }
 
         #endregion Concurrency
 
@@ -208,63 +233,70 @@ namespace Grid.Bot.SlashCommands
 
             try
             {
-                _itemCount++;
+                var userIsAdmin = command.User.IsAdmin();
 
-                if (_processingItem)
-                    await command.RespondEphemeralPingAsync($"The render queue is currently trying to process {_itemCount} items, please wait for your result to be processed.");
-
-                lock (_renderLock)
+                if (_renderFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
                 {
-                    _processingItem = true;
-
-                    var subCommand = command.Data.GetSubCommand();
-
-                    var userId = GetUserId(ref command, ref subCommand, ref failure);
-                    if (userId == long.MinValue) return;
-
-                    if (UserUtility.GetIsUserBanned(userId))
-                    {
-                        Logger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
-                        command.RespondEphemeralPing($"The user '{userId}' is banned or does not exist.");
-                        return;
-                    }
-
-                    Logger.Singleton.Information(
-                        "Trying to render the character for the user '{0}' with the place '{1}', " +
-                        "and the dimensions of {2}x{3}",
-                        userId,
-                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
-                    );
-
-                    // get a stream and temp filename
-                    var (stream, fileName) = GridServerCommandUtility.RenderUser(
-                        userId,
-                        global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
-                        global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
-                        global::Grid.Bot.Properties.Settings.Default.RenderSizeY
-                    );
-
-                    if (stream == null || fileName == null)
-                    {
-                        failure = true;
-                        command.RespondEphemeralPing("Internal failure when processing item render.");
-
-                        return;
-                    }
-
-                    using (stream)
-                        command.RespondWithFilePublicPing(
-                            stream,
-                            fileName
-                        );
+                    await command.RespondEphemeralAsync("Too many people are using this command at once, please wait a few moments and try again.");
+                    return;
                 }
+
+                _renderFloodChecker.UpdateCount();
+
+                var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(command.User.Id, GetPerUserFloodChecker);
+                if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
+                {
+                    await command.RespondEphemeralAsync("You are sending render commands too quickly, please wait a few moments and try again.");
+                    return;
+                }
+
+                perUserFloodChecker.UpdateCount();
+
+                var subCommand = command.Data.GetSubCommand();
+
+                var userId = GetUserId(ref command, ref subCommand, ref failure);
+                if (userId == long.MinValue) return;
+
+                if (UserUtility.GetIsUserBanned(userId))
+                {
+                    Logger.Singleton.Warning("The input user ID of {0} was linked to a banned user account.", userId);
+                    await command.RespondEphemeralPingAsync($"The user '{userId}' is banned or does not exist.");
+                    return;
+                }
+
+                Logger.Singleton.Information(
+                    "Trying to render the character for the user '{0}' with the place '{1}', " +
+                    "and the dimensions of {2}x{3}",
+                    userId,
+                    global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                    global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                    global::Grid.Bot.Properties.Settings.Default.RenderSizeY
+                );
+
+                // get a stream and temp filename
+                var (stream, fileName) = GridServerCommandUtility.RenderUser(
+                    userId,
+                    global::Grid.Bot.Properties.Settings.Default.RenderPlaceID,
+                    global::Grid.Bot.Properties.Settings.Default.RenderSizeX,
+                    global::Grid.Bot.Properties.Settings.Default.RenderSizeY
+                );
+
+                if (stream == null || fileName == null)
+                {
+                    failure = true;
+                    await command.RespondEphemeralPingAsync("Internal failure when processing item render.");
+
+                    return;
+                }
+
+                using (stream)
+                    await command.RespondWithFilePublicPingAsync(
+                        stream,
+                        fileName
+                    );
             }
             finally
             {
-                _itemCount--;
-                _processingItem = false;
                 sw.Stop();
                 Logger.Singleton.Debug("Took {0}s to execute render slash command.", sw.Elapsed.TotalSeconds.ToString("f7"));
 

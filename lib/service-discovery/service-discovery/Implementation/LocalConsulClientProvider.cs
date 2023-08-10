@@ -28,7 +28,12 @@ public class LocalConsulClientProvider : IConsulClientProvider, INotifyPropertyC
         : this(global::ServiceDiscovery.Properties.Settings.Default)
     {}
 
-    internal LocalConsulClientProvider(ISettings settings)
+    /// <summary>
+    /// Construct a new instance of <see cref="LocalConsulClientProvider"/>
+    /// </summary>
+    /// <param name="settings">The <see cref="ISettings"/></param>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> cannot be null.</exception>
+    public LocalConsulClientProvider(ISettings settings)
     {
         _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
 

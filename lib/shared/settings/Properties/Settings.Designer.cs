@@ -160,42 +160,6 @@ namespace Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int UsersServiceMaxRedirects {
-            get {
-                return ((int)(this["UsersServiceMaxRedirects"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan UsersServiceRequestTimeout {
-            get {
-                return ((global::System.TimeSpan)(this["UsersServiceRequestTimeout"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int UsersServiceMaxCircuitBreakerFailuresBeforeTrip {
-            get {
-                return ((int)(this["UsersServiceMaxCircuitBreakerFailuresBeforeTrip"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan UsersServiceCircuitBreakerRetryInterval {
-            get {
-                return ((global::System.TimeSpan)(this["UsersServiceCircuitBreakerRetryInterval"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public long MaxUserIDSize {
             get {
                 return ((long)(this["MaxUserIDSize"]));
@@ -348,24 +312,6 @@ namespace Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string GridServerRegistryKeyName {
-            get {
-                return ((string)(this["GridServerRegistryKeyName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string GridServerRegistryValueName {
-            get {
-                return ((string)(this["GridServerRegistryValueName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool AllowAdminScripts {
             get {
@@ -385,15 +331,6 @@ namespace Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ExecuteCommandsInNewThread {
-            get {
-                return ((bool)(this["ExecuteCommandsInNewThread"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ScriptExecutionPrependBaseURL {
             get {
                 return ((bool)(this["ScriptExecutionPrependBaseURL"]));
@@ -406,15 +343,6 @@ namespace Grid.Bot.Properties {
         public string BaseURL {
             get {
                 return ((string)(this["BaseURL"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool NewThreadsOnlyAvailableForAdmins {
-            get {
-                return ((bool)(this["NewThreadsOnlyAvailableForAdmins"]));
             }
         }
         
@@ -493,15 +421,6 @@ namespace Grid.Bot.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool OpenGridServerAtStartup {
-            get {
-                return ((bool)(this["OpenGridServerAtStartup"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool DebugAllowTaskCanceledExceptions {
             get {
                 return ((bool)(this["DebugAllowTaskCanceledExceptions"]));
@@ -514,60 +433,6 @@ namespace Grid.Bot.Properties {
         public string HigherPrivilagedUsers {
             get {
                 return ((string)(this["HigherPrivilagedUsers"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string RbxDiscordUsersServiceRemoteURL {
-            get {
-                return ((string)(this["RbxDiscordUsersServiceRemoteURL"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int RbxDiscordUsersServiceMaxRedirects {
-            get {
-                return ((int)(this["RbxDiscordUsersServiceMaxRedirects"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan RbxDiscordUsersServiceRequestTimeout {
-            get {
-                return ((global::System.TimeSpan)(this["RbxDiscordUsersServiceRequestTimeout"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip {
-            get {
-                return ((int)(this["RbxDiscordUsersServiceMaxCircuitBreakerFailuresBeforeTrip"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
-        public global::System.TimeSpan RbxDiscordUsersServiceCircuitBreakerRetryInterval {
-            get {
-                return ((global::System.TimeSpan)(this["RbxDiscordUsersServiceCircuitBreakerRetryInterval"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("UA-201817978-5")]
-        public string GoogleAnalyticsTrackerID {
-            get {
-                return ((string)(this["GoogleAnalyticsTrackerID"]));
             }
         }
         
@@ -663,33 +528,6 @@ namespace Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ConsulServiceRegistrationEnabled {
-            get {
-                return ((bool)(this["ConsulServiceRegistrationEnabled"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:8500")]
-        public string ConsulServiceRegistrationUrl {
-            get {
-                return ((string)(this["ConsulServiceRegistrationUrl"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ConsulServiceRegistrationAclToken {
-            get {
-                return ((string)(this["ConsulServiceRegistrationAclToken"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
         public global::System.TimeSpan ExceptionBasedAutomoderatorLeaseTimeSpanAddition {
             get {
@@ -717,33 +555,6 @@ namespace Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int RenderWorkQueueRolloutPercentage {
-            get {
-                return ((int)(this["RenderWorkQueueRolloutPercentage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int NewViewGridServerConsoleWorkQueueRolloutPercentage {
-            get {
-                return ((int)(this["NewViewGridServerConsoleWorkQueueRolloutPercentage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int NewScriptExecutionWorkQueueRolloutPercentage {
-            get {
-                return ((int)(this["NewScriptExecutionWorkQueueRolloutPercentage"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool GridServerArbiterQueueUpEnabled {
             get {
@@ -753,55 +564,10 @@ namespace Grid.Bot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int ShardedClientTotalNumberOfShards {
-            get {
-                return ((int)(this["ShardedClientTotalNumberOfShards"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.0/8,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12")]
         public string WhitelistedCounterServerCidrs {
             get {
                 return ((string)(this["WhitelistedCounterServerCidrs"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("G-1DBF9PK9KT")]
-        public string GoogleAnalyticsMetricsID {
-            get {
-                return ((string)(this["GoogleAnalyticsMetricsID"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("AFJlwquBQqOW_KvPCG5DlQ")]
-        public string GoogleAnalyticsApiSecret {
-            get {
-                return ((string)(this["GoogleAnalyticsApiSecret"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GoogleAnalyticsEnableServerSideValidation {
-            get {
-                return ((bool)(this["GoogleAnalyticsEnableServerSideValidation"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ScreenshotUtilityLaunchGridServerOnLeaseExpired {
-            get {
-                return ((bool)(this["ScreenshotUtilityLaunchGridServerOnLeaseExpired"]));
             }
         }
         
@@ -820,6 +586,176 @@ namespace Grid.Bot.Properties {
         public bool ShouldAdminsUseVM {
             get {
                 return ((bool)(this["ShouldAdminsUseVM"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:8500")]
+        public string ConsulAddress {
+            get {
+                return ((string)(this["ConsulAddress"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:05:00")]
+        public global::System.TimeSpan ConsulBackoffBase {
+            get {
+                return ((global::System.TimeSpan)(this["ConsulBackoffBase"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00.1000000")]
+        public global::System.TimeSpan ConsulLongPollingMaxWaitTime {
+            get {
+                return ((global::System.TimeSpan)(this["ConsulLongPollingMaxWaitTime"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:30")]
+        public global::System.TimeSpan MaximumConsulBackoff {
+            get {
+                return ((global::System.TimeSpan)(this["MaximumConsulBackoff"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::Redis.RedisEndpoints FloodCheckersRedisEndpoints {
+            get {
+                return ((global::Redis.RedisEndpoints)(this["FloodCheckersRedisEndpoints"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FloodCheckersRedisUseServiceDiscovery {
+            get {
+                return ((bool)(this["FloodCheckersRedisUseServiceDiscovery"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ScriptExecutionFloodCheckingEnabled {
+            get {
+                return ((bool)(this["ScriptExecutionFloodCheckingEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ScriptExecutionFloodCheckerLimit {
+            get {
+                return ((int)(this["ScriptExecutionFloodCheckerLimit"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan ScriptExecutionFloodCheckerWindow {
+            get {
+                return ((global::System.TimeSpan)(this["ScriptExecutionFloodCheckerWindow"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RenderFloodCheckingEnabled {
+            get {
+                return ((bool)(this["RenderFloodCheckingEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RenderFloodCheckerLimit {
+            get {
+                return ((int)(this["RenderFloodCheckerLimit"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan RenderFloodCheckerWindow {
+            get {
+                return ((global::System.TimeSpan)(this["RenderFloodCheckerWindow"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("floodcheckers-redis")]
+        public string FloodCheckersConsulServiceName {
+            get {
+                return ((string)(this["FloodCheckersConsulServiceName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ScriptExecutionPerUserFloodCheckingEnabled {
+            get {
+                return ((bool)(this["ScriptExecutionPerUserFloodCheckingEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ScriptExecutionPerUserFloodCheckerLimit {
+            get {
+                return ((int)(this["ScriptExecutionPerUserFloodCheckerLimit"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan ScriptExecutionPerUserFloodCheckerWindow {
+            get {
+                return ((global::System.TimeSpan)(this["ScriptExecutionPerUserFloodCheckerWindow"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RenderPerUserFloodCheckingEnabled {
+            get {
+                return ((bool)(this["RenderPerUserFloodCheckingEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RenderPerUserFloodCheckerLimit {
+            get {
+                return ((int)(this["RenderPerUserFloodCheckerLimit"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan RenderPerUserFloodCheckerWindow {
+            get {
+                return ((global::System.TimeSpan)(this["RenderPerUserFloodCheckerWindow"]));
             }
         }
     }

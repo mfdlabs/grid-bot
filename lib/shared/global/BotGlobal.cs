@@ -5,7 +5,7 @@ using Discord.WebSocket;
 
 using Logging;
 
-using Configuration.Extensions;
+using Configuration;
 
 namespace Grid.Bot.Global
 {
