@@ -58,5 +58,14 @@ namespace ServiceDiscovery.Properties {
                 return ((global::System.TimeSpan)(this["MaximumConsulBackoff"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:10")]
+        public global::System.TimeSpan ConsulRefreshInterval {
+            get {
+                return ((global::System.TimeSpan)(this["ConsulRefreshInterval"]));
+            }
+        }
     }
 }

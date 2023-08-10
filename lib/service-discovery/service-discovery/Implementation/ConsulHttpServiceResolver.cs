@@ -151,6 +151,8 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                 lastIndex = await DoRefreshAsync(lastServiceName, lastIndex, _CancellationTokenSource.Token).ConfigureAwait(false);
 
                 failures = 0;
+
+                await Task.Delay(_Settings.ConsulRefreshInterval).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {

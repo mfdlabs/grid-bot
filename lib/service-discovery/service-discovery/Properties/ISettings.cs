@@ -27,4 +27,9 @@ public interface ISettings : INotifyPropertyChanged
     /// Max backoff when retrying.
     /// </summary>
     TimeSpan MaximumConsulBackoff { get; }
+
+    /// <summary>
+    /// Gets the refresh interval.
+    /// </summary>
+    TimeSpan ConsulRefreshInterval { get; }
 }

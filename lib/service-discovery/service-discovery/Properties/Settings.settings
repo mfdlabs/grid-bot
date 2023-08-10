@@ -14,5 +14,8 @@
     <Setting Name="MaximumConsulBackoff" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">00:00:30</Value>
     </Setting>
+    <Setting Name="ConsulRefreshInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:10</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
