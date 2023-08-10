@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using Grid.Commands;
 using Networking;
 using Text.Extensions;
@@ -161,7 +162,7 @@ namespace Grid.Bot.Utility
                 null,
                 "roblox.com",
                 Guid.NewGuid(),
-                NetworkingGlobal.GetLocalIp(),
+                NetworkingGlobal.GetLocalIp(AddressFamily.InterNetwork),
                 1,
                 1000,
                 100,
@@ -190,7 +191,7 @@ namespace Grid.Bot.Utility
                 null,
                 "roblox.com",
                 Guid.NewGuid(),
-                NetworkingGlobal.GetLocalIp(),
+                NetworkingGlobal.GetLocalIp(AddressFamily.InterNetwork),
                 1,
                 200,
                 10,
