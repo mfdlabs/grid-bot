@@ -38,10 +38,9 @@ using System.ServiceModel.Channels;
 internal class ExecuteScript : IStateSpecificSlashCommandHandler
 {
     public string CommandDescription => "Execute Luau Script";
-    public string CommandAlias => "execute";
+    public string Name => "execute";
     public bool Internal => false;
     public bool IsEnabled { get; set; } = true;
-    public ulong? GuildId => null;
 
     public SlashCommandOptionBuilder[] Options => new[]
     {
@@ -330,7 +329,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
             var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
 
-            var wantsConsole = subcommand.GetOptionValue("with_console")?.ToString() == "true";
+            var wantsConsole = subcommand.GetOptionValue("with_console")?.ToString()?.ToLower() == "true";
 
             try
             {
