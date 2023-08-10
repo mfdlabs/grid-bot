@@ -38,7 +38,7 @@ namespace Grid.Bot.Commands
 
             
             
-            var fullScriptName = Path.Combine(Directory.GetCurrentDirectory(), "RuntimeScripts", $"{scriptName}.csx");
+            var fullScriptName = Path.Combine(Directory.GetCurrentDirectory(), "runtime-scripts", $"{scriptName}.csx");
 
             if (!File.Exists(fullScriptName))
             {

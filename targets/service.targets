@@ -47,20 +47,20 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 
-    <None Update="App.config">
+    <None Update="app.config">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="App.debug.config">
-      <DependentUpon>App.config</DependentUpon>
+    <None Update="app.debug.config">
+      <DependentUpon>app.config</DependentUpon>
     </None>
-    <None Update="App.debug-vault.config">
-      <DependentUpon>App.Debug.config</DependentUpon>
+    <None Update="app.debug-vault.config">
+      <DependentUpon>app.debug.config</DependentUpon>
     </None>
-    <None Update="App.release.config">
-      <DependentUpon>App.config</DependentUpon>
+    <None Update="app.release.config">
+      <DependentUpon>app.config</DependentUpon>
     </None>
-    <None Update="App.release-vault.config">
-      <DependentUpon>App.Release.config</DependentUpon>
+    <None Update="app.release-vault.config">
+      <DependentUpon>app.release.config</DependentUpon>
     </None>
   </ItemGroup>
 

@@ -30,7 +30,7 @@ $appSettingsConfiguration = IF ($isDebug) { "debug" } else { "release" };
 if ($isVaultBacked) {
 	Write-Host "Build is vault-backed, appending vault configuration postfix." -ForegroundColor Green;
 	
-    $appSettingsConfiguration += "-Vault";
+    $appSettingsConfiguration += "-vault";
 }
 
 # Copy the current configuration settings to the target
@@ -42,27 +42,27 @@ if (Test-Path $projectConfigurationFile) {
 }
 
 # Delete old runtime-scripts and copy new runtime-scripts
-$runtimeScriptsOutDir = [System.IO.Path]::Combine($projectDir, $outDir, "RuntimeScripts");
+$runtimeScriptsOutDir = [System.IO.Path]::Combine($projectDir, $outDir, "runtime-scripts");
 
 IF (Test-Path $runtimeScriptsOutDir) {
     Remove-Item -Path $runtimeScriptsOutDir -Recurse -Force
 }
 
 # Copy the runtime-scripts
-$runtimeScriptsDir = Join-Path $projectDir "RuntimeScripts";
+$runtimeScriptsDir = Join-Path $projectDir "runtime-scripts";
 IF (Test-Path $runtimeScriptsDir) {
     Copy-Item -Path $runtimeScriptsDir -Destination $runtimeScriptsOutDir -Recurse -Force
 }
 
 # Delete the old Lua scripts and copy the new Lua scripts
-$luaScriptsOutDir = [System.IO.Path]::Combine($projectDir, $outDir, "Lua");
+$luaScriptsOutDir = [System.IO.Path]::Combine($projectDir, $outDir, "lua");
 
 IF (Test-Path $luaScriptsOutDir) {
     Remove-Item -Path $luaScriptsOutDir -Recurse -Force
 }
 
 # Copy the Lua scripts
-$luaScriptsDir = Join-Path $projectDir "Lua";
+$luaScriptsDir = Join-Path $projectDir "lua";
 IF (Test-Path $luaScriptsDir) {
     Copy-Item -Path $luaScriptsDir -Destination $luaScriptsOutDir -Recurse -Force
 }

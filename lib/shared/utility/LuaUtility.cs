@@ -12,11 +12,7 @@ namespace Grid.Bot.Utility
     public static class LuaUtility
     {
         public static string SafeLuaMode
-#if DEBUG
-            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.formatted.lua"));
-#else
-            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Lua", "LuaVM.lua"));
-#endif
+            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua"));
 
 
         public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
