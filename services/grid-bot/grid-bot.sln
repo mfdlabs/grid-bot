@@ -88,6 +88,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Targets", "Targets", "{C5B2
 		..\..\targets\lib-framework.targets = ..\..\targets\lib-framework.targets
 		..\..\targets\lib-standard.targets = ..\..\targets\lib-standard.targets
 		..\..\targets\lib-vault-both.targets = ..\..\targets\lib-vault-both.targets
+		..\..\targets\lib-vault-standard.targets = ..\..\targets\lib-vault-standard.targets
 		..\..\targets\service.targets = ..\..\targets\service.targets
 		..\..\targets\shared-vault.targets = ..\..\targets\shared-vault.targets
 		..\..\targets\shared.targets = ..\..\targets\shared.targets
@@ -104,6 +105,18 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Shared", "..\..\lib\grid\shared\Grid.Shared.csproj", "{1AD6EFB6-D73E-42AA-860E-0A57D80147D6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logging", "..\..\lib\logging\logging\Logging.csproj", "{026BA481-3EDC-4665-AC4A-6701621EDD8D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redis", "Redis", "{FE8CC31A-E896-409A-9A98-D0730AAC18ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hashing", "Hashing", "{69831D3E-ED15-4FA7-B1D6-E773211225F5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hashing", "..\..\lib\hashing\hashing\Hashing.csproj", "{07F31815-075A-46C3-BCA3-E5BC326B364A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceDiscovery", "ServiceDiscovery", "{BDA02670-A190-49D0-979C-B272114D15DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceDiscovery", "..\..\lib\service-discovery\service-discovery\ServiceDiscovery.csproj", "{A280C402-9F6A-44D1-A069-259356E8461B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redis", "..\..\lib\redis\redis\Redis.csproj", "{923E10F3-D8CA-4C05-B847-5C6B687AE903}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -581,6 +594,54 @@ Global
 		{026BA481-3EDC-4665-AC4A-6701621EDD8D}.release-vault|Any CPU.Build.0 = release|Any CPU
 		{026BA481-3EDC-4665-AC4A-6701621EDD8D}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
 		{026BA481-3EDC-4665-AC4A-6701621EDD8D}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-vault|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-vault|Any CPU.Build.0 = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-vault-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.debug-vault-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release|Any CPU.ActiveCfg = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release|Any CPU.Build.0 = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-deploy|Any CPU.Build.0 = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-vault|Any CPU.ActiveCfg = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-vault|Any CPU.Build.0 = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{07F31815-075A-46C3-BCA3-E5BC326B364A}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-vault|Any CPU.ActiveCfg = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-vault|Any CPU.Build.0 = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-vault-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.debug-vault-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release|Any CPU.ActiveCfg = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release|Any CPU.Build.0 = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-deploy|Any CPU.Build.0 = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-vault|Any CPU.ActiveCfg = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-vault|Any CPU.Build.0 = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{A280C402-9F6A-44D1-A069-259356E8461B}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-vault|Any CPU.ActiveCfg = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-vault|Any CPU.Build.0 = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-vault-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.debug-vault-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release|Any CPU.ActiveCfg = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release|Any CPU.Build.0 = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-deploy|Any CPU.Build.0 = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault|Any CPU.ActiveCfg = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault|Any CPU.Build.0 = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -623,6 +684,12 @@ Global
 		{FE22F43E-3EAE-4B6E-8AF3-A1F3A16C2841} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
 		{1AD6EFB6-D73E-42AA-860E-0A57D80147D6} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
 		{026BA481-3EDC-4665-AC4A-6701621EDD8D} = {90317702-8FDC-4DB1-A55D-78204BCD1239}
+		{FE8CC31A-E896-409A-9A98-D0730AAC18ED} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
+		{69831D3E-ED15-4FA7-B1D6-E773211225F5} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
+		{07F31815-075A-46C3-BCA3-E5BC326B364A} = {69831D3E-ED15-4FA7-B1D6-E773211225F5}
+		{BDA02670-A190-49D0-979C-B272114D15DB} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
+		{A280C402-9F6A-44D1-A069-259356E8461B} = {BDA02670-A190-49D0-979C-B272114D15DB}
+		{923E10F3-D8CA-4C05-B847-5C6B687AE903} = {FE8CC31A-E896-409A-9A98-D0730AAC18ED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}
