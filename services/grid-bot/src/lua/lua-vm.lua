@@ -12,19 +12,22 @@ local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
 local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
 
 local blacklistedServices = {{
-	"httprbxapiservice"
+	"httprbxapiservice",
+	"testservice"
 }}
 
 local blacklistedInstanceTypes = {{
 	"script",
 	"modulescript",
 	"corescript",
+	"localscript",
 	"networkclient",
 	"networkmarker",
 	"networkserver",
 	"networkpeer",
 	"networkreplicator",
-	"networksettings"
+	"networksettings",
+	"testservice"
 }}
 
 local blacklistedProps = {{
@@ -36,7 +39,7 @@ local blacklistedProps = {{
 	httpgetasync = {{"datamodel"}},
 	httppost = {{"datamodel"}},
 	httppostasync = {{"datamodel"}},
-	run = {{"runservice"}},
+	run = {{"runservice", "testservice"}},
 	loadasset = {{"insertservice"}},
 	load = {{"datamodel"}}
 }};
