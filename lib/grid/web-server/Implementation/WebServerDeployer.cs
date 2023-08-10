@@ -114,10 +114,17 @@ public class WebServerDeployer : IWebServerDeployer
             return;
         }
 
-        _process.Kill();
-        _process.Dispose();
+        try
+        {
+            _process.Kill();
+            _process.Dispose();
 
-        _process = null;
+            _process = null;
+        }
+        catch (InvalidOperationException)
+        {
+            _process = null;
+        }
 
         _logger.Information("Web server stopped");
     }
@@ -125,6 +132,9 @@ public class WebServerDeployer : IWebServerDeployer
     /// <inheritdoc cref="IWebServerDeployer.LaunchWebServer(int)"/>
     public void LaunchWebServer(int maxAttempts = 15)
     {
+        if (_process != null && _process.HasExited)
+            _process = null; // Case for when the process was killed externally
+
         var status = _healthCheckClient.CheckHealth();
 
         if (status == HealthCheckStatus.Failure)

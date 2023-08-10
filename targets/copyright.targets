@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Copyright>Copyright © $(CompanyName) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
     <Company>MFDLABS</Company>
+    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
   </PropertyGroup>
 </Project>
