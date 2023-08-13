@@ -448,8 +448,8 @@ do
 		"LogService"
 	})
 	instance_data:add_blocked_methods(game:GetService("HttpService"), {
-		"HttpGetAsync",
-		"HttpPostAsync",
+		"GetAsync",
+		"PostAsync",
 		"RequestAsync",
 		"RequestInternal"
 	})
