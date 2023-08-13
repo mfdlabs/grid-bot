@@ -22,11 +22,11 @@ using Logging;
 
 using FileSystem;
 using Diagnostics;
+using Configuration;
 using Text.Extensions;
 using Threading.Extensions;
 using Reflection.Extensions;
 using Diagnostics.Extensions;
-using Configuration.Extensions;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable EmptyGeneralCatchClause
@@ -279,8 +279,8 @@ namespace Grid.AutoDeployer.Service
             {
                 Task.Delay(-1, _stopSignal.Token).Wait();
             }
-            catch (TaskCanceledException) {} // Ignore
-            catch (AggregateException ex) when (ex.InnerExceptions.Any(e => e is TaskCanceledException) || ex.InnerException is TaskCanceledException) {} // Ignore
+            catch (TaskCanceledException) { } // Ignore
+            catch (AggregateException ex) when (ex.InnerExceptions.Any(e => e is TaskCanceledException) || ex.InnerException is TaskCanceledException) { } // Ignore
         }
 
         private static void SkippedVersionInvalidationWork()
@@ -628,30 +628,30 @@ SLEEP:
                                     },
                                     after: nextPageCursor
                                 )
-                                select from node in release.Nodes
-                                    select new MinimalRelease
-                                    {
-                                        Name = node.Name,
-                                        TagName = node.TagName,
-                                        Draft = node.IsDraft,
-                                        Prerelease = node.IsPrerelease,
-                                        NextPageCursor = release.PageInfo.EndCursor,
-                                        Assets = (from asset in
-                                            node.ReleaseAssets(
-                                                4,
-                                                null,
-                                                null,
-                                                null,
-                                                null
-                                            )
-                                            select from assetNode in
-                                                asset.Nodes
-                                                select new MinimalRelease.MinimalReleaseAsset
-                                                {
-                                                    Name = assetNode.Name,
-                                                    Url = assetNode.Url
-                                                }).ToList()
-                                            }).Compile();
+                        select from node in release.Nodes
+                               select new MinimalRelease
+                               {
+                                   Name = node.Name,
+                                   TagName = node.TagName,
+                                   Draft = node.IsDraft,
+                                   Prerelease = node.IsPrerelease,
+                                   NextPageCursor = release.PageInfo.EndCursor,
+                                   Assets = (from asset in
+                                       node.ReleaseAssets(
+                                           4,
+                                           null,
+                                           null,
+                                           null,
+                                           null
+                                       )
+                                             select from assetNode in
+                                                 asset.Nodes
+                                                    select new MinimalRelease.MinimalReleaseAsset
+                                                    {
+                                                        Name = assetNode.Name,
+                                                        Url = assetNode.Url
+                                                    }).ToList()
+                               }).Compile();
 
                     var releases = _gitHubQLClient
                         .Run(releasesQuery)
@@ -700,7 +700,8 @@ SLEEP:
 
                     if (latestRelease.Prerelease)
                     {
-                        if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                        if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase) ||
+                            !global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
                         {
                             _logger.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
                             SkipVersion(latestReleaseVersion);
@@ -709,6 +710,16 @@ SLEEP:
                         }
 
                         _logger.Warning("{0} IS MARKED TO DEPLOY BUT IS PRE-RELEASE, THIS COULD POTENTIALLY BE A DANGEROUS DEPLOYMENT!", latestReleaseVersion);
+                    }
+                    else
+                    {
+                        if (!global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
+                        {
+                            _logger.Warning("This auto-deployer can only deploy pre-releases, skipping {0}", latestReleaseVersion);
+                            SkipVersion(latestReleaseVersion);
+                            nextPageCursor = latestRelease.NextPageCursor;
+                            continue;
+                        }
                     }
 
                     var groups = latestRelease.Name.Match(DeploymentIdRegex, RegexOptions.Compiled | RegexOptions.IgnoreCase).Groups;

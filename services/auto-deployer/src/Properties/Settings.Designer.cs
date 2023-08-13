@@ -148,5 +148,14 @@ namespace Grid.AutoDeployer.Properties {
                 return ((bool)(this["EnvironmentLoggerUseColor"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OnlyDeployPreRelease {
+            get {
+                return ((bool)(this["OnlyDeployPreRelease"]));
+            }
+        }
     }
 }
