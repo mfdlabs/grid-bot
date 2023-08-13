@@ -105,7 +105,7 @@ do
 
 			__index = function(self: VirtualizedSignal, key: any): any
 				if key:lower() == "connect" or key:lower() == "connectparallel" or key:lower() == "once" then
-					local method = (self._signal :: any)[key]
+					local method = self._signal[key]
 					if typeof(method) ~= "function" then
 						return method
 					end
@@ -120,13 +120,13 @@ do
 						end)
 					end
 				else
-					return (self._signal :: any)[key]
+					return self._signal[key]
 				end
 			end,
 
 			__newindex = function(self: VirtualizedSignal, key: any, value: any)
 				-- Signals are read-only; no need for filtering
-				(self._signal :: any)[key] = value
+				self._signal[key] = value
 			end,
 
 
@@ -181,7 +181,7 @@ do
 					end
 				end
 
-				local value = (self._instance :: any)[key]
+				local value = self._instance[key]
 				if typeof(value) == "function" then
 					if self._instance_data:is_method_blocked(value) then
 						return error(string.format("The method by the name of '%s' is disabled.", key))
@@ -210,7 +210,7 @@ do
 					end
 				end
 
-				(self._instance :: any)[key] = value
+				self._instance[key] = value
 			end,
 
 			__tostring = function(self: VirtualizedInstance) return tostring(self._instance) end,
@@ -329,7 +329,7 @@ do
 			local lua_methods = {}
 			for _, method in methods do
 				local func, err = pcall(function()
-					return (instance :: any)[method]
+					return instance[method]
 				end)
 				assert(err == nil, string.format("Instance of type %s does not have a method %s", instance.ClassName, method))
 				self._blocked_methods[func] = true
