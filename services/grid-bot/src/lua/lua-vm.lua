@@ -336,7 +336,7 @@ do
 			end
 		end,
 
-		is_method_blocked = function(self: VirtualizedInstanceData, method: (...any) -> ...any): boolean
+		is_method_blocked = function(self: VirtualizedInstanceData, method: ({any}) -> {any}): boolean
 			return self._blocked_methods[method] ~= nil
 		end,
 
