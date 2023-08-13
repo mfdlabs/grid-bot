@@ -264,7 +264,7 @@ do
 				return self:get_wrapped_instance(value):get_proxy()
 			elseif typeof(value) == "table" then
 				local output = {}
-				for _, item in value do
+				for _, item in pairs(value) do
 					table.insert(output, self:get_wrapped_value(item))
 				end
 
@@ -297,7 +297,7 @@ do
 		end,
 
 		add_blocked_classnames = function(self: VirtualizedInstanceData, classNames: {string})
-			for _, className in classNames do
+			for _, className in pairs(classNames) do
 				self._blocked_classnames[className:lower()] = true
 			end
 		end,
@@ -311,7 +311,7 @@ do
 				self._blocked_class_properties[className:lower()] = {}
 			end
 
-			for _, property in properties do
+			for _, property in pairs(properties) do
 				self._blocked_class_properties[className:lower()][property:lower()] = true
 			end
 		end,
@@ -327,7 +327,7 @@ do
 		add_blocked_methods = function(self: VirtualizedInstanceData, instance: Instance, methods: {string})
 			-- Get the real method's function in-memory
 			local lua_methods = {}
-			for _, method in methods do
+			for _, method in pairs(methods) do
 				local func, err = pcall(function()
 					return instance[method]
 				end)
@@ -353,7 +353,7 @@ do
 		_environment = {};
 
 		add_native_globals = function(self: VirtualizedEnvironmentData, names: {string})
-			for _, name in names do
+			for _, name in pairs(names) do
 				local global = getfenv(0)[name]
 				assert(global, string.format("Global %s does not exist", name))
 				self._environment[name] = global
@@ -361,7 +361,7 @@ do
 		end,
 
 		apply_global = function(self: VirtualizedEnvironmentData, keys: {string}, value: any)
-			for _, key in keys do
+			for _, key in pairs(keys) do
 				self._environment[key] = value
 			end
 		end,
@@ -513,7 +513,7 @@ do
 	setfenv(1, execution_env)
 end
 
-local ctx = function() for i = 1, 500 do warn("hi") end return "" end
+local ctx = function() {0} end
 
 type ReturnMetadata = {
 	success: boolean?;
