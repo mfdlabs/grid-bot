@@ -328,10 +328,10 @@ do
 			-- Get the real method's function in-memory
 			local lua_methods = {}
 			for _, method in pairs(methods) do
-				local err, func = pcall(function()
+				local success, func = pcall(function()
 					return instance[method]
 				end)
-				assert(err == nil, string.format("Instance of type %s does not have a method %s", instance.ClassName, method))
+				assert(success, string.format("Instance of type %s does not have a method %s", instance.ClassName, method))
 				self._blocked_methods[func] = true
 			end
 		end,
