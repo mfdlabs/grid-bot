@@ -53,24 +53,15 @@ local FFlag: FFlagManager = {
 	end,
 
 	add_int = function(self: FFlagManager, name: string, default: number)
-		success, self._values[name] = pcall(game.GetFastInt, game, name)
-		if not success then
-			self._values[name] = default
-		end
+		self._values[name] = game:DefineFastInt(name, default)
 	end,
 
 	add_flag = function(self: FFlagManager, name: string, default: boolean)
-		success, self._values[name] = pcall(game.GetFastFlag, game, name)
-		if not success then
-			self._values[name] = default
-		end
+		self._values[name] = game:DefineFastFlag(name, default)
 	end,
 
 	add_string = function(self: FFlagManager, name: string, default: string)
-		success, self._values[name] = pcall(game.GetFastFlag, game, name)
-		if not success then
-			self._values[name] = default
-		end
+		self._values[name] = game:DefineFastString(name, default)
 	end,
 }
 
@@ -648,3 +639,4 @@ end
 return_metadata.logs = logs
 
 return result, return_metadata -- This will actually make the check for LUA_TARRAY redundant.
+
