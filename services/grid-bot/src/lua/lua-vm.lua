@@ -1,412 +1,588 @@
 --[[
-File Name: SafeLuaMode.lua
-Written By: Nikita Petko
+File Name: LuaVM.lua
+Written By: Liam Meshorer
 Description: Disables specific things in the datamodel, by virtualizing the function environment
-Modifications:
-	21/11/2021 01:16 => Removed the game to script check because it was returning nil (we aren't running under a script so it's nil)
---]] 
-local args = ...
-local isAdmin = args['isAdmin'] -- might be able to be hacked, but we'll see
-local isVmEnabledForAdmins = args['isVmEnabledForAdmins']
+--]]
 
-local shouldVirtualize = isAdmin and isVmEnabledForAdmins or true
+local execution_env = {}
 
-local blacklistedServices = {{
-	"httprbxapiservice",
-	"testservice"
-}}
+do
+	local args = {['unit_test'] = true}
+	local timeout = tonumber(args['timeout']) or 2
+	local max_log_length = tonumber(args['max_log_length']) or 4096
+	local is_admin = args['is_admin']
+	local vm_enabled_for_admin = args['vm_enabled_for_admins']
+	local should_virtualize = is_admin and vm_enabled_for_admin or true
 
-local blacklistedInstanceTypes = {{
-	"script",
-	"modulescript",
-	"corescript",
-	"localscript",
-	"networkclient",
-	"networkmarker",
-	"networkserver",
-	"networkpeer",
-	"networkreplicator",
-	"networksettings",
-	"testservice"
-}}
-
-local blacklistedProps = {{
-	getasync = {{"httpservice"}},
-	postasync = {{"httpservice"}},
-	requestasync = {{"httpservice"}},
-	requestinternal = {{"httpservice"}},
-	httpget = {{"datamodel"}},
-	httpgetasync = {{"datamodel"}},
-	httppost = {{"datamodel"}},
-	httppostasync = {{"datamodel"}},
-	run = {{"runservice", "testservice"}},
-	loadasset = {{"insertservice"}},
-	load = {{"datamodel"}}
-}};
-
-local DebugService = nil
-if isAdmin then
-    DebugService = {{}};
-    DebugService.__index = DebugService;
-    DebugService.__metatable = "This metatable is locked";
-    function DebugService:__tostring()
-        return "DebugService";
-    end
-
-    function DebugService.new()
-        local service = {{
-            _last = nil,
-            _capsule = nil,
-            _wrap = nil,
-            _unwrap = nil,
-            _original = nil,
-            _wrapper = nil
-        }};
-
-        setmetatable(service, DebugService);
-
-        return service;
-    end
-
-    function DebugService:setLast(last)
-        self._last = last
-    end
-
-    function DebugService:getLast()
-        return self._last
-    end
-
-    function DebugService:setMeta(capsule, original, wrapper)
-        self._capsule = capsule
-        self._original = orginal
-        self._wrapped = wrapped
-    end
-
-    function DebugService:getMeta()
-        return {{
-            capsule = self._capsule,
-            original = self._original,
-            wrapped = self._wrapped
-        }};
-    end
-
-    function DebugService:setWrappers(wrap, unwrap)
-        self._wrap = wrap
-        self._unwrap = unwrap
-    end
-
-    function DebugService:wrap(...)
-        return self._wrap(...)
-    end
-
-    function DebugService:unwrap(...)
-        return self._unwrap(...)
-    end
-end
-
-
-if shouldVirtualize then
-    warn("We are in a VM state, blocking specific methods is expected.")
-
-    local setfenv = setfenv
-    local getfenv = getfenv
-    local setmetatable = setmetatable
-    local getmetatable = getmetatable
-    local type = type
-    local select = select
-    local tostring = tostring
-    local newproxy = newproxy
-    local next = next
-
-    local debugService = isAdmin and DebugService.new() or nil
-
-    local Capsule = {{}}
-    Capsule.__metatable = "This debug metatable is locked."
-
-    local last = nil
-	
-	function _is_blacklisted_service(serviceName)
-		local name = serviceName:lower()
-		
-		return table.find(blacklistedServices, name) ~= nil
-	end
-	
-	function _is_blacklisted_instance(instanceName)
-		local name = instanceName:lower()
-		
-		return table.find(blacklistedInstanceTypes, name) ~= nil
-	end
-	
-	function _is_blacklisted(instance, propName)
-		local name = propName:lower()
-		local instanceName = typeof(instance) == "Instance" and 
-							 instance.ClassName:lower() or 
-							 ""
-		
-		local prop = blacklistedProps[name]
-		
-		return prop ~= nil and (#prop == 0 or table.find(prop, instanceName) ~= nil)
+	local setfenv = setfenv
+	local getfenv = getfenv
+	local setmetatable = setmetatable
+	local getmetatable = getmetatable
+	local type = type
+	local select = select
+	local tostring = tostring
+	local newproxy = newproxy
+	local game = game
+	if args['unit_test'] then
+		local assert = function(v, ...) if not v then print(v, ...) end end
 	end
 
-    function Capsule:__index(k)
-        if isAdmin then print(k, tostring(last)) end
+	--[[ Type Definitions ]]
+	type VirtualizedObject = {
+		_type: string;
+		_proxy: any;
+		_instance_data: VirtualizedInstanceData;
 
-        if typeof(k) ~= "string" then
-            k = tostring(k)
-        end
+		get_proxy: (VirtualizedObject) -> any;
+	}
 
-        k = k:gsub("[^%w%s_]+", "")
-		
-		local lower = k:lower()
-		
-        if lower == "getservice" or lower == "service" or lower == "findservice" then
-            return function(...)
-                local t = {{...}}
+	type VirtualizedSignal = {
+		_signal: RBXScriptSignal;
+	} & VirtualizedObject
 
-                if isAdmin and t[2] == "DebugService" then
-					last = debugService
-                    return debugService
-                end
-				
-				if _is_blacklisted_service(t[2]) then
-					error(string.format(
-							"The service by the name of '%s' is inaccessible.", 
-							t[2]
-						))
+	type VirtualizedInstance = {
+		_instance: Instance;
+	} & VirtualizedObject
+
+	type VirtualizedInstanceData = {
+		[Instance]: VirtualizedInstance,
+		get_wrapped_instance: (VirtualizedInstanceData, Instance) -> VirtualizedInstance;
+		get_wrapped_signal: (VirtualizedInstanceData, RBXScriptSignal, string) -> VirtualizedSignal;
+		get_wrapped_value: (VirtualizedInstanceData, any) -> any;
+
+		_blocked_classnames: {[string]: boolean?};
+		_blocked_class_properties: {[string]: {[string]: boolean?}};
+		_blocked_methods: {[({any}) -> any]: boolean?};
+		_virtualized_signals: {[string]: VirtualizedSignal};
+		_proxy_map: {[any]: VirtualizedObject};
+
+		add_blocked_classnames: (VirtualizedInstanceData, {string}) -> nil;
+		is_classname_blocked: (VirtualizedInstanceData, string) -> boolean;
+
+		add_blocked_class_properties: (VirtualizedInstanceData, string, {string}) -> nil;
+		is_class_property_blocked: (VirtualizedInstanceData, string, string) -> boolean;
+
+		add_blocked_methods: (VirtualizedInstanceData, Instance, {string}) -> nil;
+		is_method_blocked: (VirtualizedInstanceData, ({any}) -> {any}) -> boolean;
+
+		get_proxy: (VirtualizedInstanceData, any) -> VirtualizedObject | nil;
+	}
+
+	type VirtualizedEnvironmentData = {
+		_environment: {[string]: any};
+
+		add_native_globals: (VirtualizedEnvironmentData, {string}) -> nil;
+		apply_global: (VirtualizedEnvironmentData, {string}, any) -> nil;
+		get_environment: (VirtualizedEnvironmentData) -> {[string]: any};
+	}
+
+	type LogData = {
+		_data: string;
+		_cap_exceeded: boolean;
+		_surplus_rows: number;
+		_log_connection: RBXScriptConnection;
+
+		get_log_string: (LogData) -> string;
+		add_log: (LogData, {string}, Enum.MessageType) -> nil;
+		start_collecting: (LogData) -> nil;
+	}
+
+	local instance_data: VirtualizedInstanceData = nil;
+	local environment_data: VirtualizedEnvironmentData = nil;
+	local log_data: LogData = nil;
+
+	-- [[ Code Definitions ]]
+	local function VirtualizeSignal(signal: RBXScriptSignal, instance_data: VirtualizedInstanceData): (any, VirtualizedSignal)
+		local wrapper: VirtualizedSignal = {
+			_type = 'RBXScriptSignal',
+			_proxy = newproxy(true),
+			_signal = signal,
+			_instance_data = instance_data,
+
+			get_proxy = function(self: VirtualizedObject): any
+				return self._proxy
+			end,
+
+			__index = function(self: VirtualizedSignal, key: any): any
+				if key:lower() == "connect" or key:lower() == "connectparallel" or key:lower() == "once" then
+					local method = (self._signal :: any)[key]
+					if typeof(method) ~= "function" then
+						return method
+					end
+
+					return function(signal, callback)
+						if signal ~= self._proxy then
+							return
+						end
+						method(self._signal, function(...)
+							local event_input = instance_data:get_wrapped_value({...})
+							callback(unpack(event_input))
+						end)
+					end
+				else
+					return (self._signal :: any)[key]
 				end
+			end,
 
-                local service = game[k](game, t[2])
-				
-                last = service
-				
-                return service
-            end
-        end
-		
-		if lower == "new" and last == Instance then
-			return function(...)
-                local t = {{...}}
+			__newindex = function(self: VirtualizedSignal, key: any, value: any)
+				-- Signals are read-only; no need for filtering
+				(self._signal :: any)[key] = value
+			end,
 
-				if _is_blacklisted_instance(t[1]) then
-					error(string.format(
-							"The instance type by the name of '%s' is inaccessible.", 
-							t[1]
-						))
+
+			__tostring = function(self: VirtualizedSignal) return tostring(self._signal) end,
+
+			__call = function(self: VirtualizedSignal, ...)     error("attempt to call a RBXScriptSignal value") end,
+			__concat = function(self: VirtualizedSignal, other) error(("attempt to concatenate RBXScriptSignal with %s"):format(typeof(other))) end,
+			__unm = function(self: VirtualizedSignal)           error("attempt to perform arithmethic (unm) on RBXScriptSignal") end,
+			__add = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (add) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__sub = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (sub) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__mul = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (mul) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__div = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (div) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__mod = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (mod) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__pow = function(self: VirtualizedSignal, other)    error(("attempt to perform arithmetic (pow) on RBXScriptSignal and %s"):format(typeof(other))) end,
+			__lt = function(self: VirtualizedSignal, other)     error(("attempt to compare RBXScriptSignal < %s"):format(typeof(other))) end,
+			__le = function(self: VirtualizedSignal, other)     error(("attempt to compare RBXScriptSignal <= %s"):format(typeof(other))) end,
+			__len = function(self: VirtualizedSignal)           error("attempt to get length of a RBXScriptSignal value") end,
+
+		}
+
+		-- Set up the proxy metatable
+		local metatable = getmetatable(wrapper._proxy)
+		metatable.__metatable = 'The metatable is locked'
+		for method_name, method_func in pairs(wrapper) do
+			if method_name:sub(1, 2) == '__' then
+				metatable[method_name] = function(...)
+					local args = {...}
+					table.remove(args, 1)
+					return method_func(wrapper, table.unpack(args))
 				end
-
-                local inst = Instance.new(t[1])
-				
-                last = inst
-				
-                return inst
-            end
-		end
-		
-        -- todo: clean up the check, because it looks kludgy
-        if _is_blacklisted(last, k) then
-			if typeof(last) == "Instance" then
-				error(string.format(
-						"'%s.%s' is inaccessible.", 
-						last:GetFullName(),
-						k
-					))
-			else
-				error(string.format(
-						"'%s' is inaccessible.", 
-						k
-					))
 			end
 		end
-		
-        last = self[k]
 
-        if isAdmin then debugService:setLast(last) end
+		return wrapper._proxy, wrapper
+	end
 
-        return self[k]
-    end
-	
-    function Capsule:__newindex(k, v) self[k] = v end
-    function Capsule:__call(...) self(...) end
-    function Capsule:__concat(v) return self .. v end
-    function Capsule:__unm() return -self end
-    function Capsule:__add(v) return self + v end
-    function Capsule:__sub(v) return self - v end
-    function Capsule:__mul(v) return self * v end
-    function Capsule:__div(v) return self / v end
-    function Capsule:__mod(v) return self % v end
-    function Capsule:__pow(v) return self ^ v end
-    function Capsule:__tostring() return tostring(self) end
-    function Capsule:__eq(v) return self == v end
-    function Capsule:__lt(v) return self < v end
-    function Capsule:__le(v) return self <= v end
-    function Capsule:__len() return #self end
-    local CapsuleMT = {{__index = Capsule}}
+	local function VirtualizeInstance(instance: Instance, instance_data: VirtualizedInstanceData): (any, VirtualizedInstance)
+		local wrapper: VirtualizedInstance = {
+			_type = 'Instance',
+			_proxy = newproxy(true),
+			_instance = instance,
+			_instance_data = instance_data,
 
-    local original = setmetatable({{}}, {{__mode = "k"}})
-    local wrapper = setmetatable({{}}, {{__mode = "v"}})
+			get_proxy = function(self: VirtualizedObject): any
+				return self._proxy
+			end,
 
-    if isAdmin then
-        debugService:setMeta(Capsule, original, wrapper);
-    end
+			__index = function(self: VirtualizedInstance, key: any): any
+				if type(key) == string then
+					if self._instance_data:is_class_property_blocked(self._instance.ClassName, key) then
+						return error(string.format("The property by the name of '%s' is disabled.", key))
+					end
+				end
 
-    local wrap
-    local unwrap
+				local value = (self._instance :: any)[key]
+				if typeof(value) == "function" then
+					if self._instance_data:is_method_blocked(value) then
+						return error(string.format("The method by the name of '%s' is disabled.", key))
+					end
 
-    local secureVersions = {{
-        [setfenv] = function(target, newWrappedEnv)
-            if type(target) == "number" and target > 0 then
-                target = target + 2
-            elseif target == wrapper[target] then
-                target = original[target]
-            end
+					return function(...)
+						local args = {...}
+						if args[1] == self._proxy then
+							args[1] = self._instance
+						end
+						local function_return = {value(table.unpack(args))}
+						function_return = self._instance_data:get_wrapped_value(function_return)
+						return unpack(function_return)
+					end
+				elseif typeof(value) == "RBXScriptSignal" then
+					return self._instance_data:get_wrapped_signal(value, self._instance:GetFullName() .. key):get_proxy()
+				else
+					return self._instance_data:get_wrapped_value(value)
+				end
+			end,
 
-            local success, oldEnv = pcall(getfenv, target)
-            local newEnv = newWrappedEnv
-            if not success or oldEnv == wrapper[oldEnv] then
-                newEnv = newWrappedEnv
-            else
-                newEnv = original[newWrappedEnv]
-            end
+			__newindex = function(self: VirtualizedInstance, key: any, value: any)
+				if type(key) == string then
+					if self._instance_data:is_class_property_blocked(self._instance.ClassName, key:lower()) then
+						return error(string.format("The property by the name of '%s' is disabled.", key))
+					end
+				end
 
-            return wrap(setfenv(target, newEnv))
-        end,
+				(self._instance :: any)[key] = value
+			end,
 
-        [getfenv] = function(target, newWrappedEnv)
-            if type(target) == "number" and target > 0 then
-                target = target + 1
-            elseif target == wrapper[target] then
-                target = original[target]
-            end
+			__tostring = function(self: VirtualizedInstance) return tostring(self._instance) end,
 
-            return wrap(getfenv(target))
-        end
-    }}
+			--[[ The following metamethods will always throw an error like regular Instances ]]
+			__call = function(self: VirtualizedInstance, ...)     error("attempt to call a Instance value") end,
+			__concat = function(self: VirtualizedInstance, other) error(("attempt to concatenate Instance with %s"):format(typeof(other))) end,
+			__unm = function(self: VirtualizedInstance)           error("attempt to perform arithmethic (unm) on Instance") end,
+			__add = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (add) on Instance and %s"):format(typeof(other))) end,
+			__sub = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (sub) on Instance and %s"):format(typeof(other))) end,
+			__mul = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (mul) on Instance and %s"):format(typeof(other))) end,
+			__div = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (div) on Instance and %s"):format(typeof(other))) end,
+			__mod = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (mod) on Instance and %s"):format(typeof(other))) end,
+			__pow = function(self: VirtualizedInstance, other)    error(("attempt to perform arithmetic (pow) on Instance and %s"):format(typeof(other))) end,
+			__lt = function(self: VirtualizedInstance, other)     error(("attempt to compare Instance < %s"):format(typeof(other))) end,
+			__le = function(self: VirtualizedInstance, other)     error(("attempt to compare Instance <= %s"):format(typeof(other))) end,
+			__len = function(self: VirtualizedInstance)           error("attempt to get length of a Instance value") end,
 
-    local i, n = 1, 0
+		}
 
-    function unwrap(...)
-        if i > n then
-            i = 1
-            n = select("#", ...)
+		-- Set up the proxy metatable
+		local metatable = getmetatable(wrapper._proxy)
+		metatable.__metatable = 'The metatable is locked'
+		for method_name, method_func in pairs(wrapper) do
+			if method_name:sub(1, 2) == '__' then
+				metatable[method_name] = function(...)
+					local args = {...}
+					table.remove(args, 1)
+					return method_func(wrapper, table.unpack(args))
+				end
+			end
+		end
 
-            if n == 0 then return end
-        end
+		return wrapper._proxy, wrapper
+	end
 
-        local value = select(i, ...)
-        if value then
-            if type(value) == "function" then
-                local wrappedFunc = wrapper[value]
-                if wrappedFunc then
-                    local originalFunc = original[wrappedFunc]
-                    if originalFunc == value then
-                        return wrappedFunc
-                    else
-                        return originalFunc
-                    end
-                else
-                    wrappedFunc = function(...)
-                        return unwrap(value(wrap(...)))
-                    end
-                    wrapper[wrappedFunc] = wrappedFunc
-                    wrapper[value] = wrappedFunc
-                    original[wrappedFunc] = value
-                    return wrappedFunc
-                end
-            elseif wrapper[value] then
-                value = original[wrapper[value]]
-            end
-        end
+	local instance_data: VirtualizedInstanceData = {
+		_blocked_classnames = {};
+		_blocked_class_properties = {};
+		_blocked_methods = {};
+		_virtualized_signals = {};
+		_proxy_map = {};
 
-        i = i + 1
-        if i <= n then
-            return value, unwrap(...)
-        else
-            return value
-        end
-    end
+		get_wrapped_value = function(self: VirtualizedInstanceData, value: any): any
+			--[[ Filter an arbitrary value (i.e. values returned from the ROBLOX API) and wrap/block native types ]]
+			if typeof(value) == "Instance" then
+				if self:is_classname_blocked(value.ClassName) then
+					return nil
+				end
 
-    function wrap(...)
-        if i > n then
-            i = 1
-            n = select("#", ...)
+				return self:get_wrapped_instance(value):get_proxy()
+			elseif typeof(value) == "table" then
+				local output = {}
+				for _, item in value do
+					table.insert(output, self:get_wrapped_value(item))
+				end
 
-            if n == 0 then return end
-        end
+				return output
+			else
+				return value
+			end
+		end,
 
-        local value = select(i, ...)
-        if value then
-            local wrapped = wrapper[value]
+		get_wrapped_instance = function(self: VirtualizedInstanceData, instance: Instance): VirtualizedInstance
+			-- Check for a cache hit
+			if self[instance] then return self[instance] end
 
-            if not wrapped then
-                local vType = type(value)
-                if vType == "function" then
-                    if secureVersions[value] then
-                        wrapped = secureVersions[value]
-                    else
-                        local func = value
-                        wrapped = function(...)
-                            return wrap(func(unwrap(...)))
-                        end
-                    end
-                elseif vType == "table" then
-                    wrapped = setmetatable({{}}, Capsule)
-                elseif vType == "userdata" then
-                    wrapped = newproxy(true)
-                    local mt = getmetatable(wrapped)
-                    for key, value in next, Capsule do
-                        mt[key] = value
-                    end
-                else
-                    wrapped = value
-                end
+			-- Instantiate the virtualized instance and add it to the cahe
+			local proxy, wrapper = VirtualizeInstance(instance, self)
+			self._proxy_map[proxy] = wrapper
+			self[instance] = wrapper
+			return wrapper
+		end,
 
-                wrapper[value] = wrapped
-                wrapper[wrapped] = wrapped
-                original[wrapped] = value
-            end
+		get_wrapped_signal = function(self: VirtualizedInstanceData, signal: RBXScriptSignal, signal_path: string): VirtualizedSignal
+			-- Check if the signal path already exists. We need to use a path as the RBXScriptSignal type cannot be used as a key
+			if self._virtualized_signals[signal_path] then return self._virtualized_signals[signal_path] end
 
-            value = wrapped
-        end
+			-- Instantiate the virtualized signal and add it to the cahe
+			local proxy, wrapper = VirtualizeSignal(signal, self)
+			self._proxy_map[proxy] = wrapper
+			self._virtualized_signals[signal_path] = wrapper
+			return wrapper
+		end,
 
-        i = i + 1
-        if i <= n then
-            return value, wrap(...)
-        else
-            return value
-        end
-    end
+		add_blocked_classnames = function(self: VirtualizedInstanceData, classNames: {string})
+			for _, className in classNames do
+				self._blocked_classnames[className:lower()] = true
+			end
+		end,
 
-    if isAdmin then
-        debugService:setWrappers(wrap, unwrap)
-    end
+		is_classname_blocked = function(self: VirtualizedInstanceData, className: string): boolean
+			return self._blocked_classnames[className:lower()] ~= nil
+		end,
 
-    for key, metamethod in next, Capsule do Capsule[key] = wrap(metamethod) end
+		add_blocked_class_properties = function(self: VirtualizedInstanceData, className: string, properties: {string})
+			if not self._blocked_class_properties[className:lower()] then
+				self._blocked_class_properties[className:lower()] = {}
+			end
 
-    local ret = setfenv(1, wrap(getfenv(1)))
-    local new = getfenv(1)
-    setfenv(1, new)
+			for _, property in properties do
+				self._blocked_class_properties[className:lower()][property:lower()] = true
+			end
+		end,
+
+		is_class_property_blocked = function(self: VirtualizedInstanceData, className: string, property: string): boolean
+			if not self._blocked_class_properties[className:lower()] then
+				return false
+			end
+
+			return self._blocked_class_properties[className:lower()][property:lower()] ~= nil
+		end,
+
+		add_blocked_methods = function(self: VirtualizedInstanceData, instance: Instance, methods: {string})
+			-- Get the real method's function in-memory
+			local lua_methods = {}
+			for _, method in methods do
+				local func, err = pcall(function()
+					return (instance :: any)[method]
+				end)
+				assert(err == nil, string.format("Instance of type %s does not have a method %s", instance.ClassName, method))
+				self._blocked_methods[func] = true
+			end
+		end,
+
+		is_method_blocked = function(self: VirtualizedInstanceData, method: (...any) -> ...any): boolean
+			return self._blocked_methods[method] ~= nil
+		end,
+
+		get_proxy = function(self: VirtualizedInstanceData, proxy: any): VirtualizedObject | nil
+			if self._proxy_map[proxy] then
+				return self._proxy_map[proxy]
+			else
+				return nil
+			end
+		end,
+	}
+
+	local environment_data: VirtualizedEnvironmentData = {
+		_environment = {};
+
+		add_native_globals = function(self: VirtualizedEnvironmentData, names: {string})
+			for _, name in names do
+				local global = getfenv(0)[name]
+				assert(global, string.format("Global %s does not exist", name))
+				self._environment[name] = global
+			end
+		end,
+
+		apply_global = function(self: VirtualizedEnvironmentData, keys: {string}, value: any)
+			for _, key in keys do
+				self._environment[key] = value
+			end
+		end,
+
+		get_environment = function(self: VirtualizedEnvironmentData)
+			if not should_virtualize then
+				return getfenv(0)
+			end
+
+			return self._environment
+		end,
+	}
+
+	local log_data: LogData = {
+		_data = '';
+		_surplus_rows = 0;
+		_cap_exceeded = false;
+		_log_connection = nil;
+
+		get_log_string = function(self: LogData): string
+			local surplus_rows = ""
+			if self._surplus_rows > 0 then
+				surplus_rows = ("\n... (%d more lines)"):format(self._surplus_rows)
+			end
+			self._log_connection:Disconnect()
+			return self._data:sub(1, #self._data - 1) .. surplus_rows
+		end,
+
+		add_log = function(self, message_data: {string}, message_type: Enum.MessageType)
+			if #message_data > 0 then
+				for i = 1, #message_data do
+					message_data[i] = tostring(message_data[i])
+				end
+			end
+			local message = table.concat(message_data, " ")
+			if self._cap_exceeded then
+				self._surplus_rows += 1
+				return
+			end
+
+			if #message > 200 then
+				message = message:sub(0, 200) .. ("... (%d more characters)"):format(#message - 200)
+			end
+
+			local message_types = {
+				[Enum.MessageType.MessageInfo] = 'INFO';
+				[Enum.MessageType.MessageError] = 'ERROR';
+				[Enum.MessageType.MessageWarning] = 'WARNING';
+				[Enum.MessageType.MessageOutput] = 'INFO';
+			}
+
+
+			local log_milli = tostring(math.floor(math.fmod(os.clock(), 1) * 1000)):sub(0, 3)
+			if #log_milli < 3 then
+				log_milli = ("0"):rep(3 - #log_milli) .. log_milli
+			end
+			self._data ..=  ("%s -- %s.%s -- %s\n"):format(message_types[message_type], os.date("%X"), log_milli, message)
+			if #self._data >= max_log_length then
+				self._cap_exceeded = true
+			end
+		end,
+
+		start_collecting = function(self: LogData)
+			self._log_connection = game:GetService("LogService").MessageOut:Connect(function(message, message_type)
+				self:add_log({message}, message_type)
+			end)
+		end,
+	}
+
+	-- [[ Instance Filtering Definitions ]]
+	instance_data:add_blocked_classnames({ --[[ Blocked instance types ]]
+		"Script",
+		"ModuleScript",
+		"CoreScript",
+		"NetworkClient",
+		"NetworkMarker",
+		"NetworkServer",
+		"NetworkPeer",
+		"NetworkReplicator",
+		"NetworkSettings"
+	})
+	instance_data:add_blocked_classnames({ --[[ Blocked service types ]]
+		"HttpRbxApiService",
+		"LogService"
+	})
+	instance_data:add_blocked_methods(game:GetService("HttpService"), {
+		"HttpGetAsync",
+		"HttpPostAsync",
+		"RequestAsync",
+		"RequestInternal"
+	})
+	instance_data:add_blocked_methods(game, {
+		"HttpGet",
+		"HttpAsync",
+		"HttpPost",
+		"HttpPostAsync",
+		"Load",
+		"LoadLocalAsset"
+	})
+	instance_data:add_blocked_class_properties("HttpService", {"HttpEnabled"})
+	instance_data:add_blocked_class_properties("ScriptContext", {"ScriptsEnabled"})
+
+	--[[ Environment Definitions ]]
+	environment_data:add_native_globals({ --[[ Lua Globals ]]
+		"assert", "collectgarbage", "getmetatable", "setmetatable", "ipairs", "pairs", "_G",
+		"pcall", "rawequal", "rawget", "rawset", "select", "tonumber", "tostring", "unpack", "xpcall", "type"
+	})
+	environment_data:add_native_globals({ -- [[ Roblox Globals ]]
+		"delay", "elapsedTime", "gcinfo", "spawn", "stats", "tick", "time", "wait", "warn", "Enum", "shared"
+	})
+	environment_data:add_native_globals({ -- [[ Libraries ]]
+		"bit32", "coroutine", "math", "os", "string", "table", "task", "utf8"
+	})
+	environment_data:apply_global({"timeout"}, timeout)
+	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game):get_proxy())
+	environment_data:apply_global({"workspace", "Workspace"}, instance_data:get_wrapped_instance(workspace):get_proxy())
+	environment_data:apply_global({"typeof"}, function(value: any)
+		local object = instance_data:get_proxy(value)
+		if object then
+			-- We're doing this to make our virtualized objects indistinguishable from their native types
+			return object._type
+		else
+			return typeof(value)
+		end
+	end)
+	environment_data:apply_global({"Instance"}, {
+		new = function(instance_type)
+			if instance_data:is_classname_blocked(instance_type) then
+				return error(("The instance type by the name of '%s' is disabled."):format(instance_type))
+			end
+
+			return instance_data:get_wrapped_instance(Instance.new(instance_type)):get_proxy()
+		end,
+	})
+	environment_data:apply_global({"get_log_string"}, function()
+		return log_data:get_log_string()
+	end)
+	environment_data:apply_global({"print"}, function(...)
+		log_data:add_log({...}, Enum.MessageType.MessageInfo)
+	end)
+	environment_data:apply_global({"warn"}, function(...)
+		log_data:add_log({...}, Enum.MessageType.MessageWarning)
+	end)
+	environment_data:apply_global({"error"}, function(...)
+		log_data:add_log({...}, Enum.MessageType.MessageError)
+	end)
+	execution_env = environment_data:get_environment()
+	log_data:start_collecting()
+	setfenv(1, execution_env)
 end
 
-local result = (function()
+local ctx = function() for i = 1, 500 do warn("hi") end return "" end
 
-	local isAdmin = nil
-	local isVmEnabledForAdmins = nil
-	local args = nil
-	local shouldVirtualize = nil
-	local blacklistedServices = nil
-	local blacklistedInstanceTypes = nil
-	local blacklistedProps = nil
+type ReturnMetadata = {
+	success: boolean?;
+	execution_time: number?;
+	error_message: string?;
+	logs: string?;
+}
 
-{0}
+local return_metadata: ReturnMetadata = {}
+local result, success, finished, error_message, exec_time
+local event = Instance.new('BindableEvent')
+local exec_thread = coroutine.create(function()
+	local start_time = os.clock()
+	local output = {pcall(ctx)}
+	exec_time = os.clock() - start_time
+	success = output[1]
+	if #output == 2 then
+		result = output[2]
+	else
+		table.remove(output, 1)
+		result = output
+	end
+	event:Fire()
+end)
 
-end)()
+local timeout_thread = coroutine.create(function()
+	wait(timeout)
+	exec_time = timeout
+	event:Fire(true)
+end)
+
+event.Event:Connect(function(timeout)
+	if timeout then
+		return_metadata.error_message = "script exceeded timeout"
+		return_metadata.success = false
+		coroutine.close(exec_thread)
+	else
+		if not success then
+			if result:find(":") then
+				result = result:split(":")[3]:sub(2)
+			end
+			return_metadata.error_message, result = result, nil
+		end
+		coroutine.close(timeout_thread)
+		return_metadata.success = success
+	end
+	return_metadata.execution_time = exec_time
+	finished = true
+end)
+
+coroutine.resume(exec_thread)
+coroutine.resume(timeout_thread)
+repeat task.wait() until finished
 
 if typeof(result) == "Instance" then
-    result = tostring(result)
+	result = tostring(result)
 elseif typeof(result) == "table" then
-    result = game:GetService("HttpService"):JSONEncode(result)
+	result = game:GetService("HttpService"):JSONEncode(result)
 elseif result ~= nil then
-    result = tostring(result)
+	result = tostring(result)
 end
 
-return result -- This will actually make the check for LUA_TARRAY redundant.
+local logs = get_log_string()
+if #logs > 6000 then
+	logs = logs:sub(1, 6000)
+end
+if result and #result > 6000 then
+	result = result:sub(1, 6000)
+end
+return_metadata.logs = logs
+return result, return_metadata -- This will actually make the check for LUA_TARRAY redundant.
+
