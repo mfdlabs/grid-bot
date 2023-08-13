@@ -454,15 +454,16 @@ do
 		"RequestInternal"
 	})
 	instance_data:add_blocked_methods(game, {
-		"HttpGet",
-		"HttpAsync",
-		"HttpPost",
+		"HttpGetAsync",
 		"HttpPostAsync",
-		"Load",
-		"LoadLocalAsset"
+		"Load"
+	})
+	instance_data:add_blocked_methods(game:GetService("RunService"), {
+		"Run"
 	})
 	instance_data:add_blocked_class_properties("HttpService", {"HttpEnabled"})
 	instance_data:add_blocked_class_properties("ScriptContext", {"ScriptsEnabled"})
+	instance_data:add_blocked_class_properties("Script", {"Source"})
 
 	--[[ Environment Definitions ]]
 	environment_data:add_native_globals({ --[[ Lua Globals ]]
@@ -473,7 +474,7 @@ do
 		"delay", "elapsedTime", "gcinfo", "spawn", "stats", "tick", "time", "wait", "warn", "Enum", "shared"
 	})
 	environment_data:add_native_globals({ -- [[ Libraries ]]
-		"bit32", "coroutine", "math", "os", "string", "table", "task", "utf8"
+		"bit32", "coroutine", "math", "os", "string", "table", "utf8"
 	})
 	environment_data:apply_global({"timeout"}, timeout)
 	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game):get_proxy())
@@ -549,7 +550,6 @@ event.Event:Connect(function(timeout)
 	if timeout then
 		return_metadata.error_message = "script exceeded timeout"
 		return_metadata.success = false
-		coroutine.close(exec_thread)
 	else
 		if not success then
 			if result:find(":") then
@@ -557,7 +557,6 @@ event.Event:Connect(function(timeout)
 			end
 			return_metadata.error_message, result = result, nil
 		end
-		coroutine.close(timeout_thread)
 		return_metadata.success = success
 	end
 	return_metadata.execution_time = exec_time
@@ -566,7 +565,7 @@ end)
 
 coroutine.resume(exec_thread)
 coroutine.resume(timeout_thread)
-repeat task.wait() until finished
+repeat wait() until finished
 
 if typeof(result) == "Instance" then
 	result = tostring(result)
@@ -584,5 +583,6 @@ if result and #result > 6000 then
 	result = result:sub(1, 6000)
 end
 return_metadata.logs = logs
+
 return result, return_metadata -- This will actually make the check for LUA_TARRAY redundant.
 
