@@ -328,7 +328,7 @@ do
 			-- Get the real method's function in-memory
 			local lua_methods = {}
 			for _, method in pairs(methods) do
-				local func, err = pcall(function()
+				local err, func = pcall(function()
 					return instance[method]
 				end)
 				assert(err == nil, string.format("Instance of type %s does not have a method %s", instance.ClassName, method))
