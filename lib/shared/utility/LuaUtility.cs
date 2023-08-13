@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using Logging;
 
@@ -12,8 +13,21 @@ namespace Grid.Bot.Utility
     public static class LuaUtility
     {
         public static string SafeLuaMode
-            => File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua"));
+            => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua")));
 
+
+        private static string FixFormatString(string input)
+        {
+            //language=regex
+            const string partRegex = @"{{(\d{1,2})}}";
+
+            input = input.Replace("{", "{{");
+            input = input.Replace("}", "}}");
+
+            input = Regex.Replace(input, partRegex, (m) => { return $"{{{m.Groups[1]}}}"; });
+
+            return input;
+        }
 
         public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
 
