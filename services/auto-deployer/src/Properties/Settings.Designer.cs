@@ -115,7 +115,7 @@ namespace Grid.AutoDeployer.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Information")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
         public global::Logging.LogLevel EnvironmentLogLevel {
             get {
                 return ((global::Logging.LogLevel)(this["EnvironmentLogLevel"]));
@@ -155,6 +155,60 @@ namespace Grid.AutoDeployer.Properties {
         public bool OnlyDeployPreRelease {
             get {
                 return ((bool)(this["OnlyDeployPreRelease"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int WatchDogMaxAttempts {
+            get {
+                return ((int)(this["WatchDogMaxAttempts"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9f55e8c1e2a0bc06f874371f33d7c24e38b88c48f3c3cd853fc95174a13beb9b")]
+        public string BacktraceToken {
+            get {
+                return ((string)(this["BacktraceToken"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://mfdlabs.sp.backtrace.io:6097")]
+        public string BacktraceUrl {
+            get {
+                return ((string)(this["BacktraceUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:05")]
+        public global::System.TimeSpan WatchDogWaitTime {
+            get {
+                return ((global::System.TimeSpan)(this["WatchDogWaitTime"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("grid-auto-deployer")]
+        public string EnvironmentLoggerName {
+            get {
+                return ((string)(this["EnvironmentLoggerName"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public int UploadLogFilesToBacktraceEnabledPercent {
+            get {
+                return ((int)(this["UploadLogFilesToBacktraceEnabledPercent"]));
             }
         }
     }

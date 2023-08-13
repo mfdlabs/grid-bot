@@ -26,7 +26,7 @@ internal static class Program
     public static async Task Main(params string[] args)
     {
         _logger = new Logger(
-            name: "grid-auto-deployer",
+            name: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerName,
             logLevel: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel,
             logWithColor: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerUseColor
         );

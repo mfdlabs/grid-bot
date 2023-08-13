@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+using Backtrace;
+using Backtrace.Model;
+
 using Octokit;
 using Octokit.GraphQL;
 
@@ -70,6 +73,8 @@ namespace Grid.AutoDeployer.Service
         private const string ShouldDeployPreReleaseSearchString = @"\[(?i)(deploy)\]";
         private const string UserAgent = "mfdlabs-github-api-client";
         private const string DeploymentMarkerFilename = ".mfdlabs-deployment-marker";
+
+        private static BacktraceClient _backtraceClient;
 
         private static User _githubUser;
         private static GitHubClient _gitHubClient;
@@ -258,6 +263,25 @@ namespace Grid.AutoDeployer.Service
                 _gitHubQLClient = new(ghQlPhv, new($"{uri.Scheme}://{uri.Host}/graphql"), _githubToken);
             }
 
+            if (!global::Grid.AutoDeployer.Properties.Settings.Default.BacktraceUrl.IsNullOrEmpty())
+            {
+                BacktraceCredentials backtraceCredentials = null;
+
+                if (!global::Grid.AutoDeployer.Properties.Settings.Default.BacktraceToken.IsNullOrEmpty())
+                    backtraceCredentials = new BacktraceCredentials(
+                        global::Grid.AutoDeployer.Properties.Settings.Default.BacktraceUrl,
+                        global::Grid.AutoDeployer.Properties.Settings.Default.BacktraceToken
+                    );
+                else
+                    backtraceCredentials = new BacktraceCredentials(
+                        global::Grid.AutoDeployer.Properties.Settings.Default.BacktraceUrl
+                    );
+
+                _backtraceClient = new BacktraceClient(backtraceCredentials);
+
+                BackgroundWork(CollectLogsAndReportToBacktrace);
+            }
+
             _gitHubClient.Credentials = new(_githubToken);
 
             _githubUser = _gitHubClient.User.Current().SyncOrDefault();
@@ -269,6 +293,9 @@ namespace Grid.AutoDeployer.Service
 
             _logger.Debug("Authenticated to Rest API '{0}' as '{1}'.", _gitHubClient.BaseAddress, _githubUser.Email);
             _logger.Debug("Authenticated to GraphQL API '{0}' as '{1}'. We are setup to fetch releases from '{2}/{3}'", _gitHubQLClient.Uri, _githubUser.Email, _githubOrgOrAccountName, _githubRepositoryName);
+
+			if (global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
+				_logger.Warning("This auto-deployer is setup to only deploy pre-release builds from the target '{0}/{1}'!", _githubOrgOrAccountName, _githubRepositoryName);
 
             _isRunning = true;
 
@@ -373,7 +400,7 @@ namespace Grid.AutoDeployer.Service
                         }
 
                         KillAllProcessByNameSafe(_primaryDeploymentExecutable);
-                        StartNewProcess(primaryExe, versionDeploymentPath);
+                        BackgroundWork(() => WatchDogProcess(primaryExe, versionDeploymentPath));
 
                         _cachedVersion = r.TagName;
                         WriteVersionToRegistry();
@@ -388,6 +415,61 @@ SLEEP:
                 _logger.Error(ex);
                 Stop();
             }
+        }
+
+        private static void WatchDogProcess(string primaryExe, string workingDirectory)
+        {
+            for (int i = 1; i <= global::Grid.AutoDeployer.Properties.Settings.Default.WatchDogMaxAttempts; i++)
+            {
+                StartNewProcess(primaryExe, workingDirectory);
+
+                Thread.Sleep(global::Grid.AutoDeployer.Properties.Settings.Default.WatchDogWaitTime);
+
+                if (ProcessHelper.GetProcessByName(_primaryDeploymentExecutable.ToLower().Replace(".exe", ""), out _)) return;
+
+                _logger.Warning(
+                    "Process '{0}' was not open after {1}, number of reattempts: {2}",
+                    primaryExe,
+                    global::Grid.AutoDeployer.Properties.Settings.Default.WatchDogWaitTime,
+                    i - 1
+                );
+            }
+
+            ReportToBacktrace("Process '{0}' did not open after {1} attempts, send this to Backtrace!", primaryExe, global::Grid.AutoDeployer.Properties.Settings.Default.WatchDogMaxAttempts);
+        }
+
+        private static void CollectLogsAndReportToBacktrace()
+        {
+            PercentageInvoker.InvokeAction(
+                () =>
+                {
+#if DEBUG
+                    var prefix = "dev_" + global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerName;
+#else
+                    var prefix = global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerName;
+#endif
+
+                    var attachments = from file in Directory.EnumerateFiles(Path.GetDirectoryName(_logger.FullyQualifiedFileName))
+                                      where Path.GetFileName(file).StartsWith(prefix) && file != _logger.FullyQualifiedFileName
+                                      select file;
+
+                    _backtraceClient.Send("Log files upload", attachmentPaths: attachments.ToList());
+
+                    foreach (var log in attachments)
+                    {
+                        _logger.Warning("Deleting old log file: {0}", log);
+
+                        log.PollDeletion();
+                    }
+                },
+                global::Grid.AutoDeployer.Properties.Settings.Default.UploadLogFilesToBacktraceEnabledPercent
+            );
+        }
+
+        private static void ReportToBacktrace(string data, params object[] args)
+        {
+            _logger.Error(data, args);
+            _backtraceClient?.Send(args is { Length: 0 } ? data : string.Format(data, args));
         }
 
         private static void PurgeCachedVersionIfNoLongerExists(out bool remoteVersionCheckWasRatelimited, out TimeSpan? retryAfter)
@@ -419,7 +501,7 @@ SLEEP:
 
             var versionDeploymentPath = Path.Combine(_deploymentPath, fqn);
             var primaryExe = Path.Combine(versionDeploymentPath, _primaryDeploymentExecutable);
-            StartNewProcess(primaryExe, versionDeploymentPath);
+            BackgroundWork(() => WatchDogProcess(primaryExe, versionDeploymentPath));
         }
 
         private static void StartNewProcess(string primaryExe, string workingDirectory)
@@ -508,13 +590,13 @@ SLEEP:
                 (
                     from f in release.Assets
                     where f.Name.IsMatch(
-                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?\.unpacker\.ps1"
+                        $@"{release.TagName}_?(((?i)(net(?i)(standard|coreapp)?)(([0-9]{{1,3}}\.?){{1,2}}))-(?i)(release|debug)(?i)(-config(?i)(uration)?)?)?\.[U|u]npacker\.ps1"
                     )
                     select f
                 ).FirstOrDefault()?.Name!
             );
 
-            versionDeploymentPath = unpackerFile.Replace(".unpacker.ps1", "");
+            versionDeploymentPath = Regex.Replace(unpackerFile, @".[U|u]npacker\.ps1", "");
 
             if (!File.Exists(unpackerFile))
             {
@@ -700,7 +782,7 @@ SLEEP:
 
                     if (latestRelease.Prerelease)
                     {
-                        if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase) ||
+                        if (!latestRelease.Name.IsMatch(ShouldDeployPreReleaseSearchString, RegexOptions.Compiled | RegexOptions.IgnoreCase) &&
                             !global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
                         {
                             _logger.Warning("{0} was marked as prerelease but had no deploy override text in the title, skipping...", latestReleaseVersion);
@@ -713,7 +795,7 @@ SLEEP:
                     }
                     else
                     {
-                        if (!global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
+                        if (global::Grid.AutoDeployer.Properties.Settings.Default.OnlyDeployPreRelease)
                         {
                             _logger.Warning("This auto-deployer can only deploy pre-releases, skipping {0}", latestReleaseVersion);
                             SkipVersion(latestReleaseVersion);

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Backtrace" Version="2.1.9" />
     <PackageReference Include="Octokit" Version="0.51.0" />
     <PackageReference Include="Octokit.GraphQL" Version="0.1.9-beta" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
