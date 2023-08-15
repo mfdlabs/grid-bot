@@ -12,11 +12,9 @@
   <ItemGroup>
     <ProjectReference Include="../../configuration/configuration/Configuration.csproj" />
     <ProjectReference Include="../compute-cloud/Grid.ComputeCloud.csproj" />
-    <ProjectReference Include="../health-check-client/Grid.HealthCheck.Client.csproj" />
     <ProjectReference Include="../port-management/Grid.PortManagement.csproj" />
     <ProjectReference Include="../process-management/Grid.ProcessManagement.csproj" />
     <ProjectReference Include="../shared/Grid.Shared.csproj" />
-    <ProjectReference Include="../web-server/Grid.WebServer.csproj" />
     <ProjectReference Include="../../instrumentation/instrumentation/Instrumentation.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
   </ItemGroup>

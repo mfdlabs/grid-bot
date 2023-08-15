@@ -143,7 +143,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
     private readonly GridServerArbiterPerformanceMonitor _perfmon;
     private readonly ICounterRegistry _counterRegistry;
     private readonly IPortAllocator _portAllocator;
-    private readonly IWebServerDeployer _webServerDeployer;
     private readonly IGridServerDeployer _gridServerDeployer;
     private readonly ILogger _logger;
 
@@ -158,7 +157,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
     /// <param name="logger">The <see cref="ILogger"/> used for logging.</param>
     /// <param name="httpBinding">The <see cref="Binding"/> used for HTTP communication.</param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/> used for port allocation.</param>
-    /// <param name="webServerDeployer">The <see cref="IWebServerDeployer"/> used for web server deployment.</param>
     /// <param name="gridServerDeployer">The <see cref="IGridServerDeployer"/> used for grid server deployment.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="counterRegistry"/> is <see langword="null" />.
@@ -170,7 +168,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         ILogger logger,
         Binding httpBinding,
         IPortAllocator portAllocator = null,
-        IWebServerDeployer webServerDeployer = null,
         IGridServerDeployer gridServerDeployer = null
     )
     {
@@ -179,17 +176,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         _httpBinding = httpBinding ?? throw new ArgumentNullException(nameof(httpBinding));
 
         _portAllocator = portAllocator ?? new PortAllocator(counterRegistry, logger);
-
-        var healthCheckClient = new WebServerHealthCheckClient(
-            global::Grid.Properties.Settings.Default.WebServerHealthCheckBaseUrl,
-            global::Grid.Properties.Settings.Default.WebServerHealthCheckExpectedResponseText
-        );
-        _webServerDeployer = webServerDeployer ?? new WebServerDeployer(
-            logger,
-            healthCheckClient,
-            global::Grid.Properties.Settings.Default.WebServerWorkspacePath
-        );
-
 
         _gridServerDeployer = gridServerDeployer ?? new GridServerDeployer(
             global::Grid.Properties.Settings.Default.GridServerExecutableName,
@@ -262,8 +248,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
             _logger.Debug("{0} grid server instances were disposed of", instanceCount);
 
-            _webServerDeployer.StopWebServer();
-
             return instanceCount;
         }
     }
@@ -312,8 +296,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
         var currentAllocatedPort = _portAllocator.FindNextAvailablePort();
 
-        _webServerDeployer.LaunchWebServer();
-
         var instance = new GridServerInstance(
             counterRegistry: _counterRegistry,
             logger: _logger,
@@ -355,8 +337,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
         var currentAllocatedPort = _portAllocator.FindNextAvailablePort();
 
-        _webServerDeployer.LaunchWebServer();
-
         var instance = new GridServerInstance(
             counterRegistry: _counterRegistry,
             logger: _logger,
@@ -397,8 +377,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         _perfmon.TotalArbiteredGridServerInstancesOpened.Increment();
 
         var currentAllocatedPort = _portAllocator.FindNextAvailablePort();
-
-        _webServerDeployer.LaunchWebServer();
 
         var instance = new LeasedGridServerInstance(
             lease: lease ?? LeasedGridServerInstance.DefaultLease,
@@ -530,8 +508,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
         TryGetSoapMethod(args, false, method, out var methodToInvoke);
 
-        _webServerDeployer.LaunchWebServer();
-
         var instance = GetOrCreateAnyInstance(name, maxAttemptsToCallSoap, ipAddress, isPoolable);
 
         _logger.Debug("Got the instance '{0}' to execute method '{1}'", instance, method);
@@ -552,8 +528,6 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         _perfmon.TotalInvocations.Increment();
 
         TryGetSoapMethod(args, true, method, out var methodToInvoke);
-
-        _webServerDeployer.LaunchWebServer();
 
         var instance = GetOrCreateAnyInstance(name, maxAttemptsToCallSoap, ipAddress, isPoolable);
 

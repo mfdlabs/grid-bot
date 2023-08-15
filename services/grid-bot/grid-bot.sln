@@ -94,10 +94,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Targets", "Targets", "{C5B2
 		..\..\targets\shared.targets = ..\..\targets\shared.targets
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.WebServer", "..\..\lib\grid\web-server\Grid.WebServer.csproj", "{547A7E94-5788-43CA-ADAC-81163A7D82C2}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.HealthCheck.Client", "..\..\lib\grid\health-check-client\Grid.HealthCheck.Client.csproj", "{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.ProcessManagement", "..\..\lib\grid\process-management\Grid.ProcessManagement.csproj", "{706CA857-B9EE-454F-AF0E-B0AC41DA5813}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.PortManagement", "..\..\lib\grid\port-management\Grid.PortManagement.csproj", "{FE22F43E-3EAE-4B6E-8AF3-A1F3A16C2841}"
@@ -504,38 +500,6 @@ Global
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.release-vault|Any CPU.Build.0 = release-vault|Any CPU
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.release-vault-deploy|Any CPU.ActiveCfg = release-vault|Any CPU
 		{70A7CD06-3B31-40D2-817D-F937C89050EA}.release-vault-deploy|Any CPU.Build.0 = release-vault|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug|Any CPU.ActiveCfg = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug|Any CPU.Build.0 = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-deploy|Any CPU.ActiveCfg = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-deploy|Any CPU.Build.0 = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-vault|Any CPU.ActiveCfg = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-vault|Any CPU.Build.0 = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-vault-deploy|Any CPU.ActiveCfg = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.debug-vault-deploy|Any CPU.Build.0 = debug|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release|Any CPU.ActiveCfg = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release|Any CPU.Build.0 = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-deploy|Any CPU.Build.0 = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-vault|Any CPU.ActiveCfg = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-vault|Any CPU.Build.0 = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug|Any CPU.ActiveCfg = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug|Any CPU.Build.0 = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-deploy|Any CPU.ActiveCfg = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-deploy|Any CPU.Build.0 = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-vault|Any CPU.ActiveCfg = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-vault|Any CPU.Build.0 = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-vault-deploy|Any CPU.ActiveCfg = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.debug-vault-deploy|Any CPU.Build.0 = debug|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release|Any CPU.ActiveCfg = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release|Any CPU.Build.0 = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-deploy|Any CPU.ActiveCfg = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-deploy|Any CPU.Build.0 = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-vault|Any CPU.ActiveCfg = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-vault|Any CPU.Build.0 = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-vault-deploy|Any CPU.ActiveCfg = release|Any CPU
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F}.release-vault-deploy|Any CPU.Build.0 = release|Any CPU
 		{706CA857-B9EE-454F-AF0E-B0AC41DA5813}.debug|Any CPU.ActiveCfg = debug|Any CPU
 		{706CA857-B9EE-454F-AF0E-B0AC41DA5813}.debug|Any CPU.Build.0 = debug|Any CPU
 		{706CA857-B9EE-454F-AF0E-B0AC41DA5813}.debug-deploy|Any CPU.ActiveCfg = debug|Any CPU
@@ -716,8 +680,6 @@ Global
 		{0823C57E-7AEC-461C-8AEA-EB2F3F00460D} = {9685C904-F110-4634-8A25-7B10B4AE559E}
 		{6E5501FF-76F9-4A22-B04A-C27C7F636E43} = {9685C904-F110-4634-8A25-7B10B4AE559E}
 		{70A7CD06-3B31-40D2-817D-F937C89050EA} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
-		{547A7E94-5788-43CA-ADAC-81163A7D82C2} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
-		{DFE8B3CD-7FD2-4C7D-98F7-D5CE35CA138F} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
 		{706CA857-B9EE-454F-AF0E-B0AC41DA5813} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
 		{FE22F43E-3EAE-4B6E-8AF3-A1F3A16C2841} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
 		{1AD6EFB6-D73E-42AA-860E-0A57D80147D6} = {2C9F5CA5-4BE6-43B7-8C41-226A7D30C24E}
