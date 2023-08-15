@@ -6,13 +6,88 @@ Description: Disables specific things in the datamodel, by virtualizing the func
 
 local execution_env = {}
 
+type FFlagManager = {
+	_values: any;
+
+	get_fflag_map: (FFlagManager, string) -> any;
+	get_fflag_list: (FFlagManager, string) -> {string};
+	get_fflag: (FFlagManager, string) -> string | number | boolean;
+	add_int: (FFlagManager, string, number) -> nil;
+	add_flag: (FFlagManager, string, boolean) -> nil;
+	add_string: (FFlagManager, string, string) -> nil;
+}
+
+local FFlag: FFlagManager = {
+	_values = {},
+
+	get_fflag = function(self: FFlagManager, name: string): string | number | boolean
+		return self._values[name]
+	end,
+
+	get_fflag_map = function(self: FFlagManager, name: string)
+		local map_data = self._values[name]
+		assert(map_data, ("requested FFlag %s does not exist"):format(name))
+		if #map_data == 0 then return {} end
+		local rows, map = map_data:split("\n"), {}
+		for _, row in pairs(rows) do
+			local items = row:split(",")
+			for i = 1, #items do
+				items[i] = items[i]:gsub("%s+", "")
+			end
+			local key = items[1]
+			table.remove(items, 1)
+			map[key] = items
+		end
+		return map
+	end,
+
+	get_fflag_list = function(self: FFlagManager, name: string): {string}
+		local list_data = self._values[name]
+		assert(list_data, ("requested FFlag %s does not exist"):format(name))
+		if #list_data == 0 then return {} end
+		local items = list_data:split(",")
+		for i = 1, #items do
+			items[i] = items[i]:gsub("%s+", "")
+		end
+		return items
+	end,
+
+	add_int = function(self: FFlagManager, name: string, default: number)
+		success, self._values[name] = pcall(game.GetFastInt, game, name)
+		if not success then
+			self._values[name] = default
+		end
+	end,
+
+	add_flag = function(self: FFlagManager, name: string, default: boolean)
+		success, self._values[name] = pcall(game.GetFastFlag, game, name)
+		if not success then
+			self._values[name] = default
+		end
+	end,
+
+	add_string = function(self: FFlagManager, name: string, default: string)
+		success, self._values[name] = pcall(game.GetFastFlag, game, name)
+		if not success then
+			self._values[name] = default
+		end
+	end,
+}
+
 do
-	local args = {['unit_test'] = true}
-	local timeout = tonumber(args['timeout']) or 2
-	local max_log_length = tonumber(args['max_log_length']) or 4096
+	FFlag:add_int("LuaVMTimeout", 5)
+	FFlag:add_int("LuaVMMaxLogLength", 4096)
+	FFlag:add_flag("LuaVMEnabledForAdmins", true)
+	FFlag:add_string("LuaVMBlacklistedClassNames", "")
+	FFlag:add_string("LuaVMBlacklistedClassProperties", "")
+	FFlag:add_string("LuaVMBlacklistedClassMethods", "")
+	FFlag:add_string("LuaVMLuaGlobals", "pcall,wait,tostring")
+	FFlag:add_string("LuaVMRobloxGlobals", "")
+	FFlag:add_string("LuaVMLibraryGlobals", "coroutine,os,table")
+
+	local args = {['unit_test'] = false}
 	local is_admin = args['is_admin']
-	local vm_enabled_for_admin = args['vm_enabled_for_admins']
-	local should_virtualize = is_admin and vm_enabled_for_admin or true
+	local should_virtualize = is_admin and FFlag:get_fflag("LuaVMEnabledForAdmins") or true
 
 	local setfenv = setfenv
 	local getfenv = getfenv
@@ -204,7 +279,7 @@ do
 			end,
 
 			__newindex = function(self: VirtualizedInstance, key: any, value: any)
-				if type(key) == string then
+				if type(key) == "string" then
 					if self._instance_data:is_class_property_blocked(self._instance.ClassName, key:lower()) then
 						return error(string.format("The property by the name of '%s' is disabled.", key))
 					end
@@ -386,7 +461,9 @@ do
 			if self._surplus_rows > 0 then
 				surplus_rows = ("\n... (%d more lines)"):format(self._surplus_rows)
 			end
-			self._log_connection:Disconnect()
+			if self._log_connection then
+				self._log_connection:Disconnect()
+			end
 			return self._data:sub(1, #self._data - 1) .. surplus_rows
 		end,
 
@@ -419,64 +496,50 @@ do
 				log_milli = ("0"):rep(3 - #log_milli) .. log_milli
 			end
 			self._data ..=  ("%s -- %s.%s -- %s\n"):format(message_types[message_type], os.date("%X"), log_milli, message)
-			if #self._data >= max_log_length then
+			if #self._data >= tonumber(FFlag:get_fflag("LuaVMMaxLogLength")) then
 				self._cap_exceeded = true
 			end
 		end,
 
 		start_collecting = function(self: LogData)
-			self._log_connection = game:GetService("LogService").MessageOut:Connect(function(message, message_type)
-				self:add_log({message}, message_type)
-			end)
+			--self._log_connection = game:GetService("LogService").MessageOut:Connect(function(message, message_type)
+			--	self:add_log({message}, message_type)
+			--end)
 		end,
 	}
 
 	-- [[ Instance Filtering Definitions ]]
-	instance_data:add_blocked_classnames({ --[[ Blocked instance types ]]
-		"Script",
-		"ModuleScript",
-		"CoreScript",
-		"NetworkClient",
-		"NetworkMarker",
-		"NetworkServer",
-		"NetworkPeer",
-		"NetworkReplicator",
-		"NetworkSettings"
-	})
-	instance_data:add_blocked_classnames({ --[[ Blocked service types ]]
-		"HttpRbxApiService",
-		"LogService"
-	})
-	instance_data:add_blocked_methods(game:GetService("HttpService"), {
-		"GetAsync",
-		"PostAsync",
-		"RequestAsync",
-		"RequestInternal"
-	})
-	instance_data:add_blocked_methods(game, {
-		"HttpGetAsync",
-		"HttpPostAsync",
-		"Load"
-	})
-	instance_data:add_blocked_methods(game:GetService("RunService"), {
-		"Run"
-	})
-	instance_data:add_blocked_class_properties("HttpService", {"HttpEnabled"})
-	instance_data:add_blocked_class_properties("ScriptContext", {"ScriptsEnabled"})
-	instance_data:add_blocked_class_properties("Script", {"Source"})
+	local blocked_classnames = FFlag:get_fflag_list("LuaVMBlacklistedClassNames")
+	instance_data:add_blocked_classnames(blocked_classnames)
+
+	local blocked_methods = FFlag:get_fflag_map("LuaVMBlacklistedClassMethods")
+	for classname, methods in pairs(blocked_methods) do
+		local success, obj
+		if classname == "game" then
+			success, obj = true, game
+		end
+		if not success then
+			success, obj = pcall(game.GetService, game, classname)
+		end
+		if not success then
+			success, obj = pcall(Instance.new, classname)
+		end
+		assert(success, ("unable to acquire object of type %s to block methods"):format(classname))
+		instance_data:add_blocked_methods(obj, methods)
+	end
+
+	local blocked_properties = FFlag:get_fflag_map("LuaVMBlacklistedClassProperties")
+	for classname, properties in pairs(blocked_properties) do
+		print("blocking", classname, properties)
+		instance_data:add_blocked_class_properties(classname, properties)
+	end
 
 	--[[ Environment Definitions ]]
-	environment_data:add_native_globals({ --[[ Lua Globals ]]
-		"assert", "collectgarbage", "getmetatable", "setmetatable", "ipairs", "pairs", "_G",
-		"pcall", "rawequal", "rawget", "rawset", "select", "tonumber", "tostring", "unpack", "xpcall", "type"
-	})
-	environment_data:add_native_globals({ -- [[ Roblox Globals ]]
-		"delay", "elapsedTime", "gcinfo", "spawn", "stats", "tick", "time", "wait", "warn", "Enum", "shared"
-	})
-	environment_data:add_native_globals({ -- [[ Libraries ]]
-		"bit32", "coroutine", "math", "os", "string", "table", "utf8"
-	})
-	environment_data:apply_global({"timeout"}, timeout)
+	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMLuaGlobals"))
+	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMLibraryGlobals"))
+	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMRobloxGlobals"))
+
+	environment_data:apply_global({"timeout"}, tonumber(FFlag:get_fflag("LuaVMTimeout")))
 	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game):get_proxy())
 	environment_data:apply_global({"workspace", "Workspace"}, instance_data:get_wrapped_instance(workspace):get_proxy())
 	environment_data:apply_global({"typeof"}, function(value: any)
@@ -576,13 +639,12 @@ elseif result ~= nil then
 end
 
 local logs = get_log_string()
-if #logs > 6000 then
-	logs = logs:sub(1, 6000)
+if #logs > 4096 then
+	logs = logs:sub(1, 4096)
 end
-if result and #result > 6000 then
-	result = result:sub(1, 6000)
+if result and #result > 4096 then
+	result = result:sub(1, 4096)
 end
 return_metadata.logs = logs
 
 return result, return_metadata -- This will actually make the check for LUA_TARRAY redundant.
-
