@@ -33,7 +33,7 @@ using PerformanceMonitors;
 
 using HWND = System.IntPtr;
 using System.ServiceModel.Channels;
-
+using System.Collections.Generic;
 
 internal class ExecuteScript : IStateSpecificSlashCommandHandler
 {
@@ -48,15 +48,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             .WithName("attachment")
             .WithDescription("Execute a Luau script from an uploaded attachment.")
             .WithType(ApplicationCommandOptionType.SubCommand)
-            .AddOption("contents", ApplicationCommandOptionType.Attachment, "The Luau script attachment.", true)
-            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false),
+            .AddOption("contents", ApplicationCommandOptionType.Attachment, "The Luau script attachment.", true),
 
         new SlashCommandOptionBuilder()
             .WithName("text")
             .WithDescription("Execute a Luau script directly on the command line.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("contents", ApplicationCommandOptionType.String, "The Luau script contents.", true)
-            .AddOption("with_console", ApplicationCommandOptionType.Boolean, "Whether to include the console output.", false)
     };
 
     private sealed class ExecuteScriptSlashCommandPerformanceMonitor
@@ -143,6 +141,98 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         );
     }
 
+    private (string, MemoryStream) DetermineDescription(string input, string fileName)
+    {
+        if (input.IsNullOrEmpty()) return (null, null);
+
+        if (input.Length > MaxResultLength)
+        {
+            if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
+                return ($"The result cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+
+            return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+        }
+
+        return (input, null);
+    }
+
+    private (string, MemoryStream) DetermineResult(string input, string fileName)
+    {
+        if (input.IsNullOrEmpty()) return (null, null);
+
+        if (input.Length > MaxResultLength)
+        {
+            if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)
+                return ($"The result cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+
+            return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+        }
+
+        return (input, null);
+    }
+
+    private void HandleResponse(SocketSlashCommand command, string result, LuaUtility.ReturnMetadata metadata)
+    {
+        var builder = new EmbedBuilder()
+            .WithTitle(
+                metadata.Success
+                    ? "Lua Success"
+                    : "Lua Error"
+            )
+            .WithAuthor(command.User)
+            .WithCurrentTimestamp();
+
+        if (metadata.Success)
+            builder.WithColor(0x00, 0xff, 0x00);
+        else
+            builder.WithColor(0xff, 0x00, 0x00);
+
+        var (fileNameOrOutput, outputFile) = DetermineDescription(
+            metadata.Logs,
+            command.Id.ToString() + "-output.txt"
+        );
+
+        if (outputFile == null && !fileNameOrOutput.IsNullOrEmpty())
+            builder.WithDescription($"```\n{fileNameOrOutput}\n```");
+
+        var (fileNameOrResult, resultFile) = DetermineResult(
+            metadata.Success
+                ? result
+                : metadata.ErrorMessage,
+            command.Id.ToString() + "-result.txt"
+        );
+
+        if (resultFile == null && !fileNameOrResult.IsNullOrEmpty())
+            builder.AddField("Result", $"```\n{fileNameOrResult}\n```");
+
+        builder.AddField("Execution Time", $"{metadata.ExecutionTime:f5}s");
+
+        var attachments = new List<FileAttachment>();
+        if (outputFile != null)
+            attachments.Add(new(outputFile, fileNameOrOutput));
+
+        if (resultFile != null)
+            attachments.Add(new(resultFile, fileNameOrResult));
+
+        var text = metadata.Success
+                    ? result.IsNullOrEmpty()
+                        ? "Executed script with no return!"
+                        : null
+                    : "An error occured while executing your script:";
+
+        if (attachments.Count > 0)
+            command.RespondWithFilesPublic(
+                attachments,
+                text,
+                embed: builder.Build()
+            );
+        else
+            command.RespondPublic(
+                text,
+                embed: builder.Build()
+            );
+    }
+
     private static bool GetScriptContents(
         ref SocketSlashCommand item,
         ref SocketSlashCommandDataOption subcommand,
@@ -174,6 +264,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                     return false;
                 }
 
+                if (attachment.Size / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
+                {
+                    isFailure = true;
+
+                    item.RespondEphemeralPing($"The input attachment ({attachment.Filename}) cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)} KiB!");
+                    return false;
+                }
+
                 _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment.Increment();
                 _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachmentPerSecond.Increment();
 
@@ -186,34 +284,6 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         }
 
         return false;
-    }
-
-    private static void MaximizeGridServer([In] HWND hWnd)
-    {
-        const int SW_MAXIMIZE = 3;
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool ShowWindow(HWND hWnd, int nCmdShow);
-
-        ShowWindow(hWnd, SW_MAXIMIZE);
-    }
-
-    private static Stream GetScreenshotStream(ILeasedGridServerInstance inst)
-    {
-        var tempFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", $"{inst.Name}");
-        try
-        {
-            var mainWindowHandle = Process.GetProcessById(inst.Process.Process.Id).MainWindowHandle;
-            MaximizeGridServer(mainWindowHandle);
-            var bitMap = mainWindowHandle.GetBitmapForWindowByWindowHandle();
-            bitMap.Save(tempFileName);
-            return new MemoryStream(File.ReadAllBytes(tempFileName));
-        }
-        finally
-        {
-            tempFileName.PollDeletion();
-        }
     }
 
     public async Task Invoke(SocketSlashCommand command)
@@ -305,8 +375,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             // isAdmin allows a bypass of disabled methods and virtualized globals
             var (gserverCommand, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
                 filesafeScriptId,
-                ("isAdmin", isAdminScript),
-                ("isVmEnabledForAdmins", global::Grid.Bot.Properties.Settings.Default.ShouldAdminsUseVM)
+                ("is_admin", isAdminScript)
             );
 
             if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
@@ -326,72 +395,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             // bump to 20 seconds so it doesn't batch job timeout on first execution
             var job = new Job() { id = scriptId, expirationInSeconds = userIsAdmin ? 20000 : 20 };
 
-            var instance = GridServerArbiter.Singleton.GetOrCreateAvailableLeasedInstance();
-            var expirationTime = new DateTimeOffset(instance.Expiration).ToUnixTimeSeconds();
-
-            var wantsConsole = subcommand.GetOptionValue("with_console")?.ToString()?.ToLower() == "true";
-
             try
             {
                 File.WriteAllText(scriptName, script, Encoding.ASCII);
 
-                var result = LuaUtility.ParseLuaValues(instance.BatchJobEx(job, scriptEx));
+                var serverResult = GridServerArbiter.Singleton.BatchJobEx(job, scriptEx);
+                var (result, metadata) = LuaUtility.ParseResult(serverResult);
 
-                instance.Lock();
-
-                var screenshot = GetScreenshotStream(instance);
-                var screenshotName = $"{instance.Name}.png";
-
-                if (!result.IsNullOrEmpty())
-                {
-                    if (result.Length > MaxResultLength)
-                    {
-                        _perfmon.TotalItemsProcessedThatHadAFileResult.Increment();
-
-                        if (wantsConsole)
-                            await command.RespondWithFilePublicAsync(
-                                screenshot,
-                                screenshotName
-                            );
-
-                        await command.RespondWithFilePublicAsync(new MemoryStream(Encoding.UTF8.GetBytes(result)),
-                            "execute-result.txt"
-                        );
-                        return;
-                    }
-
-                    var embed = new EmbedBuilder()
-                            .WithTitle("Return value")
-                            .WithDescription($"```\n{result}\n```")
-                            .WithAuthor(command.User)
-                            .WithCurrentTimestamp()
-                            .WithColor(0x00, 0xff, 0x00)
-                            .Build();
-
-                    if (wantsConsole)
-                        await command.RespondWithFilePublicAsync(
-                            screenshot,
-                            screenshotName,
-                            embed: embed
-                        );
-                    else
-                        await command.RespondPublicAsync(
-                            embed: embed
-                        );
-
-                    return;
-                }
-
-                if (wantsConsole)
-                    await command.RespondWithFilePublicAsync(
-                        screenshot,
-                        screenshotName,
-                        "Executed script with no return!"
-                    );
-                else
-                    await command.RespondPublicAsync(
-                       "Executed script with no return!"
-                    );
+                HandleResponse(command, result, metadata);
             }
             catch (Exception ex)
             {
@@ -403,75 +414,13 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                     await command.RespondEphemeralPingAsync("There was an IO error when writing the script to the system, please try again later.");
                 }
 
-                // We assume that it didn't actually track screenshots here.
-                instance.Lock();
-                var screenshot = GetScreenshotStream(instance);
-                var screenshotName = $"{instance.Name}.png";
-
                 if (ex is TimeoutException)
                 {
                     if (!command.User.IsOwner()) command.User.IncrementExceptionLimit();
-
-                    if (wantsConsole)
-                        await command.RespondWithFilePublicAsync(
-                            screenshot,
-                            screenshotName,
-                            "The code you supplied executed for too long, please try again later."
-                        );
-                    else
-                        await command.RespondPublicAsync(
-                            "The code you supplied executed for too long, please try again later."
-                        );
-
-                    return;
-                }
-
-                if (ex is FaultException fault)
-                {
-                    if (fault.Message.Length + 8 > EmbedBuilder.MaxDescriptionLength)
-                    {
-                        // Respond with file instead
-                        if (wantsConsole)
-                        {
-                            await command.RespondWithFilePublicAsync(
-                                screenshot,
-                                screenshotName,
-                                "An error occured while executing your script:"
-                            );
-                            await command.RespondWithFilePublicAsync(
-                                new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
-                                instance.Name + "txt"
-                            );
-                        }
-                        else
-                            await command.RespondWithFilePublicAsync(
-                                new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
-                                instance.Name + "txt",
-                                "An error occured while executing your script:"
-                            );
-                    }
-                    else
-                    {
-                        var embed = new EmbedBuilder()
-                            .WithColor(0xff, 0x00, 0x00)
-                            .WithTitle("Luau Error")
-                            .WithAuthor(command.User)
-                            .WithDescription($"```\n{fault.Message}\n```")
-                            .Build();
-
-                        if (wantsConsole)
-                            await command.RespondWithFilePublicAsync(
-                                screenshot,
-                                screenshotName,
-                                "An error occured while executing your script:",
-                                embed: embed
-                            );
-                        else
-                            await command.RespondPublicAsync(
-                                "An error occured while executing your script:",
-                                embed: embed
-                            );
-                    }
+                    
+                    await command.RespondPublicAsync(
+                        "The code you supplied executed for too long, please try again later."
+                    );
 
                     return;
                 }
@@ -506,21 +455,6 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                         scriptName,
                         ex.Message
                     );
-                }
-
-                try
-                {
-                    if (instance != null)
-                    {
-                        instance.Unlock();
-                        instance.Dispose();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
-                    isFailure = true;
-
                 }
             }
         }

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+using Newtonsoft.Json;
+
 using Logging;
 
 using Text.Extensions;
@@ -12,6 +14,21 @@ namespace Grid.Bot.Utility
 {
     public static class LuaUtility
     {
+        public struct ReturnMetadata
+        {
+            [JsonProperty("success")]
+            public bool Success;
+
+            [JsonProperty("execution_time")]
+            public double ExecutionTime;
+
+            [JsonProperty("error_message")]
+            public string ErrorMessage;
+
+            [JsonProperty("logs")]
+            public string Logs;
+        }
+
         public static string SafeLuaMode
             => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua")));
 
@@ -30,6 +47,14 @@ namespace Grid.Bot.Utility
         }
 
         public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
+
+        public static (string result, ReturnMetadata metadata) ParseResult(IEnumerable<LuaValue> result)
+        {
+            return (
+                (string)Lua.ConvertLua(result.FirstOrDefault()), 
+                JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(result.ElementAtOrDefault(1)))
+            );
+        }
 
         public static bool CheckIfScriptContainsDisallowedText(string script, out string word)
         {

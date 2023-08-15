@@ -89,9 +89,8 @@ public class GridServerProcess : IGridServerProcess, IDisposable
         var startInfo = new ProcessStartInfo
         {
             FileName = executableName,
-            UseShellExecute = true,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Maximized
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
         if (!string.IsNullOrEmpty(workingDirectory))
@@ -102,7 +101,7 @@ public class GridServerProcess : IGridServerProcess, IDisposable
         if (!string.IsNullOrEmpty(args))
             startInfo.Arguments = args;
         else
-            startInfo.Arguments = $"{port} -Console -Verbose";
+            startInfo.Arguments = $"{port} -Console";
 
         var process = Process.Start(startInfo);
 

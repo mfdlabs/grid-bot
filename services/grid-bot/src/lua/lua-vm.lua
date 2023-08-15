@@ -6,27 +6,26 @@ Description: Disables specific things in the datamodel, by virtualizing the func
 
 local execution_env = {}
 
-type FFlagManager = {
+type FVariableManager = {
 	_values: any;
 
-	get_fflag_map: (FFlagManager, string) -> any;
-	get_fflag_list: (FFlagManager, string) -> {string};
-	get_fflag: (FFlagManager, string) -> string | number | boolean;
-	add_int: (FFlagManager, string, number) -> nil;
-	add_flag: (FFlagManager, string, boolean) -> nil;
-	add_string: (FFlagManager, string, string) -> nil;
+	get_variable_map: (FVariableManager, string) -> any;
+	get_variable_list: (FVariableManager, string) -> {string};
+	add_int: (FVariableManager, string, number) -> number;
+	add_flag: (FVariableManager, string, boolean) -> boolean;
+	add_string: (FVariableManager, string, string) -> string;
 }
 
-local FFlag: FFlagManager = {
+local FVariable: FVariableManager = {
 	_values = {},
 
-	get_fflag = function(self: FFlagManager, name: string): string | number | boolean
+	get_variable = function(self: FVariableManager, name: string): string | number | boolean
 		return self._values[name]
 	end,
 
-	get_fflag_map = function(self: FFlagManager, name: string)
+	get_variable_map = function(self: FVariableManager, name: string)
 		local map_data = self._values[name]
-		assert(map_data, ("requested FFlag %s does not exist"):format(name))
+		assert(map_data, ("requested FVariable %s does not exist"):format(name))
 		if #map_data == 0 then return {} end
 		local rows, map = map_data:split("\n"), {}
 		for _, row in pairs(rows) do
@@ -41,9 +40,9 @@ local FFlag: FFlagManager = {
 		return map
 	end,
 
-	get_fflag_list = function(self: FFlagManager, name: string): {string}
+	get_variable_list = function(self: FVariableManager, name: string): {string}
 		local list_data = self._values[name]
-		assert(list_data, ("requested FFlag %s does not exist"):format(name))
+		assert(list_data, ("requested FVariable %s does not exist"):format(name))
 		if #list_data == 0 then return {} end
 		local items = list_data:split(",")
 		for i = 1, #items do
@@ -52,42 +51,50 @@ local FFlag: FFlagManager = {
 		return items
 	end,
 
-	add_int = function(self: FFlagManager, name: string, default: number)
-		success, self._values[name] = pcall(game.GetFastInt, game, name)
+	add_int = function(self: FVariableManager, name: string, default: number)
+		success, self._values[name] = pcall(game.DefineFastInt, game, name, default)
 		if not success then
 			self._values[name] = default
 		end
+
+		return self._values[name]
 	end,
 
-	add_flag = function(self: FFlagManager, name: string, default: boolean)
-		success, self._values[name] = pcall(game.GetFastFlag, game, name)
+	add_flag = function(self: FVariableManager, name: string, default: boolean)
+		success, self._values[name] = pcall(game.DefineFastFlag, game, name, default)
 		if not success then
 			self._values[name] = default
 		end
+
+		return self._values[name]
 	end,
 
-	add_string = function(self: FFlagManager, name: string, default: string)
-		success, self._values[name] = pcall(game.GetFastFlag, game, name)
+	add_string = function(self: FVariableManager, name: string, default: string)
+		success, self._values[name] = pcall(game.DefineFastString, game, name, default)
 		if not success then
 			self._values[name] = default
 		end
+
+		return self._values[name]
 	end,
 }
 
 do
-	FFlag:add_int("LuaVMTimeout", 5)
-	FFlag:add_int("LuaVMMaxLogLength", 4096)
-	FFlag:add_flag("LuaVMEnabledForAdmins", true)
-	FFlag:add_string("LuaVMBlacklistedClassNames", "")
-	FFlag:add_string("LuaVMBlacklistedClassProperties", "")
-	FFlag:add_string("LuaVMBlacklistedClassMethods", "")
-	FFlag:add_string("LuaVMLuaGlobals", "pcall,wait,tostring")
-	FFlag:add_string("LuaVMRobloxGlobals", "")
-	FFlag:add_string("LuaVMLibraryGlobals", "coroutine,os,table")
+	local timeout = FVariable:add_int("LuaVMTimeout", 5)
+	local max_log_length = FVariable:add_int("LuaVMMaxLogLength", 4096)
+	local vm_enabled_for_admins = FVariable:add_flag("LuaVMEnabledForAdmins", true)
+	
+	FVariable:add_string("LuaVMBlacklistedClassNames", "")
+	FVariable:add_string("LuaVMBlacklistedClassProperties", "")
+	FVariable:add_string("LuaVMBlacklistedClassMethods", "")
 
-	local args = {['unit_test'] = false}
+	FVariable:add_string("LuaVMLuaGlobals", "pcall,wait,tostring")
+	FVariable:add_string("LuaVMRobloxGlobals", "")
+	FVariable:add_string("LuaVMLibraryGlobals", "coroutine,os,table")
+
+	local args = ...
 	local is_admin = args['is_admin']
-	local should_virtualize = is_admin and FFlag:get_fflag("LuaVMEnabledForAdmins") or true
+	local should_virtualize = is_admin and vm_enabled_for_admins or true
 
 	local setfenv = setfenv
 	local getfenv = getfenv
@@ -496,23 +503,17 @@ do
 				log_milli = ("0"):rep(3 - #log_milli) .. log_milli
 			end
 			self._data ..=  ("%s -- %s.%s -- %s\n"):format(message_types[message_type], os.date("%X"), log_milli, message)
-			if #self._data >= tonumber(FFlag:get_fflag("LuaVMMaxLogLength")) then
+			if #self._data >= max_log_length then
 				self._cap_exceeded = true
 			end
-		end,
-
-		start_collecting = function(self: LogData)
-			--self._log_connection = game:GetService("LogService").MessageOut:Connect(function(message, message_type)
-			--	self:add_log({message}, message_type)
-			--end)
 		end,
 	}
 
 	-- [[ Instance Filtering Definitions ]]
-	local blocked_classnames = FFlag:get_fflag_list("LuaVMBlacklistedClassNames")
+	local blocked_classnames = FVariable:get_variable_list("LuaVMBlacklistedClassNames")
 	instance_data:add_blocked_classnames(blocked_classnames)
 
-	local blocked_methods = FFlag:get_fflag_map("LuaVMBlacklistedClassMethods")
+	local blocked_methods = FVariable:get_variable_map("LuaVMBlacklistedClassMethods")
 	for classname, methods in pairs(blocked_methods) do
 		local success, obj
 		if classname == "game" then
@@ -528,18 +529,18 @@ do
 		instance_data:add_blocked_methods(obj, methods)
 	end
 
-	local blocked_properties = FFlag:get_fflag_map("LuaVMBlacklistedClassProperties")
+	local blocked_properties = FVariable:get_variable_map("LuaVMBlacklistedClassProperties")
 	for classname, properties in pairs(blocked_properties) do
 		print("blocking", classname, properties)
 		instance_data:add_blocked_class_properties(classname, properties)
 	end
 
 	--[[ Environment Definitions ]]
-	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMLuaGlobals"))
-	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMLibraryGlobals"))
-	environment_data:add_native_globals(FFlag:get_fflag_list("LuaVMRobloxGlobals"))
+	environment_data:add_native_globals(FVariable:get_variable_list("LuaVMLuaGlobals"))
+	environment_data:add_native_globals(FVariable:get_variable_list("LuaVMLibraryGlobals"))
+	environment_data:add_native_globals(FVariable:get_variable_list("LuaVMRobloxGlobals"))
 
-	environment_data:apply_global({"timeout"}, tonumber(FFlag:get_fflag("LuaVMTimeout")))
+	environment_data:apply_global({"timeout"}, timeout)
 	environment_data:apply_global({"game", "Game"}, instance_data:get_wrapped_instance(game):get_proxy())
 	environment_data:apply_global({"workspace", "Workspace"}, instance_data:get_wrapped_instance(workspace):get_proxy())
 	environment_data:apply_global({"typeof"}, function(value: any)
@@ -573,11 +574,10 @@ do
 		log_data:add_log({...}, Enum.MessageType.MessageError)
 	end)
 	execution_env = environment_data:get_environment()
-	log_data:start_collecting()
 	setfenv(1, execution_env)
 end
 
-local ctx = function() {0} end
+local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; {0} end
 
 type ReturnMetadata = {
 	success: boolean?;
@@ -598,7 +598,9 @@ local exec_thread = coroutine.create(function()
 		result = output[2]
 	else
 		table.remove(output, 1)
-		result = output
+		if #output > 0 then
+			result = output
+		end
 	end
 	event:Fire()
 end)
@@ -626,8 +628,8 @@ event.Event:Connect(function(timeout)
 	finished = true
 end)
 
-coroutine.resume(exec_thread)
 coroutine.resume(timeout_thread)
+coroutine.resume(exec_thread)
 repeat wait() until finished
 
 if typeof(result) == "Instance" then
@@ -647,4 +649,4 @@ if result and #result > 4096 then
 end
 return_metadata.logs = logs
 
-return result, return_metadata -- This will actually make the check for LUA_TARRAY redundant.
+return result, game:GetService("HttpService"):JSONEncode(return_metadata) -- This will actually make the check for LUA_TARRAY redundant.

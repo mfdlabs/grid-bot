@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.11" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
     <PackageReference Include="Polly" Version="7.2.4" />

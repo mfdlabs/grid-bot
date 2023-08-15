@@ -767,5 +767,23 @@ namespace Grid.Bot.Properties {
                 return ((global::System.TimeSpan)(this["ConsulRefreshInterval"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("75")]
+        public int ScriptExecutionMaxFileSizeKb {
+            get {
+                return ((int)(this["ScriptExecutionMaxFileSizeKb"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int ScriptExecutionMaxResultSizeKb {
+            get {
+                return ((int)(this["ScriptExecutionMaxResultSizeKb"]));
+            }
+        }
     }
 }

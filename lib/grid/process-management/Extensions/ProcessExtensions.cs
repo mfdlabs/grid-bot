@@ -13,17 +13,15 @@ internal static class ProcessExtensions
 {
     public static string GetOwner(this Process process)
     {
-        var tokenHandle = IntPtr.Zero;
+        var tkHandle = Kernel32.SafeObjectHandle.Null;
         try
         {
-            AdvApi32.OpenProcessToken(process.Handle, 0x8, out var tkHandle);
+            AdvApi32.OpenProcessToken(process.Handle, 0x8, out tkHandle);
 
             if (tkHandle.IsInvalid)
                 return null;
 
-            tokenHandle = tkHandle.DangerousGetHandle();
-
-            var wi = new WindowsIdentity(tokenHandle);
+            var wi = new WindowsIdentity(tkHandle.DangerousGetHandle());
             string user = wi.Name;
             return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
         }
@@ -33,14 +31,14 @@ internal static class ProcessExtensions
         }
         finally
         {
-            if (tokenHandle != IntPtr.Zero)
-                Kernel32.CloseHandle(tokenHandle);
+            if (tkHandle != Kernel32.SafeObjectHandle.Null)
+                tkHandle.Close();
         }
     }
 
     public static bool SafeGetHasExited(this Process process)
     {
-        var hProcess = IntPtr.Zero;
+        var hProcess = Kernel32.SafeObjectHandle.Null;
 
         try
         {
@@ -48,9 +46,7 @@ internal static class ProcessExtensions
             if (processHandle == Kernel32.SafeObjectHandle.Null || processHandle.IsInvalid)
                 return true;
 
-            hProcess = processHandle.DangerousGetHandle();
-
-            return Kernel32.GetExitCodeProcess(hProcess, out var lpExitCode) && lpExitCode != 259;
+            return Kernel32.GetExitCodeProcess(processHandle.DangerousGetHandle(), out var lpExitCode) && lpExitCode != 259;
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception or COMException)
         {
@@ -58,8 +54,8 @@ internal static class ProcessExtensions
         }
         finally
         {
-            if (hProcess != IntPtr.Zero)
-                Kernel32.CloseHandle(hProcess);
+            if (hProcess != Kernel32.SafeObjectHandle.Null)
+                hProcess.Close();
         }
     }
 
@@ -72,13 +68,10 @@ internal static class ProcessExtensions
         if (objHandle == Kernel32.SafeObjectHandle.Null) 
             return (false, Kernel32.GetLastError());
 
-        var hProccess = objHandle.DangerousGetHandle();
-
-        if (!Kernel32.TerminateProcess(hProccess, 0)) 
+        if (!Kernel32.TerminateProcess(objHandle.DangerousGetHandle(), 0)) 
             return (false, Kernel32.GetLastError());
 
-        if (!Kernel32.CloseHandle(hProccess))
-            return (false, Kernel32.GetLastError());
+        objHandle.Close();
 
         return (true, Win32ErrorCode.NERR_Success);
     }

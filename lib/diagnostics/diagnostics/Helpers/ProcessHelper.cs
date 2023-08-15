@@ -12,7 +12,6 @@ using Diagnostics.Extensions;
 using Diagnostics.NativeWin32;
 
 // WinAPI members
-using PHANDLE = System.IntPtr;
 using HANDLE = System.IntPtr;
 using HWND = System.IntPtr;
 using DWORD = System.Int32;
@@ -93,7 +92,6 @@ namespace Diagnostics
 #if NETFRAMEWORK
 #if !SIMPLISTIC_FETCH_OF_OWNER
             var processHandle = Kernel32.SafeObjectHandle.Null;
-            var phandle = PHANDLE.Zero;
             try
             {
                 AdvApi32.OpenProcessToken(process.Handle, 0x8, out processHandle);
@@ -101,9 +99,7 @@ namespace Diagnostics
                 if (processHandle.IsInvalid)
                     return null;
 
-                phandle = processHandle.DangerousGetHandle();
-
-                var wi = new WindowsIdentity(phandle);
+                var wi = new WindowsIdentity(processHandle.DangerousGetHandle());
                 string user = wi.Name;
                 return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
             }
@@ -113,8 +109,8 @@ namespace Diagnostics
             }
             finally
             {
-                if (phandle != PHANDLE.Zero) 
-                    Kernel32.CloseHandle(phandle);
+                if (processHandle != Kernel32.SafeObjectHandle.Null)
+                    processHandle.Close();
             }
 #else
             return GetProcessOwnerByProcessId(process.Id);
@@ -235,7 +231,6 @@ namespace Diagnostics
         private static bool ProcessIsElavatedByHandle(HANDLE hProcess)
         {
             var processHandle = Kernel32.SafeObjectHandle.Null;
-            var phandle = PHANDLE.Zero;
             try
             {
                 AdvApi32.OpenProcessToken(hProcess, 8, out processHandle);
@@ -243,9 +238,7 @@ namespace Diagnostics
                 if (processHandle.IsInvalid)
                     return false;
 
-                phandle = processHandle.DangerousGetHandle();
-
-                return new WindowsIdentity(phandle).IsAdministrator();
+                return new WindowsIdentity(processHandle.DangerousGetHandle()).IsAdministrator();
             }
             catch
             {
@@ -253,8 +246,8 @@ namespace Diagnostics
             }
             finally
             {
-                if (phandle != PHANDLE.Zero)
-                    Kernel32.CloseHandle(phandle);
+                if (processHandle != Kernel32.SafeObjectHandle.Null)
+                    processHandle.Close();
             }
         }
 

@@ -540,7 +540,6 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
     #region |Recovery Methods|
 
-    private const string BatchJobTimedOutMessage = "BatchJob Timeout";
     private const string BatchJobAlreadyRunningMessage = "Cannot invoke BatchJob while another job is running";
 
     /// <summary>
@@ -551,8 +550,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
     /// <remarks>
     /// Default cases for recovery are:
     /// - EndpointNotFoundException
-    /// - TimeoutException
-    /// - FaultException with message "BatchJob Timeout" or "Cannot invoke BatchJob while another job is running"
+    /// - FaultException with message "Cannot invoke BatchJob while another job is running"
     /// - CommunicationException with inner exception of type WebException
     /// </remarks>
     protected virtual bool IsReasonForRecovery(Exception exception)
@@ -562,7 +560,6 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
         switch (exception)
         {
             case EndpointNotFoundException:
-            case TimeoutException:
                 return true;
 
             case FaultException ex:
@@ -570,7 +567,6 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
 
                 switch (message)
                 {
-                    case BatchJobTimedOutMessage:
                     case BatchJobAlreadyRunningMessage:
                         return true;
                 }

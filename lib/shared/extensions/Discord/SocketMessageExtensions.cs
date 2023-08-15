@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
@@ -66,6 +67,23 @@ namespace Grid.Bot.Extensions
                 new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
                 new MessageReference(message.Id)
             );
+        public static async Task<RestUserMessage> ReplyWithFilesAsync(
+            this SocketMessage message,
+            IEnumerable<FileAttachment> attachments,
+            string text = null,
+            bool isTts = false,
+            Embed embed = null,
+            RequestOptions options = null
+        )
+            => await message.Channel.SendFilesAsync(
+                attachments,
+                text,
+                isTts,
+                embed,
+                options,
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
+                new MessageReference(message.Id)
+            );
         public static RestUserMessage ReplyWithFile(
             this SocketMessage message,
             string fileName,
@@ -95,6 +113,22 @@ namespace Grid.Bot.Extensions
             RequestOptions options = null
         )
             => message.ReplyAsync(text, isTts, embed, options).Sync();
+
+        public static RestUserMessage ReplyWithFiles(
+            this SocketMessage message,
+            IEnumerable<FileAttachment> attachments,
+            string text = null,
+            bool isTts = false,
+            Embed embed = null,
+            RequestOptions options = null
+        )
+            => message.ReplyWithFilesAsync(
+                attachments,
+                text,
+                isTts,
+                embed,
+                options
+            ).Sync();
         public static bool IsInPublicChannel(this SocketMessage message) =>
             message.Channel is SocketGuildChannel;
         public static async Task<bool> RejectIfNotAdminAsync(this SocketMessage message) 

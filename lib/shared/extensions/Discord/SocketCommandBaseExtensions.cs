@@ -3,11 +3,13 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+
 using Grid.Bot.Utility;
-using Text.Extensions;
 using Threading.Extensions;
 
 namespace Grid.Bot.Extensions
@@ -197,6 +199,77 @@ namespace Grid.Bot.Extensions
            Embed embed = null,
            RequestOptions options = null
         ) => await command.RespondWithFilePublicAsync(fileStream, fileName, text, true, embeds, isTts, components, embed, options);
+        public static async Task<RestFollowupMessage> RespondWithFilesEphemeralAsync(
+            this SocketCommandBase command,
+            ICollection<FileAttachment> attachments,
+            string text = null,
+            bool pingUser = false,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent components = null,
+            Embed embed = null,
+            RequestOptions options = null
+        )
+        {
+            return await command.FollowupWithFilesAsync(
+                attachments,
+                text,
+                embeds,
+                isTts,
+                true,
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+                components,
+                embed,
+                options
+            );
+        }
+
+        public static async Task<RestFollowupMessage> RespondWithFilesEphemeralPingAsync(
+            this SocketCommandBase command,
+            ICollection<FileAttachment> attachments,
+            string text = null,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent components = null,
+            Embed embed = null,
+            RequestOptions options = null
+        ) => await command.RespondWithFilesEphemeralAsync(attachments, text, true, embeds, isTts, components, embed, options);
+
+        public static async Task<RestFollowupMessage> RespondWithFilesPublicAsync(
+           this SocketCommandBase command,
+           ICollection<FileAttachment> attachments,
+           string text = null,
+           bool pingUser = false,
+           Embed[] embeds = null,
+           bool isTts = false,
+           MessageComponent components = null,
+           Embed embed = null,
+           RequestOptions options = null
+        )
+        {
+            return await command.FollowupWithFilesAsync(
+                attachments,
+                text,
+                embeds,
+                isTts,
+                false,
+                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+                components,
+                embed,
+                options
+            );
+        }
+
+        public static async Task<RestFollowupMessage> RespondWithFilesPublicPingAsync(
+           this SocketCommandBase command,
+           ICollection<FileAttachment> attachments,
+           string text = null,
+           Embed[] embeds = null,
+           bool isTts = false,
+           MessageComponent components = null,
+           Embed embed = null,
+           RequestOptions options = null
+        ) => await command.RespondWithFilesPublicAsync(attachments, text, true, embeds, isTts, components, embed, options);
 
 
         public static RestFollowupMessage RespondWithFileEphemeral(
@@ -282,6 +355,90 @@ namespace Grid.Bot.Extensions
        ) => command.RespondWithFilePublicPingAsync(
                fileStream,
                fileName,
+               text,
+               embeds,
+               isTts,
+               components,
+               embed,
+               options
+           )
+           .Sync();
+
+        public static RestFollowupMessage RespondWithFilesEphemeral(
+            this SocketCommandBase command,
+            ICollection<FileAttachment> attachments,
+            string text = null,
+            bool pingUser = false,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent components = null,
+            Embed embed = null,
+            RequestOptions options = null
+        ) => command.RespondWithFilesEphemeralAsync(
+                attachments,
+                text,
+                pingUser,
+                embeds,
+                isTts,
+                components,
+                embed,
+                options
+            )
+            .Sync();
+
+        public static RestFollowupMessage RespondWithFilesEphemeralPing(
+            this SocketCommandBase command,
+            ICollection<FileAttachment> attachments,
+            string text = null,
+            Embed[] embeds = null,
+            bool isTts = false,
+            MessageComponent components = null,
+            Embed embed = null,
+            RequestOptions options = null
+        ) => command.RespondWithFilesEphemeralPingAsync(
+                attachments,
+                text,
+                embeds,
+                isTts,
+                components,
+                embed,
+                options
+            )
+            .Sync();
+
+        public static RestFollowupMessage RespondWithFilesPublic(
+           this SocketCommandBase command,
+           ICollection<FileAttachment> attachments,
+           string text = null,
+           bool pingUser = false,
+           Embed[] embeds = null,
+           bool isTts = false,
+           MessageComponent components = null,
+           Embed embed = null,
+           RequestOptions options = null
+       ) => command.RespondWithFilesPublicAsync(
+               attachments,
+               text,
+               pingUser,
+               embeds,
+               isTts,
+               components,
+               embed,
+               options
+           )
+           .Sync();
+
+        public static RestFollowupMessage RespondWithFilesPublicPing(
+           this SocketCommandBase command,
+           ICollection<FileAttachment> attachments,
+           string text = null,
+           Embed[] embeds = null,
+           bool isTts = false,
+           MessageComponent components = null,
+           Embed embed = null,
+           RequestOptions options = null
+       ) => command.RespondWithFilesPublicPingAsync(
+               attachments,
                text,
                embeds,
                isTts,

@@ -138,7 +138,7 @@ public static class Lua
     /// </summary>
     /// <param name="luaValue">The <see cref="LuaValue"/></param>
     /// <returns>The actual value of the <see cref="LuaValue"/></returns>
-    private static object ConvertLua(LuaValue luaValue) 
+    public static object ConvertLua(LuaValue luaValue) 
         => luaValue.type switch
         {
             LuaType.LUA_TBOOLEAN => Convert.ToBoolean(luaValue.value),
