@@ -1032,6 +1032,9 @@ REGISTER:
 #if WE_LOVE_EM_SLASH_COMMANDS
         private static bool CheckOptionsIdentical(List<ApplicationCommandOptionProperties> options, IReadOnlyCollection<SocketApplicationCommandOption> existingOptions)
         {
+            var optionsDiffOps = existingOptions.Where(op => !options.Any(opp => op.Name == opp.Name));
+            if (optionsDiffOps.Any()) return false;
+
             foreach (var option in options)
             {
                 var existingOption = existingOptions.Where(op => op.Name == option.Name).FirstOrDefault();
