@@ -458,7 +458,7 @@ public class GridServerInstance : ComputeCloudServiceSoapClient, IDisposable, IG
             TryStartNewProcess();
         }
 
-        if (exception is TargetInvocationException && exception.InnerException is FaultException)
+        if (exception is TargetInvocationException && exception.InnerException is (FaultException or TimeoutException))
         {
             // Re-throw the inner exception
             throw exception.InnerException;

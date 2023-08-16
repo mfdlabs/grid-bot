@@ -376,7 +376,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                 {
                     File.WriteAllText(scriptName, script, Encoding.ASCII);
 
-                    var serverResult = GridServerArbiter.Singleton.BatchJobEx(job, scriptEx);
+                    var serverResult = ScriptExecutionArbiter.Singleton.BatchJobEx(job, scriptEx);
                     var (newResult, metadata) = LuaUtility.ParseResult(serverResult);
 
                     HandleResponse(message, newResult, metadata);

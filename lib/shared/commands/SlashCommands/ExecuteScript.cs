@@ -413,7 +413,7 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
             {
                 File.WriteAllText(scriptName, script, Encoding.ASCII);
 
-                var serverResult = GridServerArbiter.Singleton.BatchJobEx(job, scriptEx);
+                var serverResult = ScriptExecutionArbiter.Singleton.BatchJobEx(job, scriptEx);
                 var (result, metadata) = LuaUtility.ParseResult(serverResult);
 
                 HandleResponse(command, result, metadata);
