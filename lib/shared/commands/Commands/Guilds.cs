@@ -1,10 +1,11 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-using Grid.Bot.Extensions;
+
 using Grid.Bot.Global;
 using Grid.Bot.Interfaces;
+using Grid.Bot.Extensions;
 
 namespace Grid.Bot.Commands
 {
@@ -20,23 +21,8 @@ namespace Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-            var guilds = BotRegistry.Client.Guilds;
-
-            var returnString = "";
-
-            var guildNames = guilds.Select(g => g.Name);
-
-            foreach (var name in guildNames)
-                returnString += $"{name}\n";
-
             await message.ReplyAsync(
-                $"We are in {guilds.Count} guilds!",
-                embed: new EmbedBuilder()
-                    .WithTitle("Guild Names")
-                    .WithCurrentTimestamp()
-                    .WithColor(0x00, 0xff, 0x00)
-                    .WithDescription($"```\n{returnString}```")
-                    .Build()
+                $"We are in {BotRegistry.Client.Guilds.Count} guilds!"
             );
         }
     }

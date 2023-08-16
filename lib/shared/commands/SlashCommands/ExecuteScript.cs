@@ -5,35 +5,30 @@ using Discord.WebSocket;
 
 namespace Grid.Bot.SlashCommands;
 
-
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 using System.Diagnostics;
-using System.ServiceModel;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+
+using Loretta.CodeAnalysis;
+using Loretta.CodeAnalysis.Lua;
 
 using Logging;
-using Drawing;
+
 using FileSystem;
 using Networking;
 using Diagnostics;
 using ComputeCloud;
 using Text.Extensions;
 using Instrumentation;
-using FloodCheckers.Core;
-using FloodCheckers.Redis;
 
 using Utility;
 using Interfaces;
 using Extensions;
 using PerformanceMonitors;
-
-using HWND = System.IntPtr;
-using System.ServiceModel.Channels;
-using System.Collections.Generic;
 
 internal class ExecuteScript : IStateSpecificSlashCommandHandler
 {
@@ -107,7 +102,8 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         }
     }
 
-    private const int MaxResultLength = EmbedBuilder.MaxDescriptionLength - 8;
+    private const int MaxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
+    private const int MaxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
     #region Metrics
 
@@ -115,40 +111,14 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
 
     #endregion Metrics
 
-    private const string _floodCheckerCategory = "Grid.SlashCommands.ExecuteScript.FloodChecking";
-
-    private static readonly IFloodChecker _scriptExecutionFloodChecker = new RedisRollingWindowFloodChecker(
-        _floodCheckerCategory,
-        nameof(ExecuteScript),
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerLimit,
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerWindow,
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckingEnabled,
-        Logger.Singleton,
-        FloodCheckersRedisClientProvider.RedisClient
-    );
-    private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
-
-    private static IFloodChecker GetPerUserFloodChecker(ulong userId)
-    {
-        return new RedisRollingWindowFloodChecker(
-            _floodCheckerCategory,
-            $"{nameof(ScriptExecution)}:{userId}",
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerLimit,
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerWindow,
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckingEnabled,
-            Logger.Singleton,
-            FloodCheckersRedisClientProvider.RedisClient
-        );
-    }
-
     private (string, MemoryStream) DetermineDescription(string input, string fileName)
     {
         if (input.IsNullOrEmpty()) return (null, null);
 
-        if (input.Length > MaxResultLength)
+        if (input.Length > MaxErrorLength)
         {
             if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
-                return ($"The result cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+                return ($"The output cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -169,6 +139,44 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         }
 
         return (input, null);
+    }
+
+
+    public bool ParseLua(SocketSlashCommand command, string input)
+    {
+        var options = new LuaParseOptions(LuaSyntaxOptions.Roblox);
+        var syntaxTree = LuaSyntaxTree.ParseText(input, options);
+
+        var diagnostics = syntaxTree.GetDiagnostics();
+        var errors = diagnostics.Where(diag => diag.Severity == DiagnosticSeverity.Error);
+
+        if (errors.Any())
+        {
+            var errorString = string.Join("\n", errors.Select(err => err.ToString()));
+
+            if (errorString.Length > MaxErrorLength)
+            {
+                var truncated = errorString.Substring(0, MaxErrorLength - 20);
+
+                truncated += string.Format("({0} characters remaing...)", errorString.Length - (MaxErrorLength + 20));
+
+                errorString = truncated;
+            }
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Luau Syntax Error")
+                .WithAuthor(command.User)
+                .WithCurrentTimestamp()
+                .WithColor(0xff, 0x00, 0x00)
+                .WithDescription($"```\n{errorString}\n```")
+                .Build();
+
+            command.RespondPublic("There was a Luau syntax error in your script:", embed: embed);
+
+            return false;
+        }
+
+        return true;
     }
 
     private void HandleResponse(SocketSlashCommand command, string result, LuaUtility.ReturnMetadata metadata)
@@ -297,16 +305,16 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
         {
             var userIsAdmin = command.User.IsAdmin();
 
-            if (_scriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
+            if (FloodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
             {
                 await command.RespondEphemeralAsync("Too many people are using this command at once, please wait a few moments and try again.");
                 isFailure = true;
                 return;
             }
 
-            _scriptExecutionFloodChecker.UpdateCount();
+            FloodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
 
-            var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(command.User.Id, GetPerUserFloodChecker);
+            var perUserFloodChecker = FloodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(command.User.Id);
             if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
             {
                 await command.RespondEphemeralAsync("You are sending script execution commands too quickly, please wait a few moments and try again.");
@@ -366,6 +374,12 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 return;
             }
 
+            if (!ParseLua(command, script))
+            {
+                isFailure = true;
+                return;
+            }
+
             var isAdminScript = global::Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
 
             var scriptId = NetworkingGlobal.GenerateUuidv4();
@@ -417,10 +431,8 @@ internal class ExecuteScript : IStateSpecificSlashCommandHandler
                 if (ex is TimeoutException)
                 {
                     if (!command.User.IsOwner()) command.User.IncrementExceptionLimit();
-                    
-                    await command.RespondPublicAsync(
-                        "The code you supplied executed for too long, please try again later."
-                    );
+
+                    HandleResponse(command, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                     return;
                 }

@@ -32,7 +32,7 @@ namespace Grid.Bot.Commands
         /// <inheritdoc/>
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!await message.RejectIfNotAdminAsync()) return;
+            if (!await message.RejectIfNotOwnerAsync()) return;
 
             if (message.IsInPublicChannel() && !global::Grid.Bot.Properties.Settings.Default.AllowLogSettingsInPublicChannels)
             {

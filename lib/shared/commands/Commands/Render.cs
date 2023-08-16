@@ -4,23 +4,18 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Discord;
 using Discord.WebSocket;
 
 using Logging;
 
-using Threading;
 using Diagnostics;
 using Text.Extensions;
 using Instrumentation;
+
 using Grid.Bot.Utility;
 using Grid.Bot.Interfaces;
 using Grid.Bot.Extensions;
 using Grid.Bot.PerformanceMonitors;
-using FloodCheckers.Core;
-using FloodCheckers.Redis;
-using Grid.ComputeCloud;
-using System.Collections.Concurrent;
 
 namespace Grid.Bot.Commands
 {
@@ -92,36 +87,6 @@ namespace Grid.Bot.Commands
                  where !uname.IsNullOrEmpty()
                  select uname).ToArray();
 
-        #region Concurrency
-
-        private const string _floodCheckerCategory = "Grid.Commands.Render.FloodChecking";
-
-        private static readonly IFloodChecker _renderFloodChecker = new RedisRollingWindowFloodChecker(
-            _floodCheckerCategory,
-            nameof(Render),
-            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerLimit,
-            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckerWindow,
-            () => global::Grid.Bot.Properties.Settings.Default.RenderFloodCheckingEnabled,
-            Logger.Singleton,
-            FloodCheckersRedisClientProvider.RedisClient
-        );
-        private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
-
-        private static IFloodChecker GetPerUserFloodChecker(ulong userId)
-        {
-            return new RedisRollingWindowFloodChecker(
-                _floodCheckerCategory,
-                $"{nameof(Render)}:{userId}",
-                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerLimit,
-                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckerWindow,
-                () => global::Grid.Bot.Properties.Settings.Default.RenderPerUserFloodCheckingEnabled,
-                Logger.Singleton,
-                FloodCheckersRedisClientProvider.RedisClient
-            );
-        }
-
-        #endregion Concurrency
-
         #region Metrics
 
         private static readonly RenderCommandPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
@@ -142,15 +107,15 @@ namespace Grid.Bot.Commands
                 {
                     var userIsAdmin = message.Author.IsAdmin();
 
-                    if (_renderFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
+                    if (FloodCheckerRegistry.RenderFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
                     {
                         message.Reply("Too many people are using this command at once, please wait a few moments and try again.");
                         return;
                     }
 
-                    _renderFloodChecker.UpdateCount();
+                    FloodCheckerRegistry.RenderFloodChecker.UpdateCount();
 
-                    var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(message.Author.Id, GetPerUserFloodChecker);
+                    var perUserFloodChecker = FloodCheckerRegistry.GetPerUserRenderFloodChecker(message.Author.Id);
                     if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
                     {
                         message.Reply("You are sending render commands too quickly, please wait a few moments and try again.");

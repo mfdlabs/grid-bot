@@ -30,7 +30,7 @@ namespace Grid.Bot.SlashCommands
 
         public async Task Invoke(SocketSlashCommand command)
         {
-            if (!await command.RejectIfNotAdminAsync()) return;
+            if (!await command.RejectIfNotOwnerAsync()) return;
 
             var subCommand = command.Data.GetSubCommand();
 

@@ -28,7 +28,7 @@ namespace Grid.Bot.SlashCommands
 
         public async Task Invoke(SocketSlashCommand command)
         {
-            if (!await command.RejectIfNotAdminAsync()) return;
+            if (!await command.RejectIfNotOwnerAsync()) return;
 
             var countParamValue = command.Data.GetOptionValue("count");
 

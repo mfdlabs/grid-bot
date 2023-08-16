@@ -19,7 +19,7 @@ namespace Grid.Bot.Commands
 
         public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
         {
-            if (!await message.RejectIfNotAdminAsync()) return;
+            if (!await message.RejectIfNotOwnerAsync()) return;
 
             if (!int.TryParse(messageContentArray.ElementAtOrDefault(1), out int count))
                 count = 1;

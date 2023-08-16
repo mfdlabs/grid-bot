@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 using Loretta.CodeAnalysis;
 using Loretta.CodeAnalysis.Lua;
@@ -21,8 +20,6 @@ using Diagnostics;
 using ComputeCloud;
 using Text.Extensions;
 using Instrumentation;
-using FloodCheckers.Core;
-using FloodCheckers.Redis;
 
 using Utility;
 using Interfaces;
@@ -100,40 +97,14 @@ internal class ExecuteScript : IStateSpecificCommandHandler
 
     #endregion Metrics
 
-    private const string _floodCheckerCategory = "Grid.Commands.ExecuteScript.FloodChecking";
-
-    private static readonly IFloodChecker _scriptExecutionFloodChecker = new RedisRollingWindowFloodChecker(
-        _floodCheckerCategory,
-        nameof(ExecuteScript),
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerLimit,
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckerWindow,
-        () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionFloodCheckingEnabled,
-        Logger.Singleton,
-        FloodCheckersRedisClientProvider.RedisClient
-    );
-    private static readonly ConcurrentDictionary<ulong, IFloodChecker> _perUserFloodCheckers = new();
-
-    private static IFloodChecker GetPerUserFloodChecker(ulong userId)
-    {
-        return new RedisRollingWindowFloodChecker(
-            _floodCheckerCategory,
-            $"{nameof(ExecuteScript)}:{userId}",
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerLimit,
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckerWindow,
-            () => global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPerUserFloodCheckingEnabled,
-            Logger.Singleton,
-            FloodCheckersRedisClientProvider.RedisClient
-        );
-    }
-
     private (string, MemoryStream) DetermineDescription(string input, string fileName)
     {
         if (input.IsNullOrEmpty()) return (null, null);
 
-        if (input.Length > MaxResultLength)
+        if (input.Length > MaxErrorLength)
         {
             if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
-                return ($"The result cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+                return ($"The output cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -267,16 +238,16 @@ internal class ExecuteScript : IStateSpecificCommandHandler
             {
                 var userIsAdmin = message.Author.IsAdmin();
 
-                if (_scriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
+                if (FloodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
                 {
                     message.Reply("Too many people are using this command at once, please wait a few moments and try again.");
                     isFailure = true;
                     return;
                 }
 
-                _scriptExecutionFloodChecker.UpdateCount();
+                FloodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
 
-                var perUserFloodChecker = _perUserFloodCheckers.GetOrAdd(message.Author.Id, GetPerUserFloodChecker);
+                var perUserFloodChecker = FloodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(message.Author.Id);
                 if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
                 {
                     message.Reply("You are sending script execution commands too quickly, please wait a few moments and try again.");
@@ -425,9 +396,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                     {
                         if (!message.Author.IsOwner()) message.Author.IncrementExceptionLimit();
 
-                        await message.ReplyAsync(
-                            "The code you supplied executed for too long, please try again later."
-                        );
+                        HandleResponse(message, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                         return;
                     }

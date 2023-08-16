@@ -19,7 +19,6 @@ namespace Grid.Bot.Commands
         {
             if (!await message.RejectIfNotAdminAsync()) return;
 
-
             var totalItemsKilled = GridServerArbiter.Singleton.KillAllInstances();
 
             if (totalItemsKilled == 0)
