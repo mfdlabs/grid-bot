@@ -68,7 +68,7 @@
                 if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
                     global::Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception, true);
 
-                global::Grid.Bot.Runner.OnGlobalException(e.ExceptionObject as global::System.Exception);
+                global::Grid.Bot.Runner.OnGlobalException();
 
                 if (e.ExceptionObject is global::System.AggregateException aggregate)
                 {

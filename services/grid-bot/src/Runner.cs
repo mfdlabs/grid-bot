@@ -5,15 +5,20 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Backtrace;
+using Backtrace.Model;
+
 using Discord;
 using Discord.WebSocket;
 
 using Logging;
 
+using FileSystem;
 using Networking;
 using Diagnostics;
 using Configuration;
 using Text.Extensions;
+
 using Grid.Bot.Events;
 using Grid.Bot.Global;
 using Grid.Bot.Utility;
@@ -36,11 +41,9 @@ namespace Grid.Bot
         private const string BadActorMessage = "THIS SOFTWARE IS UNLICENSED, IF YOU DO NOT HAVE EXPLICIT WRITTEN PERMISSION " +
                                                "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY!";
 
-        public static void OnGlobalException(Exception ex)
+        public static void OnGlobalException()
         {
             Logger.Singleton.Error(PrimaryTaskError);
-
-            PerformanceServer.Stop();
         }
 
         public static void Invoke(string[] args)
@@ -55,6 +58,8 @@ namespace Grid.Bot
             if (SystemGlobal.ContextIsAdministrator() &&
                 global::Grid.Bot.Properties.Settings.Default.OnLaunchWarnAboutAdminMode)
                 Logger.Singleton.Warning(AdminMode);
+
+            Task.Factory.StartNew(CollectLogsAndReportToBacktrace);
 
             if (args.Contains("--write-settings"))
             {
@@ -89,6 +94,40 @@ namespace Grid.Bot
             InvokeAsync(args).Wait();
 
             Environment.Exit(0);
+        }
+
+        private static void CollectLogsAndReportToBacktrace()
+        {
+            PercentageInvoker.InvokeAction(
+                () =>
+                {
+#if DEBUG
+                    var prefix = "dev_" + Logger.Singleton.Name;
+#else
+                    var prefix = Logger.Singleton.Name;
+#endif
+
+                    var attachments = from file in Directory.EnumerateFiles(Path.GetDirectoryName(Logger.Singleton.FullyQualifiedFileName))
+                                      where Path.GetFileName(file).StartsWith(prefix) && file != Logger.Singleton.FullyQualifiedFileName
+                                      select file;
+
+                    var bckTraceCreds = new BacktraceCredentials(
+                        global::Grid.Bot.Properties.Settings.Default.CrashHandlerURL,
+                        global::Grid.Bot.Properties.Settings.Default.CrashHandlerAccessToken
+                    );
+                    var crashUploaderClient = new BacktraceClient(bckTraceCreds);
+
+                    crashUploaderClient.Send("Log files upload", attachmentPaths: attachments.ToList());
+
+                    foreach (var log in attachments)
+                    {
+                        Logger.Singleton.Warning("Deleting old log file: {0}", log);
+
+                        log.PollDeletion();
+                    }
+                },
+                global::Grid.Bot.Properties.Settings.Default.UploadLogFilesToBacktraceEnabledPercent
+            );
         }
 
         private static async Task InvokeAsync(IEnumerable<string> args)
@@ -158,7 +197,7 @@ namespace Grid.Bot
             if (global::Grid.Bot.Properties.Settings.Default.OnStartCloseAllOpenGridServerInstances)
                 GridServerArbiter.Singleton.KillAllInstances();
 
-            Task.Run(ShutdownUdpReceiver.Receive);
+            Task.Factory.StartNew(ShutdownUdpReceiver.Receive);
 
             FloodCheckersRedisClientProvider.SetUp();
 

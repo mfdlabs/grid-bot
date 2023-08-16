@@ -79,9 +79,12 @@ local FVariable: FVariableManager = {
 	end,
 }
 
+local max_result_length = FVariable:add_int("LuaVMMaxResultLength", 4096)
+
 do
 	local timeout = FVariable:add_int("LuaVMTimeout", 5)
 	local max_log_length = FVariable:add_int("LuaVMMaxLogLength", 4096)
+	local max_log_line_length = FVariable:add_int("LuaVMMaxLogLineLength", 200)
 	local vm_enabled_for_admins = FVariable:add_flag("LuaVMEnabledForAdmins", true)
 	
 	FVariable:add_string("LuaVMBlacklistedClassNames", "")
@@ -486,8 +489,8 @@ do
 				return
 			end
 
-			if #message > 200 then
-				message = message:sub(0, 200) .. ("... (%d more characters)"):format(#message - 200)
+			if #message > max_log_line_length then
+				message = message:sub(0, max_log_line_length) .. ("... (%d more characters)"):format(#message - max_log_line_length)
 			end
 
 			local message_types = {
@@ -577,7 +580,7 @@ do
 	setfenv(1, execution_env)
 end
 
-local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; {0} end
+local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil; {0} end
 
 type ReturnMetadata = {
 	success: boolean?;
@@ -640,13 +643,9 @@ elseif result ~= nil then
 	result = tostring(result)
 end
 
-local logs = get_log_string()
-if #logs > 4096 then
-	logs = logs:sub(1, 4096)
+if result and #result > max_result_length then
+	result = result:sub(0, max_result_length)
 end
-if result and #result > 4096 then
-	result = result:sub(1, 4096)
-end
-return_metadata.logs = logs
+return_metadata.logs = get_log_string()
 
-return result, game:GetService("HttpService"):JSONEncode(return_metadata) -- This will actually make the check for LUA_TARRAY redundant.
+return result, game:GetService("HttpService"):JSONEncode(return_metadata)
