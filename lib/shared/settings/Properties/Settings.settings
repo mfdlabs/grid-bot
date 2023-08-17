@@ -1,0 +1,276 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Grid.Bot.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="BotToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Prefix" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AllowParsingForBots" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AllowAllChannels" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IsEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ReasonForDying" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Admins" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BotGlobalStatusMessage" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BotGlobalUserStatus" Type="Discord.UserStatus" Scope="Application">
+      <Value Profile="(Default)">Offline</Value>
+    </Setting>
+    <Setting Name="AllowedChannels" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BotOwnerID" Type="System.UInt64" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GridServerArbiterDefaultTimeout" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="BotGlobalStreamURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BotGlobalActivityType" Type="Discord.ActivityType" Scope="Application">
+      <Value Profile="(Default)">Playing</Value>
+    </Setting>
+    <Setting Name="UsersServiceRemoteURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MaxUserIDSize" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RemoteRenderTaskAvatarFetchHost" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RemoteRenderAssetFetchUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RemoteRenderAvatarFetchUriPart" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RenderResultFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RenderPlaceID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderSizeX" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderSizeY" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CareToLeakSensitiveExceptions" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="KillCommandShouldForce" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BlacklistedScriptKeywords" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ScriptExecutionSupportUnicode" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExectionCareAboutBadTextCase" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShouldLogDiscordInternals" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="IsAllowedToEchoBackNotFoundCommandException" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RegisterCommandRegistryAtAppStart" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="OnLaunchWarnAboutDebugMode" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AllowAdminScripts" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="OnLaunchWarnAboutAdminMode" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPrependBaseURL" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BaseURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AllowNullsWhenUpdatingSetting" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AllowLogSettingsInPublicChannels" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RenderJobTimeoutInSeconds" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="AllowAdminsToBypassDisabledCommands" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShouldLaunchCounterServer" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CounterServerPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderThumbnailTypeShouldForceCloseup" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UserUtilityShouldResolveBannedUsers" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DebugAllowTaskCanceledExceptions" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="HigherPrivilagedUsers" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CommandRegistryOnlyMatchAlphabetCharactersForCommandName" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="OnStartCloseAllOpenGridServerInstances" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionRequireProtections" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CrashHandlerURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://mfdlabs.sp.backtrace.io:6097</Value>
+    </Setting>
+    <Setting Name="CrashHandlerAccessToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">9f55e8c1e2a0bc06f874371f33d7c24e38b88c48f3c3cd853fc95174a13beb9b</Value>
+    </Setting>
+    <Setting Name="CrashHandlerExitWhenDone" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DiscordConfigurationVaultToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DiscordConfigurationVaultAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://localhost:8200</Value>
+    </Setting>
+    <Setting Name="BlacklistedUsernamesForRendering" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BlacklistedDiscordUserIds" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorLeaseTimeSpanAddition" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorMaxExceptionHitsBeforeBlacklist" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ExceptionBasedAutomoderatorEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="GridServerArbiterQueueUpEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="WhitelistedCounterServerCidrs" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">127.0.0.0/8,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12</Value>
+    </Setting>
+    <Setting Name="CommandCircuitBreakerWrapperRetryInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:05</Value>
+    </Setting>
+    <Setting Name="ShouldAdminsUseVM" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ConsulAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://localhost:8500</Value>
+    </Setting>
+    <Setting Name="ConsulBackoffBase" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:05:00</Value>
+    </Setting>
+    <Setting Name="ConsulLongPollingMaxWaitTime" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00.1000000</Value>
+    </Setting>
+    <Setting Name="MaximumConsulBackoff" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:30</Value>
+    </Setting>
+    <Setting Name="FloodCheckersRedisEndpoints" Type="Redis.RedisEndpoints" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="FloodCheckersRedisUseServiceDiscovery" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="FloodCheckersConsulServiceName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">floodcheckers-redis</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionPerUserFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckingEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckerLimit" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RenderPerUserFloodCheckerWindow" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="ConsulRefreshInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:20</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionMaxFileSizeKb" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">75</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionMaxResultSizeKb" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">50</Value>
+    </Setting>
+    <Setting Name="ScriptExecutionArbiterMaxTimeout" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:10</Value>
+    </Setting>
+    <Setting Name="UploadLogFilesToBacktraceEnabledPercent" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="ClientSettingsApiBaseUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ClientSettingsCertificateValidationEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ClientSettingsApiKey" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>

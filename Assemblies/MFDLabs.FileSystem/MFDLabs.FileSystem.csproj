@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="../../AssembliesStandard.targets" />
-
-  <ItemGroup>
-    <ProjectReference Include="..\MFDLabs.Sentinels\MFDLabs.Sentinels.csproj" />
-  </ItemGroup>
-
-</Project>
