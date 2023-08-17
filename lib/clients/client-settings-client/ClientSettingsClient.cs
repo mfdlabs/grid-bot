@@ -44,7 +44,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ApiEmptyResponseModel> ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request);
+        System.Threading.Tasks.Task ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
@@ -53,7 +53,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ApiEmptyResponseModel> ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request, System.Threading.CancellationToken cancellationToken);
 
         /// <summary>
         /// Refreshes the complete settings dictionary for all Roblox client applications.
@@ -61,7 +61,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ApiEmptyResponseModel> RefreshAllClientApplicationSettingsAsync(string x_Api_Key);
+        System.Threading.Tasks.Task RefreshAllClientApplicationSettingsAsync(string x_Api_Key);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
@@ -70,7 +70,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ApiEmptyResponseModel> RefreshAllClientApplicationSettingsAsync(string x_Api_Key, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task RefreshAllClientApplicationSettingsAsync(string x_Api_Key, System.Threading.CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns the setting for a Roblox client application.
@@ -232,7 +232,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ApiEmptyResponseModel> ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request)
+        public virtual System.Threading.Tasks.Task ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request)
         {
             return ImportApplicationSettingAsync(x_Api_Key, request, System.Threading.CancellationToken.None);
         }
@@ -244,7 +244,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ApiEmptyResponseModel> ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request, System.Threading.CancellationToken cancellationToken)
         {
             if (request == null)
                 throw new System.ArgumentNullException("request");
@@ -286,12 +286,7 @@ namespace ClientSettings.Client
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<ApiEmptyResponseModel>(response_, headers_, cancellationToken).ConfigureAwait(false);
-                            if (objectResponse_.Object == null)
-                            {
-                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
-                            }
-                            return objectResponse_.Object;
+                            return;
                         }
                         else
                         if (status_ == 400)
@@ -331,7 +326,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ApiEmptyResponseModel> RefreshAllClientApplicationSettingsAsync(string x_Api_Key)
+        public virtual System.Threading.Tasks.Task RefreshAllClientApplicationSettingsAsync(string x_Api_Key)
         {
             return RefreshAllClientApplicationSettingsAsync(x_Api_Key, System.Threading.CancellationToken.None);
         }
@@ -343,7 +338,7 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ApiEmptyResponseModel> RefreshAllClientApplicationSettingsAsync(string x_Api_Key, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task RefreshAllClientApplicationSettingsAsync(string x_Api_Key, System.Threading.CancellationToken cancellationToken)
         {
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(_baseUrl != null ? _baseUrl.TrimEnd('/') : "").Append("/v1/settings");
@@ -379,12 +374,7 @@ namespace ClientSettings.Client
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<ApiEmptyResponseModel>(response_, headers_, cancellationToken).ConfigureAwait(false);
-                            if (objectResponse_.Object == null)
-                            {
-                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
-                            }
-                            return objectResponse_.Object;
+                            return;
                         }
                         else
                         {
@@ -773,13 +763,6 @@ namespace ClientSettings.Client
         public ClientApplicationSettingResponse NewValue { get; set; }
 
     }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v11.0.0.0))")]
-    public partial class ApiEmptyResponseModel
-    {
-
-    }
-
 
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v11.0.0.0))")]

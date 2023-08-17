@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>HTTP client used to interact with Roblox's Client Settings API Site.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
