@@ -701,7 +701,7 @@ namespace ClientSettings.Client
     public partial class ClientApplicationSettingsResponse
     {
         [Newtonsoft.Json.JsonProperty("applicationSettings", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.IDictionary<string, string> ApplicationSettings { get; set; }
+        public System.Collections.Generic.IDictionary<string, object> ApplicationSettings { get; set; }
 
     }
 
