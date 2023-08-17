@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="../../AssembliesFramework.targets" />
-  
-  <ItemGroup>
-    <Reference Include="System.Drawing" />
-  </ItemGroup>
-
-</Project>

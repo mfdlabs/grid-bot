@@ -5,10 +5,10 @@ Please see the [GRIDBOT](https://github.com/orgs/mfdlabs/projects/5) project for
 # Build Configurations
 
 ## Information on deployments<br/>
-### ***Release*** and ***Debug*** refer to ***vanilla*** builds.<br/>
-### ***ReleaseDeploy*** and ***DebugDeploy*** refer to ***vanilla*** builds, but we are creating a component archive for the application.<br/>
-### ***ReleaseGrid*** and ***DebugGrid*** refer to builds with ***Hashicorp Vault configuration providers***.<br/>
-### ***ReleaseGridDeploy*** and ***DebugGridDeploy*** refer to builds with ***Hashicorp Vault configuration providers***, but we are creating a component archive for the application.<br/><br/>
+### ***release*** and ***debug*** refer to ***vanilla*** builds.<br/>
+### ***release-deploy*** and ***debug-deploy*** refer to ***vanilla*** builds, but we are creating a component archive for the application.<br/>
+### ***release-vault*** and ***debug-vault*** refer to builds with ***Hashicorp Vault configuration providers***.<br/>
+### ***release-vault-deploy*** and ***debug-vault-deploy*** refer to builds with ***Hashicorp Vault configuration providers***, but we are creating a component archive for the application.<br/><br/>
 
 ---
 

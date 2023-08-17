@@ -1,9 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
-    <LangVersion>10</LangVersion>
-  </PropertyGroup>
-</Project>
