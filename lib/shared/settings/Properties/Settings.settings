@@ -263,5 +263,14 @@
     <Setting Name="UploadLogFilesToBacktraceEnabledPercent" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">100</Value>
     </Setting>
+    <Setting Name="ClientSettingsApiBaseUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ClientSettingsCertificateValidationEnabled" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ClientSettingsApiKey" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

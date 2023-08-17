@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\clients\client-settings-client\ClientSettings.Client.csproj" />
     <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 

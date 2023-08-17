@@ -803,5 +803,32 @@ namespace Grid.Bot.Properties {
                 return ((int)(this["UploadLogFilesToBacktraceEnabledPercent"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ClientSettingsApiBaseUrl {
+            get {
+                return ((string)(this["ClientSettingsApiBaseUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClientSettingsCertificateValidationEnabled {
+            get {
+                return ((bool)(this["ClientSettingsCertificateValidationEnabled"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ClientSettingsApiKey {
+            get {
+                return ((string)(this["ClientSettingsApiKey"]));
+            }
+        }
     }
 }

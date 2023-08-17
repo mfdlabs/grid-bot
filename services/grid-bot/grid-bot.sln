@@ -120,6 +120,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloodCheckers.Core", "..\..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloodCheckers.Redis", "..\..\lib\floodcheckers\redis\FloodCheckers.Redis.csproj", "{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSettings.Client", "..\..\lib\clients\client-settings-client\ClientSettings.Client.csproj", "{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		debug|Any CPU = debug|Any CPU
@@ -644,6 +646,22 @@ Global
 		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault|Any CPU.Build.0 = release-vault|Any CPU
 		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault-deploy|Any CPU.ActiveCfg = release-vault|Any CPU
 		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9}.release-vault-deploy|Any CPU.Build.0 = release-vault|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-vault|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-vault|Any CPU.Build.0 = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-vault-deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.debug-vault-deploy|Any CPU.Build.0 = Debug|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release|Any CPU.Build.0 = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-deploy|Any CPU.ActiveCfg = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-deploy|Any CPU.Build.0 = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-vault|Any CPU.ActiveCfg = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-vault|Any CPU.Build.0 = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-vault-deploy|Any CPU.ActiveCfg = Release|Any CPU
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1}.release-vault-deploy|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -693,6 +711,7 @@ Global
 		{6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797} = {841D6B21-240B-4023-A97C-B2267B5E56D3}
 		{246A2F21-F492-4D13-A5A9-A218FD429F52} = {6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797}
 		{CA3DCB1B-4945-470C-9ACE-A1F925F3C0E9} = {6B75582F-C2B9-4B2C-8D74-D1FFD1FF1797}
+		{0E3DB2D7-3C1D-439F-B6C7-C22E96D68FD1} = {8E7AA611-95BB-4BE8-8EF6-C95E7F850B0B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {702B47AB-01B3-45F8-B57A-28DF901C1358}
