@@ -108,7 +108,7 @@ namespace Grid.Bot.SlashCommands
                             $"{applicationName}.json"
                         );
                     }
-                    catch (ApiException ex) when (ex.StatusCode == 404)
+                    catch (ApiException)
                     {
                         await command.RespondEphemeralAsync($"Unknown application [{applicationName}]!");
                     }
@@ -138,7 +138,7 @@ namespace Grid.Bot.SlashCommands
                     request.ApplicationName = applicationName;
                     request.ApplicationSettings = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents);
 
-                    var dependencies = subCommand.GetOptionValue("application_name")?.ToString()?.Split(',');
+                    var dependencies = subCommand.GetOptionValue("dependencies")?.ToString()?.Split(',');
                     if (dependencies?.Length > 0)
                     {
                         request.Dependencies = dependencies;
@@ -191,7 +191,7 @@ namespace Grid.Bot.SlashCommands
                                 .Build()
                         );
                     }
-                    catch (ApiException ex) when (ex.StatusCode == 404)
+                    catch (ApiException)
                     {
                         await command.RespondEphemeralAsync($"Unknown application [{applicationName}] setting [{settingName}]!");
                     }
@@ -275,9 +275,9 @@ namespace Grid.Bot.SlashCommands
                                 .Build()
                         );
                     }
-                    catch (ApiException ex) when (ex.StatusCode == 404)
+                    catch (ApiException ex) 
                     {
-                        await command.RespondEphemeralAsync($"Unknown application [{applicationName}] setting [{settingName}]!");
+                        await command.RespondEphemeralAsync($"Unknown application [{applicationName}] setting [{settingName}]. Exception: {ex.Message}!");
                     }
 
                     return;
