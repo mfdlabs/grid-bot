@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/shared.targets" />
+
+  <PropertyGroup>
+    <Description>Shared library containing a registry that stores the current bot.</Description>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);DISCORD_SHARDING_ENABLED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

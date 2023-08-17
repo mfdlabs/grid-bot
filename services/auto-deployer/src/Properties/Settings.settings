@@ -1,0 +1,69 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Grid.AutoDeployer.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="GithubEnterpriseUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="VersioningRegistryVersionKeyName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">AppVersion</Value>
+    </Setting>
+    <Setting Name="CreateDeploymentPathIfNotExists" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="GithubToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="VersioningRegistrySubKey" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DeploymentPath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GithubAccountOrOrganizationName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GithubRepositoryName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DeploymentPrimaryExecutableName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="PollingInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="EnvironmentLogLevel" Type="Logging.LogLevel" Scope="Application">
+      <Value Profile="(Default)">Debug</Value>
+    </Setting>
+    <Setting Name="DeploymentAppName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SkippedVersionInvalidationInterval" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:05:00</Value>
+    </Setting>
+    <Setting Name="EnvironmentLoggerUseColor" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="OnlyDeployPreRelease" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="WatchDogMaxAttempts" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="BacktraceToken" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">9f55e8c1e2a0bc06f874371f33d7c24e38b88c48f3c3cd853fc95174a13beb9b</Value>
+    </Setting>
+    <Setting Name="BacktraceUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://mfdlabs.sp.backtrace.io:6097</Value>
+    </Setting>
+    <Setting Name="WatchDogWaitTime" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">00:00:05</Value>
+    </Setting>
+    <Setting Name="EnvironmentLoggerName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">grid-auto-deployer</Value>
+    </Setting>
+    <Setting Name="UploadLogFilesToBacktraceEnabledPercent" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

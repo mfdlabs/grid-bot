@@ -1,0 +1,70 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="./copyright.targets"/>
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
+    <OutputType>Exe</OutputType>
+
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-deploy' ">
+    <OutputPath>bin\release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-deploy' ">
+    <OutputPath>bin\debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' or '$(Configuration)' == 'release-vault-deploy' ">
+    <OutputPath>bin\release\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' or '$(Configuration)' == 'debug-vault-deploy' ">
+    <OutputPath>bin\debug\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="deploy\**" />
+    <EmbeddedResource Remove="deploy\**" />
+    <None Remove="deploy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="run-service.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>run-service.ps1</DependentUpon>
+    </None>
+    <None Update="run-service.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+
+    <None Update="app.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="app.debug.config">
+      <DependentUpon>app.config</DependentUpon>
+    </None>
+    <None Update="app.debug-vault.config">
+      <DependentUpon>app.debug.config</DependentUpon>
+    </None>
+    <None Update="app.release.config">
+      <DependentUpon>app.config</DependentUpon>
+    </None>
+    <None Update="app.release-vault.config">
+      <DependentUpon>app.release.config</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)../../scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false $(ExtraPostBuildArguments)" />
+  </Target>
+</Project>

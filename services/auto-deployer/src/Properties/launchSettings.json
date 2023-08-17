@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "MFDLabs.Grid.AutoDeployer": {
+      "commandName": "Project"
+    }
+  }
+}
