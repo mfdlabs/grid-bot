@@ -86,7 +86,7 @@ do
 	local max_log_length = FVariable:add_int("LuaVMMaxLogLength", 4096)
 	local max_log_line_length = FVariable:add_int("LuaVMMaxLogLineLength", 200)
 	local vm_enabled_for_admins = FVariable:add_flag("LuaVMEnabledForAdmins", true)
-	
+
 	FVariable:add_string("LuaVMBlacklistedClassNames", "")
 	FVariable:add_string("LuaVMBlacklistedClassProperties", "")
 	FVariable:add_string("LuaVMBlacklistedClassMethods", "")
@@ -95,7 +95,7 @@ do
 	FVariable:add_string("LuaVMRobloxGlobals", "")
 	FVariable:add_string("LuaVMLibraryGlobals", "coroutine,os,table")
 
-	local args = ...
+	local args = {}
 	local is_admin = args['is_admin']
 	local should_virtualize = is_admin and vm_enabled_for_admins or true
 
@@ -165,11 +165,9 @@ do
 		_data: string;
 		_cap_exceeded: boolean;
 		_surplus_rows: number;
-		_log_connection: RBXScriptConnection;
 
 		get_log_string: (LogData) -> string;
 		add_log: (LogData, {string}, Enum.MessageType) -> nil;
-		start_collecting: (LogData) -> nil;
 	}
 
 	local instance_data: VirtualizedInstanceData = nil;
@@ -464,16 +462,13 @@ do
 		_data = '';
 		_surplus_rows = 0;
 		_cap_exceeded = false;
-		_log_connection = nil;
 
 		get_log_string = function(self: LogData): string
 			local surplus_rows = ""
 			if self._surplus_rows > 0 then
 				surplus_rows = ("\n... (%d more lines)"):format(self._surplus_rows)
 			end
-			if self._log_connection then
-				self._log_connection:Disconnect()
-			end
+
 			return self._data:sub(1, #self._data - 1) .. surplus_rows
 		end,
 
@@ -534,7 +529,6 @@ do
 
 	local blocked_properties = FVariable:get_variable_map("LuaVMBlacklistedClassProperties")
 	for classname, properties in pairs(blocked_properties) do
-		print("blocking", classname, properties)
 		instance_data:add_blocked_class_properties(classname, properties)
 	end
 
@@ -575,12 +569,14 @@ do
 	end)
 	environment_data:apply_global({"error"}, function(...)
 		log_data:add_log({...}, Enum.MessageType.MessageError)
+		error(...)
 	end)
 	execution_env = environment_data:get_environment()
 	setfenv(1, execution_env)
 end
 
-local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil; {0} end
+local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil;
+return a.c end
 
 type ReturnMetadata = {
 	success: boolean?;
@@ -595,6 +591,7 @@ local event = Instance.new('BindableEvent')
 local exec_thread = coroutine.create(function()
 	local start_time = os.clock()
 	local output = {pcall(ctx)}
+	return_metadata.output = output
 	exec_time = os.clock() - start_time
 	success = output[1]
 	if #output == 2 then
@@ -620,8 +617,9 @@ event.Event:Connect(function(timeout)
 		return_metadata.success = false
 	else
 		if not success then
-			if result:find(":") then
-				result = result:split(":")[3]:sub(2)
+			local _, _, _, err = string.find(result, "(%[.*%]:%d+:)%s(.*)")
+			if err then
+				result = err
 			end
 			return_metadata.error_message, result = result, nil
 		end
