@@ -95,7 +95,7 @@ do
 	FVariable:add_string("LuaVMRobloxGlobals", "")
 	FVariable:add_string("LuaVMLibraryGlobals", "coroutine,os,table")
 
-	local args = {}
+	local args = ...
 	local is_admin = args['is_admin']
 	local should_virtualize = is_admin and vm_enabled_for_admins or true
 
@@ -575,8 +575,7 @@ do
 	setfenv(1, execution_env)
 end
 
-local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil;
-return a.c end
+local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil; {0} end
 
 type ReturnMetadata = {
 	success: boolean?;
@@ -591,7 +590,6 @@ local event = Instance.new('BindableEvent')
 local exec_thread = coroutine.create(function()
 	local start_time = os.clock()
 	local output = {pcall(ctx)}
-	return_metadata.output = output
 	exec_time = os.clock() - start_time
 	success = output[1]
 	if #output == 2 then
