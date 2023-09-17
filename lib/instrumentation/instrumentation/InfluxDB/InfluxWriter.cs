@@ -29,17 +29,17 @@ namespace Instrumentation
                         builder.Append(EscapeTagName(counterKey.Key.Category));
                         builder.Append(",counter=");
                         builder.Append(EscapeTagName(counterKey.Key.Name));
-                        if (!counterKey.Key.Instance.IsNullOrWhiteSpace())
+                        if (!counterKey.Key.Instance.IsNullOrEmpty())
                         {
                             builder.Append(",instance=");
                             builder.Append(EscapeTagName(counterKey.Key.Instance));
                         }
-                        if (!configuration.FarmIdentifier.IsNullOrWhiteSpace())
+                        if (!configuration.FarmIdentifier.IsNullOrEmpty())
                         {
                             builder.Append(",farm=");
                             builder.Append(EscapeTagName(configuration.FarmIdentifier));
                         }
-                        if (!configuration.SuperFarmIdentifier.IsNullOrWhiteSpace())
+                        if (!configuration.SuperFarmIdentifier.IsNullOrEmpty())
                         {
                             builder.Append(",superFarm=");
                             builder.Append(EscapeTagName(configuration.SuperFarmIdentifier));

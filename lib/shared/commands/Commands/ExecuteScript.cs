@@ -9,102 +9,58 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Loretta.CodeAnalysis;
 using Loretta.CodeAnalysis.Lua;
 
 using Logging;
 using FileSystem;
-using Networking;
-using Diagnostics;
 using ComputeCloud;
+using Grid.Commands;
 using Text.Extensions;
-using Instrumentation;
 
 using Utility;
 using Interfaces;
 using Extensions;
-using PerformanceMonitors;
 
-using System.Collections.Generic;
-
-internal class ExecuteScript : IStateSpecificCommandHandler
+/// <summary>
+/// Executes a Lua script on a grid-server.
+/// </summary>
+[Obsolete("Text-based commands are being deprecated. Please migrate to using the /execute slash command.")]
+internal class ExecuteScript : ICommandHandler
 {
-    public string CommandName => "Execute Grid Server Lua Script";
-    public string CommandDescription => $"Attempts to execute the given script contents on a grid " +
+    /// <inheritdoc cref="ICommandHandler.Name"/>
+    public string Name => "Execute Grid Server Lua Script";
+
+    /// <inheritdoc cref="ICommandHandler.Description"/>
+    public string Description => $"Attempts to execute the given script contents on a grid " +
                                         $"server instance.";
-    public string[] CommandAliases => new[] { "x", "ex", "execute" };
-    public bool Internal => false;
+
+    /// <inheritdoc cref="ICommandHandler.Aliases"/>
+    public string[] Aliases => new[] { "x", "ex", "execute" };
+
+    /// <inheritdoc cref="ICommandHandler.IsInternal"/>
+    public bool IsInternal => false;
+
+    /// <inheritdoc cref="ICommandHandler.IsEnabled"/>
     public bool IsEnabled { get; set; } = true;
-    private sealed class ExecuteScriptCommandPerformanceMonitor
-    {
-        private const string Category = "Grid.Commands.ExecuteScript";
 
-        public IRawValueCounter TotalItemsProcessed { get; }
-        public IRawValueCounter TotalItemsProcessedThatFailed { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatFailedPerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadEmptyScripts { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadEmptyScriptsPerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachmentPerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachmentPerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadAnInvalidScriptFile { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadAnInvalidScriptFilePerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadBlacklistedKeywords { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadBlacklistedKeywordsPerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadUnicode { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadUnicodePerSecond { get; }
-        public IRawValueCounter TotalItemsProcessedThatHadAFileResult { get; }
-        public IRateOfCountsPerSecondCounter TotalItemsProcessedThatHadAFileResultPerSecond { get; }
-        public IAverageValueCounter ExecuteScriptCommandSuccessAverageTimeTicks { get; }
-        public IAverageValueCounter ExecuteScriptCommandFailureAverageTimeTicks { get; }
+    private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
+    private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
-        public ExecuteScriptCommandPerformanceMonitor(ICounterRegistry counterRegistry)
-        {
-            if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
-
-            var instance = $"{SystemGlobal.GetMachineId()} ({SystemGlobal.GetMachineHost()})";
-
-            TotalItemsProcessed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessed", instance);
-            TotalItemsProcessedThatFailed = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatFailed", instance);
-            TotalItemsProcessedThatFailedPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatFailedPerSecond", instance);
-            TotalItemsProcessedThatHadEmptyScripts = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScripts", instance);
-            TotalItemsProcessedThatHadEmptyScriptsPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsPerSecond", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachmentPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachmentPerSecond", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment", instance);
-            TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachmentPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachmentPerSecond", instance);
-            TotalItemsProcessedThatHadAnInvalidScriptFile = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadAnInvalidScriptFile", instance);
-            TotalItemsProcessedThatHadAnInvalidScriptFilePerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadAnInvalidScriptFilePerSecond", instance);
-            TotalItemsProcessedThatHadBlacklistedKeywords = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadBlacklistedKeywords", instance);
-            TotalItemsProcessedThatHadBlacklistedKeywordsPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadBlacklistedKeywordsPerSecond", instance);
-            TotalItemsProcessedThatHadUnicode = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadUnicode", instance);
-            TotalItemsProcessedThatHadUnicodePerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadUnicodePerSecond", instance);
-            TotalItemsProcessedThatHadAFileResult = counterRegistry.GetRawValueCounter(Category, "TotalItemsProcessedThatHadAFileResult", instance);
-            TotalItemsProcessedThatHadAFileResultPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "TotalItemsProcessedThatHadAFileResultPerSecond", instance);
-            ExecuteScriptCommandSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ExecuteScriptCommandSuccessAverageTimeTicks", instance);
-            ExecuteScriptCommandFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "ExecuteScriptCommandFailureAverageTimeTicks", instance);
-        }
-    }
-
-    private const int MaxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
-    private const int MaxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
-
-    #region Metrics
-
-    private static readonly ExecuteScriptCommandPerformanceMonitor _perfmon = new(PerfmonCounterRegistryProvider.Registry);
-
-    #endregion Metrics
+    private static readonly IGridServerFileHelper _fileHelper = new GridServerFileHelper(ArbiterSettings.Singleton);
 
     private (string, MemoryStream) DetermineDescription(string input, string fileName)
     {
         if (input.IsNullOrEmpty()) return (null, null);
 
-        if (input.Length > MaxErrorLength)
+        if (input.Length > _maxErrorLength)
         {
-            if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
-                return ($"The output cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+            var maxSize = ScriptsSettings.Singleton.ScriptExecutionMaxFileSizeKb;
+
+            if (input.Length / 1000 > maxSize)
+                return ($"The output cannot be larger than {maxSize} KiB", null);
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -116,10 +72,12 @@ internal class ExecuteScript : IStateSpecificCommandHandler
     {
         if (input.IsNullOrEmpty()) return (null, null);
 
-        if (input.Length > MaxResultLength)
+        if (input.Length > _maxResultLength)
         {
-            if (input.Length / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)
-                return ($"The result cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxResultSizeKb)} KiB", null);
+            var maxSize = ScriptsSettings.Singleton.ScriptExecutionMaxResultSizeKb;
+
+            if (input.Length / 1000 > maxSize)
+                return ($"The result cannot be larger than {maxSize} KiB", null);
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -127,7 +85,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
         return (input, null);
     }
 
-    public bool ParseLua(SocketMessage message, string input)
+    public async Task<bool> ParseLuaAsync(SocketMessage message, string input)
     {
         var options = new LuaParseOptions(LuaSyntaxOptions.Roblox);
         var syntaxTree = LuaSyntaxTree.ParseText(input, options);
@@ -139,11 +97,11 @@ internal class ExecuteScript : IStateSpecificCommandHandler
         {
             var errorString = string.Join("\n", errors.Select(err => err.ToString()));
 
-            if (errorString.Length > MaxErrorLength)
+            if (errorString.Length > _maxErrorLength)
             {
-                var truncated = errorString.Substring(0, MaxErrorLength - 20);
+                var truncated = errorString.Substring(0, _maxErrorLength - 20);
 
-                truncated += string.Format("({0} characters remaing...)", errorString.Length - (MaxErrorLength + 20));
+                truncated += string.Format("({0} characters remaing...)", errorString.Length - (_maxErrorLength + 20));
 
                 errorString = truncated;
             }
@@ -156,7 +114,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                 .WithDescription($"```\n{errorString}\n```")
                 .Build();
 
-            message.Reply("There was a Luau syntax error in your script:", embed: embed);
+            await message.ReplyAsync("There was a Luau syntax error in your script:", embed: embed);
 
             return false;
         }
@@ -164,7 +122,7 @@ internal class ExecuteScript : IStateSpecificCommandHandler
         return true;
     }
 
-    private void HandleResponse(SocketMessage message, string result, LuaUtility.ReturnMetadata metadata)
+    private async Task HandleResponseAsync(SocketMessage message, string result, LuaUtility.ReturnMetadata metadata)
     {
         var builder = new EmbedBuilder()
             .WithTitle(
@@ -214,241 +172,181 @@ internal class ExecuteScript : IStateSpecificCommandHandler
                     : "An error occured while executing your script:";
 
         if (attachments.Count > 0)
-            message.ReplyWithFiles(
+            await message.ReplyWithFilesAsync(
                 attachments,
                 text,
                 embed: builder.Build()
             );
         else
-            message.Reply(
+            await message.ReplyAsync(
                 text,
                 embed: builder.Build()
             );
     }
 
-    public async Task Invoke(string[] contentArray, SocketMessage message, string originalCommand)
+    /// <inheritdoc cref="ICommandHandler.ExecuteAsync(string[], SocketMessage, string)"/>
+    public async Task ExecuteAsync(string[] contentArray, SocketMessage message, string originalCommand)
     {
-        _perfmon.TotalItemsProcessed.Increment();
         var sw = Stopwatch.StartNew();
-        bool isFailure = false;
 
-        try
+        using (message.Channel.EnterTypingState())
         {
-            using (message.Channel.EnterTypingState())
+            var userIsAdmin = message.Author.IsAdmin();
+
+            if (FloodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
             {
-                var userIsAdmin = message.Author.IsAdmin();
+                await message.ReplyAsync("Too many people are using this command at once, please wait a few moments and try again.");
+                return;
+            }
 
-                if (FloodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded() && !userIsAdmin) // allow admins to bypass
+            FloodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
+
+            var perUserFloodChecker = FloodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(message.Author.Id);
+            if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
+            {
+                await message.ReplyAsync("You are sending script execution commands too quickly, please wait a few moments and try again.");
+                return;
+            }
+
+            perUserFloodChecker.UpdateCount();
+
+            var script = contentArray.Join(" ");
+
+            if (script.IsNullOrEmpty())
+            {
+                // let's try and read the first attachment
+                if (message.Attachments.Count == 0)
                 {
-                    message.Reply("Too many people are using this command at once, please wait a few moments and try again.");
-                    isFailure = true;
+                    await message.ReplyAsync("Script contents (up to 2000 chars, 4000 if nitro user), or 1 attachment was expected.");
                     return;
                 }
 
-                FloodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
+                var firstAttachment = message.Attachments.First();
+                // TODO: Setting to disable this in case we want them to use any extension
+                //       because this message response can become ambigious
 
-                var perUserFloodChecker = FloodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(message.Author.Id);
-                if (perUserFloodChecker.IsFlooded() && !userIsAdmin)
+                if (!firstAttachment.Filename.EndsWith(".lua"))
                 {
-                    message.Reply("You are sending script execution commands too quickly, please wait a few moments and try again.");
-                    isFailure = true;
+                    await message.ReplyAsync($"Expected the attachment ({firstAttachment.Filename}) to be a valid Lua file.");
                     return;
                 }
 
-                perUserFloodChecker.UpdateCount();
+                var maxSize = ScriptsSettings.Singleton.ScriptExecutionMaxFileSizeKb;
 
-                var script = contentArray.Join(" ");
-
-                if (script.IsNullWhiteSpaceOrEmpty())
+                if (firstAttachment.Size / 1000 > maxSize)
                 {
-                    _perfmon.TotalItemsProcessedThatHadEmptyScripts.Increment();
-                    _perfmon.TotalItemsProcessedThatHadEmptyScriptsPerSecond.Increment();
-
-                    // let's try and read the first attachment
-                    if (message.Attachments.Count == 0)
-                    {
-                        _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachment.Increment();
-                        _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnNoAttachmentPerSecond.Increment();
-
-                        isFailure = true;
-                        message.Reply("Script contents (up to 2000 chars, 4000 if nitro user), or 1 attachment was expected.");
-                        return;
-                    }
-
-                    var firstAttachment = message.Attachments.First();
-                    // TODO: Setting to disable this in case we want them to use any extension
-                    //       because this message response can become ambigious
-
-                    if (!firstAttachment.Filename.EndsWith(".lua"))
-                    {
-                        _perfmon.TotalItemsProcessedThatHadAnInvalidScriptFile.Increment();
-                        _perfmon.TotalItemsProcessedThatHadAnInvalidScriptFilePerSecond.Increment();
-
-                        isFailure = true;
-
-                        message.Reply($"Expected the attachment ({firstAttachment.Filename}) to be a valid Lua file.");
-                        return;
-                    }
-
-                    if (firstAttachment.Size / 1000 > global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)
-                    {
-                        isFailure = true;
-
-                        message.Reply($"The input attachment ({firstAttachment.Filename}) cannot be larger than {(global::Grid.Bot.Properties.Settings.Default.ScriptExecutionMaxFileSizeKb)} KiB!");
-                        return;
-                    }
-
-                    _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachment.Increment();
-                    _perfmon.TotalItemsProcessedThatHadEmptyScriptsButHadAnAttachmentPerSecond.Increment();
-
-                    script = firstAttachment.GetAttachmentContentsAscii();
-                }
-
-                // Remove phone specific quotes (UTF-8, and Lua cannot parse them)
-                script = script.EscapeQuotes();
-
-                // Extract the script from back ticks (if they exist)
-                // TODO: Skip this if we have an attachment.
-                script = script.GetCodeBlockContents();
-
-                if (LuaUtility.CheckIfScriptContainsDisallowedText(script, out var keyword) && !userIsAdmin)
-                {
-                    _perfmon.TotalItemsProcessedThatHadBlacklistedKeywords.Increment();
-                    _perfmon.TotalItemsProcessedThatHadBlacklistedKeywordsPerSecond.Increment();
-
-                    isFailure = true;
-
-                    await message.ReplyAsync($"The script you sent contains keywords that are not permitted, " +
-                                             $"please review your script and change the blacklisted keyword: {keyword}");
+                    await message.ReplyAsync($"The input attachment ({firstAttachment.Filename}) cannot be larger than {maxSize} KiB!");
 
                     return;
                 }
 
-                if (script.ContainsUnicode() && !global::Grid.Bot.Properties.Settings.Default.ScriptExecutionSupportUnicode && !userIsAdmin)
+                script = firstAttachment.GetAttachmentContentsAscii();
+            }
+
+            // Remove phone specific quotes (UTF-8, and Lua cannot parse them)
+            script = script.EscapeQuotes();
+
+            // Extract the script from back ticks (if they exist)
+            // TODO: Skip this if we have an attachment.
+            script = script.GetCodeBlockContents();
+
+            if (script.ContainsUnicode() && !userIsAdmin)
+            {
+                // TODO: Ack back the UTF-8 Characters if we can in the future.
+                await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, " +
+                                         "please remove any unicode characters from your script.");
+
+                return;
+            }
+
+            if (!await ParseLuaAsync(message, script)) return;
+
+            var scriptId = Guid.NewGuid().ToString();
+            var filesafeScriptId = scriptId.Replace("-", "");
+            var scriptName = _fileHelper.GetGridServerScriptPath(filesafeScriptId);
+
+            var settings = new ExecuteScriptSettings(filesafeScriptId, new Dictionary<string, object>() { { "is_admin", userIsAdmin } });
+            var command = new ExecuteScriptCommand(settings);
+
+            script = string.Format(LuaUtility.LuaVMTemplate, script);
+
+            var scriptEx = Lua.NewScript(
+                Guid.NewGuid().ToString(),
+                command.ToJson()
+            );
+
+            // bump to 20 seconds so it doesn't batch job timeout on first execution
+            var job = new Job() { id = scriptId, expirationInSeconds = userIsAdmin ? 20000 : 20 };
+
+            try
+            {
+                File.WriteAllText(scriptName, script, Encoding.ASCII);
+
+                var serverResult = ScriptExecutionArbiter.Singleton.BatchJobEx(job, scriptEx);
+                var (newResult, metadata) = LuaUtility.ParseResult(serverResult);
+
+                await HandleResponseAsync(message, newResult, metadata);
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+
+                if (ex is IOException)
                 {
-                    _perfmon.TotalItemsProcessedThatHadUnicode.Increment();
-                    _perfmon.TotalItemsProcessedThatHadUnicodePerSecond.Increment();
+                    BacktraceUtility.UploadCrashLog(ex);
 
-                    isFailure = true;
+                    await message.ReplyAsync("There was an IO error when writing the script to the system, please try again later.");
+                }
 
-                    // TODO: Ack back the UTF-8 Characters if we can in the future.
-                    await message.ReplyAsync("Sorry, but unicode in messages is not supported as of now, " +
-                                             "please remove any unicode characters from your script.");
+                if (ex is TimeoutException)
+                {
+                    if (!message.Author.IsOwner()) message.Author.IncrementExceptionLimit();
+
+                    await HandleResponseAsync(
+                        message,
+                        null,
+                        new()
+                        {
+                            ErrorMessage = "script exceeded timeout",
+                            ExecutionTime = sw.Elapsed.TotalSeconds,
+                            Success = false
+                        }
+                    );
+
                     return;
                 }
 
-                if (!ParseLua(message, script))
-                {
-                    isFailure = true;
-                    return;
-                }
-
-                var isAdminScript = global::Grid.Bot.Properties.Settings.Default.AllowAdminScripts && userIsAdmin;
-
-                var scriptId = NetworkingGlobal.GenerateUuidv4();
-                var filesafeScriptId = scriptId.Replace("-", "");
-                var scriptName = GridServerFileHelper.GetGridServerScriptPath(filesafeScriptId);
-
-                // isAdmin allows a bypass of disabled methods and virtualized globals
-                var (command, _) = JsonScriptingUtility.GetSharedGameServerExecutionScript(
-                    filesafeScriptId,
-                    ("is_admin", isAdminScript)
-                );
-
-                if (isAdminScript) Logger.Singleton.Debug("Admin scripts are enabled, disabling VM.");
-
-                if (global::Grid.Bot.Properties.Settings.Default.ScriptExecutionRequireProtections)
-                    script = string.Format(LuaUtility.SafeLuaMode, script);
-
-                if (global::Grid.Bot.Properties.Settings.Default.ScriptExecutionPrependBaseURL)
-                    script = $"game:GetService(\"ContentProvider\"):SetBaseUrl" +
-                             $"(\"{Grid.Bot.Properties.Settings.Default.BaseURL}\");{script}";
-
-                var scriptEx = Lua.NewScript(
-                    NetworkingGlobal.GenerateUuidv4(),
-                    command
-                );
-
-                // bump to 20 seconds so it doesn't batch job timeout on first execution
-                var job = new Job() { id = scriptId, expirationInSeconds = userIsAdmin ? 20000 : 20 };
-
+                if (ex is not IOException) throw;
+            }
+            finally
+            {
                 try
                 {
-                    File.WriteAllText(scriptName, script, Encoding.ASCII);
-
-                    var serverResult = ScriptExecutionArbiter.Singleton.BatchJobEx(job, scriptEx);
-                    var (newResult, metadata) = LuaUtility.ParseResult(serverResult);
-
-                    HandleResponse(message, newResult, metadata);
-
+                    Logger.Singleton.Debug(
+                        "Trying delete the script '{0}' at path '{1}'",
+                        scriptId,
+                        scriptName
+                    );
+                    scriptName.PollDeletion(
+                        10,
+                        ex => Logger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
+                        () => Logger.Singleton.Debug(
+                            "Successfully deleted the script '{0}' at path '{1}'!",
+                                scriptId,
+                                scriptName
+                            )
+                    );
                 }
                 catch (Exception ex)
                 {
-                    isFailure = true;
+                    BacktraceUtility.UploadCrashLog(ex);
 
-                    if (ex is IOException)
-                    {
-                        global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
-                        await message.ReplyAsync("There was an IO error when writing the script to the system, please try again later.");
-                    }
-
-                    if (ex is TimeoutException)
-                    {
-                        if (!message.Author.IsOwner()) message.Author.IncrementExceptionLimit();
-
-                        HandleResponse(message, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
-
-                        return;
-                    }
-
-                    if (ex is not IOException) throw;
+                    Logger.Singleton.Warning(
+                        "Failed to delete the user script '{0}' because '{1}'",
+                        scriptName,
+                        ex.Message
+                    );
                 }
-                finally
-                {
-                    try
-                    {
-                        Logger.Singleton.Debug(
-                            "Trying delete the script '{0}' at path '{1}'",
-                            scriptId,
-                            scriptName
-                        );
-                        scriptName.PollDeletion(
-                            10,
-                            ex => Logger.Singleton.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                            () => Logger.Singleton.Debug(
-                                "Successfully deleted the script '{0}' at path '{1}'!",
-                                    scriptId,
-                                    scriptName
-                                )
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
-                        isFailure = true;
-                        Logger.Singleton.Warning(
-                            "Failed to delete the user script '{0}' because '{1}'",
-                            scriptName,
-                            ex.Message
-                        );
-                    }
-                }
-            }
-        }
-        finally
-        {
-            sw.Stop();
-            Logger.Singleton.Debug("Took {0}s to execute script command.", sw.Elapsed.TotalSeconds.ToString("f7"));
-
-            if (isFailure)
-            {
-                _perfmon.TotalItemsProcessedThatFailed.Increment();
-                _perfmon.TotalItemsProcessedThatFailedPerSecond.Increment();
-                _perfmon.ExecuteScriptCommandFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
-            }
-            else
-            {
-                _perfmon.ExecuteScriptCommandSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
             }
         }
     }

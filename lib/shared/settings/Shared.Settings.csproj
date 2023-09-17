@@ -4,6 +4,9 @@
 
   <PropertyGroup>
     <Description>Shared library containing settings used by the grid-bot</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\configuration\configuration\Configuration.csproj" />
-    <ProjectReference Include="..\..\configuration\discord-configuration\Configuration.Discord.csproj" />
+    <ProjectReference Include="..\..\configuration\configuration-v2\ConfigurationV2.csproj" />
+    <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
     <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
     <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
   </ItemGroup>
@@ -23,17 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Properties/Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/Resources.Designer.cs">
+    <Compile Update="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
@@ -41,18 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Properties/Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="Properties/Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties/Resources.resx">
+    <EmbeddedResource Update="Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>

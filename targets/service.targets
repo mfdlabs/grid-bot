@@ -16,6 +16,7 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'debug-deploy' ">
     <OutputPath>bin\debug\</OutputPath>
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' or '$(Configuration)' == 'release-vault-deploy' ">
@@ -25,7 +26,7 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' or '$(Configuration)' == 'debug-vault-deploy' ">
     <OutputPath>bin\debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEBUG;USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

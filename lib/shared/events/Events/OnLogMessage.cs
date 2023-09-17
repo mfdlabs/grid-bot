@@ -1,61 +1,73 @@
-﻿using System;
+﻿namespace Grid.Bot.Events;
+
+using System;
 using System.Threading.Tasks;
 
 using Discord;
 
 using Logging;
 
-namespace Grid.Bot.Events
+/// <summary>
+/// Event invoked when Discord.Net creates a log message.
+/// </summary>
+public static class OnLogMessage
 {
-    public static class OnLogMessage
+    private static readonly ILogger _logger = new Logger(
+        DiscordSettings.Singleton.DiscordLoggerName,
+        DiscordSettings.Singleton.DiscordLoggerLogLevel
+    );
+
+    /// <summary>
+    /// Invoke the event handler.
+    /// </summary>
+    /// <param name="message">The <see cref="LogMessage"/></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException">The <see cref="LogSeverity"/> is out of range.</exception>
+    public static Task Invoke(LogMessage message)
     {
-        public static Task Invoke(LogMessage message)
+        if (message.Exception != null)
         {
-            if (message.Exception != null)
-            {
 #if !DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS
-                if (message.Exception?.InnerException is WebSocketClosedException) return Task.CompletedTask;
+            if (message.Exception?.InnerException is WebSocketClosedException)
+                return Task.CompletedTask;
 #endif
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-                if (!(message.Exception is TaskCanceledException &&
-                      !global::Grid.Bot.Properties.Settings.Default.DebugAllowTaskCanceledExceptions))
-                    Logger.Singleton.Error("DiscordInternal-EXCEPTION-{0}: {1} {2}",
-                        message.Source,
-                        message.Message,
-                        message.Exception.ToString()
-                    );
+            if (!(message.Exception is TaskCanceledException &&
+                  !DiscordSettings.Singleton.DebugAllowTaskCanceledExceptions))
+                _logger.Error("Source = {0}, Message = {1}, Exception = {2}",
+                    message.Source,
+                    message.Message,
+                    message.Exception.ToString()
+                );
 #endif
-                return Task.CompletedTask;
-            }
-
-            if (!global::Grid.Bot.Properties.Settings.Default.ShouldLogDiscordInternals)
-                return Task.CompletedTask;
-            
-            switch (message)
-            {
-                case {Severity: LogSeverity.Warning}:
-                    Logger.Singleton.Warning("DiscordInternal-WARNING-{0}: {1}", message.Source, message.Message);
-                    break;
-                case {Severity: LogSeverity.Debug}:
-                    Logger.Singleton.Debug("DiscordInternal-DEBUG-{0}: {1}", message.Source, message.Message);
-                    break;
-                case {Severity: LogSeverity.Info}:
-                    Logger.Singleton.Information("DiscordInternal-INFO-{0}: {1}", message.Source, message.Message);
-                    break;
-                case {Severity: LogSeverity.Verbose}:
-                    Logger.Singleton.Debug("DiscordInternal-VERBOSE-{0}: {1}", message.Source, message.Message);
-                    break;
-                case {Severity: LogSeverity.Error | LogSeverity.Critical}:
-                    Logger.Singleton.Error("DiscordInternal-ERROR-{0}: {1}", message.Source, message.Message);
-                    break;
-                case {Severity: LogSeverity.Critical}:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
             return Task.CompletedTask;
         }
+
+        if (!DiscordSettings.Singleton.ShouldLogDiscordInternals)
+            return Task.CompletedTask;
+
+        switch (message)
+        {
+            case { Severity: LogSeverity.Warning }:
+                _logger.Warning("{0}: {1}", message.Source, message.Message);
+                break;
+            case { Severity: LogSeverity.Debug }:
+                _logger.Debug("{0}: {1}", message.Source, message.Message);
+                break;
+            case { Severity: LogSeverity.Info }:
+                _logger.Information("{0}: {1}", message.Source, message.Message);
+                break;
+            case { Severity: LogSeverity.Verbose }:
+                _logger.Debug("{0}: {1}", message.Source, message.Message);
+                break;
+            case { Severity: LogSeverity.Error | LogSeverity.Critical }:
+                _logger.Error("{0}: {1}", message.Source, message.Message);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return Task.CompletedTask;
     }
 }

@@ -1,43 +1,61 @@
-﻿using System.Linq;
+﻿namespace Grid.Bot.Commands;
+
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 using Discord.WebSocket;
-using Grid.Bot.Extensions;
-using Grid.Bot.Interfaces;
-using Grid.Bot.Registries;
+
 using Text.Extensions;
 
-namespace Grid.Bot.Commands
+using Extensions;
+using Interfaces;
+using Registries;
+
+/// <summary>
+/// Disables an <see cref="ICommandHandler"/>
+/// </summary>
+[Obsolete("Text-based commands are being deprecated. Please begin to use slash commands!")]
+internal sealed class DisableCommand : ICommandHandler
 {
-    internal sealed class DisableCommand : IStateSpecificCommandHandler
+    /// <inheritdoc cref="ICommandHandler.Name"/>
+    public string Name => "Disable Bot Command";
+
+    /// <inheritdoc cref="ICommandHandler.Description"/>
+    public string Description => $"Tries to disable a command from the CommandRegistry\nLayout:" +
+                                        $"{CommandsSettings.Singleton.Prefix}disable commandName.";
+
+    /// <inheritdoc cref="ICommandHandler.Aliases"/>
+    public string[] Aliases => new[] { "disable" };
+
+    /// <inheritdoc cref="ICommandHandler.IsInternal"/>
+    public bool IsInternal => true;
+
+    /// <inheritdoc cref="ICommandHandler.IsEnabled"/>
+    public bool IsEnabled { get; set; } = true;
+
+    /// <inheritdoc cref="ICommandHandler.ExecuteAsync(string[], SocketMessage, string)"/>
+    public async Task ExecuteAsync(string[] messageContentArray, SocketMessage message, string originalCommand)
     {
-        public string CommandName => "Disable Bot Command";
-        public string CommandDescription => $"Tries to disable a command from the CommandRegistry\nLayout:" +
-                                            $"{Grid.Bot.Properties.Settings.Default.Prefix}disable commandName.";
-        public string[] CommandAliases => new[] { "disable" };
-        public bool Internal => true;
-        public bool IsEnabled { get; set; } = true;
+        if (!await message.RejectIfNotAdminAsync()) return;
 
-        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
+        var commandName = messageContentArray.ElementAtOrDefault(0);
+
+        if (commandName.IsNullOrEmpty())
         {
-            if (!await message.RejectIfNotAdminAsync()) return;
-
-            var commandName = messageContentArray.ElementAtOrDefault(0);
-
-            if (commandName.IsNullOrEmpty())
-            {
-                await message.ReplyAsync("The command name is required.");
-                return;
-            }
-
-            var disabledMessage = string.Join(" ", messageContentArray.Skip(1));
-
-            if (!CommandRegistry.SetIsEnabled(commandName, false, disabledMessage.IsNullOrWhiteSpace() ? null : disabledMessage))
-            {
-                await message.ReplyAsync($"The command by the nameof '{commandName}' was not found.");
-                return;
-            }
-
-            await message.ReplyAsync($"Successfully disabled the command '{commandName}'.");
+            await message.ReplyAsync("The command name is required.");
+            return;
         }
+
+        var disabledMessage = string.Join(" ", messageContentArray.Skip(1));
+
+        if (!CommandRegistry.SetIsEnabled(commandName, false, disabledMessage.IsNullOrEmpty() ? null : disabledMessage))
+        {
+            await message.ReplyAsync($"The command by the nameof '{commandName}' was not found.");
+
+            return;
+        }
+
+        await message.ReplyAsync($"Successfully disabled the command '{commandName}'.");
     }
 }

@@ -117,7 +117,7 @@ namespace Instrumentation
         }
         private void ValidateStringParameter(string parameter, string parameterName)
         {
-            if (parameter.IsNullOrWhiteSpace()) throw new ArgumentException(parameterName);
+            if (parameter.IsNullOrEmpty()) throw new ArgumentException(parameterName);
         }
 
         private static readonly byte[] _DefaultPercentiles = new byte[] { 1, 5, 10, 25, 50, 75, 90, 95, 99 };

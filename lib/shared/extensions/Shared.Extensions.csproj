@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Library containg extensions to aid in interacting with Discord.Net</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -17,7 +19,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
-	<ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+    <ProjectReference Include="..\..\random\random\Random.csproj" />
+    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
   </ItemGroup>
 
 </Project>

@@ -29,7 +29,7 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
     /// <param name="getLimit">The threshold before a checker becomes flooded</param>
     /// <param name="getWindowPeriod">The window of time to consider counts towards the limit</param>
     /// <param name="isEnabled">Whether or not the floodchecker is enabled. If false it will never report itself as flooded</param>
-    /// <param name="logger"></param>
+    /// <param name="logger">The <see cref="ILogger"/></param>
     public RedisApproximateRollingWindowFloodChecker(
         string category, 
         string key, 
@@ -59,8 +59,8 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
     /// <param name="getLimit">The threshold before a checker becomes flooded</param>
     /// <param name="getWindowPeriod">The window of time to consider counts towards the limit</param>
     /// <param name="isEnabled">Whether or not the floodchecker is enabled. If false it will never report itself as flooded</param>
-    /// <param name="logger"></param>
-    /// <param name="redisClient"></param>
+    /// <param name="logger">The <see cref="ILogger"/></param>
+    /// <param name="redisClient">The <see cref="IRedisClient"/></param>
     public RedisApproximateRollingWindowFloodChecker(
         string category,
         string key,
@@ -166,6 +166,7 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
         _NowProvider = nowProvider;
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoUpdateCount"/>
     protected override void DoUpdateCount()
     {
         var timeNow = _NowProvider();
@@ -182,6 +183,7 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
         }
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoReset"/>
     protected override void DoReset()
     {
         var window = GetWindowPeriod();
@@ -195,6 +197,7 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
             RedisClient.Execute(previousBucketKey, db => db.KeyDelete(previousBucketKey));
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoGetCount"/>
     protected override int DoGetCount()
     {
         var window = GetWindowPeriod();
@@ -216,6 +219,7 @@ public class RedisApproximateRollingWindowFloodChecker : BaseRedisFloodChecker, 
         return count;
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoGetRetryAfter"/>
     protected override TimeSpan? DoGetRetryAfter()
     {
         var window = GetWindowPeriod();

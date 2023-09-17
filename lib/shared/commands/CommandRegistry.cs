@@ -9,6 +9,7 @@
 // Alex: That won't really work if we want to keep up shared settings.
 // Nikita: Shut up, I did it anyway, you guys slow and suck at code
 
+namespace Grid.Bot.Registries;
 
 using System;
 using System.IO;
@@ -29,10 +30,9 @@ using Logging;
 using Threading;
 using Grid.Bot.Guards;
 using Text.Extensions;
+using Grid.Bot.Utility;
 using Grid.Bot.Interfaces;
 using Grid.Bot.Extensions;
-using Reflection.Extensions;
-using Grid.Bot.PerformanceMonitors;
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 using Grid.Bot.Global;
@@ -40,1181 +40,1079 @@ using Grid.Bot.Global;
 
 // ReSharper disable AsyncVoidLambda
 
-namespace Grid.Bot.Registries
+/// <summary>
+/// Class used to register commands.
+/// </summary>
+[Obsolete("This is being deprecated.")]
+public static class CommandRegistry
 {
-    public static class CommandRegistry
+    private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command:";
+
+    private static bool _wasRegistered;
+    private static readonly object RegistrationLock = new();
+
+    private static readonly ICollection<CommandCircuitBreakerWrapper> CommandCircuitBreakerWrappers = new List<CommandCircuitBreakerWrapper>();
+    private static readonly ICollection<ICommandHandler> CommandHandlers = new List<ICommandHandler>();
+    private static ICollection<(ICommandHandler, string)> _disabledCommandsReasons = new List<(ICommandHandler, string)>();
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    private static readonly ICollection<SlashCommandCircuitBreakerWrapper> SlashCommandCircuitBreakerWrappers = new List<SlashCommandCircuitBreakerWrapper>();
+    private static readonly ICollection<ISlashCommandHandler> SlashCommandHandlers = new List<ISlashCommandHandler>();
+    private static ICollection<(ISlashCommandHandler, string)> _disabledSlashCommandsReasons = new List<(ISlashCommandHandler, string)>();
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+    private static string GetDefaultCommandNamespace() => "Grid.Bot.Commands";
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    private static string GetSlashCommandNamespace() => "Grid.Bot.SlashCommands";
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+    /// <summary>
+    /// Construct help embed for a single command.
+    /// </summary>
+    /// <param name="commandName">The name of the command.</param>
+    /// <param name="author">The <see cref="IUser"/> who requested help.</param>
+    /// <returns>The help embed.</returns>
+    public static Embed ConstructHelpEmbedForSingleCommand(string commandName, IUser author)
     {
-        private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command and the environment variable 'CareToLeakSensitiveExceptions' is false, this may leak sensitive information:";
+        if (!_wasRegistered) RegisterOnce();
 
-        private static bool _wasRegistered;
-        private static readonly object RegistrationLock = new();
+        var command = GetCommandByCommandAlias(commandName);
 
-        private static readonly ICollection<CommandCircuitBreakerWrapper> CommandCircuitBreakerWrappers = new List<CommandCircuitBreakerWrapper>();
-        private static readonly ICollection<IStateSpecificCommandHandler> StateSpecificCommandHandlers = new List<IStateSpecificCommandHandler>();
-        private static ICollection<(IStateSpecificCommandHandler, string)> _disabledCommandsReasons = new List<(IStateSpecificCommandHandler, string)>();
+        if (command == default) return null;
 
-#if WE_LOVE_EM_SLASH_COMMANDS
+        var isInternal = command.IsInternal;
+        var isDisabled = command.IsEnabled == false;
+        var isDeprecated = command.GetType().GetCustomAttribute<ObsoleteAttribute>() != null;
 
-        private static readonly ICollection<SlashCommandCircuitBreakerWrapper> SlashCommandCircuitBreakerWrappers = new List<SlashCommandCircuitBreakerWrapper>();
-        private static readonly ICollection<IStateSpecificSlashCommandHandler> StateSpecificSlashCommandHandlers = new List<IStateSpecificSlashCommandHandler>();
-        private static ICollection<(IStateSpecificSlashCommandHandler, string)> _disabledSlashCommandsReasons = new List<(IStateSpecificSlashCommandHandler, string)>();
+        if (isInternal && !author.IsAdmin()) return null;
 
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        private static readonly CommandRegistryInstrumentationPerformanceMonitor InstrumentationPerfmon = new(PerfmonCounterRegistryProvider.Registry);
-
-        private static string GetDefaultCommandNamespace() => "Grid.Bot.Commands";
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        private static string GetSlashCommandNamespace() => "Grid.Bot.SlashCommands";
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        public static Embed ConstructHelpEmbedForSingleCommand(string commandName, IUser author)
+        var builder = new EmbedBuilder
         {
-            if (!_wasRegistered) RegisterOnce();
+            Title = $"{command.Name} Documentation",
+            Color = isDisabled ? new Color(0xff, 0x00, 0x00) : new Color(0x00, 0xff, 0x00)
+        };
+        builder.AddField(
+            string.Join(", ", command.Aliases),
+            $"{command.Description}\n" +
+            $"{(isDeprecated ? ":warning:" : "")} " +
+            $"{(isInternal ? ":no_entry:" : "")} " +
+            $"{(isDisabled ? ":x:" : ":white_check_mark:")}");
+        builder.WithCurrentTimestamp();
+        builder.Description = 
+            ":no_entry:\\: **INTERNAL**\n" +
+            ":warning:\\: **DEPRECATED**\n" +
+            ":x:\\: **DISABLED**\n" +
+            ":white_check_mark:\\: **ENABLED**";
 
-            var command = GetCommandByCommandAlias(commandName);
+        return builder.Build();
+    }
 
-            if (command == default) return null;
+    /// <summary>
+    /// Construct a help embed for all commands.
+    /// </summary>
+    /// <param name="author">The <see cref="IUser"/> who requested the help embed.</param>
+    /// <returns>The help embeds.</returns>
+    public static ICollection<Embed> ConstructHelpEmbedForAllCommands(IUser author)
+    {
+        if (!_wasRegistered) RegisterOnce();
 
-            var isInternal = command.Internal;
-            var isDisabled = command.IsEnabled == false;
+        var builder = new EmbedBuilder().WithTitle("Documentation");
+        var embeds = new List<Embed>();
+        var i = 0;
 
-            if (isInternal && !author.IsAdmin()) return null;
-
-            var builder = new EmbedBuilder
-            {
-                Title = $"{command.CommandName} Documentation",
-                Color = isDisabled ? new Color(0xff, 0x00, 0x00) : new Color(0x00, 0xff, 0x00)
-            };
-            builder.AddField(string.Join(", ",
-                    command.CommandAliases),
-                $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}");
-            builder.WithCurrentTimestamp();
-            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
-
-            return builder.Build();
-        }
-
-        public static ICollection<Embed> ConstructHelpEmbedForAllCommands(IUser author)
+        foreach (var command in CommandHandlers)
         {
-            if (!_wasRegistered) RegisterOnce();
-
-            var builder = new EmbedBuilder().WithTitle("Documentation");
-            var embeds = new List<Embed>();
-            var i = 0;
-
-            foreach (var command in StateSpecificCommandHandlers)
+            if (i == 24)
             {
-                if (i == 24)
-                {
-                    embeds.Add(builder.Build());
-                    builder = new EmbedBuilder();
-                    i = 0;
-                }
-
-                var isInternal = command.Internal;
-                var isDisabled = command.IsEnabled == false;
-                if (isInternal && !author.IsAdmin()) continue;
-
-                builder.AddField(
-                    $"{command.CommandName}: {string.Join(", ", command.CommandAliases)}",
-                    $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}"
-                );
-
-                builder.Color = new Color(0x00, 0x99, 0xff);
-                builder.WithCurrentTimestamp();
-                i++;
+                embeds.Add(builder.Build());
+                builder = new EmbedBuilder();
+                i = 0;
             }
 
-            if (i < 24) embeds.Add(builder.Build());
-            builder.Color = new Color(0x00, 0x99, 0xff);
-            builder = new EmbedBuilder();
-            builder.WithCurrentTimestamp();
-            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
-            embeds.Add(builder.Build());
-
-            return embeds;
-        }
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        public static Embed ConstructHelpEmbedForSingleSlashCommand(string commandName, IUser author)
-        {
-            if (!_wasRegistered) RegisterOnce();
-
-            var command = GetSlashCommandByCommandAlias(commandName);
-
-            if (command == default) return null;
-
-            var isInternal = command.Internal;
+            var isInternal = command.IsInternal;
             var isDisabled = command.IsEnabled == false;
+            var isDeprecated = command.GetType().GetCustomAttribute<ObsoleteAttribute>() != null;
 
-            if (isInternal && !author.IsAdmin()) return null;
+            if (isInternal && !author.IsAdmin()) continue;
 
-            var builder = new EmbedBuilder
-            {
-                Title = $"{command.Name} Documentation",
-                Color = isDisabled ? new Color(0xff, 0x00, 0x00) : new Color(0x00, 0xff, 0x00)
-            };
             builder.AddField(
-                "Description",
-                $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}"
+                $"{command.Name}: {string.Join(", ", command.Aliases)}",
+                $"{command.Description}\n" +
+                $"{(isDeprecated ? ":warning:" : "")} " +
+                $"{(isInternal ? ":no_entry:" : "")} " +
+                $"{(isDisabled ? ":x:" : ":white_check_mark:")}"
             );
-            builder.WithCurrentTimestamp();
-            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
 
-            return builder.Build();
+            builder.Color = new Color(0x00, 0x99, 0xff);
+            builder.WithCurrentTimestamp();
+            i++;
         }
 
-        public static ICollection<Embed> ConstructHelpEmbedForAllSlashCommands(IUser author)
+        if (i < 24) embeds.Add(builder.Build());
+        builder.Color = new Color(0x00, 0x99, 0xff);
+        builder = new EmbedBuilder();
+        builder.WithCurrentTimestamp();
+        builder.Description = 
+            ":no_entry:\\: **INTERNAL**\n" +
+            ":warning:\\: **DEPRECATED**\n" +
+            ":x:\\: **DISABLED**\n" +
+            ":white_check_mark:\\: **ENABLED**";
+
+        embeds.Add(builder.Build());
+
+        return embeds;
+    }
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    /// <summary>
+    /// Sets a slash command enabled.
+    /// </summary>
+    /// <param name="commandName">The name of the command.</param>
+    /// <param name="isEnabled">Is the slash command enabled?</param>
+    /// <param name="reason">The reason for disabling.</param>
+    /// <returns>True if the command was disabled or not.</returns>
+    public static bool SetIsSlashCommandEnabled(string commandName, bool isEnabled, string reason = null)
+    {
+        var command = GetSlashCommandByCommandAlias(commandName.ToLower());
+
+        if (command == null) return false;
+
+        lock (SlashCommandHandlers)
+        {
+            if (!isEnabled && reason != null)
+                _disabledSlashCommandsReasons.Add((command, reason));
+            else
+            {
+                var list = _disabledSlashCommandsReasons.ToList();
+                list.RemoveAll(x => x.Item1 == command);
+                _disabledSlashCommandsReasons = list;
+            }
+            SlashCommandHandlers.Remove(command);
+
+            command.IsEnabled = isEnabled;
+
+            SlashCommandHandlers.Add(command);
+        }
+
+        return true;
+    }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+    /// <summary>
+    /// Sets a command enabled.
+    /// </summary>
+    /// <param name="commandName">The name of the command.</param>
+    /// <param name="isEnabled">Is the slash command enabled?</param>
+    /// <param name="reason">The reason for disabling.</param>
+    /// <returns>True if the command was disabled or not.</returns>
+    public static bool SetIsEnabled(string commandName, bool isEnabled, string reason = null)
+    {
+        var command = GetCommandByCommandAlias(commandName.ToLower());
+
+        if (command == null) return false;
+
+        lock (CommandHandlers)
+        {
+            if (!isEnabled && reason != null)
+                _disabledCommandsReasons.Add((command, reason));
+            else
+            {
+                var list = _disabledCommandsReasons.ToList();
+                list.RemoveAll(x => x.Item1 == command);
+                _disabledCommandsReasons = list;
+            }
+            CommandHandlers.Remove(command);
+
+            command.IsEnabled = isEnabled;
+
+            CommandHandlers.Add(command);
+        }
+
+        return true;
+    }
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    /// <summary>
+    /// Run a <see cref="SocketSlashCommand"/>
+    /// </summary>
+    /// <param name="command">The <see cref="SocketSlashCommand"/></param>
+    public static async Task CheckAndRunSlashCommand(SocketSlashCommand command)
+    {
+        var commandAlias = command.CommandName;
+
+        var channel = command.Channel as SocketGuildChannel;
+        var channelName = channel != null ? channel.Name.Escape() : command.Channel.Name;
+        var channelId = channel?.Id ?? command.Channel.Id;
+        var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {command.Channel.Name}.";
+        var guildId = channel != null ? channel.Guild.Id : command.Channel.Id;
+        var username = $"{command.User.Username.Escape()}#{command.User.Discriminator}";
+        var userId = command.User.Id;
+        var subCommand = command.Data.GetSubCommand();
+        var args = (from opt in subCommand != null ? subCommand.Options : command.Data.Options select $"{opt.Name} = {opt.Value}").Join(", ");
+        var subCommandName = subCommand != null ? subCommand.Name + " " : "";
+
+        InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", $"Slash Command - {commandAlias}");
+        Counters.RequestCountN++;
+        Logger.Singleton.Debug(
+            "Try execute the slash command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
+            commandAlias,
+            !args.IsNullOrEmpty()
+                ? $"{subCommandName}{args.EscapeNewLines().Escape()}"
+                : "no arguments.",
+            username,
+            userId,
+            guildName,
+            guildId,
+            channelName,
+            channelId
+        );
+
+        var sw = Stopwatch.StartNew();
+
+        try
         {
             if (!_wasRegistered) RegisterOnce();
 
-            var builder = new EmbedBuilder().WithTitle("Documentation");
-            var embeds = new List<Embed>();
-            var i = 0;
+            var cmd = GetSlashCommandByCommandAlias(commandAlias);
 
-            foreach (var command in StateSpecificSlashCommandHandlers)
+            if (cmd == null)
             {
-                if (i == 24)
-                {
-                    embeds.Add(builder.Build());
-                    builder = new EmbedBuilder();
-                    i = 0;
-                }
+                Counters.RequestFailedCountN++;
 
-                var isInternal = command.Internal;
-                var isDisabled = command.IsEnabled == false;
-                if (isInternal && !author.IsAdmin()) continue;
-
-                builder.AddField(
-                    "Description",
-                    $"{command.CommandDescription}\n{(isInternal ? ":no_entry:" : "")} {(isDisabled ? ":x:" : ":white_check_mark:")}"
-                );
-
-                builder.Color = new Color(0x00, 0x99, 0xff);
-                builder.WithCurrentTimestamp();
-                i++;
+                Logger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
+                DeleteSocketCommand(command);
+                return;
             }
 
-            if (i < 24) embeds.Add(builder.Build());
-            builder.Color = new Color(0x00, 0x99, 0xff);
-            builder = new EmbedBuilder();
-            builder.WithCurrentTimestamp();
-            builder.Description = ":no_entry:\\: **INTERNAL**\n:x:\\: **DISABLED**\n:white_check_mark:\\: **ENABLED**";
-            embeds.Add(builder.Build());
-
-            return embeds;
-        }
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        public static bool SetIsSlashCommandEnabled(string commandName, bool isEnabled, string reason = null)
-        {
-            var command = GetSlashCommandByCommandAlias(commandName.ToLower());
-
-            if (command == null) return false;
-
-            lock (StateSpecificSlashCommandHandlers)
+            if (!cmd.IsEnabled)
             {
-                if (!isEnabled && reason != null)
-                    _disabledSlashCommandsReasons.Add((command, reason));
-                else
+                var disabledMessage = (from c in _disabledSlashCommandsReasons select c.Item2).FirstOrDefault();
+
+                Logger.Singleton.Warning("The slash command '{0}' is disabled. {1}",
+                    commandAlias,
+                    disabledMessage != null
+                        ? $"Because: '{disabledMessage}'"
+                        : "");
+                var isAllowed = false;
+                if (command.User.IsAdmin())
                 {
-                    var list = _disabledSlashCommandsReasons.ToList();
-                    list.RemoveAll(x => x.Item1 == command);
-                    _disabledSlashCommandsReasons = list;
+                    isAllowed = true;
                 }
-                StateSpecificSlashCommandHandlers.Remove(command);
 
-                command.IsEnabled = isEnabled;
-
-                StateSpecificSlashCommandHandlers.Add(command);
-            }
-
-            return true;
-        }
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        public static bool SetIsEnabled(string commandName, bool isEnabled, string reason = null)
-        {
-            var command = GetCommandByCommandAlias(commandName.ToLower());
-
-            if (command == null) return false;
-
-            lock (StateSpecificCommandHandlers)
-            {
-                if (!isEnabled && reason != null)
-                    _disabledCommandsReasons.Add((command, reason));
-                else
+                if (!isAllowed)
                 {
-                    var list = _disabledCommandsReasons.ToList();
-                    list.RemoveAll(x => x.Item1 == command);
-                    _disabledCommandsReasons = list;
-                }
-                StateSpecificCommandHandlers.Remove(command);
-
-                command.IsEnabled = isEnabled;
-
-                StateSpecificCommandHandlers.Add(command);
-            }
-
-            return true;
-        }
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        public static async Task CheckAndRunSlashCommand(SocketSlashCommand command)
-        {
-            var commandAlias = command.CommandName;
-
-            InstrumentationPerfmon.CommandsPerSecond.Increment();
-
-            var channel = command.Channel as SocketGuildChannel;
-            var channelName = channel != null ? channel.Name.Escape() : command.Channel.Name;
-            var channelId = channel?.Id ?? command.Channel.Id;
-            var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {command.Channel.Name}.";
-            var guildId = channel != null ? channel.Guild.Id : command.Channel.Id;
-            var username = $"{command.User.Username.Escape()}#{command.User.Discriminator}";
-            var userId = command.User.Id;
-            var subCommand = command.Data.GetSubCommand();
-            var args = (from opt in subCommand != null ? subCommand.Options : command.Data.Options select $"{opt.Name} = {opt.Value}").Join(", ");
-            var subCommandName = subCommand != null ? subCommand.Name + " " : "";
-
-            InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", $"Slash Command - {commandAlias}");
-            Counters.RequestCountN++;
-            Logger.Singleton.Debug(
-                "Try execute the slash command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
-                commandAlias,
-                !args.IsNullOrEmpty()
-                    ? $"{subCommandName}{args.EscapeNewLines().Escape()}"
-                    : "no arguments.",
-                username,
-                userId,
-                guildName,
-                guildId,
-                channelName,
-                channelId
-            );
-
-            var sw = Stopwatch.StartNew();
-
-            try
-            {
-                if (!_wasRegistered) RegisterOnce();
-
-                var cmd = GetSlashCommandByCommandAlias(commandAlias);
-
-                if (cmd == null)
-                {
-                    InstrumentationPerfmon.CommandsThatDidNotExist.Increment();
-                    InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-
                     Counters.RequestFailedCountN++;
-
-                    Logger.Singleton.Warning("The slash command '{0}' did not exist.", commandAlias);
-                    if (global::Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
-                    {
-                        InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
-                        await command.RespondEphemeralPingAsync($"The slash command with the name '{commandAlias}' was not found.");
-                    }
-                    DeleteSocketCommand(command);
-                    InstrumentationPerfmon.NotFoundCommandsThatDidNotTellTheFrontendUser.Increment();
+                    await command.RespondEphemeralPingAsync($"The command by the name of '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
                     return;
                 }
+            }
 
-                InstrumentationPerfmon.CommandsThatExist.Increment();
+            await GetSlashCommandWrapperByCommand(cmd).ExecuteAsync(command);
 
-                if (!cmd.IsEnabled)
-                {
-                    var disabledMessage = (from c in _disabledSlashCommandsReasons select c.Item2).FirstOrDefault();
+            Counters.RequestSucceededCountN++;
+        }
+        catch (Exception ex)
+        {
+            await HandleSlashCommandException(ex, commandAlias, command);
+        }
+        finally
+        {
+            sw.Stop();
+            Logger.Singleton.Debug(
+                "Took {0}s to execute command '{1}'.",
+                sw.Elapsed.TotalSeconds,
+                commandAlias
+            );
+        }
+    }
 
-                    InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    Logger.Singleton.Warning("The slash command '{0}' is disabled. {1}",
-                        commandAlias,
-                        disabledMessage != null
-                            ? $"Because: '{disabledMessage}'"
-                            : "");
-                    var isAllowed = false;
-                    if (command.User.IsAdmin())
-                    {
-                        if (global::Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
-                        {
-                            InstrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
-                            isAllowed = true;
-                        }
-                        else
-                        {
-                            InstrumentationPerfmon.DisabledCommandsThatDidNotAllowAdminBypass.Increment();
-                        }
-                    }
+    private static void DeleteSocketCommand(SocketSlashCommand cmd)
+    {
+        Task.Factory.StartNew(async () =>
+        {
+            try
+            {
+                var cmdInternal = await BotRegistry.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
 
-                    if (!isAllowed)
-                    {
-                        InstrumentationPerfmon.DisabledCommandsThatDidNotAllowBypass.Increment();
-                        InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-                        Counters.RequestFailedCountN++;
-                        await command.RespondEphemeralPingAsync($"The command by the name of '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
-                        return;
-                    }
-                    InstrumentationPerfmon.DisabledCommandsThatWereInvokedToTheFrontendUser.Increment();
-                }
-                else
-                {
-                    InstrumentationPerfmon.CommandsThatAreEnabled.Increment();
-                }
-
-                InstrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
-
-                await GetSlashCommandWrapperByCommand(cmd).ExecuteAsync(command);
-
-                InstrumentationPerfmon.SucceededCommandsPerSecond.Increment();
-                Counters.RequestSucceededCountN++;
+                await cmdInternal.DeleteAsync();
             }
             catch (Exception ex)
             {
-                await HandleSlashCommandException(ex, commandAlias, command);
+                Logger.Singleton.Error(ex);
             }
-            finally
-            {
-                sw.Stop();
-                InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
-                InstrumentationPerfmon.CommandsThatFinished.Increment();
-                Logger.Singleton.Debug(
-                    "Took {0}s to execute command '{1}'.",
-                    sw.Elapsed.TotalSeconds,
-                    commandAlias
-                );
-            }
-        }
-
-        private static void DeleteSocketCommand(SocketSlashCommand cmd)
-        {
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    var cmdInternal = await BotRegistry.Client.GetGlobalApplicationCommandAsync(cmd.CommandId);
-
-                    await cmdInternal.DeleteAsync();
-                }
-                catch (Exception ex)
-                {
-                    Logger.Singleton.Error(ex);
-                }
-            });
-        }
+        });
+    }
 
 #endif // WE_LOVE_EM_SLASH_COMMANDS
 
-        public static async Task CheckAndRunCommandByAlias(string commandAlias, string[] messageContent, SocketMessage message)
+    /// <summary>
+    /// Run a command by its alias.
+    /// </summary>
+    /// <param name="commandAlias">The alias.</param>
+    /// <param name="messageContent">The arguments.</param>
+    /// <param name="message">The raw <see cref="SocketMessage"/></param>
+    public static async Task CheckAndRunCommandByAlias(string commandAlias, string[] messageContent, SocketMessage message)
+    {
+
+        var channel = message.Channel as SocketGuildChannel;
+        var channelName = channel != null ? channel.Name.Escape() : message.Channel.Name;
+        var channelId = channel?.Id ?? message.Channel.Id;
+        var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {message.Channel.Name}.";
+        var guildId = channel != null ? channel.Guild.Id : message.Channel.Id;
+        var username = $"{message.Author.Username.Escape()}#{message.Author.Discriminator}";
+        var userId = message.Author.Id;
+
+        InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
+        Counters.RequestCountN++;
+        Logger.Singleton.Debug(
+            "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
+            commandAlias,
+            messageContent.Length > 0
+                ? messageContent.Join(' ')
+                    .EscapeNewLines()
+                    .Escape()
+                : "No command arguments.",
+            username,
+            userId,
+            guildName,
+            guildId,
+            channelName,
+            channelId
+        );
+
+        if (commandAlias.IsNullOrEmpty())
         {
+            Logger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
+            return;
+        }
 
-            InstrumentationPerfmon.CommandsPerSecond.Increment();
+        if (
+            !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$") &&
+            !message.Author.IsAdmin()
+        )
+        {
+            Logger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
+            // should we reply here?
+            return;
+        }
 
+        var sw = Stopwatch.StartNew();
 
-            var channel = message.Channel as SocketGuildChannel;
-            var channelName = channel != null ? channel.Name.Escape() : message.Channel.Name;
-            var channelId = channel?.Id ?? message.Channel.Id;
-            var guildName = channel != null ? channel.Guild.Name.Escape() : $"Direct Message in {message.Channel.Name}.";
-            var guildId = channel != null ? channel.Guild.Id : message.Channel.Id;
-            var username = $"{message.Author.Username.Escape()}#{message.Author.Discriminator}";
-            var userId = message.Author.Id;
+        try
+        {
+            if (!_wasRegistered) RegisterOnce();
 
-            InsertIntoAverages($"#{channelName} - {channelId}", $"{guildName} - {guildId}", $"{username} @ {userId}", commandAlias);
-            Counters.RequestCountN++;
-            Logger.Singleton.Debug(
-                "Try execute the command '{0}' with the arguments '{1}' from '{2}' ({3}) in guild '{4}' ({5}) - channel '{6}' ({7}).",
-                commandAlias,
-                messageContent.Length > 0
-                    ? messageContent.Join(' ')
-                        .EscapeNewLines()
-                        .Escape()
-                    : "No command arguments.",
-                username,
-                userId,
-                guildName,
-                guildId,
-                channelName,
-                channelId
+            var command = GetCommandByCommandAlias(commandAlias);
+
+            if (command == null)
+            {
+                Counters.RequestFailedCountN++;
+                Logger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
+
+                return;
+            }
+
+            var obsoleteAttribute = command.GetType().GetCustomAttribute<ObsoleteAttribute>();
+            if (obsoleteAttribute != null)
+            {
+                var description = obsoleteAttribute.Message;
+
+                if (!description.IsNullOrEmpty())
+                    await message.Channel.SendMessageAsync($"The command '{command.Name}' is deprecated: {description}");
+                else
+                    await message.Channel.SendMessageAsync($"The command '{command.Name}' is deprecated.");
+            }
+
+            if (!command.IsEnabled)
+            {
+                var disabledMessage =
+                    (from cmd in _disabledCommandsReasons where cmd.Item1 == command select cmd.Item2)
+                    .FirstOrDefault();
+
+                Logger.Singleton.Warning("The command '{0}' is disabled. {1}",
+                    commandAlias,
+                    disabledMessage != null
+                        ? $"Because: '{disabledMessage}'"
+                        : "");
+                var isAllowed = false;
+                if (message.Author.IsAdmin())
+                {
+                    isAllowed = true;
+                }
+
+                if (!isAllowed)
+                {
+                    Counters.RequestFailedCountN++;
+                    await message.ReplyAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
+                    return;
+                }
+            }
+
+            await GetWrapperByCommand(command)
+                .ExecuteAsync(messageContent, message, commandAlias);
+
+            Counters.RequestSucceededCountN++;
+        }
+        catch (Exception ex)
+        {
+            await HandleException(ex, commandAlias, message);
+        }
+        finally
+        {
+            sw.Stop();
+            Logger.Singleton.Debug("Took {0}s to execute command '{1}'.",
+                sw.Elapsed.TotalSeconds,
+                commandAlias
             );
+        }
+    }
 
-            if (commandAlias.IsNullOrWhiteSpace())
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    private static async Task HandleSlashCommandException(Exception ex, string alias, SocketSlashCommand command)
+    {
+        Counters.RequestFailedCountN++;
+
+        var exceptionId = Guid.NewGuid();
+
+        switch (ex)
+        {
+            case NotSupportedException _:
+                Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                return;
+            case ApplicationException _:
+                Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
+                await command.RespondEphemeralPingAsync($"The command threw an exception: {ex.Message}");
+                return;
+            case TimeoutException _:
+                Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
+                await command.RespondEphemeralPingAsync("the command you tried to execute has timed out, please " +
+                                                    "try identify the leading cause of a timeout.");
+                return;
+            case EndpointNotFoundException _:
+                Logger.Singleton.Warning("The grid service was not online.");
+                await command.RespondEphemeralPingAsync($"the grid service is not currently running, " +
+                                                    $"please ask <@!{DiscordRolesSettings.Singleton.BotOwnerId}>" +
+                                                    $" to start the service.");
+                return;
+            case FaultException fault:
             {
-                Logger.Singleton.Warning("We got a prefix in the message, but the command was 0 in length.");
+                Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+
+                if (fault.Message == "Cannot invoke BatchJob while another job is running")
+                {
+                    await command.RespondEphemeralPingAsync("You are sending requests too fast, please slow down!");
+                    return;
+                }
+
+                if (fault.Message == "BatchJob Timeout")
+                {
+                    await command.RespondEphemeralPingAsync("The job timed out, please try again later.");
+                    return;
+                }
+
+                if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await command.RespondPublicPingAsync("An exception occurred on the grid server, please review this error to see if your input was malformed:");
+                    await command.RespondWithFilePublicPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "Fault From Server:");
+                    return;
+                }
+
+                await command.RespondPublicPingAsync(
+                    "An exception occurred on the grid server, please review this error to see if your input was malformed:",
+                    embed: new EmbedBuilder()
+                        .WithColor(0xff, 0x00, 0x00)
+                        .WithTitle("GridServer exception.")
+                        .WithAuthor(command.User)
+                        .WithDescription($"```\n{fault.Message}\n```")
+                        .Build()
+                );
                 return;
             }
+        }
 
-            if (
-                global::Grid.Bot.Properties.Settings.Default.CommandRegistryOnlyMatchAlphabetCharactersForCommandName &&
-                !Regex.IsMatch(commandAlias, @"^[a-zA-Z-]*$") &&
-                !message.Author.IsAdmin()
-            )
+        Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
+
+#if DEBUG
+        var detail = ex.ToString();
+        if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+        {
+            await command.RespondEphemeralPingAsync(UnhandledExceptionOccurredFromCommand);
+            await command.RespondWithFileEphemeralPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt", "Exception From Command:");
+            return;
+        }
+
+        await command.RespondEphemeralPingAsync(
+            UnhandledExceptionOccurredFromCommand,
+            embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
+        );
+        return;
+#else
+
+    await command.RespondEphemeralPingAsync(
+            $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
+            $"<@!{DiscordRolesProvider.Singleton.BotOwnerId}>");
+#endif
+    }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+    private static async Task HandleException(Exception ex, string alias, SocketMessage message)
+    {
+        Counters.RequestFailedCountN++;
+
+        var exceptionId = Guid.NewGuid();
+
+        if (ex is not FaultException)
+            BacktraceUtility.UploadCrashLog(ex);
+
+        switch (ex)
+        {
+            case NotSupportedException _:
+                Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
+                return;
+            case ApplicationException _:
+                Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
+                await message.ReplyAsync($"The command threw an exception: {ex.Message}");
+                return;
+            case TimeoutException _:
+                Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
+                await message.ReplyAsync("the command you tried to execute has timed out, please try identify " +
+                                         "the leading cause of a timeout.");
+                return;
+            case EndpointNotFoundException _:
+                Logger.Singleton.Warning("The grid service was not online.");
+                await message.ReplyAsync($"the grid service is not currently running, please ask " +
+                                         $"<@!{DiscordRolesSettings.Singleton.BotOwnerId}> to start " +
+                                         $"the service.");
+                return;
+            case FaultException fault:
             {
-                Logger.Singleton.Warning("We got a prefix in the message, but the command contained non-alphabetic characters, message: {0}", commandAlias);
-                // should we reply here?
+                Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
+
+                switch (fault.Message)
+                {
+                    case "Cannot invoke BatchJob while another job is running":
+                        await message.ReplyAsync("You are sending requests too fast, please slow down!");
+                        return;
+                    case "BatchJob Timeout":
+                        await message.ReplyAsync("The job timed out, please try again later.");
+                        return;
+                }
+
+                if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
+                {
+                    await message.Channel.SendFileAsync(
+                        new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
+                        "fault.txt",
+                        "An exception occurred on the grid server, please review this error to see if " +
+                        "your input was malformed:");
+                    return;
+                }
+
+                await message.Channel.SendMessageAsync(
+                    "An exception occurred on the grid server, please review this error to see if" +
+                    " your input was malformed:",
+                    embed: new EmbedBuilder()
+                        .WithColor(0xff, 0x00, 0x00)
+                        .WithTitle("GridServer exception.")
+                        .WithAuthor(message.Author)
+                        .WithDescription($"```\n{fault.Message}\n```")
+                        .Build()
+                );
                 return;
             }
+        }
 
-            var sw = Stopwatch.StartNew();
+        Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}",
+            exceptionId.ToString(),
+            ex.ToString()
+        );
+
+#if DEBUG
+        var detail = ex.ToString();
+        if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+        {
+            await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt", UnhandledExceptionOccurredFromCommand);
+            return;
+        }
+
+        await message.ReplyAsync(
+            UnhandledExceptionOccurredFromCommand,
+            embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
+        );
+        return;
+#else
+
+        await message.ReplyAsync($"An unexpected Exception has occurred. Exception ID: {exceptionId}, " +
+                                 $"send this ID to <@!{DiscordRolesProvider.Singleton.BotOwnerId}>");
+#endif
+    }
+
+    private static ICommandHandler GetCommandByCommandAlias(string alias)
+    {
+        lock (CommandHandlers)
+            return (from command in CommandHandlers where command.Aliases.Contains(alias) select command).FirstOrDefault();
+    }
+
+    private static CommandCircuitBreakerWrapper GetWrapperByCommand(ICommandHandler command)
+    {
+        lock (CommandCircuitBreakerWrappers)
+            return (from wrapper in CommandCircuitBreakerWrappers
+                    where wrapper.Command.Name == command.Name
+                    select wrapper).FirstOrDefault();
+    }
+
+#if WE_LOVE_EM_SLASH_COMMANDS
+
+    private static ISlashCommandHandler GetSlashCommandByCommandAlias(string alias)
+    {
+        lock (SlashCommandHandlers)
+            return (from command in SlashCommandHandlers where command.Name == alias select command).FirstOrDefault();
+    }
+
+    private static SlashCommandCircuitBreakerWrapper GetSlashCommandWrapperByCommand(ISlashCommandHandler command)
+    {
+        lock (SlashCommandCircuitBreakerWrappers)
+            return (from wrapper in SlashCommandCircuitBreakerWrappers
+                    where wrapper.Command.Name == command.Name
+                    select wrapper).FirstOrDefault();
+    }
+
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+    private static void ParseAndInsertIntoCommandRegistry()
+    {
+        lock (CommandHandlers)
+        {
+            Logger.Singleton.Debug("Begin attempt to register commands via Reflection");
 
             try
             {
-                if (!_wasRegistered) RegisterOnce();
+                var types = Assembly.GetExecutingAssembly().GetTypes();
 
-                var command = GetCommandByCommandAlias(commandAlias);
+                var defaultCommandNamespace = GetDefaultCommandNamespace();
 
-                if (command == null)
-                {
-                    InstrumentationPerfmon.CommandsThatDidNotExist.Increment();
-                    InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-                    Counters.RequestFailedCountN++;
-                    Logger.Singleton.Warning("The command '{0}' did not exist.", commandAlias);
-                    if (global::Grid.Bot.Properties.Settings.Default.IsAllowedToEchoBackNotFoundCommandException)
-                    {
-                        InstrumentationPerfmon.NotFoundCommandsThatToldTheFrontendUser.Increment();
-                        await message.ReplyAsync($"The command with the name '{commandAlias}' was not found.");
-                        return;
-                    }
-                    InstrumentationPerfmon.NotFoundCommandsThatDidNotTellTheFrontendUser.Increment();
-                    return;
-                }
+                Logger.Singleton.Information("Got default command namespace '{0}'.", defaultCommandNamespace);
 
-                InstrumentationPerfmon.CommandsThatExist.Increment();
-
-                if (!command.IsEnabled)
-                {
-                    var disabledMessage =
-                        (from cmd in _disabledCommandsReasons where cmd.Item1 == command select cmd.Item2)
-                        .FirstOrDefault();
-
-                    InstrumentationPerfmon.CommandsThatAreDisabled.Increment();
-                    Logger.Singleton.Warning("The command '{0}' is disabled. {1}",
-                        commandAlias,
-                        disabledMessage != null
-                            ? $"Because: '{disabledMessage}'"
-                            : "");
-                    var isAllowed = false;
-                    if (message.Author.IsAdmin())
-                    {
-                        if (global::Grid.Bot.Properties.Settings.Default.AllowAdminsToBypassDisabledCommands)
-                        {
-                            InstrumentationPerfmon.DisabledCommandsThatAllowedAdminBypass.Increment();
-                            isAllowed = true;
-                        }
-                        else
-                        {
-                            InstrumentationPerfmon.DisabledCommandsThatDidNotAllowAdminBypass.Increment();
-                        }
-                    }
-
-                    if (!isAllowed)
-                    {
-                        InstrumentationPerfmon.DisabledCommandsThatDidNotAllowBypass.Increment();
-                        InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-                        Counters.RequestFailedCountN++;
-                        await message.ReplyAsync($"The command by the nameof '{commandAlias}' is disabled, please try again later. {(disabledMessage != null ? $"\nReason: '{disabledMessage}'" : "")}");
-                        return;
-                    }
-                    InstrumentationPerfmon.DisabledCommandsThatWereInvokedToTheFrontendUser.Increment();
-                }
-                else
-                {
-                    InstrumentationPerfmon.CommandsThatAreEnabled.Increment();
-                }
-
-                InstrumentationPerfmon.CommandsThatPassedAllChecks.Increment();
-
-                await GetWrapperByCommand(command)
-                    .ExecuteAsync(messageContent, message, commandAlias);
-
-                InstrumentationPerfmon.SucceededCommandsPerSecond.Increment();
-                Counters.RequestSucceededCountN++;
-            }
-            catch (Exception ex)
-            {
-                await HandleException(ex, commandAlias, message);
-            }
-            finally
-            {
-                sw.Stop();
-                InstrumentationPerfmon.AverageRequestTime.Sample(sw.Elapsed.TotalMilliseconds);
-                InstrumentationPerfmon.CommandsThatFinished.Increment();
-                Logger.Singleton.Debug("Took {0}s to execute command '{1}'.",
-                    sw.Elapsed.TotalSeconds,
-                    commandAlias
-                );
-            }
-        }
+                var defaultCommandTypes = types.Where(t => string.Equals(t.Namespace, defaultCommandNamespace, StringComparison.Ordinal));
 
 #if WE_LOVE_EM_SLASH_COMMANDS
 
-        private static async Task HandleSlashCommandException(Exception ex, string alias, SocketSlashCommand command)
-        {
-            InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-            Counters.RequestFailedCountN++;
+                var registeredCommands = BotRegistry.Client.GetGlobalApplicationCommands();
 
-            var exceptionId = Guid.NewGuid();
-
-            switch (ex)
-            {
-                case NotSupportedException _:
-                    Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
-                    return;
-                case ApplicationException _:
-                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
-                    await command.RespondEphemeralPingAsync($"The command threw an exception: {ex.Message}");
-                    return;
-                case TimeoutException _:
-                    InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
-                    await command.RespondEphemeralPingAsync("the command you tried to execute has timed out, please " +
-                                                        "try identify the leading cause of a timeout.");
-                    return;
-                case EndpointNotFoundException _:
-                    InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
-                    Logger.Singleton.Warning("The grid service was not online.");
-                    await command.RespondEphemeralPingAsync($"the grid service is not currently running, " +
-                                                        $"please ask <@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>" +
-                                                        $" to start the service.");
-                    return;
-                case FaultException fault:
+                // Queue up a thread here because slash command
+                // registration can block the main thread
+                Task.Factory.StartNew(() =>
                 {
-                    InstrumentationPerfmon.FailedCommandsThatTriggeredAFaultException.Increment();
-                    Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
 
-                    if (fault.Message == "Cannot invoke BatchJob while another job is running")
+                    var slashCommandNamespace = GetSlashCommandNamespace();
+                    Logger.Singleton.Information("Got slash command namespace '{0}'.", slashCommandNamespace);
+                    var slashCommandTypes = types.Where(t => string.Equals(t.Namespace, slashCommandNamespace, StringComparison.Ordinal));
+
+
+                    if (slashCommandTypes.Count() == 0)
                     {
-                        InstrumentationPerfmon.FailedFaultCommandsThatWereDuplicateInvocations.Increment();
-                        await command.RespondEphemeralPingAsync("You are sending requests too fast, please slow down!");
-                        return;
-                    }
-
-                    if (fault.Message == "BatchJob Timeout")
-                    {
-                        InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                        await command.RespondEphemeralPingAsync("The job timed out, please try again later.");
-                        return;
-                    }
-
-                    InstrumentationPerfmon.FailedFaultCommandsThatWereNotDuplicateInvocations.Increment();
-                    InstrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
-
-                    if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
-                    {
-                        await command.RespondPublicPingAsync("An exception occurred on the grid server, please review this error to see if your input was malformed:");
-                        await command.RespondWithFilePublicPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)), "fault.txt", "Fault From Server:");
-                        return;
-                    }
-
-                    await command.RespondPublicPingAsync(
-                        "An exception occurred on the grid server, please review this error to see if your input was malformed:",
-                        embed: new EmbedBuilder()
-                            .WithColor(0xff, 0x00, 0x00)
-                            .WithTitle("GridServer exception.")
-                            .WithAuthor(command.User)
-                            .WithDescription($"```\n{fault.Message}\n```")
-                            .Build()
-                    );
-                    return;
-                }
-            }
-
-            InstrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
-
-            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
-
-            if (!global::Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
-            {
-                var detail = ex.ToString();
-                if (detail.Length > EmbedBuilder.MaxDescriptionLength)
-                {
-                    await command.RespondEphemeralPingAsync(UnhandledExceptionOccurredFromCommand);
-                    await command.RespondWithFileEphemeralPingAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt", "Exception From Command:");
-                    return;
-                }
-
-                InstrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
-                await command.RespondEphemeralPingAsync(
-                    UnhandledExceptionOccurredFromCommand,
-                    embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
-                );
-                return;
-            }
-
-            InstrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
-
-            await command.RespondEphemeralPingAsync(
-                $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
-                $"<@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
-        }
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        private static async Task HandleException(Exception ex, string alias, SocketMessage message)
-        {
-            InstrumentationPerfmon.FailedCommandsPerSecond.Increment();
-            Counters.RequestFailedCountN++;
-
-            var exceptionId = Guid.NewGuid();
-
-            if (ex is not FaultException)
-                global::Grid.Bot.Utility.CrashHandler.Upload(ex, true);
-
-            switch (ex)
-            {
-                case NotSupportedException _:
-                    Logger.Singleton.Warning("This could have been a thread pool error, we'll assume that.");
-                    return;
-                case ApplicationException _:
-                    Logger.Singleton.Warning("Application threw an exception {0}", ex.ToString());
-                    await message.ReplyAsync($"The command threw an exception: {ex.Message}");
-                    return;
-                case TimeoutException _:
-                    InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    Logger.Singleton.Error("The command '{0}' timed out. {1}", alias, ex.Message);
-                    await message.ReplyAsync("the command you tried to execute has timed out, please try identify " +
-                                             "the leading cause of a timeout.");
-                    return;
-                case EndpointNotFoundException _:
-                    InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                    InstrumentationPerfmon.FailedCommandsThatTriedToAccessOfflineGridServer.Increment();
-                    Logger.Singleton.Warning("The grid service was not online.");
-                    await message.ReplyAsync($"the grid service is not currently running, please ask " +
-                                             $"<@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}> to start " +
-                                             $"the service.");
-                    return;
-                case FaultException fault:
-                {
-                    InstrumentationPerfmon.FailedCommandsThatTriggeredAFaultException.Increment();
-                    Logger.Singleton.Warning("An error occured on the grid server: {0}", fault.Message);
-
-                    switch (fault.Message)
-                    {
-                        case "Cannot invoke BatchJob while another job is running":
-                            InstrumentationPerfmon.FailedFaultCommandsThatWereDuplicateInvocations.Increment();
-                            await message.ReplyAsync("You are sending requests too fast, please slow down!");
-                            return;
-                        case "BatchJob Timeout":
-                            InstrumentationPerfmon.FailedCommandsThatTimedOut.Increment();
-                            await message.ReplyAsync("The job timed out, please try again later.");
-                            return;
-                    }
-
-                    InstrumentationPerfmon.FailedFaultCommandsThatWereNotDuplicateInvocations.Increment();
-                    InstrumentationPerfmon.FailedFaultCommandsThatWereLuaExceptions.Increment();
-
-                    if (fault.Message.Length > EmbedBuilder.MaxDescriptionLength)
-                    {
-                        await message.Channel.SendFileAsync(
-                            new MemoryStream(Encoding.UTF8.GetBytes(fault.Message)),
-                            "fault.txt",
-                            "An exception occurred on the grid server, please review this error to see if " +
-                            "your input was malformed:");
-                        return;
-                    }
-
-                    await message.Channel.SendMessageAsync(
-                        "An exception occurred on the grid server, please review this error to see if" +
-                        " your input was malformed:",
-                        embed: new EmbedBuilder()
-                            .WithColor(0xff, 0x00, 0x00)
-                            .WithTitle("GridServer exception.")
-                            .WithAuthor(message.Author)
-                            .WithDescription($"```\n{fault.Message}\n```")
-                            .Build()
-                    );
-                    return;
-                }
-            }
-
-            InstrumentationPerfmon.FailedCommandsThatWereUnknownExceptions.Increment();
-
-            Logger.Singleton.Error("[EID-{0}] An unexpected error occurred: {1}",
-                exceptionId.ToString(),
-                ex.ToString()
-            );
-
-            if (!global::Grid.Bot.Properties.Settings.Default.CareToLeakSensitiveExceptions)
-            {
-                var detail = ex.ToString();
-                if (detail.Length > EmbedBuilder.MaxDescriptionLength)
-                {
-                    await message.Channel.SendFileAsync(new MemoryStream(Encoding.UTF8.GetBytes(detail)), "ex.txt", UnhandledExceptionOccurredFromCommand);
-                    return;
-                }
-
-                InstrumentationPerfmon.FailedCommandsThatLeakedExceptionInfo.Increment();
-                await message.ReplyAsync(
-                    UnhandledExceptionOccurredFromCommand,
-                    embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
-                );
-                return;
-            }
-
-            InstrumentationPerfmon.FailedCommandsThatWerePublicallyMasked.Increment();
-
-            await message.ReplyAsync($"An unexpected Exception has occurred. Exception ID: {exceptionId}, " +
-                                     $"send this ID to <@!{Grid.Bot.Properties.Settings.Default.BotOwnerID}>");
-        }
-
-        private static IStateSpecificCommandHandler GetCommandByCommandAlias(string alias)
-        {
-            lock (StateSpecificCommandHandlers)
-                return (from command in StateSpecificCommandHandlers where command.CommandAliases.Contains(alias) select command).FirstOrDefault();
-        }
-
-        private static CommandCircuitBreakerWrapper GetWrapperByCommand(IStateSpecificCommandHandler command)
-        {
-            lock (CommandCircuitBreakerWrappers)
-                return (from wrapper in CommandCircuitBreakerWrappers
-                        where wrapper.Command.CommandName == command.CommandName
-                        select wrapper).FirstOrDefault();
-        }
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-        private static IStateSpecificSlashCommandHandler GetSlashCommandByCommandAlias(string alias)
-        {
-            lock (StateSpecificSlashCommandHandlers)
-                return (from command in StateSpecificSlashCommandHandlers where command.Name == alias select command).FirstOrDefault();
-        }
-
-        private static SlashCommandCircuitBreakerWrapper GetSlashCommandWrapperByCommand(IStateSpecificSlashCommandHandler command)
-        {
-            lock (SlashCommandCircuitBreakerWrappers)
-                return (from wrapper in SlashCommandCircuitBreakerWrappers
-                        where wrapper.Command.Name == command.Name
-                        select wrapper).FirstOrDefault();
-        }
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-        private static void ParseAndInsertIntoCommandRegistry()
-        {
-            lock (StateSpecificCommandHandlers)
-            {
-                InstrumentationPerfmon.CommandsParsedAndInsertedIntoRegistry.Increment();
-                Logger.Singleton.Debug("Begin attempt to register commands via Reflection");
-
-                try
-                {
-                    var defaultCommandNamespace = GetDefaultCommandNamespace();
-
-                    Logger.Singleton.Information("Got default command namespace '{0}'.", defaultCommandNamespace);
-
-                    var defaultCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(defaultCommandNamespace);
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-
-                    var registeredCommands = BotRegistry.Client.GetGlobalApplicationCommands();
-
-                    // Queue up a thread here because slash command
-                    // registration can block the main thread
-                    Task.Factory.StartNew(() =>
-                    {
-
-                        var slashCommandNamespace = GetSlashCommandNamespace();
-                        Logger.Singleton.Information("Got slash command namespace '{0}'.", slashCommandNamespace);
-                        var slashCommandTypes = Assembly.GetExecutingAssembly().GetTypesInAssemblyNamespace(slashCommandNamespace);
-
-
-                        if (slashCommandTypes.Length == 0)
-                        {
-                            InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                            Logger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
-                        }
-                        else
-                        {
-                            foreach (var type in slashCommandTypes)
-                            {
-                                try
-                                {
-                                    if (type.IsClass && type.GetInterface(nameof(IStateSpecificSlashCommandHandler)) != null)
-                                    {
-                                        var commandHandler = Activator.CreateInstance(type);
-
-                                        if (commandHandler is not IStateSpecificSlashCommandHandler trueCommandHandler) continue;
-
-                                        Logger.Singleton.Information("Parsing slash command '{0}'.", type.FullName);
-
-                                        if (trueCommandHandler.Name.IsNullOrEmpty())
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                            Logger.Singleton.Error(
-                                                "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' " +
-                                                "to not be null or empty",
-                                                type.FullName
-                                            );
-
-                                            continue;
-                                        }
-
-                                        if (GetSlashCommandByCommandAlias(trueCommandHandler.Name) != null)
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandAliasesThatAlreadyExisted.Increment();
-                                            Logger.Singleton.Error(
-                                                "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
-                                                type.FullName,
-                                                trueCommandHandler.Name
-                                            );
-                                            continue;
-                                        }
-
-                                        if (trueCommandHandler.CommandDescription is { Length: 0 })
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                            Logger.Singleton.Error(
-                                                "Exception when reading '{0}': Expected field 'CommandDescription' " +
-                                                "to have a size greater than 0",
-                                                type.FullName
-                                            );
-                                        }
-
-                                        InstrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
-
-                                        var builder = new SlashCommandBuilder();
-
-                                        builder.WithName(trueCommandHandler.Name);
-                                        builder.WithDescription(trueCommandHandler.CommandDescription);
-                                        builder.WithDefaultPermission(true); // command is enabled by default
-
-                                        if (trueCommandHandler.Options != null)
-                                            builder.AddOptions(trueCommandHandler.Options);
-
-                                        StateSpecificSlashCommandHandlers.Add(trueCommandHandler);
-                                        SlashCommandCircuitBreakerWrappers.Add(new SlashCommandCircuitBreakerWrapper(trueCommandHandler));
-
-                                        var cmd = builder.Build();
-                                        var existingCommand = registeredCommands.Where(cmd => cmd.Name == trueCommandHandler.Name).FirstOrDefault();
-
-                                        if (existingCommand != null)
-                                        {
-                                            // We check to see if everything is the same
-                                            if (existingCommand.Description != trueCommandHandler.CommandDescription) goto REGISTER;
-                                            if (cmd.Options.IsSpecified && !CheckOptionsIdentical(cmd.Options.Value, existingCommand.Options)) goto REGISTER;
-
-                                            Logger.Singleton.Warning("Slash command '{0}' exists and is identical, not re-registering!", trueCommandHandler.Name);
-
-                                            continue;
-                                        }
-
-REGISTER:
-                                        Logger.Singleton.Information("Registered slash command '{0}' via Discord API", trueCommandHandler.Name);
-
-                                        BotRegistry.Client.CreateGlobalApplicationCommand(builder.Build());
-                                    }
-                                    else
-                                    {
-                                        InstrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                                    Logger.Singleton.Error(ex);
-                                }
-                            }
-
-                            var unregisteredCommands = registeredCommands.Where(cmd => !StateSpecificSlashCommandHandlers.Any(ssCmd => ssCmd.Name == cmd.Name));
-                            if (unregisteredCommands.Any())
-                            {
-                                foreach (var cmd in unregisteredCommands)
-                                {
-                                    Logger.Singleton.Debug("Slash command '{0}' no longer exists, deleting!", cmd.Name);
-
-                                    cmd.DeleteAsync();
-                                }
-                            }
-                        }
-                    });
-
-#endif // WE_LOVE_EM_SLASH_COMMANDS
-
-                    if (defaultCommandTypes.Length == 0)
-                    {
-                        InstrumentationPerfmon.CommandNamespacesThatHadNoClasses.Increment();
-                        Logger.Singleton.Warning("There were no default commands found in the namespace '{0}'.",
-                            defaultCommandNamespace);
+                        Logger.Singleton.Warning("There were no slash commands found in the namespace '{0}'.", slashCommandNamespace);
                     }
                     else
                     {
-                        foreach (var type in defaultCommandTypes)
+                        foreach (var type in slashCommandTypes)
                         {
                             try
                             {
-                                if (type.IsClass && type.GetInterface(nameof(IStateSpecificCommandHandler)) != null)
+                                if (type.IsClass && type.GetInterface(nameof(ISlashCommandHandler)) != null)
                                 {
                                     var commandHandler = Activator.CreateInstance(type);
-                                    if (commandHandler is IStateSpecificCommandHandler trueCommandHandler)
+
+                                    if (commandHandler is not ISlashCommandHandler trueCommandHandler) continue;
+
+                                    Logger.Singleton.Information("Parsing slash command '{0}'.", type.FullName);
+
+                                    if (trueCommandHandler.Name.IsNullOrEmpty())
                                     {
-                                        Logger.Singleton.Information("Parsing command '{0}'.", type.FullName);
+                                        Logger.Singleton.Error(
+                                            "Exception when reading '{0}': Expected the sizeof field 'CommandAlias' " +
+                                            "to not be null or empty",
+                                            type.FullName
+                                        );
 
-                                        if (trueCommandHandler.CommandAliases.Length < 1)
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoAliases.Increment();
-                                            Logger.Singleton.Trace(
-                                                "Exception when reading '{0}': Expected the sizeof field " +
-                                                "'CommandAliases' to be greater than 0, got {1}",
-                                                type.FullName,
-                                                trueCommandHandler.CommandAliases.Length
-                                            );
-
-                                            continue;
-                                        }
-
-                                        if (trueCommandHandler.CommandName.IsNullOrEmpty())
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoName.Increment();
-                                            Logger.Singleton.Trace(
-                                                "Exception when reading '{0}': Expected field 'CommandName' to be not null",
-                                                type.FullName
-                                            );
-
-                                            continue;
-                                        }
-
-                                        if (trueCommandHandler.CommandDescription is { Length: 0 })
-                                        {
-                                            InstrumentationPerfmon.StateSpecificCommandsThatHadNoNullButEmptyDescription.Increment();
-                                            Logger.Singleton.Warning(
-                                                "Exception when reading '{0}': Expected field " +
-                                                "'CommandDescription' to have a size greater than 0",
-                                                type.FullName
-                                            );
-                                        }
-
-                                        InstrumentationPerfmon.StateSpecificCommandsThatWereAddedToTheRegistry.Increment();
-
-
-
-                                        StateSpecificCommandHandlers.Add(trueCommandHandler);
-                                        CommandCircuitBreakerWrappers.Add(new CommandCircuitBreakerWrapper(trueCommandHandler));
+                                        continue;
                                     }
-                                    else
+
+                                    if (GetSlashCommandByCommandAlias(trueCommandHandler.Name) != null)
                                     {
-                                        InstrumentationPerfmon.CommandThatWereNotStateSpecific.Increment();
+                                        Logger.Singleton.Error(
+                                            "Exception when reading '{0}': There is already an existing command with the alias of '{1}'",
+                                            type.FullName,
+                                            trueCommandHandler.Name
+                                        );
+                                        continue;
                                     }
-                                }
-                                else
-                                {
-                                    InstrumentationPerfmon.CommandsInNamespaceThatWereNotClasses.Increment();
+
+                                    if (trueCommandHandler.Description is { Length: 0 })
+                                    {
+                                        Logger.Singleton.Error(
+                                            "Exception when reading '{0}': Expected field 'CommandDescription' " +
+                                            "to have a size greater than 0",
+                                            type.FullName
+                                        );
+                                    }
+
+                                    var builder = new SlashCommandBuilder();
+
+                                    builder.WithName(trueCommandHandler.Name);
+                                    builder.WithDescription(trueCommandHandler.Description);
+                                    builder.WithDefaultPermission(true); // command is enabled by default
+
+                                    if (trueCommandHandler.Options != null)
+                                        builder.AddOptions(trueCommandHandler.Options);
+
+                                    SlashCommandHandlers.Add(trueCommandHandler);
+                                    SlashCommandCircuitBreakerWrappers.Add(new SlashCommandCircuitBreakerWrapper(trueCommandHandler));
+
+                                    var cmd = builder.Build();
+                                    var existingCommand = registeredCommands.Where(cmd => cmd.Name == trueCommandHandler.Name).FirstOrDefault();
+
+                                    if (existingCommand != null)
+                                    {
+                                        // We check to see if everything is the same
+                                        if (existingCommand.Description != trueCommandHandler.Description) goto REGISTER;
+                                        if (cmd.Options.IsSpecified && !CheckOptionsIdentical(cmd.Options.Value, existingCommand.Options)) goto REGISTER;
+
+                                        Logger.Singleton.Warning("Slash command '{0}' exists and is identical, not re-registering!", trueCommandHandler.Name);
+
+                                        continue;
+                                    }
+
+REGISTER:
+                                    Logger.Singleton.Information("Registered slash command '{0}' via Discord API", trueCommandHandler.Name);
+
+                                    BotRegistry.Client.CreateGlobalApplicationCommand(builder.Build());
                                 }
                             }
                             catch (Exception ex)
                             {
-                                InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
                                 Logger.Singleton.Error(ex);
                             }
                         }
+
+                        var unregisteredCommands = registeredCommands.Where(cmd => !SlashCommandHandlers.Any(ssCmd => ssCmd.Name == cmd.Name));
+                        if (unregisteredCommands.Any())
+                        {
+                            foreach (var cmd in unregisteredCommands)
+                            {
+                                Logger.Singleton.Debug("Slash command '{0}' no longer exists, deleting!", cmd.Name);
+
+                                cmd.DeleteAsync();
+                            }
+                        }
                     }
-                }
+                });
 
-                catch (Exception ex)
+#endif // WE_LOVE_EM_SLASH_COMMANDS
+
+                if (defaultCommandTypes.Count() == 0)
                 {
-                    InstrumentationPerfmon.CommandRegistryRegistrationsThatFailed.Increment();
-                    Logger.Singleton.Error(ex);
+                    Logger.Singleton.Warning("There were no default commands found in the namespace '{0}'.",
+                        defaultCommandNamespace);
                 }
-                finally
-                {
-                    Logger.Singleton.Debug("Successfully initialized the CommandRegistry.");
-                }
-            }
-        }
-
-#if WE_LOVE_EM_SLASH_COMMANDS
-        private static bool CheckOptionsIdentical(List<ApplicationCommandOptionProperties> options, IReadOnlyCollection<SocketApplicationCommandOption> existingOptions)
-        {
-            var optionsDiffOps = existingOptions.Where(op => !options.Any(opp => op.Name == opp.Name));
-            if (optionsDiffOps.Any()) return false;
-
-            foreach (var option in options)
-            {
-                var existingOption = existingOptions.Where(op => op.Name == option.Name).FirstOrDefault();
-                if (existingOption == null) return false;
-
-                if (option.Options.Any()) return CheckOptionsIdentical(option.Options, existingOption.Options);
-
-                if (option.ChannelTypes != null)
-                    if (!option.ChannelTypes.Any(ct => existingOption.ChannelTypes.Contains(ct))) return false;
                 else
-                    if (existingOption.ChannelTypes.Any()) return false;
-
-                if (!CheckChoicesIdentical(option.Choices, existingOption.Choices)) return false;
-
-                if (option.Description != existingOption.Description) return false;
-                if (option.IsAutocomplete != existingOption.IsAutocomplete.OrDefault(false)) return false;
-                if (option.IsDefault.OrDefault(false) != existingOption.IsDefault.OrDefault(false)) return false;
-                if (option.IsRequired.OrDefault(false) != existingOption.IsRequired.OrDefault(false)) return false;
-                if (option.MaxLength.OrDefault(0) != existingOption.MaxLength.OrDefault(0)) return false;
-                if (option.MaxValue.OrDefault(0) != existingOption.MaxValue.OrDefault(0)) return false;
-                if (option.MinLength.OrDefault(0) != existingOption.MinLength.OrDefault(0)) return false;
-                if (option.MinValue.OrDefault(0) != existingOption.MinValue.OrDefault(0)) return false;
-                if (option.Type != existingOption.Type) return false;
-            }
-
-            return true;
-        }
-
-        private static bool CheckChoicesIdentical(List<ApplicationCommandOptionChoiceProperties> choices, IReadOnlyCollection<SocketApplicationCommandChoice> existingChoices)
-        {
-            if (choices != null)
-            {
-                foreach (var choice in choices)
                 {
-                    var existingChoice = existingChoices.Where(c => c.Name == choice.Name).FirstOrDefault();
-                    if (existingChoice == null) return false;
+                    foreach (var type in defaultCommandTypes)
+                    {
+                        try
+                        {
+                            if (type.IsClass && type.GetInterface(nameof(ICommandHandler)) != null)
+                            {
+                                var commandHandler = Activator.CreateInstance(type);
+                                if (commandHandler is ICommandHandler trueCommandHandler)
+                                {
+                                    Logger.Singleton.Information("Parsing command '{0}'.", type.FullName);
 
-                    if (choice.Value != existingChoice.Value) return false;
+                                    if (trueCommandHandler.Aliases.Length < 1)
+                                    {
+                                        Logger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected the sizeof field " +
+                                            "'CommandAliases' to be greater than 0, got {1}",
+                                            type.FullName,
+                                            trueCommandHandler.Aliases.Length
+                                        );
+
+                                        continue;
+                                    }
+
+                                    if (trueCommandHandler.Name.IsNullOrEmpty())
+                                    {
+                                        Logger.Singleton.Trace(
+                                            "Exception when reading '{0}': Expected field 'CommandName' to be not null",
+                                            type.FullName
+                                        );
+
+                                        continue;
+                                    }
+
+                                    if (trueCommandHandler.Description is { Length: 0 })
+                                    {
+                                        Logger.Singleton.Warning(
+                                            "Exception when reading '{0}': Expected field " +
+                                            "'CommandDescription' to have a size greater than 0",
+                                            type.FullName
+                                        );
+                                    }
+
+
+                                    CommandHandlers.Add(trueCommandHandler);
+                                    CommandCircuitBreakerWrappers.Add(new CommandCircuitBreakerWrapper(trueCommandHandler));
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Singleton.Error(ex);
+                        }
+                    }
                 }
             }
-            else
-                if (existingChoices.Any()) return false;
 
-            return true;
-        }
-#endif
-
-        public static void Unregister()
-        {
-            if (!_wasRegistered) return;
-
-            lock (RegistrationLock)
+            catch (Exception ex)
             {
-                _wasRegistered = false;
-                _disabledCommandsReasons.Clear();
-                StateSpecificCommandHandlers.Clear();
-                CommandCircuitBreakerWrappers.Clear();
+                Logger.Singleton.Error(ex);
+            }
+            finally
+            {
+                Logger.Singleton.Debug("Successfully initialized the CommandRegistry.");
+            }
+        }
+    }
 
 #if WE_LOVE_EM_SLASH_COMMANDS
+    private static bool CheckOptionsIdentical(List<ApplicationCommandOptionProperties> options, IReadOnlyCollection<SocketApplicationCommandOption> existingOptions)
+    {
+        var optionsDiffOps = existingOptions.Where(op => !options.Any(opp => op.Name == opp.Name));
+        if (optionsDiffOps.Any()) return false;
 
-                _disabledSlashCommandsReasons.Clear();
-                StateSpecificSlashCommandHandlers.Clear();
-                SlashCommandCircuitBreakerWrappers.Clear();
+        foreach (var option in options)
+        {
+            var existingOption = existingOptions.Where(op => op.Name == option.Name).FirstOrDefault();
+            if (existingOption == null) return false;
 
+            if (option.Options.Any()) return CheckOptionsIdentical(option.Options, existingOption.Options);
+
+            if (option.ChannelTypes != null)
+                if (!option.ChannelTypes.Any(ct => existingOption.ChannelTypes.Contains(ct))) return false;
+                else
+                if (existingOption.ChannelTypes.Any()) return false;
+
+            if (!CheckChoicesIdentical(option.Choices, existingOption.Choices)) return false;
+
+            if (option.Description != existingOption.Description) return false;
+            if (option.IsAutocomplete != existingOption.IsAutocomplete.OrDefault(false)) return false;
+            if (option.IsDefault.OrDefault(false) != existingOption.IsDefault.OrDefault(false)) return false;
+            if (option.IsRequired.OrDefault(false) != existingOption.IsRequired.OrDefault(false)) return false;
+            if (option.MaxLength.OrDefault(0) != existingOption.MaxLength.OrDefault(0)) return false;
+            if (option.MaxValue.OrDefault(0) != existingOption.MaxValue.OrDefault(0)) return false;
+            if (option.MinLength.OrDefault(0) != existingOption.MinLength.OrDefault(0)) return false;
+            if (option.MinValue.OrDefault(0) != existingOption.MinValue.OrDefault(0)) return false;
+            if (option.Type != existingOption.Type) return false;
+        }
+
+        return true;
+    }
+
+    private static T OrDefault<T>(this T obj, T @default = default) => obj ?? @default;
+
+    private static bool CheckChoicesIdentical(List<ApplicationCommandOptionChoiceProperties> choices, IReadOnlyCollection<SocketApplicationCommandChoice> existingChoices)
+    {
+        if (choices != null)
+        {
+            foreach (var choice in choices)
+            {
+                var existingChoice = existingChoices.Where(c => c.Name == choice.Name).FirstOrDefault();
+                if (existingChoice == null) return false;
+
+                if (choice.Value != existingChoice.Value) return false;
+            }
+        }
+        else
+            if (existingChoices.Any()) return false;
+
+        return true;
+    }
 #endif
-            }
-        }
 
+    /// <summary>
+    /// Register the <see cref="CommandRegistry"/>
+    /// </summary>
+    public static void RegisterOnce()
+    {
+        if (_wasRegistered) return;
 
-        public static void RegisterOnce()
+        lock (RegistrationLock)
         {
-            if (_wasRegistered) return;
-
-            lock (RegistrationLock)
-            {
-                ParseAndInsertIntoCommandRegistry();
-                _wasRegistered = true;
-            }
+            ParseAndInsertIntoCommandRegistry();
+            _wasRegistered = true;
         }
+    }
 
-        #region Legacy Metrics
+    #region Legacy Metrics
 
-        public static (Modes, CountersData) GetMetrics()
+    /// <summary>
+    /// Gets the <see cref="ModesData"/> and <see cref="CountersData"/>
+    /// </summary>
+    /// <returns>The <see cref="ModesData"/> and <see cref="CountersData"/></returns>
+    [Obsolete("These metrica are legacy, please use prometheus instead!")]
+    public static (ModesData, CountersData) GetMetrics()
+    {
+        return (CalculateModes(), Counters);
+    }
+
+    private static void InsertIntoAverages(string channelName, string serverName, string userName, string commandName)
+    {
+        Averages.Channels.Add(channelName);
+        Averages.Servers.Add(serverName);
+        Averages.Users.Add(userName);
+        Averages.Commands.Add(commandName);
+    }
+
+    private static ModesData CalculateModes() =>
+        new()
         {
-            return (CalculateModes(), Counters);
-        }
+            Channels = CalculateModeOfArray(Averages.Channels),
+            Servers = CalculateModeOfArray(Averages.Servers),
+            Users = CalculateModeOfArray(Averages.Users),
+            Commands = CalculateModeOfArray(Averages.Commands)
+        };
 
-        private static void InsertIntoAverages(string channelName, string serverName, string userName, string commandName)
+    private static readonly CountersData Counters = new();
+    private static readonly AveragesData Averages = new();
+
+    private class AveragesData
+    {
+        internal readonly ICollection<string> Channels = new List<string>();
+        internal readonly ICollection<string> Servers = new List<string>();
+        internal readonly ICollection<string> Users = new List<string>();
+        internal readonly ICollection<string> Commands = new List<string>();
+    }
+
+    /// <summary>
+    /// Counters data.
+    /// </summary>
+    [Obsolete("These metrica are legacy, please use prometheus instead!")]
+    public class CountersData
+    {
+        /// <summary>
+        /// Number of requests.
+        /// </summary>
+        public Atomic<int> RequestCountN = 0;
+
+        /// <summary>
+        /// Number of failed requests.
+        /// </summary>
+        public Atomic<int> RequestFailedCountN = 0;
+
+        /// <summary>
+        /// Number of requests that succeeded.
+        /// </summary>
+        public Atomic<int> RequestSucceededCountN = 0;
+    }
+
+    /// <summary>
+    /// Modes data.
+    /// </summary>
+    [Obsolete("These metrica are legacy, please use prometheus instead!")]
+    public class ModesData
+    {
+        /// <summary>
+        /// Mode of channels.
+        /// </summary>
+        public Mode<string> Channels;
+
+        /// <summary>
+        /// Mode of servers.
+        /// </summary>
+        public Mode<string> Servers;
+
+        /// <summary>
+        /// Mode of users.
+        /// </summary>
+        public Mode<string> Users;
+
+        /// <summary>
+        /// Mode of commands.
+        /// </summary>
+        public Mode<string> Commands;
+    }
+
+    private static Mode<T> CalculateModeOfArray<T>(IEnumerable<T> collection)
+    {
+        try
         {
-            Averages.Channels.Add(channelName);
-            Averages.Servers.Add(serverName);
-            Averages.Users.Add(userName);
-            Averages.Commands.Add(commandName);
-        }
+            var array = collection.ToArray();
 
-        private static Modes CalculateModes() =>
-            new()
-            {
-                Channels = CalculateModeOfArray(Averages.Channels),
-                Servers = CalculateModeOfArray(Averages.Servers),
-                Users = CalculateModeOfArray(Averages.Users),
-                Commands = CalculateModeOfArray(Averages.Commands)
-            };
-
-        private static readonly CountersData Counters = new();
-        private static readonly AveragesData Averages = new();
-
-        private class AveragesData
-        {
-            internal readonly ICollection<string> Channels = new List<string>();
-            internal readonly ICollection<string> Servers = new List<string>();
-            internal readonly ICollection<string> Users = new List<string>();
-            internal readonly ICollection<string> Commands = new List<string>();
-        }
-
-        public class CountersData
-        {
-            public Atomic<int> RequestCountN = 0;
-            public Atomic<int> RequestFailedCountN = 0;
-            public Atomic<int> RequestSucceededCountN = 0;
-        }
-
-        public class Modes
-        {
-            public Mode<string> Channels;
-            public Mode<string> Servers;
-            public Mode<string> Users;
-            public Mode<string> Commands;
-        }
-
-        private static Mode<T> CalculateModeOfArray<T>(IEnumerable<T> collection)
-        {
-            try
-            {
-                var array = collection.ToArray();
-
-                if (array.Length == 0)
-                    return new Mode<T>
-                    {
-                        Item = default,
-                        Average = 0
-                    };
-
-                var mf = 1;
-                var m = 0;
-                T item = default;
-                for (var i = 0; i < array.Length; i++)
-                {
-                    for (var j = i; j < array.Length; j++)
-                    {
-                        if (array[i].Equals(array[j])) m++;
-                        if (mf >= m) continue;
-                        mf = m;
-                        item = array[i];
-                    }
-                    m = 0;
-                }
-
-                return new Mode<T>
-                {
-                    Item = EqualityComparer<T>.Default.Equals(item, default) ? array[array.Length - 1] : item,
-                    Average = mf
-                };
-            }
-            catch
-            {
+            if (array.Length == 0)
                 return new Mode<T>
                 {
                     Item = default,
                     Average = 0
                 };
+
+            var mf = 1;
+            var m = 0;
+            T item = default;
+            for (var i = 0; i < array.Length; i++)
+            {
+                for (var j = i; j < array.Length; j++)
+                {
+                    if (array[i].Equals(array[j])) m++;
+                    if (mf >= m) continue;
+                    mf = m;
+                    item = array[i];
+                }
+                m = 0;
             }
-        }
 
-        public struct Mode<T>
+            return new Mode<T>
+            {
+                Item = EqualityComparer<T>.Default.Equals(item, default) ? array[array.Length - 1] : item,
+                Average = mf
+            };
+        }
+        catch
         {
-            public T Item;
-            public int Average;
+            return new Mode<T>
+            {
+                Item = default,
+                Average = 0
+            };
         }
-
-        #endregion Legacy Metrics
     }
+
+    /// <summary>
+    /// Mode.
+    /// </summary>
+    /// <typeparam name="T">Type of mode.</typeparam>
+    [Obsolete("These metrica are legacy, please use prometheus instead!")]
+    public struct Mode<T>
+    {
+        /// <summary>
+        /// Mode item.
+        /// </summary>
+        public T Item;
+
+        /// <summary>
+        /// Mode average.
+        /// </summary>
+        public int Average;
+    }
+
+    #endregion Legacy Metrics
 }

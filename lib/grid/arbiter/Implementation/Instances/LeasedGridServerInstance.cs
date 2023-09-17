@@ -14,6 +14,7 @@ using System;
 using System.Threading.Tasks;
 using System.ServiceModel.Channels;
 
+using Random;
 using Logging;
 using Instrumentation;
 using System.ServiceModel;
@@ -36,11 +37,6 @@ public class LeasedGridServerInstance : GridServerInstance, ILeasedGridServerIns
     #endregion |Private Members|
 
     #region |Informative Members|
-
-    /// <summary>
-    /// Get the default lease time for a grid server instance.
-    /// </summary>
-    public static TimeSpan DefaultLease => global::Grid.Properties.Settings.Default.DefaultLeasedGridServerInstanceLease;
 
     /// <inheritdoc cref="ILeasedGridServerInstance.Expiration"/>
     public DateTime Expiration => _expiration;

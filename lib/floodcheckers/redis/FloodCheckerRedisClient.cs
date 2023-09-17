@@ -5,14 +5,20 @@ namespace FloodCheckers.Redis;
 using Configuration;
 using Instrumentation;
 
+/// <summary>
+/// Constructs the default <see cref="IRedisClient"/>
+/// </summary>
 public static class FloodCheckerRedisClient
 {
     private static IRedisClient _RedisClient;
     private static string _RedisEndpointsCsv = "";
 
+    /// <summary>
+    /// Static constructor.
+    /// </summary>
     static FloodCheckerRedisClient()
     {
-        global::FloodCheckers.Redis.Properties.Settings.Default.ReadValueAndMonitorChanges(s => s.FloodCheckerRedisEndpointsCsv,
+        Settings.Singleton.ReadValueAndMonitorChanges(s => s.FloodCheckerRedisEndpointsCsv,
             endpointsCsv =>
         {
             if (!_RedisEndpointsCsv.Equals(endpointsCsv))
@@ -31,5 +37,9 @@ public static class FloodCheckerRedisClient
         });
     }
 
+    /// <summary>
+    /// Get the static <see cref="IRedisClient"/>
+    /// </summary>
+    /// <returns>The <see cref="IRedisClient"/></returns>
     public static IRedisClient GetInstance() => _RedisClient;
 }

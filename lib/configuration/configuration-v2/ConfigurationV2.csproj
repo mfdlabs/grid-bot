@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+
+  <PropertyGroup>
+    <Description>C# adaptation for @mfdlabs/environment.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Consul" Version="1.6.10.9" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
+    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+    <ProjectReference Include="..\core\Configuration.Core.csproj" />
+  </ItemGroup>
+
+</Project>

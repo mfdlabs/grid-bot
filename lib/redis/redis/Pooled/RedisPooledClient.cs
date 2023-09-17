@@ -23,7 +23,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
     {
         MaxDegreeOfParallelism = 10
     };
-    private readonly ISelfHealingConnectionMultiplexerSettings _BadStateSelfHealingConnectionMultiplexerSettings;
     private readonly Func<DateTime> _GetCurrentTimeFunc;
 
     /// <summary>
@@ -34,7 +33,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
     /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="clientOptions">The <see cref="RedisPooledClientOptions"/></param>
-    /// <param name="badStateSelfHealingConnectionMultiplexerSettings">The <see cref="ISelfHealingConnectionMultiplexerSettings"/></param>
     /// <param name="getCurrentTimeFunc">The Utc Now getter.</param>
     public RedisPooledClient(
         ICounterRegistry counterRegistry,
@@ -42,7 +40,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
         string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null,
         RedisPooledClientOptions clientOptions = null, 
-        ISelfHealingConnectionMultiplexerSettings badStateSelfHealingConnectionMultiplexerSettings = null,
         Func<DateTime> getCurrentTimeFunc = null
     ) 
         : base(
@@ -52,7 +49,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
             exceptionHandler
         )
     {
-        _BadStateSelfHealingConnectionMultiplexerSettings = badStateSelfHealingConnectionMultiplexerSettings ?? global::Redis.Properties.SelfHealingConnectionMultiplexerSettings.Default;
         _GetCurrentTimeFunc = getCurrentTimeFunc ?? (() => DateTime.UtcNow);
         
         ChangePools(redisEndpoints.ToArray());
@@ -66,7 +62,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
     /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="clientOptions">The <see cref="RedisPooledClientOptions"/></param>
-    /// <param name="badStateSelfHealingConnectionMultiplexerSettings">The <see cref="ISelfHealingConnectionMultiplexerSettings"/></param>
     /// <param name="getCurrentTimeFunc">The Utc Now getter.</param>
     public RedisPooledClient(
         ICounterRegistry counterRegistry, 
@@ -74,7 +69,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
         string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null, 
         RedisPooledClientOptions clientOptions = null, 
-        ISelfHealingConnectionMultiplexerSettings badStateSelfHealingConnectionMultiplexerSettings = null,
         Func<DateTime> getCurrentTimeFunc = null
     ) 
         : this(
@@ -83,7 +77,6 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
             performanceMonitorCategory, 
             exceptionHandler,
             clientOptions, 
-            badStateSelfHealingConnectionMultiplexerSettings,
             getCurrentTimeFunc
         )
     {

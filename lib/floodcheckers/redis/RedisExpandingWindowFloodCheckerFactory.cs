@@ -1,6 +1,4 @@
-﻿using Redis;
-
-namespace FloodCheckers.Redis;
+﻿namespace FloodCheckers.Redis;
 
 using System;
 
@@ -14,11 +12,15 @@ public class RedisExpandingWindowFloodCheckerFactory : IFloodCheckerFactory<Redi
 {
     private readonly IGlobalFloodCheckerEventLogger _GlobalFloodCheckerEventLogger;
 
+    /// <summary>
+    /// Construct a new instance of <see cref="RedisExpandingWindowFloodCheckerFactory"/>
+    /// </summary>
     public RedisExpandingWindowFloodCheckerFactory()
     {
         _GlobalFloodCheckerEventLogger = new GlobalFloodCheckerEventLogger();
     }
 
+    /// <inheritdoc cref="IFloodCheckerFactory{TFloodChecker}.GetFloodChecker(string, string, Func{int}, Func{TimeSpan}, Func{bool}, Func{bool}, ILogger)"/>
     public RedisExpandingWindowFloodChecker GetFloodChecker(
         string category,
         string key,

@@ -6,6 +6,7 @@
     <Description>Helpers to aid with multi-threaded environments.</Description>
     
     <LangVersion>preview</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

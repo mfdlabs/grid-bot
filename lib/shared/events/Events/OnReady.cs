@@ -1,114 +1,74 @@
-﻿using System.Threading.Tasks;
+﻿namespace Grid.Bot.Events;
+
+using System.Threading.Tasks;
 
 using Discord;
+using Discord.WebSocket;
 
 using Logging;
 
 using Threading;
 using Text.Extensions;
-using Grid.Bot.Global;
-using Grid.Bot.Registries;
 
-#if DISCORD_SHARDING_ENABLED
-using Discord.WebSocket;
-#endif
+using Global;
+using Registries;
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-namespace Grid.Bot.Events
+/// <summary>
+/// Event handler to be invoked when a shard is ready,
+/// </summary>
+public static class OnShardReady
 {
-#if DISCORD_SHARDING_ENABLED
-    public static class OnShardReady
+    private static Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+
+    private static string GetStatusText(string updateText)
+        => updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
+
+    /// <summary>
+    /// Invoe the event handler.
+    /// </summary>
+    /// <param name="shard">The client for the shard.</param>
+    public static async Task Invoke(DiscordSocketClient shard)
     {
-        private static Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+        _shardCount++;
 
-        private static string GetStatusText(string updateText)
+        Logger.Singleton.Debug(
+            "Shard '{0}' ready as '{0}#{1}'",
+            shard.ShardId,
+            BotRegistry.Client.CurrentUser.Username,
+            BotRegistry.Client.CurrentUser.Discriminator
+        );
+
+        if (_shardCount == BotRegistry.Client.Shards.Count)
         {
-            return updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
-        }
+            Logger.Singleton.Debug("Final shard ready!");
 
-        public static async Task Invoke(DiscordSocketClient shard)
-        {
-            _shardCount++;
+            BotRegistry.Ready = true;
 
-            Logger.Singleton.Debug(
-                "Shard '{0}' ready as '{0}#{1}'",
-                shard.ShardId,
-                BotRegistry.Client.CurrentUser.Username,
-                BotRegistry.Client.CurrentUser.Discriminator
-            );
-
-            if (_shardCount == BotRegistry.Client.Shards.Count)
-            {
-                Logger.Singleton.Debug("Final shard ready!");
-
-                BotRegistry.Ready = true;
-
-                if (global::Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
-                    CommandRegistry.RegisterOnce();
-
-                if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
-                {
-                    var text = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
-                    BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb);
-                    BotRegistry.Client.SetGameAsync(GetStatusText(text), null, ActivityType.Playing);
-                    return;
-                }
-
-                BotRegistry.Client.SetStatusAsync(
-                    global::Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
-                );
-
-                if (!global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
-                    BotRegistry.Client.SetGameAsync(
-                        global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
-                        global::Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
-                        global::Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
-                    );
-            }
-        }
-    }
-#else
-    public static class OnReady
-    {
-        private static string GetStatusText(string updateText)
-        {
-            return updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
-        }
-
-        public static async Task Invoke()
-        {
-
-            if (global::Grid.Bot.Properties.Settings.Default.RegisterCommandRegistryAtAppStart)
+            if (CommandsSettings.Singleton.RegisterCommandRegistryAtAppStart)
                 CommandRegistry.RegisterOnce();
 
-            Logger.Singleton.Debug(
-                "Bot ready as '{0}#{1}'",
-                BotGlobal.Client.CurrentUser.Username,
-                BotGlobal.Client.CurrentUser.Discriminator
-            );
-
-            if (!global::Grid.Bot.Properties.Settings.Default.IsEnabled)
+            if (MaintenanceSettings.Singleton.MaintenanceEnabled)
             {
-                var text = global::Grid.Bot.Properties.Settings.Default.ReasonForDying;
-                await BotGlobal.Client.SetStatusAsync(UserStatus.DoNotDisturb);
-                await BotGlobal.Client.SetGameAsync(GetStatusText(text), null, ActivityType.Playing);
+                var text = MaintenanceSettings.Singleton.MaintenanceStatus;
+
+                BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb);
+                BotRegistry.Client.SetGameAsync(GetStatusText(text));
+
                 return;
             }
 
-            await BotGlobal.Client.SetStatusAsync(
-                global::Grid.Bot.Properties.Settings.Default.BotGlobalUserStatus
-            );
+            BotRegistry.Client.SetStatusAsync(DiscordSettings.Singleton.BotStatus);
 
-            if (!global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage.IsNullOrEmpty())
-                await BotGlobal.Client.SetGameAsync(
-                    global::Grid.Bot.Properties.Settings.Default.BotGlobalStatusMessage,
-                    global::Grid.Bot.Properties.Settings.Default.BotGlobalStreamURL,
-                    global::Grid.Bot.Properties.Settings.Default.BotGlobalActivityType
+            if (!DiscordSettings.Singleton.BotStatusMessage.IsNullOrEmpty())
+                BotRegistry.Client.SetGameAsync(
+                    DiscordSettings.Singleton.BotStatusMessage
                 );
         }
     }
-#endif
 }
 
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

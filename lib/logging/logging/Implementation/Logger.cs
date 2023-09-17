@@ -172,6 +172,7 @@ public class Logger : ILogger, IDisposable
     private const string _loggerNameRegex = @"^[a-zA-Z0-9_\-\.]{1,100}$";
 
     private static string _logFileBaseDirectoryBacking;
+    private static string _defaultLogFileDirectory => Environment.GetEnvironmentVariable("DEFAULT_LOG_FILE_DIRECTORY");
     private static string _logFileBaseDirectory
     {
         get
@@ -181,8 +182,8 @@ public class Logger : ILogger, IDisposable
 
             try
             {
-                if (!string.IsNullOrEmpty(global::Logging.Properties.Settings.Default.DefaultLogFileDirectory))
-                    Logger._logFileBaseDirectoryBacking = global::Logging.Properties.Settings.Default.DefaultLogFileDirectory;
+                if (!string.IsNullOrEmpty(_defaultLogFileDirectory))
+                    Logger._logFileBaseDirectoryBacking = _defaultLogFileDirectory;
 
                 return Logger._logFileBaseDirectoryBacking = Path.DirectorySeparatorChar == '/'
                     ? Path.Combine(Path.GetTempPath(), "mfdlabs", "logs")
@@ -193,6 +194,20 @@ public class Logger : ILogger, IDisposable
                 // If it fails, default to the current working directory
                 return Logger._logFileBaseDirectoryBacking = Directory.GetCurrentDirectory();
             }
+        }
+    }
+
+    private const string _defaultLoggerNameConstant = "logger";
+    private const LogLevel _defaultLogLevelConstant = LogLevel.Information;
+    private static string _defaultLoggerName => Environment.GetEnvironmentVariable("DEFAULT_LOGGER_NAME") ?? "logger";
+    private static LogLevel _defaultLogLevel
+    {
+        get
+        {
+            if (!Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("DEFAULT_LOG_LEVEL"), out var level))
+                return Logger._defaultLogLevelConstant;
+
+            return level;
         }
     }
 
@@ -217,11 +232,13 @@ public class Logger : ILogger, IDisposable
     /// Actual singleton instance
     /// </summary>
     protected static Logger _singleton;
-    
+    private static readonly object _singletonLock = new();
+
     /// <summary>
     /// Actual noop singleton instance
     /// </summary>
     protected static Logger _noopSingleton;
+    private static readonly object _noopSingletonLock = new();
 
     private static bool? _hasTerminal;
 
@@ -645,25 +662,9 @@ public class Logger : ILogger, IDisposable
     /// <summary>
     /// Requests that the log file directory be cleared.
     /// </summary>
-    /// <param name="override">If true, the log file directory will be cleared regardless of settings.</param>
-    public static void TryClearLocalLog(bool @override = false)
+    public static void TryClearLocalLog()
     {
         Logger.Singleton.Log("Try clear local log files...");
-
-        if (global::Logging.Properties.Settings.Default.PersistLocalLogs)
-        {
-            if (@override)
-            {
-                Logger.Singleton.Warning("Override flag set. Clearing local log files.");
-            }
-            else
-            {
-                Logger.Singleton.Warning("Local log files will not be cleared because PersistLocalLogs is set to true.");
-                return;
-            }
-        }
-
-        Logger.Singleton.Log("Clearing local log files...");
 
         var fileSystemLoggers = Logger._loggers.Where(logger => logger._logToFileSystem == true);
 
@@ -754,10 +755,17 @@ public class Logger : ILogger, IDisposable
         if (!Regex.IsMatch(name, Logger._loggerNameRegex))
             throw new ArgumentException($"The logger name must match '{Logger._loggerNameRegex}'", nameof(name));
 
-        if (Logger._loggers.Any(logger => logger.Name == name))
-            throw new InvalidOperationException($"A logger with the name of '{name}' already exists.");
+        lock (Logger._loggers)
+            if (Logger._loggers.Any(logger => logger.Name == name))
+                throw new InvalidOperationException($"A logger with the name of '{name}' already exists.");
 
-        Logger._loggers.Add(this);
+#if !NETFRAMEWORK
+        if (logWithColor)
+            logWithColor = false; // Color is not allowed on other targets as it cause a lot of issues on Windows
+#endif
+
+        lock (Logger._loggers)
+            Logger._loggers.Add(this);
 
         this._name = name;
         this._logLevel = logLevel;
@@ -781,26 +789,33 @@ public class Logger : ILogger, IDisposable
     ///     This is the recommended way to get a logger if you do not require a specific logger.
     /// </remarks>
     public static Logger Singleton
-        => Logger._singleton ??= new(
-                global::Logging.Properties.Settings.Default.DefaultLoggerName,
-                global::Logging.Properties.Settings.Default.DefaultLogLevel,
-                global::Logging.Properties.Settings.Default.DefaultLoggerLogToFileSystem,
-                global::Logging.Properties.Settings.Default.DefaultLoggerLogToConsole,
-                global::Logging.Properties.Settings.Default.DefaultLoggerCutLogPrefix,
-                global::Logging.Properties.Settings.Default.DefaultLoggerLogThreadId,
-                global::Logging.Properties.Settings.Default.DefaultLoggerLogWithColor
-            );
+    {
+        get
+        {
+            lock (Logger._singletonLock)
+                return Logger._singleton ??= new(
+                    _defaultLoggerName,
+                    _defaultLogLevel
+                );
+        }
+    }
 
     /// <summary>
     /// Gets a singleton instance of the Logger class that Noops on each operation.
     /// </summary>
     public static Logger NoopSingleton
-       => Logger._noopSingleton ??= new(
-               "_noop",
-               LogLevel.None,
-               false,
-               false
-           );
+    {
+        get
+        {
+            lock (Logger._noopSingletonLock)
+                return Logger._noopSingleton ??= new(
+                   "_noop",
+                   LogLevel.None,
+                   false,
+                   false
+               );
+        }
+    }
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1068,7 +1083,8 @@ public class Logger : ILogger, IDisposable
         if (this._name == Logger._singleton?._name) return;
         if (this._name == Logger._noopSingleton?._name) return;
 
-        Logger._loggers.Remove(this);
+        lock (Logger._loggers)
+            Logger._loggers.Remove(this);
         this._closeFileStream();
 
         this._disposed = true;

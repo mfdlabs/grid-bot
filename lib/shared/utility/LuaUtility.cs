@@ -1,97 +1,79 @@
-﻿using System.IO;
+﻿namespace Grid.Bot.Utility;
+
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 
-using Logging;
-
-using Text.Extensions;
 using Grid.ComputeCloud;
 
-namespace Grid.Bot.Utility
+/// <summary>
+/// Utility for interacting with grid-server Lua.
+/// </summary>
+public static class LuaUtility
 {
-    public static class LuaUtility
+    private static string FixFormatString(string input)
     {
-        public struct ReturnMetadata
-        {
-            [JsonProperty("success")]
-            public bool Success;
+        //language=regex
+        const string partRegex = @"{{(\d{1,2})}}";
 
-            [JsonProperty("execution_time")]
-            public double ExecutionTime;
+        input = input.Replace("{", "{{");
+        input = input.Replace("}", "}}");
 
-            [JsonProperty("error_message")]
-            public string ErrorMessage;
+        input = Regex.Replace(input, partRegex, (m) => { return $"{{{m.Groups[1]}}}"; });
 
-            [JsonProperty("logs")]
-            public string Logs;
-        }
+        return input;
+    }
 
-        public static string SafeLuaMode
-            => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua")));
+    /// <summary>
+    /// Represents the metadata returned by the lua-vm script.
+    /// </summary>
+    public struct ReturnMetadata
+    {
+        /// <summary>
+        /// Is the script a success?
+        /// </summary>
+        [JsonProperty("success")]
+        public bool Success;
+
+        /// <summary>
+        /// The total execution time.
+        /// </summary>
+        [JsonProperty("execution_time")]
+        public double ExecutionTime;
+
+        /// <summary>
+        /// The optional error message.
+        /// </summary>
+        [JsonProperty("error_message")]
+        public string ErrorMessage;
+
+        /// <summary>
+        /// The optional logs.
+        /// </summary>
+        [JsonProperty("logs")]
+        public string Logs;
+    }
+
+    /// <summary>
+    /// The template file for the lua-vm.
+    /// </summary>
+    public static string LuaVMTemplate
+        => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua")));
 
 
-        private static string FixFormatString(string input)
-        {
-            //language=regex
-            const string partRegex = @"{{(\d{1,2})}}";
-
-            input = input.Replace("{", "{{");
-            input = input.Replace("}", "}}");
-
-            input = Regex.Replace(input, partRegex, (m) => { return $"{{{m.Groups[1]}}}"; });
-
-            return input;
-        }
-
-        public static string ParseLuaValues(IEnumerable<LuaValue> result) => Lua.ToString(result);
-
-        public static (string result, ReturnMetadata metadata) ParseResult(IEnumerable<LuaValue> result)
-        {
-            return (
-                (string)Lua.ConvertLua(result.FirstOrDefault()), 
-                JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(result.ElementAtOrDefault(1)))
-            );
-        }
-
-        public static bool CheckIfScriptContainsDisallowedText(string script, out string word)
-        {
-            word = null;
-
-            var parsedScript = script;
-
-            var escapedString = script.EscapeNewLines().Escape();
-
-            if (!global::Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
-                parsedScript = script.ToLower();
-
-            Logger.Singleton.Information("Check if script '{0}' contains blacklisted words.", escapedString);
-
-            foreach (var keyword in GetBlacklistedKeywords())
-            {
-                var parsedKeyword = keyword;
-                if (!global::Grid.Bot.Properties.Settings.Default.ScriptExectionCareAboutBadTextCase) 
-                    parsedKeyword = keyword.ToLower();
-                
-                if (!parsedScript.Contains(parsedKeyword)) continue;
-                
-                word = parsedKeyword;
-                Logger.Singleton.Warning("The script '{0}' contains blacklisted words.", escapedString);
-
-                return true;
-            }
-
-            Logger.Singleton.Information("The script '{0}' does not contain blacklisted words.", escapedString);
-            return false;
-        }
-
-        private static IEnumerable<string> GetBlacklistedKeywords() 
-            =>
-                (from keyword in global::Grid.Bot.Properties.Settings.Default.BlacklistedScriptKeywords
-                        .Split(',')
-                    where !keyword.IsNullOrEmpty()
-                    select keyword);
+    /// <summary>
+    /// Parse the return metadata from the grid-server.
+    /// </summary>
+    /// <param name="result">The <see cref="LuaValue"/>s</param>
+    /// <returns>The result and the <see cref="ReturnMetadata"/></returns>
+    public static (string result, ReturnMetadata metadata) ParseResult(IEnumerable<LuaValue> result)
+    {
+        return (
+            (string)Lua.ConvertLua(result.FirstOrDefault()), 
+            JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(result.ElementAtOrDefault(1)))
+        );
     }
 }

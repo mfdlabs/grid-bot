@@ -23,6 +23,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     private readonly string _PerformanceCategory;
     private readonly RedisClientOptions _ClientOptions;
     private readonly ISingleSetting<bool> _UseServiceDiscovery;
+    private readonly IHybridRedisClientProviderSettings _Settings;
     private readonly ISingleSetting<RedisEndpoints> _RedisEndpoints;
     private readonly object _Lock = new();
     private readonly TaskCompletionSource<RedisEndpoints> _ResolverEndpoints = new();
@@ -49,6 +50,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     /// <summary>
     /// Construct a new instance of <see cref="HybridRedisClientProvider"/>
     /// </summary>
+    /// <param name="settings">The <see cref="IHybridRedisClientProviderSettings"/></param>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="serviceResolver">The <see cref="IServiceResolver"/></param>
@@ -57,6 +59,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     /// <param name="redisEndpoints">The inital redis endpoints.</param>
     /// <param name="clientOptions">The client options.</param>
     /// <exception cref="ArgumentNullException">
+    /// - <paramref name="settings"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="counterRegistry"/> cannot be null.
     /// - <paramref name="serviceResolver"/> cannot be null.
@@ -65,6 +68,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     /// - <paramref name="performanceCategory"/> cannot be null.
     /// </exception>
     public HybridRedisClientProvider(
+        IHybridRedisClientProviderSettings settings,
         ILogger logger, 
         ICounterRegistry counterRegistry,
         IServiceResolver serviceResolver, 
@@ -74,6 +78,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
         RedisClientOptions clientOptions = null
     )
     {
+        _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
         _ServiceResolver = serviceResolver ?? throw new ArgumentNullException(nameof(serviceResolver));
@@ -104,7 +109,7 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
 
         if (_UseServiceDiscovery.Value)
         {
-            var initialDiscoveryWaitTime = global::Redis.Properties.HybridRedisClientProviderSettings.Default.InitialDiscoveryWaitTime;
+            var initialDiscoveryWaitTime = _Settings.InitialDiscoveryWaitTime;
 
             if (!_ResolverEndpoints.Task.Wait(initialDiscoveryWaitTime))
             {

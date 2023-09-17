@@ -12,7 +12,7 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' ">
     <OutputPath>bin\debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEBUG;USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
   
 </Project>

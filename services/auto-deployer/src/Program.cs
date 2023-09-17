@@ -1,4 +1,6 @@
-﻿using System;
+﻿namespace Grid.AutoDeployer;
+
+using System;
 using System.IO;
 using System.CommandLine;
 using System.Threading.Tasks;
@@ -11,12 +13,9 @@ using Microsoft.Win32;
 using Logging;
 
 using FileSystem;
-using Diagnostics;
 using Text.Extensions;
-using Configuration.Logging;
-using Grid.AutoDeployer.Service;
 
-namespace Grid.AutoDeployer;
+using Service;
 
 internal static class Program
 {
@@ -25,16 +24,14 @@ internal static class Program
 
     public static async Task Main(params string[] args)
     {
-        _logger = new Logger(
-            name: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerName,
-            logLevel: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLogLevel,
-            logWithColor: global::Grid.AutoDeployer.Properties.Settings.Default.EnvironmentLoggerUseColor
-        );
+#if USE_VAULT_SETTINGS_PROVIDER
+        ConfigurationProvider.SetUpVault();
+#endif
 
-        ConfigurationLogging.OverrideDefaultConfigurationLogging(
-            _logger.Error,
-            _logger.Warning,
-            _logger.Information
+        _logger = new Logger(
+            name: AutoDeployerSettings.Singleton.EnvironmentLoggerName,
+            logLevel: AutoDeployerSettings.Singleton.EnvironmentLogLevel,
+            logWithColor: false
         );
 
         // If args has -purge or --purge etc.
@@ -68,8 +65,8 @@ internal static class Program
         {
             _logger.Warning("--purge set. Purging deployment files...");
 
-            var deploymentPath = global::Grid.AutoDeployer.Properties.Settings.Default.DeploymentPath;
-            var versioningRegSubKey = global::Grid.AutoDeployer.Properties.Settings.Default.VersioningRegistrySubKey;
+            var deploymentPath = AutoDeployerSettings.Singleton.DeploymentPath;
+            var versioningRegSubKey = AutoDeployerSettings.Singleton.VersioningRegistrySubKey;
 
             // If null, just exit and warn.
             if (deploymentPath.IsNullOrEmpty())
@@ -113,8 +110,8 @@ internal static class Program
                                     "Could not delete directory because we do not have write access. " +
                                     "Please run this app with elevated permissions or allow the user '{0}\\{1}' " +
                                     "to write to the directory '{2}' and it's sub-directories. Ignoring...",
-                                    SystemGlobal.GetMachineId(),
-                                    ProcessHelper.GetCurrentUser(),
+                                    Environment.MachineName,
+                                    Environment.UserName,
                                     directory
                                 );
                             else

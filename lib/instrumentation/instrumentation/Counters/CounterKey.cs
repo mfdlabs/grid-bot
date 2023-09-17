@@ -13,8 +13,8 @@ namespace Instrumentation
 
         public CounterKey(string category, string name, string instance)
         {
-            if (category.IsNullOrWhiteSpace()) throw new ArgumentException(nameof(category));
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentException(nameof(name));
+            if (category.IsNullOrEmpty()) throw new ArgumentException(nameof(category));
+            if (name.IsNullOrEmpty()) throw new ArgumentException(nameof(name));
             Category = category;
             Name = name;
             Instance = instance;

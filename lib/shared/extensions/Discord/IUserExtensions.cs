@@ -1,202 +1,183 @@
-﻿using System.IO;
+﻿namespace Grid.Bot.Extensions;
+
 using System.Linq;
 using System.Threading.Tasks;
+
 using Discord;
-using Diagnostics;
-using Grid.Bot.Global;
-using Grid.Bot.Utility;
-using Text.Extensions;
-using Threading.Extensions;
 
-namespace Grid.Bot.Extensions
+using Random;
+
+using Global;
+using Utility;
+
+/// <summary>
+/// Extension methods for <see cref="IUser"/>
+/// </summary>
+public static class IUserExtensions
 {
-    public static class IUserExtensions
+    /// <summary>
+    /// Whitelist the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Whitelist(this IUser user)
     {
-        public static void Whitelist(this IUser user)
+        if (user.IsBlacklisted())
         {
-            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
+            var blIds = DiscordRolesSettings.Singleton.BlacklistedUserIds.ToList();
+            blIds.Remove(user.Id);
 
-            if (blacklistedUsers.Contains(user.Id.ToString()))
-            {
-                var blIds = blacklistedUsers.Split(',').ToList();
-                blIds.Remove(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
+            DiscordRolesSettings.Singleton.BlacklistedUserIds = blIds.ToArray();
         }
-        public static void Blacklist(this IUser user)
-        {
-            var blacklistedUsers = global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds;
-
-            if (!blacklistedUsers.Contains(user.Id.ToString()))
-            {
-                var blIds = blacklistedUsers.Split(',').ToList();
-                blIds.Add(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["BlacklistedDiscordUserIds"] = blIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
-        }
-
-        public static void Disentitle(this IUser user)
-        {
-            var privilagedUsers = global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
-
-            if (privilagedUsers.Contains(user.Id.ToString()))
-            {
-                var pIds = privilagedUsers.Split(',').ToList();
-                pIds.Remove(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
-        }
-        public static void Entitle(this IUser user)
-        {
-            var privilagedUsers = global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers;
-
-            if (!privilagedUsers.Contains(user.Id.ToString()))
-            {
-                var pIds = privilagedUsers.Split(',').ToList();
-                pIds.Add(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["HigherPrivilagedUsers"] = pIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
-        }
-
-        public static void Demote(this IUser user)
-        {
-            var admins = global::Grid.Bot.Properties.Settings.Default.Admins;
-
-            if (admins.Contains(user.Id.ToString()))
-            {
-                var adIds = admins.Split(',').ToList();
-                adIds.Remove(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
-        }
-        public static void Promote(this IUser user)
-        {
-            var admins = global::Grid.Bot.Properties.Settings.Default.Admins;
-
-            if (!admins.Contains(user.Id.ToString()))
-            {
-                var adIds = admins.Split(',').ToList();
-                adIds.Add(user.Id.ToString());
-                global::Grid.Bot.Properties.Settings.Default["Admins"] = adIds.Join(',');
-                global::Grid.Bot.Properties.Settings.Default.Save();
-            }
-        }
-        public static bool CanExecuteByRolloutPercentage(this IUser user, int rolloutPercentage)
-        {
-            if (user.IsAdmin()) return true;
-
-            return PercentageInvoker.CanInvoke(rolloutPercentage);
-        }
-        public static bool IsBlacklisted(this IUser user) => AdminUtility.UserIsBlacklisted(user);
-        public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
-        public static bool IsPrivilaged(this IUser user) => AdminUtility.UserIsPrivilaged(user);
-        public static bool IsOwner(this IUser user) => AdminUtility.UserIsOwner(user);
-        public static async Task<IUserMessage> SendDirectMessageAsync(
-            this IUser user,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            MessageReference messageReference = null
-        )
-        {
-            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
-            if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
-            return await dmChannel?.SendMessageAsync(
-                text,
-                isTts,
-                embed,
-                options,
-                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
-                messageReference
-            );
-        }
-        public static async Task<IUserMessage> SendDirectMessageWithFileAsync(
-            this IUser user,
-            string fileName,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            bool isSpoiler = false,
-            MessageReference messageReference = null
-        )
-        {
-            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
-            if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
-            return await dmChannel?.SendFileAsync(
-                fileName,
-                text,
-                isTts,
-                embed,
-                options,
-                isSpoiler,
-                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
-                messageReference
-            );
-        }
-        public static async Task<IUserMessage> SendDirectMessageWithFileAsync(
-            this IUser user,
-            Stream stream,
-            string fileName,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            bool isSpoiler = false,
-            MessageReference messageReference = null
-        )
-        {
-            var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id);
-            if (dmChannel == null) dmChannel = await user.CreateDMChannelAsync();
-            return await dmChannel?.SendFileAsync(
-                stream,
-                fileName,
-                text,
-                isTts,
-                embed,
-                options,
-                isSpoiler,
-                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
-                messageReference
-            );
-        }
-        public static IUserMessage SendDirectMessageWithFile(
-            this IUser user,
-            string fileName,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            bool isSpoiler = false,
-            MessageReference messageReference = null
-        )
-            => user.SendDirectMessageWithFileAsync(fileName, text, isTts, embed, options, isSpoiler, messageReference).Sync();
-        public static IUserMessage SendDirectMessageWithFile(
-            this IUser user,
-            Stream stream,
-            string fileName,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            bool isSpoiler = false,
-            MessageReference messageReference = null
-        )
-            => user.SendDirectMessageWithFileAsync(stream, fileName, text, isTts, embed, options, isSpoiler, messageReference).Sync();
-        public static IUserMessage SendDirectMessage(
-            this IUser user,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            MessageReference messageReference = null
-        )
-            => user.SendDirectMessageAsync(text, isTts, embed, options, messageReference).Sync();
     }
+
+    /// <summary>
+    /// Blacklist the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Blacklist(this IUser user)
+    {
+        if (!user.IsBlacklisted())
+        {
+            var blIds = DiscordRolesSettings.Singleton.BlacklistedUserIds.ToList();
+            blIds.Add(user.Id);
+
+            DiscordRolesSettings.Singleton.BlacklistedUserIds = blIds.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Disentitle the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Disentitle(this IUser user)
+    {
+        if (user.IsPrivilaged())
+        {
+            var blIds = DiscordRolesSettings.Singleton.HigherPrivilagedUserIds.ToList();
+            blIds.Remove(user.Id);
+
+            DiscordRolesSettings.Singleton.HigherPrivilagedUserIds = blIds.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Entitle the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Entitle(this IUser user)
+    {
+        if (!user.IsPrivilaged())
+        {
+            var blIds = DiscordRolesSettings.Singleton.HigherPrivilagedUserIds.ToList();
+            blIds.Add(user.Id);
+
+            DiscordRolesSettings.Singleton.HigherPrivilagedUserIds = blIds.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Demote the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Demote(this IUser user)
+    {
+        if (user.IsAdmin())
+        {
+            var blIds = DiscordRolesSettings.Singleton.AdminUserIds.ToList();
+            blIds.Remove(user.Id);
+
+            DiscordRolesSettings.Singleton.AdminUserIds = blIds.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Promote the specified <see cref="IUser"/>
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    public static void Promote(this IUser user)
+    {
+        if (!user.IsAdmin())
+        {
+            var blIds = DiscordRolesSettings.Singleton.AdminUserIds.ToList();
+            blIds.Add(user.Id);
+
+            DiscordRolesSettings.Singleton.AdminUserIds = blIds.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Can the specified <see cref="IUser"/> execute by rollout percentage?
+    /// </summary>
+    /// <remarks>
+    ///     Admin users and higher can always execute.
+    /// </remarks>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <param name="rolloutPercentage">The rollout percentage.</param>
+    /// <returns>True if the user can execute.</returns>
+    public static bool CanExecuteByRolloutPercentage(this IUser user, int rolloutPercentage)
+    {
+        if (user.IsAdmin()) return true;
+
+        return PercentageInvoker.Singleton.CanInvoke(rolloutPercentage);
+    }
+
+    /// <summary>
+    /// Is the specified <see cref="IUser"/> blacklisted?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>True if the user is blacklisted.</returns>
+    public static bool IsBlacklisted(this IUser user) => AdminUtility.UserIsBlacklisted(user);
+
+    /// <summary>
+    /// Is the specified <see cref="IUser"/> an admin?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>True if the user is an admin.</returns>
+    public static bool IsAdmin(this IUser user) => AdminUtility.UserIsAdmin(user);
+
+    /// <summary>
+    /// Is the specified <see cref="IUser"/> privilaged?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>True if the user is privilaged.</returns>
+    public static bool IsPrivilaged(this IUser user) => AdminUtility.UserIsPrivilaged(user);
+
+    /// <summary>
+    /// Is the specified <see cref="IUser"/> the owner?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>True if the user is the owner.</returns>
+    public static bool IsOwner(this IUser user) => AdminUtility.UserIsOwner(user);
+
+    /// <summary>
+    /// Sends a direct message to the specified <see cref="IUser"/>.
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <param name="text">The message text.</param>
+    /// <param name="isTts">Is the message a TTS message?</param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    /// <param name="messageReference">The <see cref="MessageReference"/></param>
+    /// <returns>A <see cref="IUserMessage"/></returns>
+    public static async Task<IUserMessage> SendDirectMessageAsync(
+        this IUser user,
+        string text = null,
+        bool isTts = false,
+        Embed embed = null,
+        RequestOptions options = null,
+        MessageReference messageReference = null
+    )
+    {
+        var dmChannel = await BotRegistry.Client.GetDMChannelAsync(user.Id) ?? await user.CreateDMChannelAsync();
+
+        return await dmChannel?.SendMessageAsync(
+            text,
+            isTts,
+            embed,
+            options,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
+            messageReference
+        );
+    }
+    
 }
