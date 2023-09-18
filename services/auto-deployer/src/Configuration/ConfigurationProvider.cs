@@ -72,6 +72,8 @@ public static class ConfigurationProvider
     {
         if (credential.Contains(_appRoleSplit))
         {
+            Logger.Singleton.Information("Using AppRole authentication for Vault!");
+
             var parts = credential.Split(_appRoleSplit);
             var roleId = parts.ElementAt(0);
             var secretId = parts.ElementAt(1);
@@ -80,6 +82,8 @@ public static class ConfigurationProvider
 
             return new AppRoleAuthMethodInfo(mount, roleId, secretId);
         }
+
+        Logger.Singleton.Information("Using Token authentication for Vault!");
 
         return new TokenAuthMethodInfo(credential);
     }
