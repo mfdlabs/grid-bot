@@ -136,7 +136,7 @@ public class VaultProvider : BaseProvider, IVaultProvider
 
     private void InvokePropertyChangedForChangedValues(IDictionary<string, object> newValues)
     {
-        if (_cachedValues == null)
+        if (_cachedValues.Count == 0)
         {
             foreach (var kvp in newValues)
             {
