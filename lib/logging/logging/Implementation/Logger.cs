@@ -199,7 +199,7 @@ public class Logger : ILogger, IDisposable
 
     private const string _defaultLoggerNameConstant = "logger";
     private const LogLevel _defaultLogLevelConstant = LogLevel.Information;
-    private static string _defaultLoggerName => Environment.GetEnvironmentVariable("DEFAULT_LOGGER_NAME") ?? "logger";
+    private static string _defaultLoggerName => Environment.GetEnvironmentVariable("DEFAULT_LOGGER_NAME") ?? _defaultLoggerNameConstant;
     private static LogLevel _defaultLogLevel
     {
         get
