@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Grid.Arbiter.Service.Tests.Component": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:29010;http://localhost:29011"
+    }
+  }
+}
