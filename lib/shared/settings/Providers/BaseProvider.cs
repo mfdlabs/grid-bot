@@ -26,7 +26,8 @@ public abstract class BaseSettingsProvider
     protected BaseSettingsProvider()
         : base(
 #if USE_VAULT_SETTINGS_PROVIDER
-            refreshInterval: SettingsProvidersDefaults.DefaultRefreshInterval
+            refreshInterval: SettingsProvidersDefaults.DefaultRefreshInterval,
+            logger: Logging.Logger.Singleton
 #endif
         )
     {

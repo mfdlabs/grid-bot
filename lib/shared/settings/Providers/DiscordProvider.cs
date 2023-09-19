@@ -22,7 +22,7 @@ public class DiscordSettings : BaseSettingsProvider<DiscordSettings>
         () => throw new InvalidOperationException($"Environment Variable {nameof(BotToken)} is required!")
     );
 
-#if DEBUG
+#if DEBUG || DEBUG_LOGGING_IN_PROD
     /// <summary>
     /// Can task cancelled exceptions be loggeD?
     /// </summary>

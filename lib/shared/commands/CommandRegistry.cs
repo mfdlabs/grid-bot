@@ -559,7 +559,7 @@ public static class CommandRegistry
 
     await command.RespondEphemeralPingAsync(
             $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
-            $"<@!{DiscordRolesProvider.Singleton.BotOwnerId}>");
+            $"<@!{DiscordRolesSettings.Singleton.BotOwnerId}>");
 #endif
     }
 
@@ -653,7 +653,7 @@ public static class CommandRegistry
 #else
 
         await message.ReplyAsync($"An unexpected Exception has occurred. Exception ID: {exceptionId}, " +
-                                 $"send this ID to <@!{DiscordRolesProvider.Singleton.BotOwnerId}>");
+                                 $"send this ID to <@!{DiscordRolesSettings.Singleton.BotOwnerId}>");
 #endif
     }
 

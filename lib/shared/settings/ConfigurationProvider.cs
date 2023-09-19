@@ -39,7 +39,8 @@ public static class ConfigurationProvider
     /// <summary>
     /// Set up vault for the configuration.
     /// </summary>
-    public static void SetUpVault()
+    /// <param name="doRefresh">Should the refresh thread start?</param>
+    public static void SetUp(bool doRefresh = true)
     {
         var vaultAddr = Environment.GetEnvironmentVariable(_vaultAddressEnvVar);
         var vaultCredential = Environment.GetEnvironmentVariable(_vaultCredentialEnvVar)
@@ -53,8 +54,9 @@ public static class ConfigurationProvider
 
         Task.Factory.StartNew(() => RefreshToken(client), TaskCreationOptions.LongRunning);
 
-        ApplyClients(client);
+        ApplyClients(client, doRefresh);
     }
+
 
     private static void RefreshToken(IVaultClient client)
     {
@@ -84,7 +86,7 @@ public static class ConfigurationProvider
         return new TokenAuthMethodInfo(credential);
     }
 
-    private static void ApplyClients(IVaultClient client)
+    private static void ApplyClients(IVaultClient client, bool doRefresh)
     {
         RegisteredProviders = new List<IConfigurationProvider>();
 
@@ -110,8 +112,7 @@ public static class ConfigurationProvider
         {
             if (singleton == null) continue;
 
-            singleton.SetLogger(Logger.Singleton);
-            singleton.SetClient(client);
+            singleton.SetClient(client, doRefresh);
 
             RegisteredProviders.Add(singleton);
         }

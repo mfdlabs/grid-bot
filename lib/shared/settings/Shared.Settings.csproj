@@ -9,6 +9,10 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);DEBUG_LOGGING_IN_PROD</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="3.11.0" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
