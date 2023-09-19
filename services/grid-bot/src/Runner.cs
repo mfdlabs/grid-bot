@@ -17,6 +17,7 @@ using Logging;
 
 using Random;
 using Networking;
+using Configuration;
 using Text.Extensions;
 using Instrumentation;
 
@@ -45,7 +46,21 @@ internal static class Runner
     public static void Invoke(string[] args)
     {
 #if USE_VAULT_SETTINGS_PROVIDER
-        ConfigurationProvider.SetUpVault();
+
+        if (args.Contains("--write-local-config"))
+        {
+            ConfigurationProvider.SetUp(false);
+
+            Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
+
+            foreach (var provider in ConfigurationProvider.RegisteredProviders.Cast<IVaultProvider>())
+                provider.ApplyCurrent();
+
+            Console.ReadKey();
+            return;
+        }
+
+        ConfigurationProvider.SetUp();
 #endif
 
         Logger.Singleton.Warning(BadActorMessage);
