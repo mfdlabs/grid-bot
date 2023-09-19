@@ -1,0 +1,127 @@
+/*
+    Protobuf contracts for the Arbiter API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/protobuf/duration.proto";
+
+// Represents the request to create a new instance.
+message CreateInstanceRequest {
+    // Optional id, if not provided, a random id will be generated.
+    optional string instance_id = 1;
+
+    // Should it start the process immediately?
+    bool start = 2;
+}
+
+// Represents the request to create a persistent instance.
+message CreatePersistentInstanceRequest {
+    // Id of the instance.
+    string instance_id = 1;
+
+    // Is the instance allowed to be placed in the pool?
+    bool poolable = 2;
+
+    // Should it start the process immediately?
+    bool start = 3;
+}
+
+// Represents the request to create a leased instance.
+message CreateLeasedInstanceRequest {
+    // Optional id, if not provided, a random id will be generated.
+    optional string instance_id = 1;
+
+    // Optional lease, if not provided, a default lease will be used.
+    optional google.protobuf.Duration lease = 2;
+
+    // Should it start the process immediately?
+    bool start = 3;
+}
+
+// Represents the request to batch create instances.
+message BatchCreateInstancesRequest {
+    // Number of instances to create.
+    int32 count = 1;
+
+    // Should it start the process immediately?
+    bool start = 2;
+}
+
+// Represents the request to batch create leased instances.
+message BatchCreateLeasedInstancesRequest {
+    // Number of instances to create.
+    int32 count = 1;
+
+    // Optional lease, if not provided, a default lease will be used.
+    optional google.protobuf.Duration lease = 2;
+
+    // Should it start the process immediately?
+    bool start = 3;
+}
+
+// Represents the request to get an instance by id.
+message GetInstanceRequest {
+    // Id of the instance.
+    string instance_id = 1;
+}
+
+// Represents the request to get a persistent instance by id.
+message GetPersistentInstanceRequest {
+    // Id of the instance.
+    string instance_id = 1;
+}
+
+// Represents the request to get a leased instance by id.
+message GetLeasedInstanceRequest {
+    // Id of the instance.
+    string instance_id = 1;
+}
+
+// Represents the request to get or create any instance.
+message GetOrCreateAnyInstanceRequest {
+    // Optional id, if not provided, will try get any available instance.
+    optional string instance_id = 1;
+
+    // Is the instance allowed to be placed in the pool?
+    bool poolable = 2;
+}
+
+// Represents the request to get or create an instance.
+message GetOrCreateInstanceRequest {
+    // The id of the instance.
+    string instance_id = 1;
+}
+
+// Represents the request to get or create a persistent instance.
+message GetOrCreatePersistentInstanceRequest {
+    // The id of the instance.
+    string instance_id = 1;
+
+    // Is the instance allowed to be placed in the pool?
+    bool poolable = 2;
+}
+
+// Represents the request to get or create a leased instance.
+message GetOrCreateLeasedInstanceRequest {
+    // The id of the instance.
+    string instance_id = 1;
+
+    // Optional lease, if not provided, a default lease will be used.
+    optional google.protobuf.Duration lease = 2;
+}
+
+// Represents the request to get or create an available leased instance.
+message GetOrCreateAvailableLeasedInstanceRequest {
+    // Optional lease, if not provided, a default lease will be used.
+    optional google.protobuf.Duration lease = 1;
+}

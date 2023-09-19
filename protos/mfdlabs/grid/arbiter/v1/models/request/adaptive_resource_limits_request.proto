@@ -1,0 +1,37 @@
+/*
+    Protobuf contracts for the Arbiter ARL API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/adaptive_resource_limits.proto";
+
+// Represents the request to update the global adaptive resource limit configuration.
+message UpdateGlobalResourceLimitsRequest {
+    // The new global adaptive resource limit configuration.
+    AdaptiveResourceLimits resource_limits = 1;
+}
+
+// Represents the request to get the adaptive resource limit configuration for a grid server instance.
+message GetPerInstanceResourceLimitsRequest {
+    // The id of the grid server instance.
+    string instance_id = 1;
+}
+
+// Represents the request to update the adaptive resource limit configuration for a grid server instance.
+message UpdatePerInstanceResourceLimitsRequest {
+    // The id of the grid server instance.
+    string instance_id = 1;
+    
+    // The new adaptive resource limit configuration for the grid server instance.
+    AdaptiveResourceLimits resource_limits = 2;
+}

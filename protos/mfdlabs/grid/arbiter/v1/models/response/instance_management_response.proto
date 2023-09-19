@@ -1,0 +1,65 @@
+/*
+    Protobuf contracts for the Arbiter Instance Management API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/instances.proto";
+
+// Represents the response message to start a new instance
+message StartInstanceResponse {
+    // Did the instance start successfully
+    bool success = 1;
+
+    // The instance.
+    GridServerInstance instance = 2;
+}
+
+// Represents the response message to lock an instance
+message LockInstanceResponse {
+    // Did the instance lock successfully
+    bool success = 1;
+
+    // The instance.
+    GridServerInstance instance = 2;
+}
+
+// Represents the response message to unlock an instance
+message UnlockInstanceResponse {
+    // Did the instance unlock successfully
+    bool success = 1;
+
+    // The instance.
+    GridServerInstance instance = 2;
+}
+
+// Represents the response message to kill an instance
+message KillInstanceResponse {
+    // Did the instance kill successfully
+    bool success = 1;
+}
+
+////////////////////////////////////////////////////////////////
+//                Leased Instance Management                  //
+////////////////////////////////////////////////////////////////
+
+// Represents the response message to renew a lease
+message RenewInstanceLeaseResponse {
+    // The instance.
+    GridServerInstance instance = 1;
+}
+
+// Represents an instance lease expiration event
+message InstanceLeaseExpiredEvent {
+    // The instance.
+    GridServerInstance instance = 1;
+}

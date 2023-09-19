@@ -1,0 +1,78 @@
+/*
+    Protobuf contracts for the Arbiter API's adaptive resource limits.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+// Represents a thresholding factor for a resource limit.
+message Threshold {
+    // The thresholding factor.
+    double factor = 1;
+}
+
+// Represents a resource limit.
+message ResourceLimit {
+    // The resource limit.
+    int64 limit = 1;
+
+    // The thresholding factor for the resource limit.
+    Threshold threshold = 2;
+}
+
+// Represents a set of resource limits.
+message ResourceLimits {
+    // The CPU resource limit.
+    ResourceLimit cpu = 1;
+
+    // The memory resource limit.
+    ResourceLimit memory = 2;
+}
+
+// Represents what to do when a resource limit is exceeded.
+// Do bit-wise OR to combine multiple actions.
+enum ActionType {
+    // No action.
+    ACTION_TYPE_NONE = 0;
+
+    // Kill the container.
+    ACTION_TYPE_KILL = 1;
+
+    // Throttle the container.
+    ACTION_TYPE_THROTTLE = 2;
+
+    // Invoke alert manager.
+    ACTION_TYPE_ALERT = 4;
+}
+
+// Represents an action to be taken when a resource limit is exceeded.
+message Action {
+    // The action to be taken.
+    optional uint32 action_flags = 1;
+}
+
+// Represents a set of actions to be taken when a resource limit is exceeded.
+message Actions {
+    // The CPU action.
+    Action cpu = 1;
+
+    // The memory action.
+    Action memory = 2;
+}
+
+// Represents a set of adaptive resource limits.
+message AdaptiveResourceLimits {
+    // The resource limits.
+    ResourceLimits resource_limits = 1;
+
+    // The actions to be taken when a resource limit is exceeded.
+    Actions actions = 2;
+}

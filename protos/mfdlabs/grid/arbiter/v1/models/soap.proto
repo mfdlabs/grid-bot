@@ -1,0 +1,90 @@
+/*
+
+    Protobuf contracts for the SOAP models used by the Arbiter.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+
+    This is essentially a 1 to 1 mapping of the models inside of Grid.ComputeCloud
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+////////////////////////////////////////////////////////////////
+//                      General Messages                      //
+////////////////////////////////////////////////////////////////
+
+// Status of the job
+message Status {
+    // The version of the grid-server.
+    string version = 1;
+
+    // The environment count of the grid-server.
+    int32 environment_count = 2;
+};
+
+// The type of a Lua Value
+enum LuaType {
+    // A nil value
+    LUA_TNIL = 0;
+
+    // A boolean value
+    LUA_TBOOLEAN = 1;
+
+    // A number value
+    LUA_TNUMBER = 3;
+
+    // A string value
+    LUA_TSTRING = 4;
+
+    // A table value
+    LUA_TTABLE = 5;
+};
+
+// A Lua Value
+message LuaValue {
+    // The type of the value
+    LuaType type = 1;
+
+    // The value
+    string value = 2;
+
+    // The table values
+    repeated LuaValue table = 3;
+};
+
+// Represents a script-execution request
+message ScriptExecution {
+    // The name of the script
+    string name = 1;
+
+    // The script to execute
+    //
+    // Must be JSON form of any of the commands
+    // from Grid.Commands
+    string script = 2;
+
+    // The arguments to pass to the script
+    repeated LuaValue arguments = 4;
+}
+
+// Represents a Job
+message Job {
+    // The ID of the job
+    string id = 1;
+
+    // The expiration time of the job
+    double expiration_in_seconds = 2;
+
+    // The category of the job
+    int32 category = 3;
+
+    // The number of cores the job requires
+    double cores = 4;
+}

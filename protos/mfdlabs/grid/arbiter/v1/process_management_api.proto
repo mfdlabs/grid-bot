@@ -1,0 +1,67 @@
+/*
+    gRPC Process Manager API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/process_management_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/process_management_response.proto";
+
+// ProcessManagementAPI is the service for managing processes
+service ProcessManagementAPI {
+    // KillAllProcesses kills all processes
+    rpc KillAllProcesses (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/processes"
+        };
+    }
+
+    // KillProcess kills a process
+    rpc KillProcess (KillProcessRequest) returns (KillProcessResponse) {
+        option (google.api.http) = {
+            delete: "/v1/processes/{process_id}"
+        };
+    }
+
+    // GetAllProcesses gets all processes
+    rpc GetAllProcesses (google.protobuf.Empty) returns (GetAllProcessesResponse) {
+        option (google.api.http) = {
+            get: "/v1/processes"
+        };
+    }
+
+    // GetProcessById gets a process by id
+    rpc GetProcessById (GetProcessByIdRequest) returns (GetProcessByIdResponse) {
+        option (google.api.http) = {
+            get: "/v1/processes/{process_id}"
+        };
+    }
+
+    // GetProcessByCriteria gets a process by criteria,
+    // this will ask for metadata and will return a list of processes
+    // that have metadata matching the criteria
+    rpc GetProcessByCriteria (GetProcessByCriteriaRequest) returns (GetProcessByCriteriaResponse) {
+        option (google.api.http) = {
+            get: "/v1/processes/criteria"
+        };
+    }
+
+    // CreateProcess creates a process
+    rpc CreateProcess (google.protobuf.Empty) returns (CreateProcessResponse) {
+        option (google.api.http) = {
+            post: "/v1/processes"
+        };
+    }
+};

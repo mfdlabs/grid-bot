@@ -1,0 +1,181 @@
+/*
+    gRPC SOAP Gateway API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/soap_gateway_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/soap_gateway_response.proto";
+
+// SoapGatewayAPI is the service that provides the a proxy for the SOAP
+// interface on grid-server instances.
+service SoapGatewayAPI {
+    // HelloWorld is a method that returns a simple string
+    rpc HelloWorld (EmptyGatewayRequest) returns (HelloWorldGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/hello-world"
+        };
+    }
+
+    // GetVersion is a method that returns the version of the grid-server
+    // instance
+    rpc GetVersion (EmptyGatewayRequest) returns (GetVersionGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/version"
+        };
+    }
+
+    // GetStatus is a method that returns the status of the grid-server
+    // instance
+    rpc GetStatus (EmptyGatewayRequest) returns (GetStatusGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/status"
+        };
+    }
+
+    // OpenJob is a method that opens a job on the grid-server instance
+    //
+    // [OBSOLETE] Use OpenJobEx instead
+    rpc OpenJob (OpenJobGatewayRequest) returns (OpenJobGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs"
+            body: "*"
+        };
+    }
+
+    // OpenJobEx is a method that opens a job on the grid-server instance
+    rpc OpenJobEx (OpenJobGatewayRequest) returns (OpenJobGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs-ex"
+            body: "*"
+        };
+    }
+
+    // RenewLease is a method that renews the lease on a job on the grid-server
+    // instance
+    rpc RenewLease (RenewLeaseGatewayRequest) returns (RenewLeaseGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/renew-lease"
+            body: "*"
+        };
+    }
+
+    // Execute is a method that executes Lua on a job on the grid-server
+    // instance
+    //
+    // [OBSOLETE] Use ExecuteEx instead
+    rpc Execute (ExecuteGatewayRequest) returns (ExecuteGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/execute"
+            body: "*"
+        };
+    }
+
+    // ExecuteEx is a method that executes Lua on a job on the grid-server
+    // instance
+    rpc ExecuteEx (ExecuteGatewayRequest) returns (ExecuteGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/execute-ex"
+            body: "*"
+        };
+    }
+
+    // CloseJob is a method that closes a job on the grid-server instance
+    rpc CloseJob (CloseJobGatewayRequest) returns (EmptyGatewayResponse) {
+        option (google.api.http) = {
+            delete: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}"
+        };
+    }
+
+    // BatchJob works like OpenJob, but opens a job, executes Lua on it, and
+    // closes it in one call
+    //
+    // [OBSOLETE] Use BatchJobEx instead
+    rpc BatchJob (BatchJobGatewayRequest) returns (BatchJobGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/batch"
+            body: "*"
+        };
+    }
+
+    // BatchJobEx works like OpenJobEx, but opens a job, executes Lua on it, and
+    // closes it in one call
+    rpc BatchJobEx (BatchJobGatewayRequest) returns (BatchJobGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/batch-ex"
+            body: "*"
+        };
+    }
+
+    // GetExpiration is a method that returns the expiration time of a job on
+    // the grid-server instance
+    rpc GetExpiration (GetExpirationGatewayRequest) returns (GetExpirationGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/expiration"
+        };
+    }
+
+    // GetAllJobs is a method that returns all jobs on the grid-server instance
+    //
+    // [OBSOLETE] Use GetAllJobsEx instead
+    rpc GetAllJobs (EmptyGatewayRequest) returns (GetAllJobsGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/jobs"
+        };
+    }
+
+    // GetAllJobsEx is a method that returns all jobs on the grid-server instance
+    rpc GetAllJobsEx (EmptyGatewayRequest) returns (GetAllJobsGatewayResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/jobs-ex"
+        };
+    }
+
+    // CloseExpiredJobs is a method that closes all expired jobs on the
+    // grid-server instance
+    rpc CloseExpiredJobs (EmptyGatewayRequest) returns (EmptyGatewayResponse) {
+        option (google.api.http) = {
+            delete: "/v1/instances/{instance_id}/jobs/expired"
+        };
+    }
+
+    // CloseAllJobs is a method that closes all jobs on the grid-server instance
+    rpc CloseAllJobs (EmptyGatewayRequest) returns (EmptyGatewayResponse) {
+        option (google.api.http) = {
+            delete: "/v1/instances/{instance_id}/jobs"
+        };
+    }
+
+    // Diag is a method that returns diagnostic information about a job on the
+    // grid-server instance
+    //
+    // [OBSOLETE] Use DiagEx instead
+    rpc Diag (DiagGatewayRequest) returns (DiagGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/diag"
+            body: "*"
+        };
+    }
+
+    // DiagEx is a method that returns diagnostic information about a job on the
+    // grid-server instance
+    //
+    // [OBSOLETE] Post 2018 grid-server versions will not support this method
+    rpc DiagEx (DiagGatewayRequest) returns (DiagGatewayResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/jobs/{soap_request.job_id}/diag-ex"
+            body: "*"
+        };
+    }
+}

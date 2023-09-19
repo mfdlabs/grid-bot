@@ -1,0 +1,46 @@
+/*
+    Protobuf contracts for the Arbiter Script API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/scripts.proto";
+
+// Represents the request to write a script to the Arbiter's script store.
+message WriteScriptRequest {
+    // The name of the script to write.
+    string name = 1;
+
+    // The type of the script to write.
+    optional ScriptType type = 2;
+
+    // The content of the script to write.
+    bytes content = 3;
+}
+
+// Represents the request to read a script from the Arbiter's script store.
+message ReadScriptRequest {
+    // The name of the script to read.
+    string name = 1;
+
+    // The type of the script to read.
+    optional ScriptType type = 2;
+}
+
+// Represents the request to delete a script from the Arbiter's script store.
+message DeleteScriptRequest {
+    // The name of the script to delete.
+    string name = 1;
+
+    // The type of the script to delete.
+    optional ScriptType type = 2;
+}

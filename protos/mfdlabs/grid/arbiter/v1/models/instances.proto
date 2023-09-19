@@ -1,0 +1,61 @@
+/*
+    Protobuf contracts for the Arbiter API's instance management
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+
+/*
+
+    The case for expiration event checking:
+
+    1. We open a stream to the Arbiter API, and wait for a message
+    2. The Arbiter API sends a Redis pub-sub message to the Arbiter instance
+
+*/
+
+
+// Represents the model for a grid server instance
+message GridServerInstance {
+    // The ID of the instance
+    string id = 1;
+
+    // Is the instance available for use?
+    bool available = 2;
+
+    // Is the instance currently open?
+    bool open = 3;
+
+    // Is this instance persistent?
+    bool persistent = 4;
+
+    // Can this instance be used for the arbiter pool?
+    bool poolable = 5;
+
+    // Is this instance leased?
+    bool leased = 6;
+
+    // The expiration time of the lease
+    .google.protobuf.Timestamp expiration = 7;
+
+    // The time added to the expiration time
+    .google.protobuf.Duration lease = 8;
+
+    // Does this instance have a lease?
+    bool has_lease = 9;
+
+    // Is this instance expired?
+    bool expired = 10;
+}

@@ -1,0 +1,138 @@
+/*
+
+    Protobuf contracts for the SOAP models used by the Arbiter.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/instances.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/soap_response.proto";
+
+////////////////////////////////////////////////////////////////
+//                      Response Messages                     //
+////////////////////////////////////////////////////////////////
+
+// Response message for the HelloWorld method.
+message HelloWorldGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    HelloWorldResponse soap_response = 2;
+}
+
+// Response message for the GetVersion method.
+message GetVersionGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    GetVersionResponse soap_response = 2;
+}
+
+// Response message for the GetStatus method.
+message GetStatusGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    GetStatusResponse soap_response = 2;
+}
+
+// Response message for the OpenJob and OpenJobEx methods.
+message OpenJobGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    OpenJobResponse soap_response = 2;
+}
+
+// Response message for the RenewLease method.
+message RenewLeaseGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    RenewLeaseResponse soap_response = 2;
+}
+
+// Response message for the Execute and ExecuteEx methods.
+message ExecuteGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    ExecuteResponse soap_response = 2;
+}
+
+// Response message for the BatchJob and BatchJobEx methods.
+message BatchJobGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    BatchJobResponse soap_response = 2;
+}
+
+// Response message for the GetExpiration method.
+message GetExpirationGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    GetExpirationResponse soap_response = 2;
+}
+
+// Response message for the GetAllJobs and GetAllJobsEx methods.
+message GetAllJobsGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    GetAllJobsResponse soap_response = 2;
+}
+
+// Response message for the CloseExpiredJobs method.
+message CloseExpiredJobsGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    CloseExpiredJobsResponse soap_response = 2;
+}
+
+// Response message for the CloseAllJobs method.
+message CloseAllJobsGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    CloseAllJobsResponse soap_response = 2;
+}
+
+// Response message for the Diag and DiagEx methods.
+//
+// [OBSELETE] This method is no longer used, it is only here for backwards compatibility.
+message DiagGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+
+    // The response from the grid-server.
+    DiagResponse soap_response = 2;
+}
+
+// Empty gateway response message.
+message EmptyGatewayResponse {
+    // The instance that executed the request.
+    GridServerInstance instance = 1;
+}

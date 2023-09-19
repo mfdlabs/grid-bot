@@ -1,0 +1,73 @@
+/*
+    gRPC Instance Manager API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/instance_management_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/instance_management_response.proto";
+
+// InstanceManagementAPI is used to manage individual instances
+service InstanceManagementAPI {
+    // StartInstance starts an instance
+    rpc StartInstance(EmptyInstanceManagementRequest) returns (StartInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/start"
+            body: "*"
+        };
+    }
+
+    // LockInstance locks an instance
+    rpc LockInstance(EmptyInstanceManagementRequest) returns (LockInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/lock"
+            body: "*"
+        };
+    }
+
+    // UnlockInstance unlocks an instance
+    rpc UnlockInstance(EmptyInstanceManagementRequest) returns (UnlockInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/unlock"
+            body: "*"
+        };
+    }
+
+    // KillInstance kills an instance
+    rpc KillInstance(EmptyInstanceManagementRequest) returns (KillInstanceResponse) {
+        option (google.api.http) = {
+            delete: "/v1/instances/{instance_id}"
+        };
+    }
+
+
+    ////////////////////////////////////////////////////////////////
+    //                Leased Instance Management                  //
+    ////////////////////////////////////////////////////////////////
+
+    // RenewInstanceLease renews the lease on an instance
+    rpc RenewInstanceLease(EmptyInstanceManagementRequest) returns (RenewInstanceLeaseResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}/lease"
+            body: "*"
+        };
+    }
+
+    // ListenForLeaseExpirationEvent listens for lease expiration events
+    rpc ListenForLeaseExpirationEvent(EmptyInstanceManagementRequest) returns (stream InstanceLeaseExpiredEvent) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/lease"
+        };
+    }
+};

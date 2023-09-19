@@ -1,0 +1,45 @@
+/*
+    gRPC Script Management API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/script_management_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/script_management_response.proto";
+
+// ScriptManagementAPI is a service used to write a script to the
+// Arbiter's script store.
+service ScriptManagementAPI {
+    // WriteScript writes a script to the Arbiter's script store.
+    rpc WriteScript(WriteScriptRequest) returns (WriteScriptResponse) {
+        option (google.api.http) = {
+            post: "/v1/scripts/{type}/{name}"
+            body: "*"
+        };
+    }
+
+    // ReadScript reads a script from the Arbiter's script store.
+    rpc ReadScript(ReadScriptRequest) returns (ReadScriptResponse) {
+        option (google.api.http) = {
+            get: "/v1/scripts/{type}/{name}"
+        };
+    }
+
+    // DeleteScript deletes a script from the Arbiter's script store.
+    rpc DeleteScript(DeleteScriptRequest) returns (DeleteScriptResponse) {
+        option (google.api.http) = {
+            delete: "/v1/scripts/{type}/{name}"
+        };
+    }
+}

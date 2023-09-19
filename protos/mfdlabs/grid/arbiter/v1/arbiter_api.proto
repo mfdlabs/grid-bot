@@ -1,0 +1,202 @@
+/*
+    gRPC Arbiter API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/soap_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/soap_response.proto";
+import "mfdlabs/grid/arbiter/v1/models/request/arbiter_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/arbiter_response.proto";
+
+// ArbiterAPI is the arbiter service
+service ArbiterAPI {
+    // KillAllInstances kills all instances owned by the arbiter
+    rpc KillAllInstances(google.protobuf.Empty) returns (KillAllInstancesResponse) {
+        option (google.api.http) = {
+            delete: "/v1/instances"
+        };
+    }
+
+    // CreateInstance creates a new instance
+    rpc CreateInstance(CreateInstanceRequest) returns (CreateInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances"
+            body: "*"
+        };
+    }
+
+    // CreatePersistentInstance creates a new persistent instance
+    rpc CreatePersistentInstance(CreatePersistentInstanceRequest) returns (CreatePersistentInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/persistent"
+            body: "*"
+        };
+    }
+
+    // CreateLeasedInstance creates a new leased instance
+    rpc CreateLeasedInstance(CreateLeasedInstanceRequest) returns (CreateLeasedInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/leased"
+            body: "*"
+        };
+    }
+
+    // BatchCreateInstances creates multiple instances
+    rpc BatchCreateInstances(BatchCreateInstancesRequest) returns (BatchCreateInstancesResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/batch"
+            body: "*"
+        };
+    }
+
+    // BatchCreateLeasedInstances creates multiple leased instances
+    rpc BatchCreateLeasedInstances(BatchCreateLeasedInstancesRequest) returns (BatchCreateLeasedInstancesResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/batch/leased"
+            body: "*"
+        };
+    }
+
+    // GetAllInstances gets all instances owned by the arbiter
+    rpc GetAllInstances(google.protobuf.Empty) returns (GetAllInstancesResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances"
+        };
+    }
+
+    // GetAllAvailableInstances gets all available instances owned by the arbiter
+    rpc GetAllAvailableInstances(google.protobuf.Empty) returns (GetAllAvailableInstancesResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/available"
+        };
+    }
+
+    // GetInstance gets an instance owned by the arbiter
+    rpc GetInstance(GetInstanceRequest) returns (GetInstanceResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}"
+        };
+    }
+
+    // GetPersistentInstance gets a persistent instance owned by the arbiter
+    rpc GetPersistentInstance(GetPersistentInstanceRequest) returns (GetPersistentInstanceResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/persistent/{instance_id}"
+        };
+    }
+
+    // GetLeasedInstance gets a leased instance owned by the arbiter
+    rpc GetLeasedInstance(GetLeasedInstanceRequest) returns (GetLeasedInstanceResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/leased/{instance_id}"
+        };
+    }
+
+    // GetAvailableInstance gets any available instance owned by the arbiter
+    rpc GetAvailableInstance(google.protobuf.Empty) returns (GetAvailableInstanceResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/available"
+        };
+    }
+
+    // GetAvailableLeasedInstance gets any available leased instance owned by the arbiter
+    rpc GetAvailableLeasedInstance(google.protobuf.Empty) returns (GetAvailableLeasedInstanceResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/available/leased"
+        };
+    }
+
+    // GetOrCreateAnyInstance gets any available instance owned by the arbiter or creates a new one
+    // If instance_id is not provided, it will get an available instance
+    rpc GetOrCreateAnyInstance(GetOrCreateAnyInstanceRequest) returns (GetOrCreateAnyInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances"
+            body: "*"
+        };
+    }
+
+    // GetOrCreateInstance gets an instance owned by the arbiter or creates a new one
+    rpc GetOrCreateInstance(GetOrCreateInstanceRequest) returns (GetOrCreateInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/{instance_id}"
+            body: "*"
+        };
+    }
+
+    // GetOrCreatePersistentInstance gets a persistent instance owned by the arbiter or creates a new one
+    rpc GetOrCreatePersistentInstance(GetOrCreatePersistentInstanceRequest) returns (GetOrCreatePersistentInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/persistent/{instance_id}"
+            body: "*"
+        };
+    }
+
+    // GetOrCreateLeasedInstance gets a leased instance owned by the arbiter or creates a new one
+    rpc GetOrCreateLeasedInstance(GetOrCreateLeasedInstanceRequest) returns (GetOrCreateLeasedInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/leased/{instance_id}"
+            body: "*"
+        };
+    }
+
+    // GetOrCreateAvailableInstance gets any available instance owned by the arbiter or creates a new one
+    rpc GetOrCreateAvailableInstance(google.protobuf.Empty) returns (GetOrCreateAvailableInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/available"
+            body: "*"
+        };
+    }
+
+    // GetOrCreateAvailableLeasedInstance gets any available leased instance owned by the arbiter or creates a new one
+    rpc GetOrCreateAvailableLeasedInstance(GetOrCreateAvailableLeasedInstanceRequest) returns (GetOrCreateAvailableLeasedInstanceResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/available/leased"
+            body: "*"
+        };
+    }
+
+    // HelloWorld makes a HelloWorld SOAP request on a pooled instance
+    rpc HelloWorld(google.protobuf.Empty) returns (HelloWorldResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/hello-world"
+        };
+    }
+
+    // GetVersion gets the version of the running grid-server instances.
+    rpc GetVersion(google.protobuf.Empty) returns (GetVersionResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/version"
+        };
+    }
+
+    // BatchJob executes a batch job request on a pooled instance
+    //
+    // [OBSOLETE] Use BatchJobEx instead
+    rpc BatchJob(BatchJobRequest) returns (BatchJobResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/batch-job"
+            body: "*"
+        };
+    }
+
+    // BatchJobEx executes a batch job request on a pooled instance
+    rpc BatchJobEx(BatchJobRequest) returns (BatchJobResponse) {
+        option (google.api.http) = {
+            post: "/v1/instances/batch-job-ex"
+            body: "*"
+        };
+    }
+};

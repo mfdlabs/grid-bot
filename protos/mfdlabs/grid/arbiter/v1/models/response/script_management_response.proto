@@ -1,0 +1,73 @@
+/*
+    Protobuf contracts for the Arbiter Script API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/scripts.proto";
+
+// Represents the response for writing a script to the Arbiter script store.
+message WriteScriptResponse {
+    // Did the write succeed?
+    bool success = 1;
+
+    // The error message if the write failed.
+    string error_message = 2;
+
+    // The name of the script that was written.
+    string script_name = 3;
+
+    // The type of the script that was written.
+    ScriptType script_type = 4;
+
+    // The path of the script that was written.
+    string script_path = 5;
+}
+
+// Represents the response for reading a script from the Arbiter script store.
+message ReadScriptResponse {
+    // Did the read succeed?
+    bool success = 1;
+
+    // The error message if the read failed.
+    string error_message = 2;
+
+    // The name of the script that was read.
+    string script_name = 3;
+
+    // The type of the script that was read.
+    ScriptType script_type = 4;
+
+    // The path of the script that was read.
+    string script_path = 5;
+
+    // The contents of the script that was read.
+    string script_contents = 6;
+}
+
+// Represents the response for deleting a script from the Arbiter script store.
+message DeleteScriptResponse {
+    // Did the delete succeed?
+    bool success = 1;
+
+    // The error message if the delete failed.
+    string error_message = 2;
+
+    // The name of the script that was deleted.
+    string script_name = 3;
+
+    // The type of the script that was deleted.
+    ScriptType script_type = 4;
+
+    // The path of the script that was deleted.
+    string script_path = 5;
+}

@@ -1,0 +1,92 @@
+/*
+
+    Protobuf contracts for the SOAP Gateway models used by the Arbiter.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/request/soap_request.proto";
+
+////////////////////////////////////////////////////////////////
+//                      Request Messages                      //
+////////////////////////////////////////////////////////////////
+
+// Represents the request to OpenJob and OpenJobEx
+message OpenJobGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    OpenJobRequest soap_request = 2;
+}
+
+// Represents the request to Execute and ExecuteEx
+message ExecuteGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    ExecuteRequest soap_request = 2;
+}
+
+// Represents the request to BatchJob and BatchJobEx
+message BatchJobGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    BatchJobRequest soap_request = 2;
+}
+
+// Represents the request to Diag and DiagEx
+//
+// [OBSELETE] This is no longer used.
+message DiagGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    DiagRequest soap_request = 2;
+}
+
+// Represents the request to CloseJob
+message CloseJobGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    CloseJobRequest soap_request = 2;
+}
+
+// Represents the request to GetExpiration
+message GetExpirationGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    GetExpirationRequest soap_request = 2;
+}
+
+// Represents the request to RenewLease
+message RenewLeaseGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+
+    // The SOAP request
+    RenewLeaseRequest soap_request = 2;
+}
+
+// Represents an empty gateway request
+message EmptyGatewayRequest {
+    // The ID of the instance
+    string instance_id = 1;
+}

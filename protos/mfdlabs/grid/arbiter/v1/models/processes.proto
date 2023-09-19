@@ -1,0 +1,31 @@
+/*
+    Protobuf contracts for the Arbiter API's process management
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+// Represents a process that is running on a node
+message GridServerProcess {
+    // The process ID
+    string id = 1;
+
+    // Is the process open?
+    bool open = 2;
+
+    // Is the process disposed?
+    bool disposed = 3;
+
+    // The process metadata
+    // Useful for storing information about the process
+    // if we are using Docker or raw processes
+    map<string, string> metadata = 4;
+}

@@ -1,0 +1,101 @@
+/*
+
+    Protobuf contracts for the SOAP models used by the Arbiter.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+
+    This is essentially a 1 to 1 mapping of the models inside of Grid.ComputeCloud
+
+    [NOTE] These request response are not directly used as output, they are seperate field on any arbitered gateway response,
+           e.g. the OpenJobResponse is a field on the OpenJobGatewayResponse -> instance, soap_response
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/soap.proto";
+
+////////////////////////////////////////////////////////////////
+//                      Response Messages                     //
+////////////////////////////////////////////////////////////////
+
+// Response message for the HelloWorld method.
+message HelloWorldResponse {
+    // The message to be returned to the caller.
+    // Will always be "Hello World!"
+    string message = 1;
+}
+
+// Response message for the GetVersion method.
+message GetVersionResponse {
+    // The version of the grid-server being arbitered
+    string version = 1;
+}
+
+// Response message for the GetStatus method.
+message GetStatusResponse {
+    // The status of the grid-server being arbitered
+    Status status = 1;
+}
+
+// Response message for the OpenJob and OpenJobEx methods.
+message OpenJobResponse {
+    // The LuaValue results
+    repeated LuaValue results = 1;
+}
+
+// Response message for the RenewLease method.
+message RenewLeaseResponse {
+    // The new lease expiration time
+    double lease_expiration = 1;
+}
+
+// Response message for the Execute and ExecuteEx methods.
+message ExecuteResponse {
+    // The LuaValue results
+    repeated LuaValue results = 1;
+}
+
+// Response message for the BatchJob and BatchJobEx methods.
+message BatchJobResponse {
+    // The LuaValue results
+    repeated LuaValue results = 1;
+}
+
+// Response message for the GetExpiration method.
+message GetExpirationResponse {
+    // The lease expiration time
+    double lease_expiration = 1;
+}
+
+// Response message for the GetAllJobs and GetAllJobsEx methods.
+message GetAllJobsResponse {
+    // The jobs.
+    repeated Job jobs = 1;
+}
+
+// Response message for the CloseExpiredJobs method.
+message CloseExpiredJobsResponse {
+    // The number of jobs closed.
+    int32 closed_jobs = 1;
+}
+
+// Response message for the CloseAllJobs method.
+message CloseAllJobsResponse {
+    // The number of jobs closed.
+    int32 closed_jobs = 1;
+}
+
+// Response message for the Diag and DiagEx methods.
+//
+// [OBSELETE] This method is no longer used, it is only here for backwards compatibility.
+message DiagResponse {
+    // The diagnostics.
+    repeated LuaValue results = 1;
+}

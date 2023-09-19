@@ -1,0 +1,20 @@
+/*
+    Protobuf contracts for the Arbiter Instance Management API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+// Represents the default request for an instance of the Arbiter API
+message EmptyInstanceManagementRequest {
+    // The ID of the instance to be managed
+    string instance_id = 1;
+}

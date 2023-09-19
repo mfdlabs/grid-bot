@@ -1,0 +1,88 @@
+/*
+
+    Protobuf contracts for the SOAP models used by the Arbiter.
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+
+    This is essentially a 1 to 1 mapping of the models inside of Grid.ComputeCloud
+
+    [NOTE] These request object are not directly used as input, they are seperate field on any arbitered gateway request,
+           e.g. the OpenJobRequest is a field on the OpenJobGatewayRequest -> instance_id, soap_request
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/soap.proto";
+
+////////////////////////////////////////////////////////////////
+//                      Request Messages                      //
+////////////////////////////////////////////////////////////////
+
+// Represents the request to OpenJob and OpenJobEx
+message OpenJobRequest {
+    // The job to open
+    Job job = 1;
+
+    // The script to execute
+    ScriptExecution script = 2;
+}
+
+// Represents the request to Execute and ExecuteEx
+message ExecuteRequest {
+    // The ID of the job
+    string job_id = 1;
+
+    // The script to execute
+    ScriptExecution script = 2;
+}
+
+// Represents the request to BatchJob and BatchJobEx
+message BatchJobRequest {
+    // The job to batch
+    Job job = 1;
+
+    // The script to execute
+    ScriptExecution script = 2;
+}
+
+// Represents an empty SOAP request
+message EmptyRequest {}
+
+// Represents the request to Diag and DiagEx
+//
+// [OBSELETE] This is no longer used.
+message DiagRequest {
+    // The type of the diagnostic
+    int32 type = 1;
+
+    // The ID of the job
+    string job_id = 2;
+}
+
+// Represents the request to CloseJob
+message CloseJobRequest {
+    // The ID of the job
+    string job_id = 1;
+}
+
+// Represents the request to GetExpiration
+message GetExpirationRequest {
+    // The ID of the job
+    string job_id = 1;
+}
+
+// Represents the request to RenewLease
+message RenewLeaseRequest {
+    // The ID of the job
+    string job_id = 1;
+
+    // The expiration time of the job
+    double expiration = 2;
+}

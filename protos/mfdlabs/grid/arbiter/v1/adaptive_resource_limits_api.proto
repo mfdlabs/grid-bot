@@ -1,0 +1,54 @@
+/*
+    gRPC Adaptive Resource Limits - Arbiter API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+import "mfdlabs/grid/arbiter/v1/models/request/adaptive_resource_limits_request.proto";
+import "mfdlabs/grid/arbiter/v1/models/response/adaptive_resource_limits_response.proto";
+
+// AdaptiveResourceLimitsAPI is a service to manage the resource limits configuration
+// for the adaptive resource limits feature.
+service AdaptiveResourceLimitsAPI {
+    // GetGlobalResourceLimits returns the global resource limits configuration.
+    rpc GetGlobalResourceLimits(google.protobuf.Empty) returns (GetGlobalResourceLimitsResponse) {
+        option (google.api.http) = {
+            get: "/v1/resource-limits"
+        };
+    }
+
+    // UpdateGlobalResourceLimits updates the global resource limits configuration.
+    rpc UpdateGlobalResourceLimits(UpdateGlobalResourceLimitsRequest) returns (UpdateGlobalResourceLimitsResponse) {
+        option (google.api.http) = {
+            put: "/v1/resource-limits"
+            body: "*"
+        };
+    }
+
+    // GetPerInstanceResourceLimits returns the per-instance resource limits configuration.
+    rpc GetPerInstanceResourceLimits(GetPerInstanceResourceLimitsRequest) returns (GetPerInstanceResourceLimitsResponse) {
+        option (google.api.http) = {
+            get: "/v1/instances/{instance_id}/resource-limits"
+        };
+    }
+
+    // UpdatePerInstanceResourceLimits updates the per-instance resource limits configuration.
+    rpc UpdatePerInstanceResourceLimits(UpdatePerInstanceResourceLimitsRequest) returns (UpdatePerInstanceResourceLimitsResponse) {
+        option (google.api.http) = {
+            put: "/v1/instances/{instance_id}/resource-limits"
+            body: "*"
+        };
+    }
+}

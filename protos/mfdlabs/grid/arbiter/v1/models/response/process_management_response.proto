@@ -1,0 +1,49 @@
+/*
+    Protobuf contracts for the Arbiter Process Manager API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/processes.proto";
+
+// Represents the response for killing a process
+message KillProcessResponse {
+    // Was the process killed successfully
+    bool killed = 1;
+
+    // Error message if any
+    string error = 2;
+}
+
+// Represents the response for getting all processes
+message GetAllProcessesResponse {
+    // List of all processes
+    repeated GridServerProcess processes = 1;
+}
+
+// Represents the response for getting a process by id
+message GetProcessByIdResponse {
+    // Process
+    GridServerProcess process = 1;
+}
+
+// Represents the response for getting a process by metadata criteria
+message GetProcessByCriteriaResponse {
+    // Process
+    repeated GridServerProcess processes = 1;
+}
+
+// Represents the response for creating a process
+message CreateProcessResponse {
+    // Process
+    GridServerProcess process = 1;
+}

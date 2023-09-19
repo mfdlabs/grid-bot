@@ -1,0 +1,53 @@
+/*
+    Protobuf contracts for the Arbiter ARL API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/instances.proto";
+import "mfdlabs/grid/arbiter/v1/models/adaptive_resource_limits.proto";
+
+// Represents the response for getting the global adaptive resource limits configuration.
+message GetGlobalResourceLimitsResponse {
+    // The global adaptive resource limits configuration.
+    AdaptiveResourceLimits resource_limits = 1;
+}
+
+// Represents the response for updating the global adaptive resource limits configuration.
+message UpdateGlobalResourceLimitsResponse {
+    // The old global adaptive resource limits configuration.
+    AdaptiveResourceLimits old_resource_limits = 1;
+
+    // The new global adaptive resource limits configuration.
+    AdaptiveResourceLimits new_resource_limits = 2;
+}
+
+// Represents the response for getting the adaptive resource limits configuration for a specific instance.
+message GetPerInstanceResourceLimitsResponse {
+    // The grid server instance.
+    GridServerInstance instance = 1;
+
+    // The adaptive resource limits configuration for the instance.
+    AdaptiveResourceLimits resource_limits = 2;
+}
+
+// Represents the response for updating the adaptive resource limits configuration for a specific instance.
+message UpdatePerInstanceResourceLimitsResponse {
+    // The grid server instance.
+    GridServerInstance instance = 1;
+
+    // The old adaptive resource limits configuration for the instance.
+    AdaptiveResourceLimits old_resource_limits = 2;
+
+    // The new adaptive resource limits configuration for the instance.
+    AdaptiveResourceLimits new_resource_limits = 3;
+}

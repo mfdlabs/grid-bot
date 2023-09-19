@@ -1,0 +1,65 @@
+/*
+    Protobuf contracts for the Arbiter Script API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+// Represents the type of script.
+enum ScriptType {
+    // //internalscripts/scripts
+    SCRIPT_TYPE_INTERNAL_SCRIPT = 0;
+
+    // //internalscripts/modules
+    SCRIPT_TYPE_INTERNAL_MODULE = 1;
+
+    // //internalscripts/thumbnails
+    SCRIPT_TYPE_THUMBNAIL_SCRIPT = 2;
+
+    // //internalscripts/thumbnails/modules
+    SCRIPT_TYPE_THUMBNAIL_MODULE = 3;
+
+    // //ExtraContent/LuaPackages
+    SCRIPT_TYPE_LUA_PACKAGE = 4;
+
+    // //ExtraContent/scripts/CoreScripts
+    SCRIPT_TYPE_SHARED_CORE_SCRIPT = 5;
+
+    // //ExtraContent/scripts/CoreScripts/CoreScripts
+    SCRIPT_TYPE_CLIENT_CORE_SCRIPT = 6;
+
+    // //ExtraContent/scripts/CoreScripts/Modules
+    SCRIPT_TYPE_CORE_MODULE = 7;
+
+    // //ExtraContent/scripts/CoreScripts/ServerCoreScripts
+    SCRIPT_TYPE_SERVER_CORE_SCRIPT = 8;
+
+    // //ExtraContent/scripts/PlayerScripts/StarterCharacterScripts
+    SCRIPT_TYPE_STARTER_CHARACTER_SCRIPT = 9;
+
+    // //ExtraContent/scripts/PlayerScripts/StarterPlayerScripts
+    SCRIPT_TYPE_STARTER_PLAYER_SCRIPT = 10;
+
+    // //ExtraContent/scripts/PlayerScripts/StarterPlayerScripts_NewStructure
+    SCRIPT_TYPE_STARTER_PLAYER_SCRIPT_NEW_STRUCTURE = 11;
+
+    // //ExtraContent/scripts/PlayerScripts/StarterPlayerScriptsCommon
+    SCRIPT_TYPE_STARTER_PLAYER_SCRIPT_COMMON = 12;
+
+    // //ExtraContent/hidden/common
+    SCRIPT_TYPE_HIDDEN_COMMON = 13;
+
+    // //Content/hidden/rcc
+    SCRIPT_TYPE_HIDDEN = 14;
+
+    // //Content/hidden/rcc/modules
+    SCRIPT_TYPE_HIDDEN_MODULE = 15;
+};

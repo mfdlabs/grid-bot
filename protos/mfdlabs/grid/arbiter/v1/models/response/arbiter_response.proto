@@ -1,0 +1,131 @@
+/*
+    Protobuf contracts for the Arbiter API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+import "mfdlabs/grid/arbiter/v1/models/instances.proto";
+
+// Represents the response to kill all instances.
+message KillAllInstancesResponse {
+    // The number of instances that were killed.
+    int32 instances_killed = 1;
+}
+
+// Represents the response to create an instance.
+message CreateInstanceResponse {
+    // The instance that was created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to create a persistent instance.
+message CreatePersistentInstanceResponse {
+    // The instance that was created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to create a leased instance.
+message CreateLeasedInstanceResponse {
+    // The instance that was created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to batch create instances.
+message BatchCreateInstancesResponse {
+    // The instances that were created.
+    repeated GridServerInstance instances = 1;
+}
+
+// Represents the response to batch create leased instances.
+message BatchCreateLeasedInstancesResponse {
+    // The instances that were created.
+    repeated GridServerInstance instances = 1;
+}
+
+// Represents the response to get all instances.
+message GetAllInstancesResponse {
+    // The instances that were retrieved.
+    repeated GridServerInstance instances = 1;
+}
+
+// Represents the response to get all available instances.
+message GetAllAvailableInstancesResponse {
+    // The instances that were retrieved.
+    repeated GridServerInstance instances = 1;
+}
+
+// Represents the response to get an instance by ID.
+message GetInstanceResponse {
+    // The instance that was retrieved.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get a persistent instance by ID.
+message GetPersistentInstanceResponse {
+    // The instance that was retrieved.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get a leased instance by ID.
+message GetLeasedInstanceResponse {
+    // The instance that was retrieved.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get an available instance.
+message GetAvailableInstanceResponse {
+    // The instance that was retrieved.
+    GridServerInstance instance = 1;
+}
+
+
+// Represents the response to get an available leased instance.
+message GetAvailableLeasedInstanceResponse {
+    // The instance that was retrieved.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create any instance.
+message GetOrCreateAnyInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create an instance.
+message GetOrCreateInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create a persistent instance.
+message GetOrCreatePersistentInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create a leased instance.
+message GetOrCreateLeasedInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create an available instance.
+message GetOrCreateAvailableInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}
+
+// Represents the response to get or create an available leased instance.
+message GetOrCreateAvailableLeasedInstanceResponse {
+    // The instance that was retrieved or created.
+    GridServerInstance instance = 1;
+}

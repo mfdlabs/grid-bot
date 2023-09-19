@@ -1,0 +1,32 @@
+/*
+    Protobuf contracts for the Arbiter Process Management API
+
+    Copyright (c) 2023 MFDLABS. All rights reserved.
+*/
+syntax = "proto3";
+
+package mfdlabs.grid.arbiter.v1;
+
+option csharp_namespace = "Grid.Arbiter.V1";
+option go_package = "mfdlabs/arbiterv1";
+option java_multiple_files = true;
+option java_outer_classname = "ArbiterApiProto";
+option java_package = "com.mfdlabs.grid.arbiter.v1";
+
+// Represents the request to kill a process by its ID.
+message KillProcessRequest {
+    // The ID of the process to kill.
+    string process_id = 1;
+}
+
+// Represents the request to get a process by its ID.
+message GetProcessByIdRequest {
+    // The ID of the process to get.
+    string process_id = 1;
+}
+
+// Represents the request to get a process by metadata criteria.
+message GetProcessByCriteriaRequest {
+    // The metadata criteria to use to get the process.
+    map<string, string> criteria = 1;
+}
