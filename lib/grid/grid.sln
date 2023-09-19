@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Arbiter.Client", "arbiter-client\Grid.Arbiter.Client.csproj", "{9C16BA4C-EC38-4C55-89A1-65BD9B152C41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Grid.Arbiter.Models", "arbiter-models\Grid.Arbiter.Models.csproj", "{DAE7B0A4-349B-4411-8D3F-B84920A39907}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		release|Any CPU = release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9C16BA4C-EC38-4C55-89A1-65BD9B152C41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C16BA4C-EC38-4C55-89A1-65BD9B152C41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C16BA4C-EC38-4C55-89A1-65BD9B152C41}.release|Any CPU.ActiveCfg = release|Any CPU
+		{9C16BA4C-EC38-4C55-89A1-65BD9B152C41}.release|Any CPU.Build.0 = release|Any CPU
+		{DAE7B0A4-349B-4411-8D3F-B84920A39907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAE7B0A4-349B-4411-8D3F-B84920A39907}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAE7B0A4-349B-4411-8D3F-B84920A39907}.release|Any CPU.ActiveCfg = release|Any CPU
+		{DAE7B0A4-349B-4411-8D3F-B84920A39907}.release|Any CPU.Build.0 = release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {65C7EB04-1B69-4069-92D0-E6B7FE5993CE}
+	EndGlobalSection
+EndGlobal

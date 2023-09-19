@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../targets/lib-standard.targets" />
+
+  <PropertyGroup>
+    <Description>gRPC Client for the Arbiter service!</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>$(AssemblyName).Unit.Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Api.CommonProtos" Version="2.10.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.24.2" />
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
+    <PackageReference Include="Grpc.Tools" Version="2.57.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\lib\grid\arbiter-models\Grid.Arbiter.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\soap_gateway_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\soap_gateway_api.proto" GrpcServices="Client" />
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\instance_management_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\instance_management_api.proto" GrpcServices="Client" />
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\adaptive_resource_limits_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\adaptive_resource_limits_api.proto" GrpcServices="Client" />
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\script_management_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\script_management_api.proto" GrpcServices="Client" />
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\process_management_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\process_management_api.proto" GrpcServices="Client" />
+    <Protobuf ProtoRoot="../../../protos" Include="..\..\..\protos\mfdlabs\grid\arbiter\v1\arbiter_api.proto" Link="protos\mfdlabs\grid\arbiter\v1\arbiter_api.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+</Project>
