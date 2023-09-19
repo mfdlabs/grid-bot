@@ -1,7 +1,9 @@
 ﻿namespace Configuration;
 
 using System;
+using System.Linq;
 using System.Reflection;
+using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -94,10 +96,12 @@ public abstract class BaseProvider : IConfigurationProvider
 
         if (type.IsArray)
         {
-            type = type.GetElementType();
+            var arrType = type.GetElementType();
+
+            var listType = typeof(List<>).MakeGenericType(new[] { arrType });
 
             var v = value.Split(',');
-            var arr = new List<object>();
+            var arr = (IList)Activator.CreateInstance(listType);
 
             bool allNullValues = true;
 
@@ -105,7 +109,7 @@ public abstract class BaseProvider : IConfigurationProvider
             {
                 if (string.IsNullOrEmpty(e)) continue;
 
-                var val = ConvertTo(e, type);
+                var val = ConvertTo(e, arrType);
 
                 if (val != null)
                 {
@@ -117,7 +121,10 @@ public abstract class BaseProvider : IConfigurationProvider
 
             if (allNullValues) return null;
 
-            return arr.ToArray();
+            var cast = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast)).MakeGenericMethod(new[] { arrType });
+            var toArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray)).MakeGenericMethod(new[] { arrType });
+
+            return toArray.Invoke(null, new[] { cast.Invoke(null, new[] { arr }) });
         }
 
         if (type.IsEnum)
