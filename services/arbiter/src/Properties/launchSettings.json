@@ -1,0 +1,21 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "launchUrl": "https://localhost:7223",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5223;https://localhost:7223"
+      },
+      "distributionName": ""
+    },
+    "arbiter-service": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5223;https://localhost:7223"
+    }
+  }
+}
