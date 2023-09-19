@@ -1,57 +1,56 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
+namespace Grid.Bot.Extensions;
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 
-using Grid.Bot.Utility;
-using Threading.Extensions;
+using Utility;
 
-namespace Grid.Bot.Extensions
+/// <summary>
+/// Extension methods for <see cref="SocketCommandBase"/>
+/// </summary>
+public static class SocketCommandBaseExtensions
 {
-    public static class SocketCommandBaseExtensions
+    private class DiscardDisposable : IDisposable
     {
-        public static ulong GetGuildId(this SocketCommandBase socketCommand)
-        {
-            var guildId = socketCommand.Channel.Id;
-            if (socketCommand.Channel is SocketGuildChannel channel) guildId = channel.Guild.Id;
-            return guildId;
-        }
+        public static DiscardDisposable Instance = new();
 
-        // There's not really a reason to this, considering that it's not ephemeral by default,
-        // in the end this is really just for wrapping follow-ups, and for understanding the method easier.
-        public static async Task RespondPublicAsync(
-            this SocketCommandBase command,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        )
-        {
-            if (!command.HasResponded)
-            {
-                await command.RespondAsync(
-                    text,
-                    embeds,
-                    isTts,
-                    false,
-                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
-                    component,
-                    embed,
-                    options
-                );
-                return;
-            }
+        public void Dispose() { }
+    }
 
-            await command.FollowupAsync(
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondPublicAsync(
+        this SocketCommandBase command,
+        string text = null,
+        bool pingUser = false,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    )
+    {
+        if (!command.HasResponded)
+        {
+            await command.RespondAsync(
                 text,
                 embeds,
                 isTts,
@@ -61,46 +60,71 @@ namespace Grid.Bot.Extensions
                 embed,
                 options
             );
+
+            return;
         }
 
-        public static async Task RespondPublicPingAsync(
-            this SocketCommandBase command,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await command.RespondPublicAsync(text, true, embeds, isTts, component, embed, options);
+        await command.FollowupAsync(
+            text,
+            embeds,
+            isTts,
+            false,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+            component,
+            embed,
+            options
+        );
+    }
 
-        public static async Task RespondEphemeralAsync(
-            this SocketCommandBase command,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        )
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondPublicPingAsync(
+        this SocketCommandBase command,
+        string text = null,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    ) => await command.RespondPublicAsync(text, true, embeds, isTts, component, embed, options);
+
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that only the message owner can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondEphemeralAsync(
+        this SocketCommandBase command,
+        string text = null,
+        bool pingUser = false,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    )
+    {
+        if (!command.HasResponded)
         {
-            if (!command.HasResponded)
-            {
-                await command.RespondAsync(
-                    text,
-                    embeds,
-                    isTts,
-                    true,
-                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
-                    component,
-                    embed,
-                    options
-                );
-
-                return;
-            }
-
-            await command.FollowupAsync(
+            await command.RespondAsync(
                 text,
                 embeds,
                 isTts,
@@ -110,32 +134,75 @@ namespace Grid.Bot.Extensions
                 embed,
                 options
             );
+
+            return;
         }
 
-        public static async Task RespondEphemeralPingAsync(
-            this SocketCommandBase command,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await command.RespondEphemeralAsync(text, true, embeds, isTts, component, embed, options);
+        await command.FollowupAsync(
+            text,
+            embeds,
+            isTts,
+            true,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+            component,
+            embed,
+            options
+        );
+    }
 
-        public static async Task<RestFollowupMessage> RespondWithFileEphemeralAsync(
-            this SocketCommandBase command,
-            Stream fileStream,
-            string fileName,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        )
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that only the message owner can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondEphemeralPingAsync(
+        this SocketCommandBase command,
+        string text = null,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    ) => await command.RespondEphemeralAsync(text, true, embeds, isTts, component, embed, options);
+
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with a file.
+    /// </summary>
+    /// <remarks>This will make it so that only the message owner can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="fileStream">The <see cref="Stream"/>.</param>
+    /// <param name="fileName">The file name.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondWithFileEphemeralAsync(
+        this SocketCommandBase command,
+        Stream fileStream,
+        string fileName,
+        string text = null,
+        bool pingUser = false,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent components = null,
+        Embed embed = null,
+        RequestOptions options = null
+    )
+    {
+        if (!command.HasResponded)
         {
-            return await command.FollowupWithFileAsync(
+            await command.RespondWithFileAsync(
                 fileStream,
                 fileName,
                 text,
@@ -147,34 +214,81 @@ namespace Grid.Bot.Extensions
                 embed,
                 options
             );
+
+            return;
         }
 
-        public static async Task<RestFollowupMessage> RespondWithFileEphemeralPingAsync(
-            this SocketCommandBase command,
-            Stream fileStream,
-            string fileName,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await command.RespondWithFileEphemeralAsync(fileStream, fileName, text, true, embeds, isTts, components, embed, options);
+        await command.FollowupWithFileAsync(
+            fileStream,
+            fileName,
+            text,
+            embeds,
+            isTts,
+            true,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+            components,
+            embed,
+            options
+        );
+    }
 
-        public static async Task<RestFollowupMessage> RespondWithFilePublicAsync(
-           this SocketCommandBase command,
-           Stream fileStream,
-           string fileName,
-           string text = null,
-           bool pingUser = false,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-        )
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with a file.
+    /// </summary>
+    /// <remarks>This will make it so that only the message owner can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="fileStream">The <see cref="Stream"/>.</param>
+    /// <param name="fileName">The file name.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondWithFileEphemeralPingAsync(
+        this SocketCommandBase command,
+        Stream fileStream,
+        string fileName,
+        string text = null,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent components = null,
+        Embed embed = null,
+        RequestOptions options = null
+    ) => await command.RespondWithFileEphemeralAsync(fileStream, fileName, text, true, embeds, isTts, components, embed, options);
+
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with a file.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="fileStream">The <see cref="Stream"/>.</param>
+    /// <param name="fileName">The file name.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondWithFilePublicAsync(
+       this SocketCommandBase command,
+       Stream fileStream,
+       string fileName,
+       string text = null,
+       bool pingUser = false,
+       Embed[] embeds = null,
+       bool isTts = false,
+       MessageComponent components = null,
+       Embed embed = null,
+       RequestOptions options = null
+    )
+    {
+        if (!command.HasResponded)
         {
-            return await command.FollowupWithFileAsync(
+            await command.RespondWithFileAsync(
                 fileStream,
                 fileName,
                 text,
@@ -186,68 +300,79 @@ namespace Grid.Bot.Extensions
                 embed,
                 options
             );
+
+            return;
         }
 
-        public static async Task<RestFollowupMessage> RespondWithFilePublicPingAsync(
-           this SocketCommandBase command,
-           Stream fileStream,
-           string fileName,
-           string text = null,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-        ) => await command.RespondWithFilePublicAsync(fileStream, fileName, text, true, embeds, isTts, components, embed, options);
-        public static async Task<RestFollowupMessage> RespondWithFilesEphemeralAsync(
-            this SocketCommandBase command,
-            ICollection<FileAttachment> attachments,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        )
-        {
-            return await command.FollowupWithFilesAsync(
-                attachments,
-                text,
-                embeds,
-                isTts,
-                true,
-                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
-                components,
-                embed,
-                options
-            );
-        }
+        await command.FollowupWithFileAsync(
+            fileStream,
+            fileName,
+            text,
+            embeds,
+            isTts,
+            false,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+            components,
+            embed,
+            options
+        );
+    }
 
-        public static async Task<RestFollowupMessage> RespondWithFilesEphemeralPingAsync(
-            this SocketCommandBase command,
-            ICollection<FileAttachment> attachments,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await command.RespondWithFilesEphemeralAsync(attachments, text, true, embeds, isTts, components, embed, options);
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with a file.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="fileStream">The <see cref="Stream"/>.</param>
+    /// <param name="fileName">The file name.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondWithFilePublicPingAsync(
+       this SocketCommandBase command,
+       Stream fileStream,
+       string fileName,
+       string text = null,
+       Embed[] embeds = null,
+       bool isTts = false,
+       MessageComponent components = null,
+       Embed embed = null,
+       RequestOptions options = null
+    ) => await command.RespondWithFilePublicAsync(fileStream, fileName, text, true, embeds, isTts, components, embed, options);
 
-        public static async Task<RestFollowupMessage> RespondWithFilesPublicAsync(
-           this SocketCommandBase command,
-           ICollection<FileAttachment> attachments,
-           string text = null,
-           bool pingUser = false,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-        )
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with files.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="attachments">The <see cref="ICollection{T}"/> of <see cref="FileAttachment"/>s.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static async Task RespondWithFilesPublicAsync(
+       this SocketCommandBase command,
+       ICollection<FileAttachment> attachments,
+       string text = null,
+       bool pingUser = false,
+       Embed[] embeds = null,
+       bool isTts = false,
+       MessageComponent components = null,
+       Embed embed = null,
+       RequestOptions options = null
+    )
+    {
+        if (!command.HasResponded)
         {
-            return await command.FollowupWithFilesAsync(
+            await command.RespondWithFilesAsync(
                 attachments,
                 text,
                 embeds,
@@ -258,275 +383,134 @@ namespace Grid.Bot.Extensions
                 embed,
                 options
             );
+
+            return;
         }
 
-        public static async Task<RestFollowupMessage> RespondWithFilesPublicPingAsync(
-           this SocketCommandBase command,
-           ICollection<FileAttachment> attachments,
-           string text = null,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-        ) => await command.RespondWithFilesPublicAsync(attachments, text, true, embeds, isTts, components, embed, options);
+        await command.FollowupWithFilesAsync(
+            attachments,
+            text,
+            embeds,
+            isTts,
+            false,
+            new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
+            components,
+            embed,
+            options
+        );
+    }
 
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged with files.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="attachments">The <see cref="ICollection{T}"/> of <see cref="FileAttachment"/>s.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="components">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static void RespondWithFilesPublic(
+       this SocketCommandBase command,
+       ICollection<FileAttachment> attachments,
+       string text = null,
+       bool pingUser = false,
+       Embed[] embeds = null,
+       bool isTts = false,
+       MessageComponent components = null,
+       Embed embed = null,
+       RequestOptions options = null
+   ) => command.RespondWithFilesPublicAsync(
+           attachments,
+           text,
+           pingUser,
+           embeds,
+           isTts,
+           components,
+           embed,
+           options
+       )
+       .Wait();
 
-        public static RestFollowupMessage RespondWithFileEphemeral(
-            this SocketCommandBase command,
-            Stream fileStream,
-            string fileName,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondWithFileEphemeralAsync(
-                fileStream,
-                fileName,
-                text,
-                pingUser,
-                embeds,
-                isTts,
-                components,
-                embed,
-                options
-            )
-            .Sync();
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that only the message owner can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static void RespondEphemeralPing(
+        this SocketCommandBase command,
+        string text = null,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).Wait();
 
-        public static RestFollowupMessage RespondWithFileEphemeralPing(
-            this SocketCommandBase command,
-            Stream fileStream,
-            string fileName,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondWithFileEphemeralPingAsync(
-                fileStream,
-                fileName,
-                text,
-                embeds,
-                isTts,
-                components,
-                embed,
-                options
-            )
-            .Sync();
+    /// <summary>
+    /// Respond to the specified <see cref="SocketCommandBase"/> or
+    /// follow up if it has already been acknowledged.
+    /// </summary>
+    /// <remarks>This will make it so that everyone can see the message.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="text">The text.</param>
+    /// <param name="pingUser">Should the user be pinged?</param>
+    /// <param name="embeds">The <see cref="Embed"/>s</param>
+    /// <param name="isTts">Is the mssage a TTS message?</param>
+    /// <param name="component">The <see cref="MessageComponent"/></param>
+    /// <param name="embed">The <see cref="Embed"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    public static void RespondPublic(
+        this SocketCommandBase command,
+        string text = null,
+        bool pingUser = false,
+        Embed[] embeds = null,
+        bool isTts = false,
+        MessageComponent component = null,
+        Embed embed = null,
+        RequestOptions options = null
+    ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).Wait();
 
-        public static RestFollowupMessage RespondWithFilePublic(
-           this SocketCommandBase command,
-           Stream fileStream,
-           string fileName,
-           string text = null,
-           bool pingUser = false,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-       ) => command.RespondWithFilePublicAsync(
-               fileStream,
-               fileName,
-               text,
-               pingUser,
-               embeds,
-               isTts,
-               components,
-               embed,
-               options
-           )
-           .Sync();
+    /// <summary>
+    /// Rejects if the <see cref="IUser"/> of the <see cref="SocketCommandBase"/> is not an admin.
+    /// </summary>
+    /// <param name="cmd">The <see cref="SocketCommandBase"/></param>
+    /// <returns>True if the user has access.</returns>
+    public static async Task<bool> RejectIfNotAdminAsync(this SocketCommandBase cmd)
+        => await AdminUtility.RejectIfNotAdminAsync(cmd);
 
-        public static RestFollowupMessage RespondWithFilePublicPing(
-           this SocketCommandBase command,
-           Stream fileStream,
-           string fileName,
-           string text = null,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-       ) => command.RespondWithFilePublicPingAsync(
-               fileStream,
-               fileName,
-               text,
-               embeds,
-               isTts,
-               components,
-               embed,
-               options
-           )
-           .Sync();
+    /// <summary>
+    /// Rejects if the <see cref="IUser"/> of the <see cref="SocketCommandBase"/> is not thr owner.
+    /// </summary>
+    /// <param name="cmd">The <see cref="SocketCommandBase"/></param>
+    /// <returns>True if the user has access.</returns>
+    public static async Task<bool> RejectIfNotOwnerAsync(this SocketCommandBase cmd)
+        => await AdminUtility.RejectIfNotOwnerAsync(cmd);
 
-        public static RestFollowupMessage RespondWithFilesEphemeral(
-            this SocketCommandBase command,
-            ICollection<FileAttachment> attachments,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondWithFilesEphemeralAsync(
-                attachments,
-                text,
-                pingUser,
-                embeds,
-                isTts,
-                components,
-                embed,
-                options
-            )
-            .Sync();
+  
+    /// <summary>
+    /// Defers the <see cref="SocketCommandBase"/> until a response is made.
+    /// </summary>
+    /// <remarks>This only exists to wrap an <see cref="IDisposable"/> to be used in using statements.</remarks>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <param name="options">The <see cref="RequestOptions"/></param>
+    /// <returns></returns>
+    public static async Task<IDisposable> DeferPublicAsync(this SocketCommandBase command, RequestOptions options = null)
+    {
+        await command.DeferAsync(false, options);
 
-        public static RestFollowupMessage RespondWithFilesEphemeralPing(
-            this SocketCommandBase command,
-            ICollection<FileAttachment> attachments,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent components = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondWithFilesEphemeralPingAsync(
-                attachments,
-                text,
-                embeds,
-                isTts,
-                components,
-                embed,
-                options
-            )
-            .Sync();
-
-        public static RestFollowupMessage RespondWithFilesPublic(
-           this SocketCommandBase command,
-           ICollection<FileAttachment> attachments,
-           string text = null,
-           bool pingUser = false,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-       ) => command.RespondWithFilesPublicAsync(
-               attachments,
-               text,
-               pingUser,
-               embeds,
-               isTts,
-               components,
-               embed,
-               options
-           )
-           .Sync();
-
-        public static RestFollowupMessage RespondWithFilesPublicPing(
-           this SocketCommandBase command,
-           ICollection<FileAttachment> attachments,
-           string text = null,
-           Embed[] embeds = null,
-           bool isTts = false,
-           MessageComponent components = null,
-           Embed embed = null,
-           RequestOptions options = null
-       ) => command.RespondWithFilesPublicPingAsync(
-               attachments,
-               text,
-               embeds,
-               isTts,
-               components,
-               embed,
-               options
-           )
-           .Sync();
-
-        public static void RespondEphemeral(
-            this SocketCommandBase command,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondEphemeralAsync(text, pingUser, embeds, isTts, component, embed, options).Wait();
-
-        public static void RespondEphemeralPing(
-            this SocketCommandBase command,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondEphemeralPingAsync(text, embeds, isTts, component, embed, options).Wait();
-
-        public static void RespondPublic(
-            this SocketCommandBase command,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondPublicAsync(text, pingUser, embeds, isTts, component, embed, options).Wait();
-
-        public static void RespondPublicPing(
-            this SocketCommandBase command,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => command.RespondPublicPingAsync(text, embeds, isTts, component, embed, options).Wait();
-
-        public static async Task<bool> RejectIfNotAdminAsync(this SocketCommandBase cmd)
-            => await AdminUtility.RejectIfNotAdminAsync(cmd);
-        public static async Task<bool> RejectIfNotPrivilagedAsync(this SocketCommandBase cmd)
-            => await AdminUtility.RejectIfNotPrivilagedAsync(cmd);
-        public static async Task<bool> RejectIfNotOwnerAsync(this SocketCommandBase cmd)
-            => await AdminUtility.RejectIfNotOwnerAsync(cmd);
-        public static bool RejectIfNotPrivilaged(this SocketCommandBase cmd)
-            => cmd.RejectIfNotPrivilagedAsync().Sync();
-        public static bool RejectIfNotAdmin(this SocketCommandBase cmd)
-            => cmd.RejectIfNotAdminAsync().Sync();
-        public static bool RejectIfNotOwner(this SocketCommandBase cmd)
-            => cmd.RejectIfNotOwnerAsync().Sync();
-
-        internal class DiscardDisposable : IDisposable
-        {
-            public static DiscardDisposable Instance = new();
-
-            public void Dispose() { }
-        }
-
-        public static async Task<IDisposable> DeferEphemeralAsync(this SocketCommandBase command, RequestOptions options = null)
-        {
-            await command.DeferAsync(true, options);
-            return DiscardDisposable.Instance;
-        }
-
-        public static IDisposable DeferEphemeral(this SocketCommandBase command, RequestOptions options = null)
-            => command.DeferEphemeralAsync(options).Sync();
-
-        public static async Task<IDisposable> DeferPublicAsync(this SocketCommandBase command, RequestOptions options = null)
-        {
-            await command.DeferAsync(false, options);
-            return DiscardDisposable.Instance;
-        }
-
-        public static IDisposable DeferPublic(this SocketCommandBase command, RequestOptions options = null)
-            => command.DeferPublicAsync(options).Sync();
+        return DiscardDisposable.Instance;
     }
 }
 

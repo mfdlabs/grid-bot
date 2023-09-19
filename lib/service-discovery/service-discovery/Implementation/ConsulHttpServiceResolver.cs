@@ -1,6 +1,5 @@
 ﻿namespace ServiceDiscovery;
 
-
 using System;
 using System.Net;
 using System.Linq;
@@ -8,14 +7,11 @@ using System.Threading;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 using Consul;
 
 using Logging;
 using Configuration;
-
-using ISettings = global::ServiceDiscovery.Properties.ISettings;
 
 /// <inheritdoc cref="IServiceResolver"/>
 public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChanged, IDisposable
@@ -27,38 +23,6 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
     private readonly string _EnvironmentName;
     private readonly Thread _Thread;
     private CancellationTokenSource _CancellationTokenSource;
-
-    /// <summary>
-    /// Construct a new instance of <see cref="ConsulHttpServiceResolver"/>
-    /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/></param>
-    /// <param name="consulClientProvider">The <see cref="IConsulClientProvider"/></param>
-    /// <param name="serviceNameSetting">The <see cref="ISingleSetting{T}"/></param>
-    /// <param name="environmentName">The name of the environment.</param>
-    /// <param name="shouldStartRefreshThread">Should we start refreshing immediately?</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="consulClientProvider"/> cannot be null.
-    /// - <paramref name="serviceNameSetting"/> cannot be null.
-    /// - <paramref name="environmentName"/> cannot be null.
-    /// </exception>
-    [ExcludeFromCodeCoverage]
-    public ConsulHttpServiceResolver(
-        ILogger logger,
-        IConsulClientProvider consulClientProvider,
-        ISingleSetting<string> serviceNameSetting,
-        string environmentName,
-        bool shouldStartRefreshThread = true
-    ) : this(
-            global::ServiceDiscovery.Properties.Settings.Default,
-            logger,
-            consulClientProvider,
-            serviceNameSetting,
-            environmentName,
-            shouldStartRefreshThread
-        )
-    {
-    }
 
     /// <summary>
     /// Construct a new instance of <see cref="ConsulHttpServiceResolver"/>
@@ -125,11 +89,10 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
 
     private async void RefreshThread()
     {
+        ulong? lastIndex = null;
         string lastServiceName = null;
 
         int failures = 0;
-
-        _Logger.Debug("ConsulHttpServiceResolver: RefreshInterval = {0}", _Settings.ConsulRefreshInterval);
 
         while (true)
         {
@@ -146,9 +109,10 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                     );
 
                     lastServiceName = _ServiceNameSetting.Value;
+                    lastIndex = null;
                 }
 
-                await DoRefreshAsync(lastServiceName, _CancellationTokenSource.Token).ConfigureAwait(false);
+                lastIndex = await DoRefreshAsync(lastServiceName, lastIndex, _CancellationTokenSource.Token).ConfigureAwait(false);
 
                 failures = 0;
             }
@@ -165,21 +129,22 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                     ex
                 );
 
+                lastIndex = null;
                 await Task.Delay(DetermineBackoffDelayTime(failures, _Settings.ConsulBackoffBase, _Settings.MaximumConsulBackoff)).ConfigureAwait(false);
                 failures++;
-            }
-            finally
-            {
-                Thread.Sleep(_Settings.ConsulRefreshInterval);
             }
         }
     }
 
-    private async Task DoRefreshAsync(string serviceName, CancellationToken cancellationToken)
+    private async Task<ulong?> DoRefreshAsync(string serviceName, ulong? lastIndex, CancellationToken cancellationToken)
     {
         var queryOptions = new QueryOptions();
 
-        _Logger.Debug("DoRefreshAsync: ServiceName = {0}", serviceName);
+        if (lastIndex != null)
+        {
+            queryOptions.WaitTime = _Settings.ConsulLongPollingMaxWaitTime;
+            queryOptions.WaitIndex = lastIndex.Value;
+        }
 
         var queryResult = await _ConsulClientProvider.Client.Health.Service(
             serviceName,
@@ -201,6 +166,8 @@ public class ConsulHttpServiceResolver : IServiceResolver, INotifyPropertyChange
                ? () => string.Format("Fetched new endpoints for {0}: {1}", serviceName, string.Join(", ", endpoints))
                : () => string.Format("Endpoints for {0} have not changed.", serviceName)
         );
+
+        return queryResult.LastIndex;
     }
 
     private IEnumerable<IPEndPoint> ParseCatalogServiceResults(IEnumerable<ServiceEntry> catalogServices)

@@ -2,34 +2,18 @@
 
   <Import Project="../../../targets/lib-vault-standard.targets" />
 
+  <PropertyGroup>
+    <Description>Library for interacting with Redis based flood checkers!</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\configuration\configuration\Configuration.csproj" />
+    <ProjectReference Include="..\..\configuration\configuration-v2\ConfigurationV2.csproj" />
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
     <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
     <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
     <ProjectReference Include="..\core\FloodCheckers.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Settings.cs">
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
 
 </Project>

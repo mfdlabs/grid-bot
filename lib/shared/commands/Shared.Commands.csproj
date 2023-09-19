@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Shared library for commands used by grid-bot registered dynamically.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -12,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\clients\client-settings-client\ClientSettings.Client.csproj" />
-    <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,11 +21,8 @@
     <ProjectReference Include="..\..\floodcheckers\core\FloodCheckers.Core.csproj" />
     <ProjectReference Include="..\..\floodcheckers\redis\FloodCheckers.Redis.csproj" />
     <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
-    <ProjectReference Include="..\..\reflection\reflection\Reflection.csproj" />
-    <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />
     <ProjectReference Include="../extensions/Shared.Extensions.csproj" />
     <ProjectReference Include="../global/Shared.Global.csproj" />
-    <ProjectReference Include="../hooks/Shared.Hooks.csproj" />
   </ItemGroup>
 
   <ItemGroup>

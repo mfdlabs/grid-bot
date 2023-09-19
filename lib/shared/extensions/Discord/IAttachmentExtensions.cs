@@ -1,20 +1,32 @@
-﻿using System.Net;
+﻿namespace Grid.Bot.Extensions;
+
+using System.Net;
 using System.Text;
+
 using Discord;
 
-namespace Grid.Bot.Extensions
+/// <summary>
+/// Extension methods for <see cref="IAttachment"/>
+/// </summary>
+public static class IAttachmentExtensions
 {
-    public static class AttachmentExtensions
+    /// <summary>
+    /// Gets the data for the <see cref="IAttachment"/>
+    /// </summary>
+    /// <param name="attachment">The <see cref="IAttachment"/></param>
+    /// <returns>The raw bytes of the <see cref="IAttachment"/></returns>
+    public static byte[] GetRawAttachmentBuffer(this IAttachment attachment)
     {
-        public static byte[] GetRawAttachmentBuffer(this IAttachment attachment)
-        {
-            using var client = new WebClient();
-            return client.DownloadData(attachment.Url);
-        }
+        using var client = new WebClient();
 
-        public static string GetAttachmentContentsUtf8(this IAttachment attachment) 
-            => Encoding.UTF8.GetString(attachment.GetRawAttachmentBuffer());
-        public static string GetAttachmentContentsAscii(this IAttachment attachment) 
-            => Encoding.ASCII.GetString(attachment.GetRawAttachmentBuffer());
+        return client.DownloadData(attachment.Url);
     }
+
+    /// <summary>
+    /// Gets the data from the <see cref="IAttachment"/> and returns an ASCII string.
+    /// </summary>
+    /// <param name="attachment">The <see cref="IAttachment"/></param>
+    /// <returns>The raw string.</returns>
+    public static string GetAttachmentContentsAscii(this IAttachment attachment) 
+        => Encoding.ASCII.GetString(attachment.GetRawAttachmentBuffer());
 }

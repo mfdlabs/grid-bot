@@ -1,92 +1,97 @@
-﻿namespace Grid.Bot
+﻿namespace Grid.Bot;
+
+using System;
+using System.IO;
+using System.Linq;
+
+/// <summary>
+/// Main entry point.
+/// </summary>
+public static class Program
 {
-    public static class Program
+    private static bool AssemblyIsLoaded(string name)
     {
-        public static bool AssemblyIsLoaded(string name)
+        try
         {
-            try
-            {
-                return global::System.AppDomain.CurrentDomain.Load(name) != null;
-            }
-            // We assume this means that it's already loaded into another evidence
-            catch (global::System.IO.FileLoadException) { return true; }
-            catch (global::System.Exception) { return false; }
+            return AppDomain.CurrentDomain.Load(name) != null;
         }
+        // We assume this means that it's already loaded into another evidence
+        catch (FileLoadException) { return true; }
+        catch (Exception) { return false; }
+    }
 
-        private static string GetBadConfigurationError()
-            => $"Could not locate the application configuration at the files '{(global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile)}' " +
-            $"or '{(global::System.IO.Path.Combine(global::System.IO.Directory.GetCurrentDirectory(), "app.config"))}' with your " +
-            "distribution, please install the app correctly and try again.";
+    private static string GetBadConfigurationError()
+        => $"Could not locate the application configuration at the files '{(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile)}' " +
+        $"or '{(Path.Combine(Directory.GetCurrentDirectory(), "app.config"))}' with your " +
+        "distribution, please install the app correctly and try again.";
 
-        public static void Main(string[] args)
-        {
-            if (!global::System.IO.File.Exists(
-                global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
+    /// <summary>
+    /// Main method.
+    /// </summary>
+    /// <param name="args">The arguments.</param>
+    public static void Main(string[] args)
+    {
+        if (!File.Exists(
+            AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
+        ))
+            if (File.Exists(
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "app.config"
+                )
             ))
-                if (global::System.IO.File.Exists(
-                    global::System.IO.Path.Combine(
-                        global::System.IO.Directory.GetCurrentDirectory(),
-                        "app.config"
-                    )
-                ))
-                    global::System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = global::System.IO.Path.Combine(
-                        global::System.IO.Directory.GetCurrentDirectory(),
-                        "app.config"
-                    );
-                else
-                {
-                    global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
-                    global::System.Console.WriteLine("[URGENT]: {0}", GetBadConfigurationError());
-                    global::System.Console.ResetColor();
-
-                    if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
-                        global::Grid.Bot.CrashHandlerWrapper.Upload(new global::System.ApplicationException(GetBadConfigurationError()), true);
-
-                    return;
-                }
-
-            System.AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                AppDomain.CurrentDomain.SetupInformation.ConfigurationFile = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "app.config"
+                );
+            else
             {
-                if (e.ExceptionObject is global::System.IO.FileNotFoundException or global::System.TypeLoadException)
-                {
-                    global::System.Console.ForegroundColor = global::System.ConsoleColor.Yellow;
-                    global::System.Console.WriteLine(
-                        "There was an error loading a type or dependency, please review the following error: {0}",
-                        (e.ExceptionObject as global::System.Exception)?.Message
-                    );
-                    global::System.Console.ResetColor();
-                    global::System.Console.WriteLine("Press any key to exit...");
-                    global::System.Console.ReadKey(true);
-                    global::System.Environment.Exit(1);
-                    return;
-                }
-
-                global::System.Console.ForegroundColor = global::System.ConsoleColor.Red;
-                global::System.Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
-                global::System.Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("[URGENT]: {0}", GetBadConfigurationError());
+                Console.ResetColor();
 
                 if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
-                    global::Grid.Bot.CrashHandlerWrapper.Upload(e.ExceptionObject as global::System.Exception, true);
+                    CrashHandlerWrapper.Upload(new ApplicationException(GetBadConfigurationError()));
 
-                global::Grid.Bot.Runner.OnGlobalException();
+                return;
+            }
 
-                if (e.ExceptionObject is global::System.AggregateException aggregate)
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is FileNotFoundException or TypeLoadException)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(
+                    "There was an error loading a type or dependency, please review the following error: {0}",
+                    (e.ExceptionObject as Exception)?.Message
+                );
+                Console.ResetColor();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey(true);
+                Environment.Exit(1);
+                return;
+            }
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
+            Console.ResetColor();
+
+            if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
+                CrashHandlerWrapper.Upload(e.ExceptionObject as Exception);
+
+            Runner.OnGlobalException();
+
+            if (e.ExceptionObject is AggregateException aggregate)
+            {
+                if (aggregate.InnerExceptions.Any(x => x is InvalidOperationException))
                 {
-                    if (global::System.Linq.Enumerable.Any(
-                        global::System.Linq.Enumerable.Where(
-                            aggregate.InnerExceptions,
-                            x => x is global::System.InvalidOperationException
-                        )
-                    ))
-                    {
-                        global::System.Console.WriteLine("Press any key to exit...");
-                        global::System.Console.ReadKey(true);
-                        global::System.Environment.Exit(1);
-                    }
+                    Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey(true);
+                    Environment.Exit(1);
                 }
-            };
+            }
+        };
 
-            global::Grid.Bot.Runner.Invoke(args);
-        }
+        Runner.Invoke(args);
     }
 }

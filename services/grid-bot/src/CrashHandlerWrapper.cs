@@ -1,7 +1,7 @@
-﻿namespace Grid.Bot
+﻿namespace Grid.Bot;
+
+internal static class CrashHandlerWrapper
 {
-    internal static class CrashHandlerWrapper
-    {
-        public static void Upload(System.Exception ex, bool overrideSystemWhenExitingCrashHandler = false) => Grid.Bot.Utility.CrashHandler.Upload(ex, overrideSystemWhenExitingCrashHandler);
-    }
+    public static void Upload(System.Exception ex)
+        => Grid.Bot.Utility.BacktraceUtility.UploadCrashLog(ex);
 }

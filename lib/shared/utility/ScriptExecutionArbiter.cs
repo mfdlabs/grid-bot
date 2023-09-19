@@ -1,21 +1,26 @@
-﻿using System.ServiceModel;
+﻿namespace Grid.Bot.Utility;
+
+using System.ServiceModel;
 
 using Logging;
+using Instrumentation;
 
-using Grid.Bot.PerformanceMonitors;
-
-namespace Grid.Bot.Utility
+/// <summary>
+/// Provider for the <see cref="IGridServerArbiter"/> used by script executions.
+/// </summary>
+public static class ScriptExecutionArbiter
 {
-    public static class ScriptExecutionArbiter
-    {
-        public static IGridServerArbiter Singleton = new GridServerArbiter(
-            PerfmonCounterRegistryProvider.Registry,
-            Logger.Singleton,
-            new BasicHttpBinding(BasicHttpSecurityMode.None)
-            {
-                MaxReceivedMessageSize = int.MaxValue,
-                SendTimeout = global::Grid.Bot.Properties.Settings.Default.ScriptExecutionArbiterMaxTimeout
-            }
-        );
-    }
+    /// <summary>
+    /// The <see cref="IGridServerArbiter"/>
+    /// </summary>
+    public static IGridServerArbiter Singleton = new GridServerArbiter(
+        ArbiterSettings.Singleton,
+        StaticCounterRegistry.Instance,
+        Logger.Singleton,
+        new BasicHttpBinding(BasicHttpSecurityMode.None)
+        {
+            MaxReceivedMessageSize = int.MaxValue,
+            SendTimeout = ArbiterSettings.Singleton.ScriptExecutionArbiterMaxTimeout
+        }
+    );
 }

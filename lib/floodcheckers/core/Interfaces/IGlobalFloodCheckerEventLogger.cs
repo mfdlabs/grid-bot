@@ -5,5 +5,9 @@
 /// </summary>
 public interface IGlobalFloodCheckerEventLogger
 {
+    /// <summary>
+    /// Record an event when the flood checker is flooded.
+    /// </summary>
+    /// <param name="category">The category.</param>
     void RecordFloodCheckerIsFlooded(string category);
 }

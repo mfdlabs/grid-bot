@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Shared library containing a registry that stores the current bot.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   
   <PropertyGroup>

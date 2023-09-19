@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Shared text helpers!</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,11 +1,14 @@
 ﻿namespace FloodCheckers.Core;
 
+/// <summary>
+/// Represents a basic flood checker.
+/// </summary>
 public interface IBasicFloodChecker
 {
     /// <summary>
-    /// Indicates where or not the current count has reached or exceeded the limit
+    /// Indicates whether or not the current count has reached or exceeded the limit
     /// </summary>
-    /// <returns></returns>
+    /// <returns>True if the count has reached or exceeded the limit.</returns>
     bool IsFlooded();
 
     /// <summary>

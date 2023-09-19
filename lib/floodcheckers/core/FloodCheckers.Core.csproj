@@ -2,6 +2,12 @@
 
   <Import Project="../../../targets/lib-standard.targets" />
 
+  <PropertyGroup>
+    <Description>Core library for flood checker implementation!</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
   </ItemGroup>

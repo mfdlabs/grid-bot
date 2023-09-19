@@ -1,18 +1,27 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
-using System.Threading.Tasks;
-using Discord.WebSocket;
-using Grid.Bot.WorkQueues;
+namespace Grid.Bot.Events;
 
-namespace Grid.Bot.Events
+using System.Threading.Tasks;
+
+using Discord.WebSocket;
+
+using WorkQueues;
+
+/// <summary>
+/// Event handler for the <see cref="OnSlashCommandReceivedWorkQueue"/>
+/// </summary>
+public static class OnSlashCommand
 {
-    public static class OnSlashCommand
+    /// <summary>
+    /// Invoke the event handler.
+    /// </summary>
+    /// <param name="command">The <see cref="SocketSlashCommand"/></param>
+    public static Task Invoke(SocketSlashCommand command)
     {
-        public static Task Invoke(SocketSlashCommand command)
-        {
-            OnSlashCommandReceivedWorkQueue.Singleton.EnqueueWorkItem(command);
-            return Task.CompletedTask;
-        }
+        OnSlashCommandReceivedWorkQueue.Singleton.EnqueueWorkItem(command);
+
+        return Task.CompletedTask;
     }
 }
 

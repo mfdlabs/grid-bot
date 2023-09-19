@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Library containg event objects that are dispatched via the Discord gateway.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   
   <PropertyGroup>

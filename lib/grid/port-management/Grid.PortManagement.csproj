@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\shared\Grid.Shared.csproj" />
     <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\..\random\random\Random.csproj" />
   </ItemGroup>
 
   <ItemGroup>

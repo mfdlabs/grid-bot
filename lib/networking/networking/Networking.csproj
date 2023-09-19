@@ -4,29 +4,21 @@
 
   <PropertyGroup>
     <Description>Library used for IP address parsing and more!</Description>
+    
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>$(AssemblyName).Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
+    <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
-	<ProjectReference Include="..\..\text\text\Text.csproj" />
-  </ItemGroup>
-
 </Project>

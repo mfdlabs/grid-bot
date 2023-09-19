@@ -1,5 +1,8 @@
 ﻿namespace FloodCheckers.Core;
 
+/// <summary>
+/// Basic flood checker.
+/// </summary>
 public interface IFloodChecker : IBasicFloodChecker
 {
     /// <summary>

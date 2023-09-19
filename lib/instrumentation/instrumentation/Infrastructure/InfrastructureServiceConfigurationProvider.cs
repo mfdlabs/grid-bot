@@ -13,7 +13,7 @@ namespace Instrumentation.Infrastructure
     {
         public InfrastructureServiceConfigurationProvider(string machineName, Action<Exception> exceptionHandler)
         {
-            if (!machineName.IsNullOrWhiteSpace())
+            if (!machineName.IsNullOrEmpty())
                 _MachineName = machineName;
             else
             {

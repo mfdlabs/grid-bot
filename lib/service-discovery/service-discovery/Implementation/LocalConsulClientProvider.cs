@@ -3,11 +3,10 @@
 using System;
 using System.Net;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
 using Consul;
 
-using ISettings = global::ServiceDiscovery.Properties.ISettings;
+using Configuration;
 
 /// <inheritdoc cref="IConsulClientProvider"/>
 public class LocalConsulClientProvider : IConsulClientProvider, INotifyPropertyChanged, IDisposable
@@ -19,14 +18,6 @@ public class LocalConsulClientProvider : IConsulClientProvider, INotifyPropertyC
 
     /// <inheritdoc cref="INotifyPropertyChanged.PropertyChanged"/>
     public event PropertyChangedEventHandler PropertyChanged;
-
-    /// <summary>
-    /// Construct a new instance of <see cref="LocalConsulClientProvider"/>
-    /// </summary>
-    [ExcludeFromCodeCoverage]
-    public LocalConsulClientProvider()
-        : this(global::ServiceDiscovery.Properties.Settings.Default)
-    {}
 
     /// <summary>
     /// Construct a new instance of <see cref="LocalConsulClientProvider"/>
@@ -57,7 +48,7 @@ public class LocalConsulClientProvider : IConsulClientProvider, INotifyPropertyC
     {
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-        Client = new ConsulClient(config => config.Address = new(_Settings.ConsulAddress));
+        Client = new ConsulClient(config => config.Address = new(_Settings.ConsulAddress.FromEnvironmentExpression<string>()));
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Client)));
     }

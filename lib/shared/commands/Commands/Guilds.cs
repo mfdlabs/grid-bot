@@ -1,29 +1,43 @@
-﻿using System.Threading.Tasks;
+﻿namespace Grid.Bot.Commands;
+
+using System;
+using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
 
-using Grid.Bot.Global;
-using Grid.Bot.Interfaces;
-using Grid.Bot.Extensions;
+using Global;
+using Interfaces;
+using Extensions;
 
-namespace Grid.Bot.Commands
+/// <summary>
+/// Gets the total count of Guilds that this Bot is in.
+/// </summary>
+[Obsolete("Text-based commands are being deprecated. Please begin to use slash commands!")]
+internal sealed class Guilds : ICommandHandler
 {
-    internal sealed class Guilds : IStateSpecificCommandHandler
+    /// <inheritdoc cref="ICommandHandler.Name"/>
+    public string Name => "Get Guilds";
+
+    /// <inheritdoc cref="ICommandHandler.Description"/>
+    public string Description => "Gets the current bot's guilds";
+
+    /// <inheritdoc cref="ICommandHandler.Aliases"/>
+    public string[] Aliases => new[] { "guilds", "servers" };
+
+    /// <inheritdoc cref="ICommandHandler.IsInternal"/>
+    public bool IsInternal => true;
+
+    /// <inheritdoc cref="ICommandHandler.IsEnabled"/>
+    public bool IsEnabled { get; set; } = true;
+
+    /// <inheritdoc cref="ICommandHandler.ExecuteAsync(string[], SocketMessage, string)"/>
+    public async Task ExecuteAsync(string[] messageContentArray, SocketMessage message, string originalCommand)
     {
-        public string CommandName => "Get Guilds";
-        public string CommandDescription => "Gets the current bot's guilds";
-        public string[] CommandAliases => new[] { "guilds", "servers" };
-        public bool Internal => true;
-        public bool IsEnabled { get; set; } = true;
+        if (!await message.RejectIfNotAdminAsync()) return;
 
-        public async Task Invoke(string[] messageContentArray, SocketMessage message, string originalCommand)
-        {
-            if (!await message.RejectIfNotAdminAsync()) return;
-
-            await message.ReplyAsync(
-                $"We are in {BotRegistry.Client.Guilds.Count} guilds!"
-            );
-        }
+        await message.ReplyAsync(
+            $"We are in {BotRegistry.Client.Guilds.Count} guilds!"
+        );
     }
 }

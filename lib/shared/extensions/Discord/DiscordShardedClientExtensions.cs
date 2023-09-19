@@ -1,39 +1,63 @@
-﻿#if WE_LOVE_EM_SLASH_COMMANDS && DISCORD_SHARDING_ENABLED
+﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
-using System.Collections.Generic;
+namespace Grid.Bot.Extensions;
+
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Discord;
 using Discord.WebSocket;
+
+using Random;
 using Threading.Extensions;
 
-// Use the first shard in order to do any gateway actions.
-// TODO: Load balance these?
-
-namespace Grid.Bot.Extensions
+/// <summary>
+/// Extension methods for the <see cref="DiscordShardedClient"/>
+/// </summary>
+public static class DiscordShardedClientExtensions
 {
-    public static class DiscordShardedClientExtensions
-    {
-        public static SocketApplicationCommand CreateGlobalApplicationCommand(
-            this DiscordShardedClient client,
-            ApplicationCommandProperties properties,
-            RequestOptions options = null
-        ) 
-            => client.GetShard(0).CreateGlobalApplicationCommandAsync(properties, options).Sync();
+    private static readonly IRandom _random = RandomFactory.GetDefaultRandom();
 
-        public static IReadOnlyCollection<SocketApplicationCommand> GetGlobalApplicationCommands(
-            this DiscordShardedClient client,
-            bool withLocalizations = false, 
-            string locale = null,
-            RequestOptions options = null
-        )
-            => client.GetShard(0).GetGlobalApplicationCommandsAsync(withLocalizations, locale, options).Sync();
+    /// <summary>
+    /// Gets a random shard from the <see cref="DiscordShardedClient"/>
+    /// </summary>
+    /// <param name="client">The <see cref="DiscordShardedClient"/></param>
+    /// <returns>The <see cref="DiscordSocketClient"/></returns>
+    public static DiscordSocketClient GetShard(this DiscordShardedClient client)
+        => client.GetShard(_random.Next(0, client.Shards.Count - 1));
 
-        public static ValueTask<SocketApplicationCommand> GetGlobalApplicationCommandAsync(this DiscordShardedClient client, ulong id, RequestOptions requestOptions = null)
-            => client.GetShard(0).GetGlobalApplicationCommandAsync(id, requestOptions);
+    /// <inheritdoc cref="DiscordSocketClient.CreateGlobalApplicationCommandAsync(ApplicationCommandProperties, RequestOptions)"/>
+    public static SocketApplicationCommand CreateGlobalApplicationCommand(
+        this DiscordShardedClient client,
+        ApplicationCommandProperties properties,
+        RequestOptions options = null
+    )
+        => client.GetShard().CreateGlobalApplicationCommandAsync(properties, options).Sync();
 
-        public static ValueTask<IUser> GetUserAsync(this DiscordShardedClient client, ulong userId, RequestOptions requestOptions = null)
-            => client.GetShard(0).GetUserAsync(userId, requestOptions);
-    }
+    /// <inheritdoc cref="DiscordSocketClient.GetGlobalApplicationCommandsAsync(bool, string, RequestOptions)"/>
+    public static IReadOnlyCollection<SocketApplicationCommand> GetGlobalApplicationCommands(
+        this DiscordShardedClient client,
+        bool withLocalizations = false,
+        string locale = null,
+        RequestOptions options = null
+    )
+        => client.GetShard().GetGlobalApplicationCommandsAsync(withLocalizations, locale, options).Sync();
+
+    /// <inheritdoc cref="DiscordSocketClient.GetGlobalApplicationCommandAsync(ulong, RequestOptions)"/>
+    public static ValueTask<SocketApplicationCommand> GetGlobalApplicationCommandAsync(
+        this DiscordShardedClient client,
+        ulong id,
+        RequestOptions requestOptions = null
+    )
+        => client.GetShard().GetGlobalApplicationCommandAsync(id, requestOptions);
+
+    /// <inheritdoc cref="DiscordSocketClient.GetUserAsync(ulong, RequestOptions)"/>
+    public static async ValueTask<IUser> GetUserAsync(
+        this DiscordShardedClient client,
+        ulong userId, 
+        RequestOptions requestOptions = null
+    )
+        => await client.GetShard().GetUserAsync(userId, requestOptions);
 }
 
 #endif

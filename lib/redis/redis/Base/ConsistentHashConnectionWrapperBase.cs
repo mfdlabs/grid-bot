@@ -19,7 +19,7 @@ internal abstract class ConsistentHashConnectionWrapperBase
 
     internal ConsistentHashConnectionWrapperBase(ConfigurationOptions configuration)
     {
-        _Hash = (int)MurmurHash2.Hash(Encoding.ASCII.GetBytes(string.Join("_", configuration.EndPoints)));
+        _Hash = (int)MurmurHash3.ComputeHash(Encoding.ASCII.GetBytes(string.Join("_", configuration.EndPoints)));
     }
 
     public override int GetHashCode() => _Hash;

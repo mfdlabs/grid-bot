@@ -24,10 +24,10 @@ public class RedisExpandingWindowFloodChecker : BaseRedisFloodChecker, IExpiring
     /// <param name="getWindowPeriod">The lifespan of the floodchecker before the count is reset</param>
     /// <param name="isEnabled">Whether or not the floodchecker is enabled. If false it will never report itself as flooded</param>
     /// <param name="recordGlobalFloodedEvents">Whether or not the floodchecker should record global events when the floodchecker is flooded</param>
-    /// <param name="logger"></param>
-    /// <param name="redisClient"></param>
-    /// <param name="globalFloodCheckerEventLogger"></param>
-    /// <param name="settings"></param>
+    /// <param name="logger">The <see cref="ILogger"/></param>
+    /// <param name="redisClient">The <see cref="IRedisClient"/></param>
+    /// <param name="globalFloodCheckerEventLogger">The <see cref="IGlobalFloodCheckerEventLogger"/></param>
+    /// <param name="settings">The <see cref="ISettings"/></param>
     public RedisExpandingWindowFloodChecker(
         string category,
         string key, 
@@ -55,6 +55,7 @@ public class RedisExpandingWindowFloodChecker : BaseRedisFloodChecker, IExpiring
     {
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoUpdateCount"/>
     protected override void DoUpdateCount()
     {
         var key = GetKey();
@@ -63,6 +64,7 @@ public class RedisExpandingWindowFloodChecker : BaseRedisFloodChecker, IExpiring
         RedisClient.Execute(key, db => db.KeyExpire(key, GetWindowPeriod()));
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoReset"/>
     protected override void DoReset()
     {
         var key = GetKey();
@@ -70,6 +72,7 @@ public class RedisExpandingWindowFloodChecker : BaseRedisFloodChecker, IExpiring
         RedisClient.Execute(key, db => db.KeyDelete(key));
     }
 
+    /// <inheritdoc cref="BaseRedisFloodChecker.DoGetCount"/>
     protected override int DoGetCount()
     {
         var key = GetKey();
@@ -79,6 +82,10 @@ public class RedisExpandingWindowFloodChecker : BaseRedisFloodChecker, IExpiring
 
     private string GetKey() => string.Format("REWFC_{0}", Key);
 
+    /// <summary>
+    /// Converts a TTL to expiry.
+    /// </summary>
+    /// <returns>The expiry.</returns>
     public TimeSpan? TimeToExpiry()
     {
         if (!IsEnabled()) return null;

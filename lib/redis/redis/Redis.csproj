@@ -21,57 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../configuration/configuration/Configuration.csproj" />
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
     <ProjectReference Include="../../hashing/hashing/Hashing.csproj" />
     <ProjectReference Include="../../instrumentation/instrumentation/Instrumentation.csproj" />
     <ProjectReference Include="../../service-discovery/service-discovery/ServiceDiscovery.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties/HybridRedisClientProviderSettings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>HybridRedisClientProviderSettings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/SelfHealingConnectionMultiplexerSettings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>SelfHealingConnectionMultiplexerSettings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-
-    <Compile Update="Properties/Settings.cs">
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/SelfHealingConnectionMultiplexerSettings.cs">
-      <DependentUpon>SelfHealingConnectionMultiplexerSettings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/ISelfHealingConnectionMultiplexerSettings.cs">
-      <DependentUpon>SelfHealingConnectionMultiplexerSettings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="Properties/HybridRedisClientProviderSettings.cs">
-      <DependentUpon>HybridRedisClientProviderSettings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Properties/HybridRedisClientProviderSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>HybridRedisClientProviderSettings.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="Properties/SelfHealingConnectionMultiplexerSettings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
-      <LastGenOutput>SelfHealingConnectionMultiplexerSettings.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="Properties/Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
+    <ProjectReference Include="..\..\configuration\core\Configuration.Core.csproj" />
   </ItemGroup>
 
 </Project>

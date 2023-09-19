@@ -87,7 +87,7 @@ public interface IGridServerArbiter
     /// Create a multi-use, user managed instance that expires after a certain amount of time.
     /// </summary>
     /// <param name="name">The name of the instance. If null, a random name will be generated.</param>
-    /// <param name="lease">The lease time of the instance. If null, <see cref="LeasedGridServerInstance.DefaultLease"/> will be used.</param>
+    /// <param name="lease">The lease time of the instance. If null, <see cref="ISettings.DefaultLeasedGridServerInstanceLease"/> will be used.</param>
     /// <param name="maxAttemptsToCallSoap">The maximum number of attempts to call the SOAP service.</param>
     /// <param name="ipAddress">The IP address of the instance.</param>
     /// <param name="startUp">Should the instance's process be started up?</param>
@@ -120,7 +120,7 @@ public interface IGridServerArbiter
     /// <summary>
     /// Create multiple multi-use, user managed instances that expire after a certain amount of time.
     /// </summary>
-    /// <param name="lease">The lease time of the instance. If null, <see cref="LeasedGridServerInstance.DefaultLease"/> will be used.</param>
+    /// <param name="lease">The lease time of the instance. If null, <see cref="ISettings.DefaultLeasedGridServerInstanceLease"/> will be used.</param>
     /// <param name="count">The number of instances to create. Default is 1.</param>
     /// <param name="maxAttemptsToCallSoap">The maximum number of attempts to call the SOAP service.</param>
     /// <param name="ipAddress">The IP address of the instance.</param>
@@ -239,7 +239,7 @@ public interface IGridServerArbiter
     /// Get or create an instance by name.
     /// </summary>
     /// <param name="name">The name of the instance.</param>
-    /// <param name="lease">The lease time of the instance. If null, <see cref="LeasedGridServerInstance.DefaultLease"/> will be used.</param>
+    /// <param name="lease">The lease time of the instance. If null, <see cref="ISettings.DefaultLeasedGridServerInstanceLease"/> will be used.</param>
     /// <param name="maxAttemptsToCallSoap">The maximum number of attempts to call the SOAP service.</param>
     /// <param name="ipAddress">The IP address of the instance.</param>
     /// <returns>The instance.</returns>
@@ -259,7 +259,7 @@ public interface IGridServerArbiter
     /// <summary>
     /// Get or create any available leased instance.
     /// </summary>
-    /// <param name="lease">The lease time of the instance. If null, <see cref="LeasedGridServerInstance.DefaultLease"/> will be used.</param>
+    /// <param name="lease">The lease time of the instance. If null, <see cref="ISettings.DefaultLeasedGridServerInstanceLease"/> will be used.</param>
     /// <param name="maxAttemptsToCallSoap">The maximum number of attempts to call the SOAP service.</param>
     /// <param name="ipAddress">The IP address of the instance.</param>
     /// <returns>The instance.</returns>

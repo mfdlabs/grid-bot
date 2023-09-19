@@ -1,47 +1,54 @@
-﻿using Redis;
+﻿namespace Grid.Bot.Utility;
+
+using Redis;
 using Logging;
 using Configuration;
 using Instrumentation;
 using ServiceDiscovery;
 
-using Grid.Bot.PerformanceMonitors;
-
-namespace Grid.Bot.Utility
+/// <summary>
+/// Provider for the floodchecking Redis client.
+/// </summary>
+public static class FloodCheckersRedisClientProvider
 {
-    public static class FloodCheckersRedisClientProvider
-    {
 #if DEBUG
-        private const string _environmentName = "development";
+    private const string _environmentName = "development";
 #else
-        private const string _environmentName = "production";
+    private const string _environmentName = "production";
 #endif
 
-        private const string _floodCheckersRedisPerformanceCategory = "Grid.FloodCheckers.Redis";
+    private const string _floodCheckersRedisPerformanceCategory = "Grid.FloodCheckers.Redis";
 
-        private static IRedisClient _redisClient;
+    private static IRedisClient _redisClient;
 
-        public static IRedisClient RedisClient => _redisClient;
+    /// <summary>
+    /// The <see cref="IRedisClient"/>
+    /// </summary>
+    public static IRedisClient RedisClient => _redisClient;
 
-        public static void SetUp()
-        {
-            var consulClientProvider = new LocalConsulClientProvider(global::Grid.Bot.Properties.Settings.Default);
-            var serviceResolver = new ConsulHttpServiceResolver(
-                global::Grid.Bot.Properties.Settings.Default,
-                Logger.Singleton,
-                consulClientProvider,
-                global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersConsulServiceName),
-                _environmentName,
-                global::Grid.Bot.Properties.Settings.Default.FloodCheckersRedisUseServiceDiscovery
-            );
+    /// <summary>
+    /// Set up the Redis client.
+    /// </summary>
+    public static void SetUp()
+    {
+        var consulClientProvider = new LocalConsulClientProvider(ConsulSettings.Singleton);
+        var serviceResolver = new ConsulHttpServiceResolver(
+            ConsulSettings.Singleton,
+            Logger.Singleton,
+            consulClientProvider,
+            FloodCheckerSettings.Singleton.ToSingleSetting(s => s.FloodCheckersConsulServiceName),
+            _environmentName,
+            FloodCheckerSettings.Singleton.FloodCheckersRedisUseServiceDiscovery
+        );
 
-            _redisClient = new HybridRedisClientProvider(
-                Logger.Singleton,
-                PerfmonCounterRegistryProvider.Registry,
-                serviceResolver,
-                _floodCheckersRedisPerformanceCategory,
-                global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersRedisUseServiceDiscovery),
-                global::Grid.Bot.Properties.Settings.Default.ToSingleSetting(s => s.FloodCheckersRedisEndpoints)
-            ).Client;
-        }
+        _redisClient = new HybridRedisClientProvider(
+            FloodCheckerSettings.Singleton,
+            Logger.Singleton,
+            StaticCounterRegistry.Instance,
+            serviceResolver,
+            _floodCheckersRedisPerformanceCategory,
+            FloodCheckerSettings.Singleton.ToSingleSetting(s => s.FloodCheckersRedisUseServiceDiscovery),
+            FloodCheckerSettings.Singleton.ToSingleSetting(s => s.FloodCheckersRedisEndpoints)
+        ).Client;
     }
 }

@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>Shared utility classes used by the grid-bot</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,7 +25,6 @@
     <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
     <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
     <ProjectReference Include="..\..\clients\users-client\Users.Client.csproj" />
-    <ProjectReference Include="../diagnostics/Shared.Diagnostics.csproj" />
     <ProjectReference Include="../global/Shared.Global.csproj" />
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
   </ItemGroup>
@@ -33,10 +34,6 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\drawing\drawing\Drawing.csproj" />
   </ItemGroup>
 
 </Project>

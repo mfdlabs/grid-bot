@@ -1,38 +1,52 @@
 ﻿#if WE_LOVE_EM_SLASH_COMMANDS
 
+namespace Grid.Bot.SlashCommands;
+
 using System.IO;
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-using Grid.Bot.Extensions;
-using Grid.Bot.Interfaces;
-using Grid.Bot.Utility;
 
-namespace Grid.Bot.SlashCommands
+using Extensions;
+using Interfaces;
+
+/// <summary>
+/// Gets the current deployment ID.
+/// </summary>
+internal sealed class DeploymentId : ISlashCommandHandler
 {
-    internal sealed class DeploymentId : IStateSpecificSlashCommandHandler
+    /// <inheritdoc cref="ISlashCommandHandler.Description"/>
+    public string Description => "Get Deployment ID";
+
+    /// <inheritdoc cref="ISlashCommandHandler.Name"/>
+    public string Name => "deployment";
+
+    /// <inheritdoc cref="ISlashCommandHandler.IsInternal"/>
+    public bool IsInternal => false;
+
+    /// <inheritdoc cref="ISlashCommandHandler.IsEnabled"/>
+    public bool IsEnabled { get; set; } = true;
+
+    /// <inheritdoc cref="ISlashCommandHandler.Options"/>
+    public SlashCommandOptionBuilder[] Options => null;
+
+    /// <inheritdoc cref="ISlashCommandHandler.ExecuteAsync(SocketSlashCommand)"/>
+    public async Task ExecuteAsync(SocketSlashCommand command)
     {
-        public string CommandDescription => "Get Deployment ID";
-        public string Name => "deployment";
-        public bool Internal => false;
-        public bool IsEnabled { get; set; } = true;
-        public SlashCommandOptionBuilder[] Options => null;
+        // The deployment ID is literally just the name of the current directory that the executable is in.
+        // This is not a great way to do this, but it's the best I can think of for now.
 
-        public async Task Invoke(SocketSlashCommand command)
-        {
-            // The deployment ID is literally just the name of the current directory that the executable is in.
-            // This is not a great way to do this, but it's the best I can think of for now.
+        // Fetch current directory name.
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var currentDirectoryName = Path.GetFileName(currentDirectory);
 
-            // Fetch current directory name.
-            var currentDirectory = Directory.GetCurrentDirectory();
-            var currentDirectoryName = Path.GetFileName(currentDirectory);
-
-            // Reply with the deployment ID.
-            await command.RespondEphemeralAsync(
-                $"The deployment ID for this instance is: `{currentDirectoryName}`\n" +
-                "Please paste this into the `Deployment ID` field in grid-bot-support templates so that the internal team can easily identify this instance."
-            );
-        }
+        // Reply with the deployment ID.
+        await command.RespondEphemeralAsync(
+            $"The deployment ID for this instance is: `{currentDirectoryName}`\n" +
+            "Please paste this into the `Deployment ID` field in grid-bot-support " +
+            "templates so that the internal team can easily identify this instance."
+        );
     }
 }
 

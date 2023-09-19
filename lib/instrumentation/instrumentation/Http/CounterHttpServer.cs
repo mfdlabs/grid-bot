@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Newtonsoft.Json;
-using Networking.Extensions;
+
+using Networking;
 
 namespace Instrumentation
 {
@@ -19,12 +21,13 @@ namespace Instrumentation
             _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
             _ExceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
         }
-        public CounterHttpServer(ICounterRegistry counterRegistry, int portNumber, IEnumerable<string> whitelistedCidrRanges, Action<Exception> exceptionHandler)
+
+        public CounterHttpServer(ICounterRegistry counterRegistry, int portNumber, string whitelistedCidrRanges, Action<Exception> exceptionHandler)
         {
             if (portNumber < _MinPortNumber || portNumber > _MaxPortNumber)
                 throw new ArgumentOutOfRangeException(nameof(portNumber), string.Format("Invalid value port portNumber: {0}.  Must be between {1} and {2} inclusive.", portNumber, _MinPortNumber, _MaxPortNumber));
             _PortNumber = portNumber;
-            _WhitelistedCidrRanges = whitelistedCidrRanges?.ToArray();
+            _WhitelistedCidrRanges = IpAddressRange.ParseStringList(whitelistedCidrRanges)?.ToArray();
             _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
             _ExceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
         }
@@ -49,12 +52,14 @@ namespace Instrumentation
                 }
             });
         }
+
         public void Stop()
         {
             _IsRunning = false;
             _HttpListener?.Close();
             _HttpListener = null;
         }
+
         private void HandleRequest(HttpListenerContext context)
         {
             try
@@ -117,21 +122,13 @@ namespace Instrumentation
             var remoteIp = ctx.Request.RemoteEndPoint.Address;
             if (remoteIp == null) return false; 
 
-            var ipTxt = remoteIp.ToString();
-            if (ipTxt == null) return false;
-
-            if (ipTxt == "::1") ipTxt = "127.0.0.1";
-
-            if (ipTxt.IsIpV6())
-                ipTxt = remoteIp.MapToIPv4().ToString();
-
-            return ipTxt.IsInCidrRanges(_WhitelistedCidrRanges);
+            return IPAddressUtils.IsIpAddressAllowed(remoteIp, _WhitelistedCidrRanges);
         }
 
         private const int _MaxPortNumber = 49151;
         private const int _MinPortNumber = 0;
         private readonly ICounterRegistry _CounterRegistry;
-        private readonly string[] _WhitelistedCidrRanges;
+        private readonly IpAddressRange[] _WhitelistedCidrRanges;
         private readonly int _PortNumber;
         private readonly Action<Exception> _ExceptionHandler;
         private HttpListener _HttpListener;

@@ -66,6 +66,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
     private static Binding _defaultHttpBinding;
     private static ICounterRegistry _defaultCounterRegistry;
+    private static ISettings _defaultSettings;
     private static IGridServerArbiter _instance;
 
     /// <summary>
@@ -76,11 +77,14 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         get
         {
             if (_defaultHttpBinding == null)
-                throw new ApplicationException("The http binding was null, please call SetBinding()");
+                throw new ApplicationException($"The http binding was null, please call {nameof(SetDefaultHttpBinding)}()");
             if (_defaultCounterRegistry == null)
-                throw new ApplicationException("The counter registry was null, please call SetCounterRegistry()");
+                throw new ApplicationException($"The counter registry was null, please call {nameof(SetDefaultCounterRegistry)}()");
+            if (_defaultSettings == null)
+                throw new ApplicationException($"The settings was null, please call {nameof(SetDefaultSettings)}()");
 
             _instance ??= new GridServerArbiter(
+                _defaultSettings,
                 _defaultCounterRegistry,
                 Logger.Singleton,
                 _defaultHttpBinding
@@ -102,8 +106,15 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
     /// Set the default counter registry for the grid server arbiter. This is required before calling Singleton.
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="counterRegistry"/> is <see langword="null" />.</exception>
-    public static void SetCounterRegistry(ICounterRegistry counterRegistry)
+    public static void SetDefaultCounterRegistry(ICounterRegistry counterRegistry)
         => _defaultCounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
+
+    /// <summary>
+    /// Set the default settings for the grid server arbiter. This is required before calling Singleton.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null" />.</exception>
+    public static void SetDefaultSettings(ISettings settings)
+        => _defaultSettings = settings ?? throw new ArgumentNullException(nameof(settings));
 
     #endregion |Setup|
 
@@ -141,6 +152,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
 
     private readonly Binding _httpBinding;
     private readonly GridServerArbiterPerformanceMonitor _perfmon;
+    private readonly ISettings _settings;
     private readonly ICounterRegistry _counterRegistry;
     private readonly IPortAllocator _portAllocator;
     private readonly IGridServerDeployer _gridServerDeployer;
@@ -153,17 +165,20 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
     /// <summary>
     /// Construct a new instance of <see cref="GridServerArbiter"/>.
     /// </summary>
+    /// <param name="settings">The <see cref="ISettings"/>.</param>
     /// <param name="counterRegistry">The <see cref="ICounterRegistry"/> used for instrumentation.</param>
     /// <param name="logger">The <see cref="ILogger"/> used for logging.</param>
     /// <param name="httpBinding">The <see cref="Binding"/> used for HTTP communication.</param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/> used for port allocation.</param>
     /// <param name="gridServerDeployer">The <see cref="IGridServerDeployer"/> used for grid server deployment.</param>
     /// <exception cref="ArgumentNullException">
+    /// - <paramref name="settings"/> is <see langword="null"/>.
     /// - <paramref name="counterRegistry"/> is <see langword="null" />.
     /// - <paramref name="logger"/> is <see langword="null" />.
     /// - <paramref name="httpBinding"/> is <see langword="null" />.
     /// </exception>
     public GridServerArbiter(
+        ISettings settings,
         ICounterRegistry counterRegistry,
         ILogger logger,
         Binding httpBinding,
@@ -171,15 +186,18 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         IGridServerDeployer gridServerDeployer = null
     )
     {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _counterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpBinding = httpBinding ?? throw new ArgumentNullException(nameof(httpBinding));
 
         _portAllocator = portAllocator ?? new PortAllocator(counterRegistry, logger);
 
+        var fileHelper = new GridServerFileHelper(_settings);
+
         _gridServerDeployer = gridServerDeployer ?? new GridServerDeployer(
-            global::Grid.Properties.Settings.Default.GridServerExecutableName,
-            GridServerFileHelper.GetGridServerPath(true),
+            _settings.GridServerExecutableName,
+            fileHelper.GetGridServerPath(true),
             counterRegistry,
             logger,
             portAllocator,
@@ -210,7 +228,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         foreach (var process in processes)
         {
             var instance = new LeasedGridServerInstance(
-                lease: LeasedGridServerInstance.DefaultLease,
+                lease: _settings.DefaultLeasedGridServerInstanceLease,
                 counterRegistry: _counterRegistry,
                 logger: _logger,
                 gridServerArbiter: this,
@@ -379,7 +397,7 @@ public class GridServerArbiter : GridServerArbiterBase, IGridServerArbiter
         var currentAllocatedPort = _portAllocator.FindNextAvailablePort();
 
         var instance = new LeasedGridServerInstance(
-            lease: lease ?? LeasedGridServerInstance.DefaultLease,
+            lease: lease ?? _settings.DefaultLeasedGridServerInstanceLease,
             counterRegistry: _counterRegistry,
             logger: _logger,
             gridServerArbiter: this,

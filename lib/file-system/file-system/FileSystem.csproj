@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <Description>File system helpers and more!</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,9 +16,9 @@
       <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  
+
   <ItemGroup>
-    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
+    <ProjectReference Include="..\..\random\random\Random.csproj" />
   </ItemGroup>
 
 </Project>

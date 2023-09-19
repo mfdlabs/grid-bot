@@ -1,221 +1,129 @@
-﻿using System.Linq;
+﻿namespace Grid.Bot.Utility;
+
+using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 
 using Logging;
 
-using Text.Extensions;
-using Grid.Bot.Properties;
-
-namespace Grid.Bot.Utility
+/// <summary>
+/// Utility class for administration.
+/// </summary>
+public static class AdminUtility
 {
-    internal static class ReplyExtensions
+    /// <summary>
+    /// Is the <see cref="IUser"/> the owner?.
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>Returns true if the user's id matches the <see cref="DiscordRolesSettings.BotOwnerId"/></returns>
+    public static bool UserIsOwner(IUser user) 
+        => user.Id == DiscordRolesSettings.Singleton.BotOwnerId;
+
+    /// <summary>
+    /// Is the <see cref="IUser"/> an admin?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.AdminUserIds"/></returns>
+    public static bool UserIsAdmin(IUser user) 
+        => UserIsOwner(user) || DiscordRolesSettings.Singleton.AdminUserIds.Contains(user.Id);
+
+    /// <summary>
+    /// Is the <see cref="IUser"/> a higher privilaged user?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.HigherPrivilagedUserIds"/></returns>
+    public static bool UserIsPrivilaged(IUser user)
+        => UserIsAdmin(user) || DiscordRolesSettings.Singleton.HigherPrivilagedUserIds.Contains(user.Id);
+
+    /// <summary>
+    /// Is the <see cref="IUser"/> blacklisted?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.BlacklistedUserIds"/></returns>
+    public static bool UserIsBlacklisted(IUser user)
+        => !UserIsOwner(user) && DiscordRolesSettings.Singleton.BlacklistedUserIds.Contains(user.Id);
+    
+#if WE_LOVE_EM_SLASH_COMMANDS
+    /// <summary>
+    /// Rejects the <see cref="SocketCommandBase"/> request if the
+    /// user is not an admin.
+    /// </summary>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <returns>True if the user has access, false otherwhise.</returns>
+    public static async Task<bool> RejectIfNotAdminAsync(SocketCommandBase command)
     {
-        public static async Task<RestUserMessage> ReplyAsync(
-            this SocketMessage message,
-            string text = null,
-            bool isTts = false,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await message.Channel.SendMessageAsync(
-                    text,
-                    isTts,
-                    embed,
-                    options,
-                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = true },
-                    new MessageReference(message.Id)
-                );
-
-        public static async Task RespondEphemeralAsync(
-            this SocketCommandBase command,
-            string text = null,
-            bool pingUser = false,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        )
+        if (!UserIsAdmin(command.User))
         {
-            if (!command.HasResponded)
-            {
-                await command.RespondAsync(
-                    text,
-                    embeds,
-                    isTts,
-                    true,
-                    new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
-                    component,
-                    embed,
-                    options
-                );
-                return;
-            }
+            await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
 
-            await command.FollowupAsync(
-                text,
-                embeds,
-                isTts,
-                true,
-                new AllowedMentions(AllowedMentionTypes.Users) { MentionRepliedUser = pingUser },
-                component,
-                embed,
-                options
-            );
+            return false;
         }
 
-        public static async Task RespondEphemeralPingAsync(
-            this SocketCommandBase command,
-            string text = null,
-            Embed[] embeds = null,
-            bool isTts = false,
-            MessageComponent component = null,
-            Embed embed = null,
-            RequestOptions options = null
-        ) => await command.RespondEphemeralAsync(text, true, embeds, isTts, component, embed, options);
+        Logger.Singleton.Information("User '{0}' is an admin.", command.User.Id);
+
+        return true;
     }
 
-    public static class AdminUtility
+    /// <summary>
+    /// Rejects the <see cref="SocketCommandBase"/> request if the
+    /// user is not the owner.
+    /// </summary>
+    /// <param name="command">The <see cref="SocketCommandBase"/></param>
+    /// <returns>True if the user has access, false otherwhise.</returns>
+    public static async Task<bool> RejectIfNotOwnerAsync(SocketCommandBase command)
     {
-        private static IEnumerable<string> AllowedChannelIDs =>
-            (from id in global::Grid.Bot.Properties.Settings.Default.AllowedChannels.Split(',')
-             where !id.IsNullOrEmpty()
-             select id).ToArray();
-
-        private static IEnumerable<string> AdministratorUserIDs =>
-            (from id in global::Grid.Bot.Properties.Settings.Default.Admins.Split(',')
-             where !id.IsNullOrEmpty()
-             select id).ToArray();
-
-        private static IEnumerable<string> HigherPrivilagedUserIDs =>
-            (from id in global::Grid.Bot.Properties.Settings.Default.HigherPrivilagedUsers.Split(',')
-             where !id.IsNullOrEmpty()
-             select id).ToArray();
-
-        private static IEnumerable<string> BlacklistedUserIDs =>
-            (from id in global::Grid.Bot.Properties.Settings.Default.BlacklistedDiscordUserIds.Split(',')
-             where !id.IsNullOrEmpty()
-             select id).ToArray();
-
-        public static bool UserIsOwner(IUser user) => UserIsOwner(user.Id);
-
-        public static bool UserIsOwner(ulong id) => id == global::Grid.Bot.Properties.Settings.Default.BotOwnerID;
-
-        public static bool UserIsAdmin(IUser user) => UserIsAdmin(user.Id);
-
-        public static bool UserIsAdmin(ulong id) => UserIsAdmin(id.ToString());
-
-        public static bool UserIsAdmin(string id) => UserIsOwner(ulong.Parse(id)) || AdministratorUserIDs.Contains(id);
-
-        public static bool UserIsPrivilaged(IUser user) => UserIsPrivilaged(user.Id);
-
-        public static bool UserIsPrivilaged(ulong id) => UserIsPrivilaged(id.ToString());
-
-        public static bool UserIsPrivilaged(string id) => UserIsAdmin(id) || HigherPrivilagedUserIDs.Contains(id);
-
-        public static bool UserIsBlacklisted(IUser user) => UserIsBlacklisted(user.Id);
-
-        public static bool UserIsBlacklisted(ulong id) => UserIsBlacklisted(id.ToString());
-
-        public static bool UserIsBlacklisted(string id) => !UserIsOwner(ulong.Parse(id)) && BlacklistedUserIDs.Contains(id);
-
-        public static bool ChannelIsAllowed(IChannel channel) => ChannelIsAllowed(channel.Id);
-
-        public static bool ChannelIsAllowed(ulong id) => ChannelIsAllowed(id.ToString());
-
-        public static bool ChannelIsAllowed(string id) => AllowedChannelIDs.Contains(id);
-
-        public static bool ChannelIsAllowed(this SocketMessage message)
+        if (!UserIsOwner(command.User))
         {
-            var allowedChannelIds = message.GetSetting<string>("AllowedChannels").Split(',');
-            return allowedChannelIds.Contains(message.Channel.Id.ToString());
+            await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
+
+            return false;
         }
 
-#if WE_LOVE_EM_SLASH_COMMANDS
-        public static async Task<bool> RejectIfNotPrivilagedAsync(SocketCommandBase command)
-        {
-            var isPrivilaged = UserIsPrivilaged(command.User);
+        Logger.Singleton.Information("User '{0}' is the owner.", command.User.Id);
 
-            if (!isPrivilaged)
-            {
-                await command.RespondEphemeralPingAsync("Only privilaged users or administrators can execute that command.");
-                return false;
-            }
-
-            Logger.Singleton.Information("User '{0}' is privilaged or an admin.", command.User.Id);
-            return true;
-        }
-
-        public static async Task<bool> RejectIfNotAdminAsync(SocketCommandBase command)
-        {
-            var isAdmin = UserIsAdmin(command.User);
-
-            if (!isAdmin)
-            {
-                await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
-                return false;
-            }
-
-            Logger.Singleton.Information("User '{0}' is an admin.", command.User.Id);
-            return true;
-        }
-        public static async Task<bool> RejectIfNotOwnerAsync(SocketCommandBase command)
-        {
-            var isOwner = UserIsOwner(command.User);
-
-            if (!isOwner)
-            {
-                await command.RespondEphemeralPingAsync("You lack the correct permissions to execute that command.");
-                return false;
-            }
-
-            Logger.Singleton.Information("User '{0}' is the owner.", command.User.Id);
-            return true;
-        }
+        return true;
+    }
 #endif
 
-        public static async Task<bool> RejectIfNotPrivilagedAsync(SocketMessage message)
+    /// <summary>
+    /// Rejects the <see cref="SocketMessage"/> request if the
+    /// user is not an admin.
+    /// </summary>
+    /// <param name="message">The <see cref="SocketMessage"/></param>
+    /// <returns>True if the user has access, false otherwhise.</returns>
+    public static async Task<bool> RejectIfNotAdminAsync(SocketMessage message)
+    {
+        if (!UserIsAdmin(message.Author))
         {
-            var isPrivilaged = UserIsPrivilaged(message.Author);
+            await message.ReplyAsync("You lack the correct permissions to execute that command.");
 
-            if (!isPrivilaged)
-            {
-                await message.ReplyAsync("Only privilaged users or administrators can execute that command.");
-                return false;
-            }
-
-            Logger.Singleton.Information("User '{0}' is privilaged or an admin.", message.Author.Id);
-            return true;
+            return false;
         }
 
-        public static async Task<bool> RejectIfNotAdminAsync(SocketMessage message)
+        Logger.Singleton.Information("User '{0}' is on the admin whitelist.", message.Author.Id);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Rejects the <see cref="SocketMessage"/> request if the
+    /// user is not the owner.
+    /// </summary>
+    /// <param name="message">The <see cref="SocketMessage"/></param>
+    /// <returns>True if the user has access, false otherwhise.</returns>
+    public static async Task<bool> RejectIfNotOwnerAsync(SocketMessage message)
+    {
+        if (!UserIsOwner(message.Author))
         {
-            if (!UserIsAdmin(message.Author))
-            {
-                Logger.Singleton.Warning("User '{0}' is not on the admin whitelist. Please take this with " +
-                                               "caution as leaked internal methods may be abused!", message.Author.Id);
-                await message.ReplyAsync("You lack the correct permissions to execute that command.");
-                return false;
-            }
-            Logger.Singleton.Information("User '{0}' is on the admin whitelist.", message.Author.Id);
-            return true;
+            await message.ReplyAsync("You lack the correct permissions to execute that command.");
+
+            return false;
         }
 
-        public static async Task<bool> RejectIfNotOwnerAsync(SocketMessage message)
-        {
-            if (!UserIsOwner(message.Author))
-            {
-                Logger.Singleton.Warning("User '{0}' is not the owner. Please take this with caution " +
-                                               "as leaked internal methods may be abused!", message.Author.Id);
-                await message.ReplyAsync("You lack the correct permissions to execute that command.");
-                return false;
-            }
-            Logger.Singleton.Information("User '{0}' is the owner.", message.Author.Id);
-            return true;
-        }
+        Logger.Singleton.Information("User '{0}' is the owner.", message.Author.Id);
+
+        return true;
     }
 }
