@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
