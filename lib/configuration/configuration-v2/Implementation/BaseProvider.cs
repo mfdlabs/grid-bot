@@ -3,12 +3,12 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Logging;
-using System.Collections;
 
 /// <summary>
 /// Base implementation for <see cref="IConfigurationProvider"/>
