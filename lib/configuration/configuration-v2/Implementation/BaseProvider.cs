@@ -117,7 +117,7 @@ public abstract class BaseProvider : IConfigurationProvider
 
             if (allNullValues) return null;
 
-            return arr;
+            return arr.ToArray();
         }
 
         if (type.IsEnum)
