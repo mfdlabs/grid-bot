@@ -53,7 +53,7 @@ public class AvatarSettings : BaseSettingsProvider<AvatarSettings>
     /// <summary>
     /// Gets the ID of the place used to inherit character settings from in avatar-fetch models.
     /// </summary>
-    public long PlaceIdForRenders => GetOrDefault(
+    public long PlaceIdForRenders => GetOrDefault<long>(
         nameof(PlaceIdForRenders),
         1818
     );
