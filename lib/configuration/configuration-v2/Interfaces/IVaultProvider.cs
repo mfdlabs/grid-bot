@@ -23,11 +23,20 @@ public interface IVaultProvider : IConfigurationProvider
     void Refresh();
 
     /// <summary>
+    /// Applies the current cached values to the Vault server.
+    /// </summary>
+    /// <remarks>
+    /// Please take care when calling this directly, as this will overwrite the secret!
+    /// </remarks>
+    void ApplyCurrent();
+
+    /// <summary>
     /// Sets the <see cref="IVaultClient"/>.
     /// </summary>
     /// <remarks>
     /// If <see langword="null" />, will abort the current refresh thread.
     /// </remarks>
     /// <param name="client">The <see cref="IVaultClient"/></param>
-    void SetClient(IVaultClient client = null);
+    /// <param name="doRefresh">If true, initial refresh occurs and the refresh thread will start.</param>
+    void SetClient(IVaultClient client = null, bool doRefresh = true);
 }

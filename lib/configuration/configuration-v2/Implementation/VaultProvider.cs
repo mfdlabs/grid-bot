@@ -2,8 +2,10 @@
 
 using System;
 using System.Net;
+using System.Linq;
 using System.Threading;
 using System.Text.Json;
+using System.Reflection;
 using System.ComponentModel;
 using System.Collections.Generic;
 
@@ -16,8 +18,14 @@ using Threading.Extensions;
 /// <summary>
 /// Implementation for <see cref="BaseProvider"/> via Vault.
 /// </summary>
-public class VaultProvider : BaseProvider, IVaultProvider
+public abstract class VaultProvider : BaseProvider, IVaultProvider
 {
+    private static readonly string[] _propertyNamesIgnoredForCacheInit = new[]
+    {
+        nameof(Mount),
+        nameof(Path)
+    };
+
     private static readonly TimeSpan _defaultRefreshInterval = TimeSpan.FromMinutes(10);
 
     private IDictionary<string, object> _cachedValues = new Dictionary<string, object>();
@@ -25,15 +33,13 @@ public class VaultProvider : BaseProvider, IVaultProvider
     private IVaultClient _client;
 
     private readonly object _clientLock = new();
-    private readonly string _mount;
-    private readonly string _path;
     private readonly TimeSpan _refreshInterval;
 
     /// <inheritdoc cref="IVaultProvider.Mount"/>
-    public virtual string Mount => _mount;
+    public abstract string Mount { get; }
 
     /// <inheritdoc cref="IVaultProvider.Path"/>
-    public virtual string Path => _path;
+    public abstract string Path { get; }
 
     /// <inheritdoc cref="INotifyPropertyChanged.PropertyChanged"/>
     public override event PropertyChangedEventHandler PropertyChanged;
@@ -48,11 +54,21 @@ public class VaultProvider : BaseProvider, IVaultProvider
         var realValue = value.ToString();
 
         if (typeof(T).IsArray)
-            realValue = string.Join(",", value as Array);
+            realValue = string.Join(",", (value as Array).Cast<object>().ToArray());
 
         _cachedValues[variable] = realValue;
 
         PropertyChanged?.Invoke(this, new(variable));
+
+        ApplyCurrent();
+    }
+
+    /// <inheritdoc cref="IVaultProvider.ApplyCurrent"/>
+    public void ApplyCurrent()
+    {
+        if (_client == null) return;
+
+        _logger?.Debug("Writing secret '{0}/{1}' to Vault!", Mount, Path);
 
         _client?.V1.Secrets.KeyValue.V2.WriteSecretAsync(
             mountPoint: Mount,
@@ -64,32 +80,21 @@ public class VaultProvider : BaseProvider, IVaultProvider
     /// <summary>
     /// Construct a new instance of <see cref="VaultProvider"/>
     /// </summary>
-    /// <param name="mount">The base KVv2 path.</param>
-    /// <param name="path">The optional path.</param>
     /// <param name="refreshInterval">The refresh interval.</param>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="client">The <see cref="IVaultClient"/></param>
-    /// <exception cref="ArgumentException">
-    /// - <paramref name="mount"/> cannot be null or empty.
-    /// - <paramref name="path"/> cannot be null or empty.
-    /// </exception>
-    public VaultProvider(
-        string mount = "",
-        string path = "/",
+    protected VaultProvider(
         TimeSpan? refreshInterval = null,
         ILogger logger = null,
         IVaultClient client = null
     )
     {
-        if (string.IsNullOrEmpty(path))
-            throw new ArgumentException($"{nameof(path)} cannot be null or empty.", nameof(path));
-
-        _mount = mount;
-        _path = path;
-        _refreshInterval = refreshInterval ?? _defaultRefreshInterval;
-
         if (logger != null)
             SetLogger(logger);
+
+        ApplyInitialCache();
+
+        _refreshInterval = refreshInterval ?? _defaultRefreshInterval;
 
         if (client != null)
             SetClient(client);
@@ -103,6 +108,39 @@ public class VaultProvider : BaseProvider, IVaultProvider
 
             DoRefresh();
         }
+    }
+
+    private void ApplyInitialCache()
+    {
+        var getters = GetType()
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(prop => !_propertyNamesIgnoredForCacheInit.Contains(prop.Name));
+
+        var newCachedValues = new Dictionary<string, object>();
+
+        foreach (var getter in getters)
+        {
+            try
+            {
+                _logger?.Debug("Fetching initial value for {0}.{1}", GetType().Name, getter.Name);
+
+                var value = getter.GetGetMethod().Invoke(this, Array.Empty<object>());
+                var realValue = value?.ToString() ?? string.Empty;
+
+                if (value is Array arr)
+                    realValue = string.Join(",", arr.Cast<object>().ToArray());
+
+                newCachedValues.Add(getter.Name, realValue);
+            }
+            catch (TargetInvocationException ex)
+            {
+                _logger?.Warning("Error occurred when fetching getter for '{0}.{1}': {2}", GetType().Name, getter.Name, ex.InnerException.Message);
+
+                newCachedValues.Add(getter.Name, string.Empty);
+            }
+        }
+
+        _cachedValues = newCachedValues;
     }
 
     private void DoRefresh()
@@ -162,8 +200,8 @@ public class VaultProvider : BaseProvider, IVaultProvider
     /// <inheritdoc cref="IVaultProvider.Refresh"/>
     public void Refresh() => DoRefresh();
 
-    /// <inheritdoc cref="IVaultProvider.SetClient(IVaultClient)"/>
-    public void SetClient(IVaultClient client = null)
+    /// <inheritdoc cref="IVaultProvider.SetClient(IVaultClient, bool)"/>
+    public void SetClient(IVaultClient client = null, bool doRefresh = true)
     {
         lock (_clientLock)
         {
@@ -179,14 +217,17 @@ public class VaultProvider : BaseProvider, IVaultProvider
                 return;
             }
 
-            DoRefresh();
-
-            if (_refreshThread == null)
+            if (doRefresh)
             {
-                _logger?.Debug("SetClient: refresh thread is null, setting up!");
+                DoRefresh();
 
-                _refreshThread = new Thread(RefreshThread) { IsBackground = true };
-                _refreshThread.Start();
+                if (_refreshThread == null)
+                {
+                    _logger?.Debug("SetClient: refresh thread is null, setting up!");
+
+                    _refreshThread = new Thread(RefreshThread) { IsBackground = true };
+                    _refreshThread.Start();
+                }
             }
         }
     }

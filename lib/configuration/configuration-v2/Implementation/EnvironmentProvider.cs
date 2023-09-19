@@ -7,7 +7,7 @@ using System;
 /// </summary>
 /// <seealso cref="BaseProvider"/>
 /// <seealso cref="IConfigurationProvider"/>
-public class EnvironmentProvider : BaseProvider
+public abstract class EnvironmentProvider : BaseProvider
 {
     /// <inheritdoc cref="BaseProvider.Set{T}(string, T)"/>
     public override void Set<T>(string variable, T value)
