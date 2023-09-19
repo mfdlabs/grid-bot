@@ -183,7 +183,7 @@ public class Logger : ILogger, IDisposable
             try
             {
                 if (!string.IsNullOrEmpty(_defaultLogFileDirectory))
-                    Logger._logFileBaseDirectoryBacking = _defaultLogFileDirectory;
+                    return Logger._logFileBaseDirectoryBacking = _defaultLogFileDirectory;
 
                 return Logger._logFileBaseDirectoryBacking = Path.DirectorySeparatorChar == '/'
                     ? Path.Combine(Path.GetTempPath(), "mfdlabs", "logs")
