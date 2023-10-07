@@ -3,7 +3,6 @@
 namespace FloodCheckers.Redis;
 
 using Configuration;
-using Instrumentation;
 
 /// <summary>
 /// Constructs the default <see cref="IRedisClient"/>
@@ -28,7 +27,7 @@ public static class FloodCheckerRedisClient
                 var redisEndpoints = endpointsCsv.Split(',');
                 if (_RedisClient == null)
                 {
-                    _RedisClient = new RedisClient(StaticCounterRegistry.Instance, redisEndpoints, "FloodCheckers.Redis");
+                    _RedisClient = new RedisClient(redisEndpoints);
                     return;
                 }
 
