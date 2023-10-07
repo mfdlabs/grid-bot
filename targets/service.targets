@@ -1,8 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="./copyright.targets"/>
+  <Import Project="./default-warnings.targets"/>
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>10</LangVersion>
     <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
     <OutputType>Exe</OutputType>
@@ -64,8 +65,4 @@
       <DependentUpon>app.release.config</DependentUpon>
     </None>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Unrestricted &quot;$(SolutionDir)../../scripts/windows/powershell/on-post-build-invoked.ps1&quot; -configurationName $(ConfigurationName) -projectDir $(ProjectDir) -outDir $(OutDir) -targetName $(TargetName) -targetExt $(TargetExt) -solutionDir $(SolutionDir) -projectName $(ProjectName) -targetFramework $(TargetFramework) -deleteDebugSymbols $false $(ExtraPostBuildArguments)" />
-  </Target>
 </Project>
