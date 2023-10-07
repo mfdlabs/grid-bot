@@ -1,0 +1,259 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - "lib/**"
+      - "targets/**"
+      - "scripts/**"
+      - "nomad/**"
+      - ".github/workflows/**"
+      - "Dockerfile"
+      - "Makefile"
+      - ".dockerignore"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - "lib/**"
+      - "targets/**"
+      - "scripts/**"
+      - "nomad/**"
+      - ".github/workflows/**"
+      - "Dockerfile"
+      - "Makefile"
+      - ".dockerignore"
+  workflow_dispatch:
+    inputs:
+      build_configuration:
+        description: "Build Configuration"
+        required: true
+        default: "Release"
+        type: choice
+        options:
+          - "Release"
+          - "Debug"
+      image:
+        description: "Image Name"
+        required: true
+        default: "docker.registries.vmminfra.dev/grid/grid-bot"
+      registry:
+        description: "Docker Registry"
+        required: true
+        default: "docker.registries.vmminfra.dev"
+
+      create_release:
+        description: "Create Release"
+        required: true
+        default: true
+        type: boolean
+
+      upload_artifact:
+        description: "Upload Artifact"
+        required: true
+        default: false
+        type: boolean
+
+      create_image:
+        description: "Create Image"
+        required: true
+        default: true
+        type: boolean
+
+      deploy_to_nomad:
+        description: "Deploy to Nomad"
+        required: true
+        default: false
+        type: boolean
+
+      nomad_job_name:
+        description: "Nomad Job Name"
+        required: true
+        default: "grid-bot"
+
+      nomad_enviroment:
+        description: "Nomad Environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - "production"
+          - "development"
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  build:
+    runs-on: grid-bot-infra
+    env:
+      BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
+
+      IMAGE: ${{ github.event.inputs.image || 'docker.registries.vmminfra.dev/grid/grid-bot' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || 'docker.registries.vmminfra.dev' }}
+
+      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
+      CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
+      UPLOAD_ARTIFACT: ${{ github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#') }}
+
+      DEPLOY_TO_NOMAD: ${{ github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) }}
+
+      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}
+      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
+
+      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Move to Checkout Path
+        run: |
+          mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}
+          mv * /_/_work/${{ github.repository }}/${{ github.sha }}
+          cd /_/_work/${{ github.repository }}/${{ github.sha }}
+
+      - name: Setup .NET 6
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Create Deployment Directory
+        run: |
+          mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}/deploy
+
+      # Generate version and allow it as an output
+      - name: Generate Version
+        id: version
+        run: |
+          DATE=$(date +"%Y.%m.%d-%H.%M.%S")
+
+          # Format: yyyy.mm.dd-hh.mm.ss-<short sha>
+          VERSION="$DATE-$(echo $GITHUB_SHA | cut -c1-7)"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
+          dotnet publish \
+            -c ${{ env.BUILD_CONFIGURATION }} \
+            -o /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} \
+            -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
+            -p:CI=true
+
+      - name: Create Release Artifact
+        if: ${{ env.CREATE_RELEASE == 'true' }}
+        id: zip
+        run: |
+          zip -r /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc \
+            /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}
+
+      - name: Write Release Artifact
+        if: ${{ env.CREATE_RELEASE == 'true' && steps.zip.outcome == 'success' }}
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc
+          tag_name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          prerelease: ${{ env.BUILD_CONFIGURATION == 'Debug' }}
+          draft: false
+
+      - name: Upload Release Artifact
+        if: ${{ env.UPLOAD_ARTIFACT == 'true' && steps.zip.outcome == 'success' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.version.outputs.version }}.svc-arc
+          path: /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc
+          retention-days: 1
+
+      - name: Create Image
+        env:
+          DOCKER_BUILDKIT: 1
+        if: ${{ env.CREATE_IMAGE == 'true' && env.DOCKER_REGISTRY && env.DOCKER_USERNAME && env.DOCKER_PASSWORD }}
+        id: image
+        run: |
+          echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin "${{ env.DOCKER_REGISTRY }}"
+
+          cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
+            docker build -t ${{ env.IMAGE }}:${{ steps.version.outputs.version }} --build-arg IMAGE_TAG=${{ steps.version.outputs.version }} .
+
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            docker tag ${{ env.IMAGE }}:${{ steps.version.outputs.version }} ${{ env.IMAGE }}:latest
+          fi
+
+          docker push ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            docker push ${{ env.IMAGE }}:latest
+          fi
+
+      - name: Setup Nomad CLI
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && env.NOMAD_TOKEN && steps.image.outcome == 'success' }}
+        uses: nferch/setup-nomad@v4.0.0
+        env:
+          NOMAD_TLS_SKIP_VERIFY: 1
+
+      - name: Set Initial GitHub Deployment Status
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && env.NOMAD_TOKEN && steps.image.outcome == 'success' }}
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        continue-on-error: true
+        with:
+          token: "${{ github.token }}"
+          environment: ${{ env.NOMAD_ENVIRONMENT }}
+          environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
+
+      - name: Deploy to Nomad
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && env.NOMAD_TOKEN && steps.image.outcome == 'success' }}
+        env:
+          NOMAD_TLS_SKIP_VERIFY: 1
+        id: deploy
+        continue-on-error: true
+        run: |
+          # Template file is at ${workspace}/nomad/grid-bot.nomad
+          # Replace {{{IMAGE_NAME}}} and {{{IMAGE_TAG}}} with the actual values
+
+          # Create a temporary file
+          NOMAD_JOB_FILE=$(mktemp)
+
+          # Replace the template with the actual values
+          sed -e "s/{{{IMAGE_NAME}}}/${{ env.IMAGE }}/" \
+              -e "s/{{{IMAGE_TAG}}}/${{ steps.version.outputs.version }}/" \
+              -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
+              -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
+              /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
+
+          # Run the job but do not wait for longer than 5 minutes
+          nomad job run -detach -wait 300 $NOMAD_JOB_FILE
+
+          # Cleanup
+          rm $NOMAD_JOB_FILE
+
+      - name: Set GitHub Deployment Status
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && env.NOMAD_TOKEN && steps.image.outcome == 'success' }}
+        uses: chrnorm/deployment-status@v2
+        continue-on-error: true
+        with:
+          token: "${{ github.token }}"
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          environment-url: "${{ steps.deployment.outputs.environment_url }}"
+
+          # If the "deploy" step fails, the deployment status will be set to "failure"
+          # If the "deploy" step succeeds, the deployment status will be set to "success"
+          state: "${{ steps.deploy.outcome }}"
+
+      - name: Cleanup
+        run: |
+          rm -rf /_/_work/${{ github.repository }}/${{ github.sha }}
