@@ -361,7 +361,8 @@ MigrationBackup/
 FodyWeavers.xsd
 
 #
-Deploy/
+deploy/
 
 .idea/
 .AssemblyAttributes
+.env
