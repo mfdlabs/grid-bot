@@ -5,7 +5,7 @@ using System;
 /// <summary>
 /// Settings provider for all avatar related stuff.
 /// </summary>
-public class AvatarSettings : BaseSettingsProvider<AvatarSettings>
+public class AvatarSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.AvatarPath;
@@ -15,7 +15,7 @@ public class AvatarSettings : BaseSettingsProvider<AvatarSettings>
     /// </summary>
     public string RenderAssetFetchUrl => GetOrDefault(
         nameof(RenderAssetFetchUrl),
-        string.Empty
+        "https://assetdelivery.roblox.com/v1"
     );
 
     /// <summary>
@@ -39,7 +39,7 @@ public class AvatarSettings : BaseSettingsProvider<AvatarSettings>
     /// </summary>
     public string AvatarFetchUrl => GetOrDefault(
         nameof(AvatarFetchUrl),
-        "https://avatar.roblox.com/v1/avatar-fetch"
+        "https://avatar.sitetest4.robloxlabs.com/v1/avatar-fetch"
     );
 
     /// <summary>

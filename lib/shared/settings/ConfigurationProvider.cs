@@ -29,8 +29,6 @@ public static class ConfigurationProvider
     private const char _appRoleSplit = ':';
     private const string _defaultAppRoleMountPath = "approle";
 
-    private const string _providerSingletonFieldName = "Singleton";
-
     /// <summary>
     /// A collection of all registerd configuration providers in this domain.
     /// </summary>
@@ -60,7 +58,7 @@ public static class ConfigurationProvider
 
     private static void RefreshToken(IVaultClient client)
     {
-        Logger.Singleton.Information("Setting up token refresh thread for vault client!");
+        Console.WriteLine("Setting up token refresh thread for vault client!");
 
         while (true)
         {
@@ -94,18 +92,26 @@ public static class ConfigurationProvider
         var singletons = Assembly.GetExecutingAssembly()
             .GetTypes()
             .Where(t => string.Equals(t.Namespace, ns, StringComparison.Ordinal) &&
-                        t.BaseType.Name == typeof(BaseSettingsProvider<>).Name) // finicky
+                        t.BaseType.Name == typeof(BaseSettingsProvider).Name) // finicky
             .Select(t =>
             {
-                var field = t.BaseType.GetField(_providerSingletonFieldName, BindingFlags.Static | BindingFlags.Public);
-                if (field == null)
+                var constructor = t.GetConstructor(Type.EmptyTypes);
+                if (constructor == null)
                 {
-                    Logger.Singleton.Warning("Provider {0} did not expose a public static field called Singleton!", t.FullName);
+                    Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
 
                     return null;
                 }
 
-                return (BaseSettingsProvider)field.GetValue(null);
+                var singleton = constructor.Invoke(null);
+                if (singleton == null)
+                {
+                    Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
+
+                    return null;
+                }
+
+                return (BaseSettingsProvider)singleton;
             });
 
         foreach (var singleton in singletons)

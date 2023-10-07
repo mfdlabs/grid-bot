@@ -7,7 +7,7 @@ using Redis;
 /// <summary>
 /// Settings provider for the render and script execution flood checkers.
 /// </summary>
-public class FloodCheckerSettings : BaseSettingsProvider<FloodCheckerSettings>, IHybridRedisClientProviderSettings
+public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProviderSettings
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.FloodCheckerPath;

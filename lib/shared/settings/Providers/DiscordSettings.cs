@@ -8,7 +8,7 @@ using Logging;
 /// <summary>
 /// Settings provider for all Discord related stuff.
 /// </summary>
-public class DiscordSettings : BaseSettingsProvider<DiscordSettings>
+public class DiscordSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.DiscordPath;
@@ -30,6 +30,22 @@ public class DiscordSettings : BaseSettingsProvider<DiscordSettings>
         nameof(DebugAllowTaskCanceledExceptions),
         false
     );
+#endif
+
+#if DEBUG
+
+    /// <summary>
+    /// Gets the ID of the guild to register slash commands in.
+    /// </summary>
+    /// <remarks>
+    /// This is only valid for debug builds.
+    /// If this is 0, then the bot will not register slash commands.
+    /// </remarks>
+    public ulong DebugGuildId => GetOrDefault(
+        nameof(DebugGuildId),
+        0UL
+    );
+
 #endif
 
     /// <summary>
@@ -70,5 +86,13 @@ public class DiscordSettings : BaseSettingsProvider<DiscordSettings>
     public LogLevel DiscordLoggerLogLevel => GetOrDefault(
         nameof(DiscordLoggerLogLevel),
         LogLevel.Information
+    );
+
+    /// <summary>
+    /// Should the <see cref="ILogger"/> log to console?
+    /// </summary>
+    public bool DiscordLoggerLogToConsole => GetOrDefault(
+        nameof(DiscordLoggerLogToConsole),
+        true
     );
 }

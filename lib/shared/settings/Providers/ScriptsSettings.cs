@@ -3,7 +3,7 @@
 /// <summary>
 /// Settings provider for all script execution related stuff.
 /// </summary>
-public class ScriptsSettings : BaseSettingsProvider<ScriptsSettings>
+public class ScriptsSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.ScriptsPath;

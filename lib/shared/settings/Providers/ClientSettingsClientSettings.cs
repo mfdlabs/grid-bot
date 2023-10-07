@@ -3,7 +3,7 @@
 /// <summary>
 /// Settings provider for client-settings
 /// </summary>
-public class ClientSettingsClientSettings : BaseSettingsProvider<ClientSettingsClientSettings>
+public class ClientSettingsClientSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.ClientSettingsClientPath;
@@ -13,7 +13,7 @@ public class ClientSettingsClientSettings : BaseSettingsProvider<ClientSettingsC
     /// </summary>
     public string ClientSettingsApiBaseUrl => GetOrDefault(
         nameof(ClientSettingsApiBaseUrl),
-        "https://clientsettingscdn.roblox.com/"
+        "https://clientsettingscdn.sitetest4.robloxlabs.com/"
     );
 
     /// <summary>

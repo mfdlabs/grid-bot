@@ -3,7 +3,7 @@
 /// <summary>
 /// Settings provider for all Backtrace related stuff.
 /// </summary>
-public class BacktraceSettings : BaseSettingsProvider<BacktraceSettings>
+public class BacktraceSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.BacktracePath;

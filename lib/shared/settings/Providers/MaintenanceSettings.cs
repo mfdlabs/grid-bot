@@ -3,7 +3,7 @@
 /// <summary>
 /// Settings provider for all maintenance related stuff.
 /// </summary>
-public class MaintenanceSettings : BaseSettingsProvider<MaintenanceSettings>
+public class MaintenanceSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.MaintenancePath;

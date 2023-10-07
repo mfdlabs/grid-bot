@@ -5,7 +5,7 @@ using System;
 /// <summary>
 /// Settings provider for all Discord roles related stuff.
 /// </summary>
-public class DiscordRolesSettings : BaseSettingsProvider<DiscordRolesSettings>
+public class DiscordRolesSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.DiscordRolesPath;

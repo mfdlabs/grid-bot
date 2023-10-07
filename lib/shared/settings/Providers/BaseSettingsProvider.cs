@@ -33,16 +33,3 @@ public abstract class BaseSettingsProvider
     {
     }
 }
-
-/// <summary>
-/// Base provider class for grid operations.
-/// </summary>
-/// <typeparam name="TProvider">The type of the singleton.</typeparam>
-public abstract class BaseSettingsProvider<TProvider> : BaseSettingsProvider
-    where TProvider : class, new()
-{
-    /// <summary>
-    /// Exposes a singleton of this provider.
-    /// </summary>
-    public static readonly TProvider Singleton = new();
-}

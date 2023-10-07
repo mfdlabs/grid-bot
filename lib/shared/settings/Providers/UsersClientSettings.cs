@@ -3,7 +3,7 @@
 /// <summary>
 /// Settings provider for settings used by the Roblox Users API.
 /// </summary>
-public class UsersClientSettings : BaseSettingsProvider<UsersClientSettings>
+public class UsersClientSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.UsersClientPath;

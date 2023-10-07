@@ -7,7 +7,7 @@ using IServiceDiscoverySettings = global::ServiceDiscovery.ISettings;
 /// <summary>
 /// Settings provider for all Consul related stuff.
 /// </summary>
-public class ConsulSettings : BaseSettingsProvider<ConsulSettings>, IServiceDiscoverySettings
+public class ConsulSettings : BaseSettingsProvider, IServiceDiscoverySettings
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.ConsulPath;
