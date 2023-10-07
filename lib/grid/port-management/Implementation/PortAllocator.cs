@@ -9,33 +9,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 using Random;
 using Logging;
-using Instrumentation;
 
 /// <inheritdoc cref="IPortAllocator"/>
 public class PortAllocator : IPortAllocator
 {
-    private class PortAllocationPerformanceMonitor
-    {
-        private const string Category = "Grid.PortManagement";
-
-        internal IRateOfCountsPerSecondCounter PortAllocationAttemptsPerSecond { get; set; }
-        internal IRateOfCountsPerSecondCounter PortAllocationSuccessesPerSecond { get; set; }
-        internal IRateOfCountsPerSecondCounter PortAllocationFailuresPerSecond { get; set; }
-        internal IAverageValueCounter PortAllocationSuccessAverageTimeTicks { get; set; }
-        internal IAverageValueCounter PortAllocationFailureAverageTimeTicks { get; set; }
-
-        public PortAllocationPerformanceMonitor(ICounterRegistry counterRegistry)
-        {
-            if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
-
-            PortAllocationAttemptsPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationAttemptsPerSecond");
-            PortAllocationSuccessesPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationSuccessesPerSecond");
-            PortAllocationFailuresPerSecond = counterRegistry.GetRateOfCountsPerSecondCounter(Category, "PortAllocationFailuresPerSecond");
-            PortAllocationSuccessAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "PortAllocationSuccessAverageTimeTicks");
-            PortAllocationFailureAverageTimeTicks = counterRegistry.GetAverageValueCounter(Category, "PortAllocationFailureAverageTimeTicks");
-        }
-    }
-
     private const int InclusiveStartPort = 45000;
     private const int ExclusiveEndPort = 47000;
     private const int MaximumAttemptsToFindPort = 1000;
@@ -44,7 +21,6 @@ public class PortAllocator : IPortAllocator
     private static readonly TimeSpan _portReusedForbiddenDuration = TimeSpan.FromSeconds(30);
 
     private readonly ILogger _logger;
-    private readonly PortAllocationPerformanceMonitor _perfmon;
 
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private readonly object _sync = new();
@@ -52,17 +28,12 @@ public class PortAllocator : IPortAllocator
     /// <summary>
     /// Construct a new instance of <see cref="PortAllocator"/>
     /// </summary>
-    /// <param name="counterRegistry">The counter registry.</param>
     /// <param name="logger">The logger.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="counterRegistry"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
     /// </exception>
-    public PortAllocator(ICounterRegistry counterRegistry, ILogger logger)
+    public PortAllocator( ILogger logger)
     {
-        if (counterRegistry == null) throw new ArgumentNullException(nameof(counterRegistry));
-
-        _perfmon = new(counterRegistry);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -72,7 +43,6 @@ public class PortAllocator : IPortAllocator
     /// <inheritdoc cref="IPortAllocator.FindNextAvailablePort"/>
     public int FindNextAvailablePort()
     {
-        _perfmon.PortAllocationAttemptsPerSecond.Increment();
         var sw = Stopwatch.StartNew();
 
         lock (_sync)
@@ -92,8 +62,6 @@ public class PortAllocator : IPortAllocator
                     _cache.Set(port.ToString(), string.Empty, DateTime.Now.Add(_portReusedForbiddenDuration));
 
                     sw.Stop();
-                    _perfmon.PortAllocationSuccessesPerSecond.Increment();
-                    _perfmon.PortAllocationSuccessAverageTimeTicks.Sample(sw.ElapsedTicks);
                     _logger.Information(
                         "Port {0} is chosen for the next GridServerInstance. Number of attempts = {1}, time taken = {2} ms",
                         port,
@@ -109,8 +77,6 @@ public class PortAllocator : IPortAllocator
         }
 
         sw.Stop();
-        _perfmon.PortAllocationFailuresPerSecond.Increment();
-        _perfmon.PortAllocationFailureAverageTimeTicks.Sample(sw.ElapsedTicks);
 
         throw new TimeoutException(string.Format("Failed to find an open port. Time taken = {0} ms", sw.ElapsedMilliseconds));
     }
