@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using StackExchange.Redis;
 
 using Hashing;
-using Instrumentation;
 
 /// <summary>
 /// Base class for Redis Clients.
@@ -28,8 +27,6 @@ public abstract class RedisClientBase<TOptions> : IRedisClient
         "PUNSUBSCRIBE"
     };
 
-
-    private readonly PerformanceMonitor _PerformanceMonitor;
 
     /// <summary>
     /// The options for the client.
@@ -67,23 +64,12 @@ public abstract class RedisClientBase<TOptions> : IRedisClient
     /// <summary>
     /// Construct a new instance of <see cref="RedisClientBase{TOptions}"/>
     /// </summary>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
-    /// <param name="performanceMonitorCategory">The performance monitor category.</param>
     /// <param name="redisClientOptions">The <typeparamref name="TOptions"/></param>
     /// <param name="exceptionHandler">An exception handler.</param>
     /// <exception cref="ArgumentNullException"><paramref name="redisClientOptions"/> cannot be null.</exception>
-    protected RedisClientBase(ICounterRegistry counterRegistry, string performanceMonitorCategory, TOptions redisClientOptions, Action<Exception> exceptionHandler = null)
+    protected RedisClientBase(TOptions redisClientOptions, Action<Exception> exceptionHandler = null)
     {
         RedisClientOptions = redisClientOptions ?? throw new ArgumentNullException(nameof(redisClientOptions));
-
-        try
-        {
-            _PerformanceMonitor = new PerformanceMonitor(counterRegistry, performanceMonitorCategory);
-        }
-        catch (Exception ex)
-        {
-            exceptionHandler?.Invoke(new Exception("Unable to initialize redis performance monitor.", ex));
-        }
     }
 
     /// <inheritdoc cref="IRedisClient.Execute(string, DatabaseAction)"/>
@@ -658,24 +644,21 @@ public abstract class RedisClientBase<TOptions> : IRedisClient
         => Refreshed?.Invoke(this, EventArgs.Empty);
 
     private void PreDatabaseExecute()
-        => _PerformanceMonitor?.OutstandingRequestCount.Increment();
+        => PerformanceMonitor.OutstandingRequestsGauge.Inc();
 
     private void OnDatabaseError(IDatabase database)
     {
-        _PerformanceMonitor?.ErrorsPerSecond.Increment();
-        _PerformanceMonitor?.GetPerEndpointErrorCounter(database.Multiplexer.GetIpPortCombo()).Increment();
+        PerformanceMonitor.ErrorsPerSecondCounter.Inc();
+        PerformanceMonitor.GetPerEndpointErrorCounter(database.Multiplexer.GetIpPortCombo()).Inc();
     }
 
     private void PostDatabaseExecute(Stopwatch stopWatch)
     {
         stopWatch.Stop();
 
-        if (_PerformanceMonitor == null)
-            return;
-
-        _PerformanceMonitor.AverageResponseTime.Sample(stopWatch.Elapsed.TotalMilliseconds);
-        _PerformanceMonitor.RequestsPerSecond.Increment();
-        _PerformanceMonitor.OutstandingRequestCount.Decrement();
+        PerformanceMonitor.AverageRequestDurationHistogram.Observe(stopWatch.Elapsed.TotalMilliseconds);
+        PerformanceMonitor.RequestPerSecondCounter.Inc();
+        PerformanceMonitor.OutstandingRequestsGauge.Dec();
     }
 
     private void LoadScript(IDatabase database, byte[] scriptHash, string script)

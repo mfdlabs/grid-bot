@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using StackExchange.Redis;
 
 using Hashing;
-using Instrumentation;
 
 /// <summary>
 /// Default Redis Client.
@@ -22,22 +21,16 @@ public class RedisClient : RedisClientBase<RedisClientOptions>
     /// <summary>
     /// Construct a new instance of <see cref="RedisClient"/>
     /// </summary>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="redisEndpoints">The Redis EndPoints</param>
-    /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="redisClientOptions">The <see cref="RedisClientOptions"/></param>
     /// <exception cref="ArgumentNullException"><paramref name="redisEndpoints"/> cannot be null.</exception>
     public RedisClient(
-        ICounterRegistry counterRegistry, 
         IEnumerable<string> redisEndpoints, 
-        string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null, 
         RedisClientOptions redisClientOptions = null
     ) 
         : base(
-            counterRegistry, 
-            performanceMonitorCategory, 
             redisClientOptions ?? new RedisClientOptions(), 
             exceptionHandler
         )
@@ -50,22 +43,16 @@ public class RedisClient : RedisClientBase<RedisClientOptions>
     /// <summary>
     /// Construct a new instance of <see cref="RedisClient"/>
     /// </summary>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="redisEndpoints">The Redis EndPoints</param>
-    /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="redisClientOptions">The <see cref="RedisClientOptions"/></param>
     public RedisClient(
-        ICounterRegistry counterRegistry, 
         RedisEndpoints redisEndpoints,
-        string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null,
         RedisClientOptions redisClientOptions = null
     ) 
         : this(
-            counterRegistry, 
             redisEndpoints?.Endpoints, 
-            performanceMonitorCategory, 
             exceptionHandler, 
             redisClientOptions
         )
