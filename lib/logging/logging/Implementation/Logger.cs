@@ -17,10 +17,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 #endif
 
-#if NETFRAMEWORK
-using PInvoke;
-#endif
-
 // ReSharper disable LocalizableElement
 // ReSharper disable InconsistentNaming
 // ReSharper disable UseStringInterpolationWhenPossible
@@ -138,24 +134,6 @@ public class Logger : ILogger, IDisposable
             )
             { AutoFlush = true }
         );
-
-#if NETFRAMEWORK
-        var stdoutHandle = Kernel32.GetStdHandle(Kernel32.StdHandle.STD_OUTPUT_HANDLE);
-        if (Kernel32.GetConsoleMode(stdoutHandle, out var consoleBufferModes) &&
-            consoleBufferModes.HasFlag(Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING))
-            return;
-
-        consoleBufferModes |= Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        Kernel32.SetConsoleMode(stdoutHandle, consoleBufferModes);
-
-        var stderrHandle = Kernel32.GetStdHandle(Kernel32.StdHandle.STD_ERROR_HANDLE);
-        if (Kernel32.GetConsoleMode(stderrHandle, out consoleBufferModes) &&
-            consoleBufferModes.HasFlag(Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING))
-            return;
-
-        consoleBufferModes |= Kernel32.ConsoleBufferModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        Kernel32.SetConsoleMode(stderrHandle, consoleBufferModes);
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -173,7 +151,11 @@ public class Logger : ILogger, IDisposable
 
     private static string _logFileBaseDirectoryBacking;
     private static string _defaultLogFileDirectory => Environment.GetEnvironmentVariable("DEFAULT_LOG_FILE_DIRECTORY");
-    private static string _logFileBaseDirectory
+
+    /// <summary>
+    /// Gets the base directory for log files.
+    /// </summary>
+    public static string LogFileBaseDirectory
     {
         get
         {
@@ -632,13 +614,13 @@ public class Logger : ILogger, IDisposable
             new Random().Next(1000, 99999999)
         );
 
-        this._fullyQualifiedFileName ??= Path.Combine(Logger._logFileBaseDirectory, this._fileName);
+        this._fullyQualifiedFileName ??= Path.Combine(Logger.LogFileBaseDirectory, this._fileName);
 
-        if (Directory.Exists(Logger._logFileBaseDirectory)) return;
+        if (Directory.Exists(Logger.LogFileBaseDirectory)) return;
 
         try
         {
-            Directory.CreateDirectory(Logger._logFileBaseDirectory);
+            Directory.CreateDirectory(Logger.LogFileBaseDirectory);
         }
         catch (IOException)
         {
@@ -651,7 +633,7 @@ public class Logger : ILogger, IDisposable
         {
             this._logToFileSystem = false;
             this._closeFileStream();
-            this.Warning("Unable to create log file directory. Please ensure that the current user has permission to create the directory '{0}'.", Logger._logFileBaseDirectory);
+            this.Warning("Unable to create log file directory. Please ensure that the current user has permission to create the directory '{0}'.", Logger.LogFileBaseDirectory);
         }
     }
 
@@ -677,9 +659,9 @@ public class Logger : ILogger, IDisposable
             }
         }
 
-        if (Directory.Exists(Logger._logFileBaseDirectory))
+        if (Directory.Exists(Logger.LogFileBaseDirectory))
         {
-            foreach (var file in Directory.EnumerateFiles(Logger._logFileBaseDirectory))
+            foreach (var file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory))
             {
                 try
                 {
@@ -759,10 +741,8 @@ public class Logger : ILogger, IDisposable
             if (Logger._loggers.Any(logger => logger.Name == name))
                 throw new InvalidOperationException($"A logger with the name of '{name}' already exists.");
 
-#if !NETFRAMEWORK
-        if (logWithColor)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             logWithColor = false; // Color is not allowed on other targets as it cause a lot of issues on Windows
-#endif
 
         lock (Logger._loggers)
             Logger._loggers.Add(this);
