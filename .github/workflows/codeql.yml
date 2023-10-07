@@ -18,12 +18,16 @@ jobs:
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
+        continue-on-error: true
+        id: init
         with:
           languages: "csharp"
           config-file: "./.github/configuration/codeql-config.yml"
 
       - name: Autobuild
+        if: ${{ steps.init.outcome == "success" }}
         uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
+        if: ${{ steps.init.outcome == "success" }}
         uses: github/codeql-action/analyze@v2

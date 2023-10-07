@@ -255,5 +255,7 @@ jobs:
           state: "${{ steps.deploy.outcome }}"
 
       - name: Cleanup
+        if: always()
+        continue-on-error: true
         run: |
           rm -rf /_/_work/${{ github.repository }}/${{ github.sha }}
