@@ -16,7 +16,7 @@ namespace Grid.ComputeCloud
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
     [System.ServiceModel.ServiceContractAttribute(Namespace="http://roblox.com/", ConfigurationName="Grid.ComputeCloud.ComputeCloudServiceSoap")]
-    public interface ComputeCloudServiceSoap
+    public interface ComputeCloudServiceSoap : System.IDisposable
     {
         
         [System.ServiceModel.OperationContractAttribute(Action="http://roblox.com/HelloWorld", ReplyAction="*")]
