@@ -10,20 +10,35 @@ using Logging;
 /// <summary>
 /// Event invoked when Discord.Net creates a log message.
 /// </summary>
-public static class OnLogMessage
+public class OnLogMessage
 {
-    private static readonly ILogger _logger = new Logger(
-        DiscordSettings.Singleton.DiscordLoggerName,
-        DiscordSettings.Singleton.DiscordLoggerLogLevel
-    );
+    private readonly DiscordSettings _settings;
+    private readonly ILogger _logger;
+
+    /// <summary>
+    /// Construct a new instance of <see cref="OnLogMessage"/>.
+    /// </summary>
+    /// <param name="settings">The <see cref="DiscordSettings"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> cannot be null.</exception>
+    public OnLogMessage(DiscordSettings settings)
+    {
+        if (settings is null)
+            throw new ArgumentNullException(nameof(settings));
+
+        _settings = settings;
+
+        _logger = new Logger(
+            name: _settings.DiscordLoggerName,
+            logLevel: _settings.DiscordLoggerLogLevel,
+            logToConsole: _settings.DiscordLoggerLogToConsole
+        );
+    }
 
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
     /// <param name="message">The <see cref="LogMessage"/></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException">The <see cref="LogSeverity"/> is out of range.</exception>
-    public static Task Invoke(LogMessage message)
+    public Task Invoke(LogMessage message)
     {
         if (message.Exception != null)
         {
@@ -34,7 +49,7 @@ public static class OnLogMessage
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
             if (!(message.Exception is TaskCanceledException &&
-                  !DiscordSettings.Singleton.DebugAllowTaskCanceledExceptions))
+                  !_settings.DebugAllowTaskCanceledExceptions))
                 _logger.Error("Source = {0}, Message = {1}, Exception = {2}",
                     message.Source,
                     message.Message,
@@ -44,7 +59,7 @@ public static class OnLogMessage
             return Task.CompletedTask;
         }
 
-        if (!DiscordSettings.Singleton.ShouldLogDiscordInternals)
+        if (!_settings.ShouldLogDiscordInternals)
             return Task.CompletedTask;
 
         switch (message)

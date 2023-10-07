@@ -14,12 +14,13 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
     <ProjectReference Include="../commands/Shared.Commands.csproj" />
-    <ProjectReference Include="../extensions/Shared.Extensions.csproj" />
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
