@@ -1,0 +1,3 @@
+{
+    "dotnet.defaultSolution": "${workspaceFolder}/grid-bot.sln"
+}
