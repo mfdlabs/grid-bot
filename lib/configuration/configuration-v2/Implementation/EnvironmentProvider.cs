@@ -1,6 +1,8 @@
 ﻿namespace Configuration;
 
 using System;
+using System.Linq;
+using System.Collections;
 
 /// <summary>
 /// Implementation for <see cref="BaseProvider"/> that uses Environment variables.
@@ -16,6 +18,9 @@ public abstract class EnvironmentProvider : BaseProvider
 
         if (typeof(T).IsArray)
             realValue = string.Join(",", value as Array);
+
+        if (value is IDictionary dictionary)
+            realValue = string.Join("\n", dictionary.Keys.Cast<object>().Select(key => $"{key}={dictionary[key]}"));
 
         Environment.SetEnvironmentVariable(variable, realValue);
     }
