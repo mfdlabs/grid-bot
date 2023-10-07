@@ -1,43 +1,39 @@
 ﻿namespace Grid;
 
 using System;
+using System.Net;
+using System.Linq;
 using System.Diagnostics;
-using System.Security.Principal;
 using System.Runtime.InteropServices;
 
 using PInvoke;
 
 using Win32Exception = System.ComponentModel.Win32Exception;
 
+
 internal static class ProcessExtensions
 {
-    public static string GetOwner(this Process process)
+    public static bool GetProcessEndPoint(this Process process, out IPEndPoint endPoint)
     {
-        var tkHandle = Kernel32.SafeObjectHandle.Null;
-        try
-        {
-            AdvApi32.OpenProcessToken(process.Handle, 0x8, out tkHandle);
+        endPoint = null;
 
-            if (tkHandle.IsInvalid)
-                return null;
+        var row = ManagedIpHelper.GetExtendedTcpTable(true)
+            .FirstOrDefault(r => r.ProcessId == process.Id);
 
-            var wi = new WindowsIdentity(tkHandle.DangerousGetHandle());
-            string user = wi.Name;
-            return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
-        }
-        catch
+        if (row != null)
         {
-            return null;
+            endPoint = row.LocalEndPoint;
+
+            return true;
         }
-        finally
-        {
-            if (tkHandle != Kernel32.SafeObjectHandle.Null)
-                tkHandle.Close();
-        }
+
+        return false;
     }
 
     public static bool SafeGetHasExited(this Process process)
     {
+        if (process == null) return true;
+
         var hProcess = Kernel32.SafeObjectHandle.Null;
 
         try
