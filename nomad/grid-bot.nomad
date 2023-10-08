@@ -4,7 +4,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
   datacenters = ["*"]
 
   vault {
-    policies = ["vault_secret_grid_bot"]
+    policies = ["vault_secret_grid_settings_read_write"]
   }
 
   group "grid-bot" {
@@ -25,6 +25,8 @@ job "{{{NOMAD_JOB_NAME}}}" {
         volumes = [
           "/var/run/docker.sock:/var/run/docker.sock",
           "/tmp/.X11-unix:/tmp/.X11-unix",
+          "/opt/grid/scripts:/opt/grid/scripts",
+          "/_/_logs/grid-bot:/local/logs"
         ]
       }
 
@@ -38,6 +40,7 @@ IMAGE_TAG="{{{IMAGE_TAG}}}"
 
 # CONSUL
 CONSUL_ADDR="http://consul.service.consul:8500"
+DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
 
 {{ with secret "grid-bot-settings/{{{NOMAD_ENVIRONMENT}}}" }}
 {{ if .Data.data }}
