@@ -12,7 +12,7 @@ on:
       - "Dockerfile"
       - "Makefile"
       - ".dockerignore"
-    tags-ignore:
+    branches:
       - "**"
   workflow_dispatch:
     inputs:
