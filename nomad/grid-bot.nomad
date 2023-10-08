@@ -28,6 +28,13 @@ job "{{{NOMAD_JOB_NAME}}}" {
           "/opt/grid/scripts:/opt/grid/scripts",
           "/_/_logs/grid-bot:/local/logs"
         ]
+
+        hostname = "grid-bot.nomad.vmminfra.dev"
+      }
+
+      resources {
+        memory = 4096
+        cpu = 5000
       }
 
       template {
