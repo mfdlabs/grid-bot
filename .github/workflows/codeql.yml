@@ -25,9 +25,9 @@ jobs:
           config-file: "./.github/configuration/codeql-config.yml"
 
       - name: Autobuild
-        if: ${{ steps.init.outcome == "success" }}
+        if: ${{ steps.init.outcome == 'success' }}
         uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
-        if: ${{ steps.init.outcome == "success" }}
+        if: ${{ steps.init.outcome == 'success' }}
         uses: github/codeql-action/analyze@v2
