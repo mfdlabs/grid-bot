@@ -20,16 +20,19 @@
     <ProjectReference Include="..\..\file-system\file-system\FileSystem.csproj" />
     <ProjectReference Include="..\..\floodcheckers\core\FloodCheckers.Core.csproj" />
     <ProjectReference Include="..\..\floodcheckers\redis\FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="..\..\grid\arbiter\Grid.Arbiter.csproj" />
-    <ProjectReference Include="../extensions/Shared.Extensions.csproj" />
-    <ProjectReference Include="../global/Shared.Global.csproj" />
+    <ProjectReference Include="..\..\text\text\Text.csproj" />
+    <ProjectReference Include="..\..\networking\networking\Networking.csproj" />
+    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
     <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.11" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
   </ItemGroup>

@@ -11,7 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\configuration\configuration-v2\ConfigurationV2.csproj" />
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
-    <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
     <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
     <ProjectReference Include="..\core\FloodCheckers.Core.csproj" />
   </ItemGroup>

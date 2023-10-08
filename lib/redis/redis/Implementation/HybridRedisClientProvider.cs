@@ -9,7 +9,6 @@ using System.Collections.Generic;
 
 using Logging;
 using Configuration;
-using Instrumentation;
 using ServiceDiscovery;
 
 /// <summary>
@@ -18,9 +17,7 @@ using ServiceDiscovery;
 public sealed class HybridRedisClientProvider : IRedisClientProvider
 {
     private readonly ILogger _Logger;
-    private readonly ICounterRegistry _CounterRegistry;
     private readonly IServiceResolver _ServiceResolver;
-    private readonly string _PerformanceCategory;
     private readonly RedisClientOptions _ClientOptions;
     private readonly ISingleSetting<bool> _UseServiceDiscovery;
     private readonly IHybridRedisClientProviderSettings _Settings;
@@ -52,27 +49,21 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     /// </summary>
     /// <param name="settings">The <see cref="IHybridRedisClientProviderSettings"/></param>
     /// <param name="logger">The <see cref="ILogger"/></param>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="serviceResolver">The <see cref="IServiceResolver"/></param>
-    /// <param name="performanceCategory">The perfomance category.</param>
     /// <param name="useServiceDiscovery">Should use service discovery.</param>
     /// <param name="redisEndpoints">The inital redis endpoints.</param>
     /// <param name="clientOptions">The client options.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="settings"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="counterRegistry"/> cannot be null.
     /// - <paramref name="serviceResolver"/> cannot be null.
     /// - <paramref name="useServiceDiscovery"/> cannot be null.
     /// - <paramref name="redisEndpoints"/> cannot be null.
-    /// - <paramref name="performanceCategory"/> cannot be null.
     /// </exception>
     public HybridRedisClientProvider(
         IHybridRedisClientProviderSettings settings,
         ILogger logger, 
-        ICounterRegistry counterRegistry,
         IServiceResolver serviceResolver, 
-        string performanceCategory,
         ISingleSetting<bool> useServiceDiscovery,
         ISingleSetting<RedisEndpoints> redisEndpoints,
         RedisClientOptions clientOptions = null
@@ -80,11 +71,9 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
     {
         _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
         _ServiceResolver = serviceResolver ?? throw new ArgumentNullException(nameof(serviceResolver));
         _UseServiceDiscovery = useServiceDiscovery ?? throw new ArgumentNullException(nameof(useServiceDiscovery));
         _RedisEndpoints = redisEndpoints ?? throw new ArgumentNullException(nameof(redisEndpoints));
-        _PerformanceCategory = performanceCategory ?? throw new ArgumentNullException(nameof(performanceCategory));
 
         _ClientOptions = clientOptions;
     }
@@ -126,12 +115,12 @@ public sealed class HybridRedisClientProvider : IRedisClientProvider
         RedisClient client;
         if (_CurrentEndpoints != null)
         {
-            client = new RedisClient(_CounterRegistry, _CurrentEndpoints, _PerformanceCategory, _Logger.Error, _ClientOptions);
+            client = new RedisClient(_CurrentEndpoints, _Logger.Error, _ClientOptions);
             _Logger.Information("Created Redis client with endpoints: {0}", _CurrentEndpoints);
         }
         else
         {
-            client = new RedisClient(_CounterRegistry, Array.Empty<string>(), _PerformanceCategory, _Logger.Error, _ClientOptions);
+            client = new RedisClient(Array.Empty<string>(), _Logger.Error, _ClientOptions);
             _Logger.Warning("Created Redis client with no endpoints");
         }
 

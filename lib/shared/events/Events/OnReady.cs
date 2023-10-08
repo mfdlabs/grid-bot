@@ -1,27 +1,84 @@
 ﻿namespace Grid.Bot.Events;
 
+using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
+using Discord.Interactions;
 
 using Logging;
 
 using Threading;
 using Text.Extensions;
 
-using Global;
-using Registries;
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
 /// </summary>
-public static class OnShardReady
+public class OnShardReady
 {
-    private static Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+    private static readonly Assembly _commandsAssembly = Assembly.Load("Shared.Commands");
+
+    private Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+
+    private readonly DiscordSettings _discordSettings;
+    private readonly MaintenanceSettings _maintenanceSettings;
+
+    private readonly ILogger _logger;
+    private readonly DiscordShardedClient _client;
+    private readonly InteractionService _interactionService;
+    private readonly IServiceProvider _services;
+
+    private readonly OnMessage _onMessageEvent;
+    private readonly OnInteraction _onInteractionEvent;
+    private readonly OnInteractionExecuted _onInteractionExecutedEvent;
+
+    /// <summary>
+    /// Construct a new instance of <see cref="OnShardReady"/>.
+    /// </summary>
+    /// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
+    /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+    /// <param name="logger">The <see cref="ILogger"/>.</param>
+    /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
+    /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
+    /// <param name="services">The <see cref="IServiceProvider"/>.</param>
+    /// <param name="onMessageEvent">The <see cref="OnMessage"/>.</param>
+    /// <param name="onInteractionEvent">The <see cref="OnInteraction"/>.</param>
+    /// <param name="onInteractionExecutedEvent">The <see cref="OnInteractionExecuted"/>.</param>
+    /// <exception cref="ArgumentNullException">
+    /// - <paramref name="discordSettings"/> cannot be null.
+    /// - <paramref name="maintenanceSettings"/> cannot be null.
+    /// - <paramref name="logger"/> cannot be null.
+    /// - <paramref name="client"/> cannot be null.
+    /// - <paramref name="interactionService"/> cannot be null.
+    /// - <paramref name="services"/> cannot be null.
+    /// - <paramref name="onMessageEvent"/> cannot be null.
+    /// - <paramref name="onInteractionEvent"/> cannot be null.
+    /// - <paramref name="onInteractionExecutedEvent"/> cannot be null.
+    /// </exception>
+    public OnShardReady(
+        DiscordSettings discordSettings,
+        MaintenanceSettings maintenanceSettings,
+        ILogger logger,
+        DiscordShardedClient client,
+        InteractionService interactionService,
+        IServiceProvider services,
+        OnMessage onMessageEvent,
+        OnInteraction onInteractionEvent,
+        OnInteractionExecuted onInteractionExecutedEvent
+    )
+    {
+        _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+        _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
+        _services = services ?? throw new ArgumentNullException(nameof(services));
+        _onMessageEvent = onMessageEvent ?? throw new ArgumentNullException(nameof(onMessageEvent));
+        _onInteractionEvent = onInteractionEvent ?? throw new ArgumentNullException(nameof(onInteractionEvent));
+        _onInteractionExecutedEvent = onInteractionExecutedEvent ?? throw new ArgumentNullException(nameof(onInteractionExecutedEvent));
+    }
 
     private static string GetStatusText(string updateText)
         => updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
@@ -30,45 +87,51 @@ public static class OnShardReady
     /// Invoe the event handler.
     /// </summary>
     /// <param name="shard">The client for the shard.</param>
-    public static async Task Invoke(DiscordSocketClient shard)
+    public async Task Invoke(DiscordSocketClient shard)
     {
         _shardCount++;
 
-        Logger.Singleton.Debug(
+        _logger.Debug(
             "Shard '{0}' ready as '{0}#{1}'",
             shard.ShardId,
-            BotRegistry.Client.CurrentUser.Username,
-            BotRegistry.Client.CurrentUser.Discriminator
+            _client.CurrentUser.Username,
+            _client.CurrentUser.Discriminator
         );
 
-        if (_shardCount == BotRegistry.Client.Shards.Count)
+        if (_shardCount == _client.Shards.Count)
         {
-            Logger.Singleton.Debug("Final shard ready!");
+            _logger.Debug("Final shard ready!");
 
-            BotRegistry.Ready = true;
+            await _interactionService.AddModulesAsync(_commandsAssembly, _services);
 
-            if (CommandsSettings.Singleton.RegisterCommandRegistryAtAppStart)
-                CommandRegistry.RegisterOnce();
+#if DEBUG
+            if (_discordSettings.DebugGuildId != 0)
+                await _interactionService.RegisterCommandsToGuildAsync(_discordSettings.DebugGuildId);
+#else
+            await _interactionService.RegisterCommandsGloballyAsync();
+#endif
 
-            if (MaintenanceSettings.Singleton.MaintenanceEnabled)
+            _client.MessageReceived += _onMessageEvent.Invoke;
+            _client.InteractionCreated += _onInteractionEvent.Invoke;
+
+            _interactionService.InteractionExecuted += _onInteractionExecutedEvent.Invoke;
+
+            if (_maintenanceSettings.MaintenanceEnabled)
             {
-                var text = MaintenanceSettings.Singleton.MaintenanceStatus;
+                var text = _maintenanceSettings.MaintenanceStatus;
 
-                BotRegistry.Client.SetStatusAsync(UserStatus.DoNotDisturb);
-                BotRegistry.Client.SetGameAsync(GetStatusText(text));
+                _client.SetStatusAsync(UserStatus.DoNotDisturb);
+                _client.SetGameAsync(GetStatusText(text));
 
                 return;
             }
 
-            BotRegistry.Client.SetStatusAsync(DiscordSettings.Singleton.BotStatus);
+            _client.SetStatusAsync(_discordSettings.BotStatus);
 
-            if (!DiscordSettings.Singleton.BotStatusMessage.IsNullOrEmpty())
-                BotRegistry.Client.SetGameAsync(
-                    DiscordSettings.Singleton.BotStatusMessage
+            if (!_discordSettings.BotStatusMessage.IsNullOrEmpty())
+                _client.SetGameAsync(
+                    _discordSettings.BotStatusMessage
                 );
         }
     }
 }
-
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

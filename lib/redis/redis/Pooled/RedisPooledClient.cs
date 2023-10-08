@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using StackExchange.Redis;
 
 using Hashing;
-using Instrumentation;
 
 /// <summary>
 /// Default implementation for a pooled Redis client.
@@ -28,23 +27,17 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
     /// <summary>
     /// Construct a new instance of <see cref="RedisPooledClient"/>
     /// </summary>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="redisEndpoints">The Redis EndPoints</param>
-    /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="clientOptions">The <see cref="RedisPooledClientOptions"/></param>
     /// <param name="getCurrentTimeFunc">The Utc Now getter.</param>
     public RedisPooledClient(
-        ICounterRegistry counterRegistry,
         IEnumerable<string> redisEndpoints, 
-        string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null,
         RedisPooledClientOptions clientOptions = null, 
         Func<DateTime> getCurrentTimeFunc = null
     ) 
         : base(
-            counterRegistry, 
-            performanceMonitorCategory, 
             clientOptions ?? new RedisPooledClientOptions(), 
             exceptionHandler
         )
@@ -57,24 +50,18 @@ public class RedisPooledClient : RedisClientBase<RedisPooledClientOptions>
     /// <summary>
     /// Construct a new instance of <see cref="RedisPooledClient"/>
     /// </summary>
-    /// <param name="counterRegistry">The <see cref="ICounterRegistry"/></param>
     /// <param name="redisEndpoints">The Redis EndPoints</param>
-    /// <param name="performanceMonitorCategory">The performance monitor category</param>
     /// <param name="exceptionHandler">The exception handler.</param>
     /// <param name="clientOptions">The <see cref="RedisPooledClientOptions"/></param>
     /// <param name="getCurrentTimeFunc">The Utc Now getter.</param>
     public RedisPooledClient(
-        ICounterRegistry counterRegistry, 
         RedisEndpoints redisEndpoints,
-        string performanceMonitorCategory, 
         Action<Exception> exceptionHandler = null, 
         RedisPooledClientOptions clientOptions = null, 
         Func<DateTime> getCurrentTimeFunc = null
     ) 
         : this(
-            counterRegistry, 
             redisEndpoints?.Endpoints, 
-            performanceMonitorCategory, 
             exceptionHandler,
             clientOptions, 
             getCurrentTimeFunc

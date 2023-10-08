@@ -1,0 +1,33 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  codeql:
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-analysis!#') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        continue-on-error: true
+        id: init
+        with:
+          languages: "csharp"
+          config-file: "./.github/configuration/codeql-config.yml"
+
+      - name: Autobuild
+        if: ${{ steps.init.outcome == 'success' }}
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        if: ${{ steps.init.outcome == 'success' }}
+        uses: github/codeql-action/analyze@v2

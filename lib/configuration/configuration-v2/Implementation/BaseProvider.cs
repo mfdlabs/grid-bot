@@ -140,9 +140,7 @@ public abstract class BaseProvider : IConfigurationProvider
         }
 
         if (type == typeof(TimeSpan))
-        {
             return TimeSpan.Parse(value);
-        }
 
         var attribute = type.GetCustomAttribute<TypeConverterAttribute>();
         if (attribute != null)
@@ -157,6 +155,42 @@ public abstract class BaseProvider : IConfigurationProvider
                         return converter.ConvertFrom(value);
                 }
             }
+        }
+
+        // Check nullable
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            var nullableType = type.GetGenericArguments().First();
+
+            if (string.IsNullOrEmpty(value)) return null;
+
+            return ConvertTo(value, nullableType);
+        }
+
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        {
+            // In the form of:
+            // key1=value1
+            // key2=value2
+
+            var dictType = typeof(Dictionary<,>).MakeGenericType(type.GetGenericArguments());
+            var dict = (IDictionary)Activator.CreateInstance(dictType);
+            var lines = value.Split('\n');
+
+            foreach (var line in lines)
+            {
+                var parts = line.Split('=');
+
+                if (parts.Length != 2) continue;
+
+                var key = ConvertTo(parts.First(), type.GetGenericArguments().First());
+                var val = ConvertTo(parts.ElementAt(1), type.GetGenericArguments().ElementAt(1));
+
+                if (key != null && val != null)
+                    dict.Add(key, val);
+            }
+
+            return dict;
         }
 
         try

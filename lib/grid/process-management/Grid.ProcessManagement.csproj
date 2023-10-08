@@ -25,10 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\random\random\Random.csproj" />
-    <ProjectReference Include="..\port-management\Grid.PortManagement.csproj" />
-    <ProjectReference Include="..\..\instrumentation\instrumentation\Instrumentation.csproj" />
-    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="..\process-management-core\Grid.ProcessManagement.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../targets/service.targets" />
+
+  <PropertyGroup>
+    <Description>Primary executable for the MFDLABS grid-bot.</Description>
+    <RepositoryUrl>https://github.vmminfra.dev/mfdlabs/grid-bot</RepositoryUrl>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
+
+    <InformationalVersion Condition="'$(CI)' == 'true'" >$(IMAGE_TAG)</InformationalVersion>
+    <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\lib\random\random\Random.csproj" />
+    <ProjectReference Include="..\lib\shared\commands\Shared.Commands.csproj" />
+    <ProjectReference Include="..\lib\shared\events\Shared.Events.csproj" />
+    <ProjectReference Include="..\lib\shared\settings\Shared.Settings.csproj" />
+    <ProjectReference Include="..\lib\shared\utility\Shared.Utility.csproj" />
+    <ProjectReference Include="..\lib\configuration\core\Configuration.Core.csproj" />
+    <ProjectReference Include="..\lib\redis\redis\Redis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <!-- Copy ./src/lua to the output -->
+    <Exec Command="cp -r $(ProjectDir)lua $(OutDir)" />
+  </Target>
+
+  <!-- Copy src/lua after publish -->
+  <Target Name="CopyLua" AfterTargets="Publish">
+    <Exec Command="cp -r $(ProjectDir)lua $(PublishDir)" />
+  </Target>
+
+</Project>

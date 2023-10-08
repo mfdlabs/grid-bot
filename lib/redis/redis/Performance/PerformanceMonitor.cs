@@ -1,33 +1,16 @@
 ﻿namespace Redis;
 
-using System;
+using Prometheus;
 
-using Instrumentation;
-
-internal class PerformanceMonitor
+internal static class PerformanceMonitor
 {
-    private readonly ICounterRegistry _CounterRegistry;
-    private readonly string _PerformanceCategory;
+    private static readonly Counter _EndPointErrors = Metrics.CreateCounter("redis_endpoint_errors", "Number of errors per endpoint", "endpoint");
 
-    public IRateOfCountsPerSecondCounter RequestsPerSecond { get; set; }
+    public static Counter RequestPerSecondCounter { get; } = Metrics.CreateCounter("redis_requests_per_second", "Number of requests per second");
+    public static Gauge OutstandingRequestsGauge { get; } = Metrics.CreateGauge("redis_outstanding_requests", "Number of outstanding requests");
+    public static Histogram AverageRequestDurationHistogram { get; } = Metrics.CreateHistogram("redis_average_request_duration", "Average request duration in milliseconds");
+    public static Counter ErrorsPerSecondCounter { get; } = Metrics.CreateCounter("redis_errors_per_second", "Number of errors per second");
 
-    public IRawValueCounter OutstandingRequestCount { get; set; }
-
-    public IAverageValueCounter AverageResponseTime { get; set; }
-
-    public IRateOfCountsPerSecondCounter ErrorsPerSecond { get; set; }
-
-    public PerformanceMonitor(ICounterRegistry counterRegistry, string performanceCategory)
-    {
-        _CounterRegistry = counterRegistry ?? throw new ArgumentNullException(nameof(counterRegistry));
-        _PerformanceCategory = performanceCategory ?? throw new ArgumentNullException(nameof(performanceCategory));
-
-        RequestsPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(performanceCategory, "Requests/s");
-        OutstandingRequestCount = _CounterRegistry.GetRawValueCounter(performanceCategory, "Outstanding Request Count");
-        AverageResponseTime = _CounterRegistry.GetAverageValueCounter(performanceCategory, "Average Response Time");
-        ErrorsPerSecond = _CounterRegistry.GetRateOfCountsPerSecondCounter(performanceCategory, "ErrorsPerSecond");
-    }
-
-    public IRateOfCountsPerSecondCounter GetPerEndpointErrorCounter(string endPoint) 
-        => _CounterRegistry.GetRateOfCountsPerSecondCounter(_PerformanceCategory, "Endpoint Errors/s", endPoint);
+    public static Counter.Child GetPerEndpointErrorCounter(string endPoint) 
+        => _EndPointErrors.WithLabels(endPoint);
 }

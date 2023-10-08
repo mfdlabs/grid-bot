@@ -1,138 +1,110 @@
 ﻿namespace Grid;
 
 using System;
-using System.IO;
-using System.Net;
-using System.Linq;
 using System.Diagnostics;
-using System.Collections.Generic;
 
 using Logging;
 
-#nullable enable
-
-/// <inheritdoc cref="IGridServerProcess"/>
-[DebuggerDisplay($"{{{nameof(ToString)}(), nq}}")]
-public class GridServerProcess : IGridServerProcess, IDisposable
+/// <summary>
+/// Represents the Docker implementation of <see cref="GridServerInstanceBase"/>
+/// </summary>
+public sealed class GridServerProcess : GridServerInstanceBase
 {
-    private readonly Process _process;
-    private readonly IPEndPoint _endpoint;
+    private readonly IGridServerProcess _Process;
+    private readonly IGridServerProcessSettings _GridServerSettings;
+    private readonly IGridServerFileHelper _FileHelper;
 
-    private ILogger? _logger;
-    private bool _disposed;
+    private bool _Disposed;
 
-    private GridServerProcess(Process process, IPEndPoint endPoint)
+    /// <inheritdoc cref="GridServerInstanceBase.HasExited"/>
+    public override bool HasExited => _Process.HasExited;
+
+    /// <inheritdoc cref="GridServerInstanceBase.Id"/>
+    public override string Id => _Process.RawProcess.Id.ToString();
+
+    /// <inheritdoc cref="GridServerInstanceBase.Name"/>
+    public override string Name => ProcessName;
+
+    /// <summary>
+    /// The name of the container.
+    /// </summary>
+    internal string ProcessName { get; set; }
+
+    /// <summary>
+    /// Construct a new instance of <see cref="GridServerProcess"/>
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/></param>
+    /// <param name="port">The port</param>
+    /// <param name="version">The version.</param>
+    /// <param name="gridServerSettings">The <see cref="IGridServerProcessSettings"/></param>
+    /// <param name="gridServerProcess">The <see cref="IGridServerProcess"/></param>
+    /// <param name="fileHelper">The <see cref="IGridServerFileHelper"/></param>
+    /// <exception cref="ArgumentException"><paramref name="port"/> must be > 0</exception>
+    internal GridServerProcess(
+        ILogger logger,
+        int port,
+        string version,
+        IGridServerProcessSettings gridServerSettings,
+        IGridServerProcess gridServerProcess,
+        IGridServerFileHelper fileHelper = null
+    )
+        : base(logger, version, port, gridServerSettings)
     {
-        _process = process;
-        _endpoint = endPoint;
+        if (port < 1) throw new ArgumentException("Port must be > 0", nameof(port));
+
+        _GridServerSettings = gridServerSettings;
+        _Process = gridServerProcess;
+
+        ProcessName = string.Format("grid-server-{0}-gr", Guid.NewGuid());
+
+        _FileHelper = fileHelper ?? new GridServerFileHelper(gridServerSettings);
+
+        Logger.Information("Constructing GridServerProcess",
+            new
+            {
+                ProcessName,
+                Port,
+                Version
+            }
+        );
     }
 
-    /// <inheritdoc cref="IGridServerProcess.Process"/>
-    public Process Process => _process;
+    /// <inheritdoc cref="GridServerInstanceBase.Start"/>
+    public override bool Start() 
+        => _Process.Start(_GridServerSettings.GridServerExecutableName, _FileHelper.GetGridServerPath(true), Port) && WaitForProcessStart();
 
-    /// <inheritdoc cref="IGridServerProcess.IsOpen"/>
-    public bool IsOpen => !_disposed && !_process.SafeGetHasExited();
-
-    /// <inheritdoc cref="IGridServerProcess.EndPoint"/>
-    public IPEndPoint EndPoint => _endpoint;
-
-    /// <inheritdoc cref="IGridServerProcess.IsDisposed"/>
-    public bool IsDisposed => _disposed;
-
-    /// <inheritdoc cref="IGridServerProcess.SetLogger(ILogger)"/>
-    public void SetLogger(ILogger logger)
+    private bool WaitForProcessStart()
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            WaitForServiceToBecomeAvailable(false, sw);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            var format = string.Format(
+                "Error waiting for Grid Server Service to become available. Process Name: {0}, Version: {1}. Exception: {2}",
+                ProcessName,
+                Version,
+                ex
+            );
+
+            Logger.Error(format);
+
+            throw new Exception(format);
+        }
     }
-
-    /// <inheritdoc cref="IGridServerProcess.Kill"/>
-    public void Kill()
-    {
-        var (didClose, errorCode) = _process.ForceKill();
-
-        _logger?.Debug("Process '{0}' did close ({1}) with error code {2}", _process.Id, didClose, errorCode);
-    }
-
-    /// <inheritdoc cref="Process.ToString"/>
-    public override string ToString() => $"[{_process.ProcessName} ({_process.Id}) @ {_endpoint}]";
 
     /// <inheritdoc cref="IDisposable.Dispose"/>
-    public void Dispose()
+    public override void Dispose()
     {
-        if (_disposed) return;
+        if (_Disposed) return;
 
-        GC.SuppressFinalize(this);
+        _Process.Kill();
+        _Process.Dispose();
 
-        _process.Dispose();
-
-        _disposed = true;
-    }
-
-    /// <summary>
-    /// Start a new process with the specified executable path.
-    /// </summary>
-    /// <param name="executableName">Name of the executable.</param>
-    /// <param name="workingDirectory">The working directory of the executable.</param>
-    /// <param name="port">The port of the grid server.</param>
-    /// <param name="args">The optional arguments</param>
-    /// <returns>The process</returns>
-    public static IGridServerProcess Start(
-        string executableName,
-        string? workingDirectory = null,
-        int port = 53640,
-        string? args = null
-    )
-    {
-        if (TcpHealthCheck.GetProcessByHostnameAndPort(IPAddress.Loopback.ToString(), port, out var proc))
-            return new GridServerProcess(proc, new IPEndPoint(IPAddress.Loopback, port));
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = executableName,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        if (!string.IsNullOrEmpty(workingDirectory))
-            startInfo.WorkingDirectory = workingDirectory;
-        else
-            startInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-
-        if (!string.IsNullOrEmpty(args))
-            startInfo.Arguments = args;
-        else
-            startInfo.Arguments = $"{port} -Console";
-
-        var process = Process.Start(startInfo);
-
-        return new GridServerProcess(process, new IPEndPoint(IPAddress.Loopback, port));
-    }
-
-    /// <summary>
-    /// Discover all the grid servers.
-    /// </summary>
-    /// <param name="executableName">Name of the process.</param>
-    /// <returns>The list of discovered processes.</returns>
-    public static IEnumerable<IGridServerProcess> DiscoverProcesses(string executableName)
-    {
-        var tcpTable = ManagedIpHelper.GetExtendedTcpTable(true);
-        var processes = Process.GetProcessesByName(executableName);
-        var wrappedProcesses = new List<GridServerProcess>();
-
-        foreach (var process in processes)
-        {
-            // Do not use the process if it is not owned by the current user.
-            if (process.GetOwner() != Environment.UserName)
-                continue;
-
-            var tcpRow = tcpTable.FirstOrDefault(row => row.ProcessId == process.Id);
-
-            if (tcpRow == default)
-                continue;
-
-            wrappedProcesses.Add(new GridServerProcess(process, tcpRow.LocalEndPoint));
-        }
-
-        return wrappedProcesses;
+        _Disposed = true;
     }
 }
