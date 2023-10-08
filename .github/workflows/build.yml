@@ -154,7 +154,7 @@ jobs:
         if: ${{ env.CREATE_RELEASE == 'true' && steps.zip.outcome == 'success' }}
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEPLOYER_TOKEN }}
         with:
           files: |
             /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc
