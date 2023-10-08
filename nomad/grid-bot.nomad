@@ -30,6 +30,11 @@ job "{{{NOMAD_JOB_NAME}}}" {
         ]
       }
 
+      resources {
+        memory = 4096
+        cpu = 5000
+      }
+
       template {
         data        = <<EOF
 
