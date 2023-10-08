@@ -75,12 +75,14 @@ permissions:
 
 jobs:
   build:
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') }}
+
     runs-on: grid-bot-infra
     env:
       BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
 
-      IMAGE: ${{ github.event.inputs.image || 'docker.registries.vmminfra.dev/grid/grid-bot' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || 'docker.registries.vmminfra.dev' }}
+      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev') || 'docker-dev.registries.vmminfra.dev' }}
 
       CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
       CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
