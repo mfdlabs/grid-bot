@@ -13,7 +13,7 @@ on:
       - "Makefile"
       - ".dockerignore"
     tags-ignore:
-      - '*'
+      - "**"
   workflow_dispatch:
     inputs:
       build_configuration:
