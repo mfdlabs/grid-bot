@@ -1,7 +1,6 @@
 ﻿namespace Grid;
 
 using System;
-using System.Net;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -9,8 +8,8 @@ using System.Collections.Generic;
 using Docker.DotNet.Models;
 
 using Logging;
-using Grid.Commands;
-using Grid.ComputeCloud;
+
+using Commands;
 
 /// <summary>
 /// Represents the Docker implementation of <see cref="GridServerInstanceBase"/>
@@ -23,6 +22,11 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     public const string PortLabel = "port";
 
     /// <summary>
+    /// The image name label.
+    /// </summary>
+    public const string ImageNameLabel = "image_name";
+
+    /// <summary>
     /// The Grid Server version label.
     /// </summary>
     public const string GridServerVersionLabel = "grid_server_version";
@@ -33,7 +37,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
     private readonly GridServerDockerAuthority _DockerAuthority;
     private readonly IGridServerDockerSettings _GridServerSettings;
-    private readonly string _GridServerContainerName;
+    private readonly string _GridServerImageName;
 
     private bool _Disposed;
 
@@ -64,7 +68,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     /// <param name="version">The version.</param>
     /// <param name="gridServerSettings">The <see cref="IGridServerDockerSettings"/></param>
     /// <param name="dockerAuthority">The <see cref="GridServerDockerAuthority"/></param>
-    /// <param name="gridServerContainerName">The Grid Server container name.</param>
+    /// <param name="gridServerImageName">The Grid Server image name.</param>
     /// <exception cref="ArgumentException"><paramref name="port"/> must be > 0</exception>
     internal GridServerDockerContainer(
         ILogger logger,
@@ -72,7 +76,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         string version,
         IGridServerDockerSettings gridServerSettings,
         GridServerDockerAuthority dockerAuthority,
-        string gridServerContainerName
+        string gridServerImageName
     )
         : base(logger, version, port, gridServerSettings)
     {
@@ -80,7 +84,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
         _GridServerSettings = gridServerSettings;
         _DockerAuthority = dockerAuthority;
-        _GridServerContainerName = gridServerContainerName;
+        _GridServerImageName = gridServerImageName;
 
         ContainerName = string.Format("grid-server-{0}-gr", Guid.NewGuid());
 
@@ -99,11 +103,11 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
     private async Task<bool> StartAsync()
     {
-        if (!await _DockerAuthority.CheckImageAsync(_GridServerContainerName, Version).ConfigureAwait(false))
+        if (!await _DockerAuthority.CheckImageAsync(_GridServerImageName, Version).ConfigureAwait(false))
         {
-            Logger.Information("Pulling container {0}:{1}", _GridServerContainerName, Version);
+            Logger.Information("Pulling container {0}:{1}", _GridServerImageName, Version);
 
-            await _DockerAuthority.CreateImageAsync(_GridServerContainerName, Version).ConfigureAwait(false);
+            await _DockerAuthority.CreateImageAsync(_GridServerImageName, Version).ConfigureAwait(false);
         }
 
         ContainerID = await _DockerAuthority.CreateContainerAsync(GetCreateContainerParameters()).ConfigureAwait(false);
@@ -235,7 +239,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
         var parameters = new CreateContainerParameters
         {
-            Image = $"{_GridServerContainerName}:{Version}",
+            Image = $"{_GridServerImageName}:{Version}",
             Name = ContainerName,
             Env = GetEnvironmentVariables()
         };
@@ -243,7 +247,8 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         var labels = new Dictionary<string, string>
         {
             [PortLabel] = Port.ToString(),
-            [GridServerVersionLabel] = Version
+            [GridServerVersionLabel] = Version,
+            [ImageNameLabel] = _GridServerImageName
         };
 
         parameters.Labels = labels;

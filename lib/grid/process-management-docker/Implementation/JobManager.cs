@@ -47,16 +47,18 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
     )
         : base(logger, rccSettings, portAllocator, resourceAllocationTracker)
     {
+        _GridServerSettings = rccSettings ?? throw new ArgumentNullException(nameof(rccSettings));
+
         _ActiveContainerFilter = new ContainersListParameters
         {
             Filters = new Dictionary<string, IDictionary<string, bool>>
             {
                 ["name"] = new Dictionary<string, bool> { ["/grid-server-.*-gr"] = true },
-                ["status"] = new Dictionary<string, bool> { ["running"] = true }
+                ["status"] = new Dictionary<string, bool> { ["running"] = true },
+                ["label"] = new Dictionary<string, bool> { [$"{GridServerDockerContainer.ImageNameLabel}={_GridServerSettings.GridServerImageName}"] = true }
             }
         };
 
-        _GridServerSettings = rccSettings ?? throw new ArgumentNullException(nameof(rccSettings));
         _Random = random ?? throw new ArgumentNullException(nameof(random));
         _DockerClient = CreateDockerClient();
         _DockerAuthority = new GridServerDockerAuthority(Logger, _DockerClient, _GridServerSettings, serverInfo);
