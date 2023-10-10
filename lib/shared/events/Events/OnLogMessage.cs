@@ -1,9 +1,11 @@
 ﻿namespace Grid.Bot.Events;
 
 using System;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 using Discord;
+using Discord.WebSocket;
 
 using Logging;
 
@@ -46,6 +48,13 @@ public class OnLogMessage
             if (message.Exception?.InnerException is WebSocketClosedException)
                 return Task.CompletedTask;
 #endif
+
+        if (message.Exception is GatewayReconnectException)
+            return Task.CompletedTask;
+
+        // Closed web socket exceptions are expected when the bot is shutting down.
+        if (message.Exception.InnerException is WebSocketException)
+            return Task.CompletedTask;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
             if (!(message.Exception is TaskCanceledException &&
