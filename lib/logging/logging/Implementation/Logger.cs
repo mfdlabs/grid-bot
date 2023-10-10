@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 // ReSharper disable UseStringInterpolationWhenPossible
 
 /// <inheritdoc cref="ILogger"/>
-public class Logger : ILogger, IDisposable
+public class Logger : ILogger
 {
     internal class LockedFileStream : Stream, IDisposable
     {
@@ -224,6 +224,8 @@ public class Logger : ILogger, IDisposable
 
     private static bool? _hasTerminal;
 
+    private static List<Func<string>> _globalLogPrefixes = new();
+
     //////////////////////////////////////////////////////////////////////////////
     // Private Readonly Properties (Only set in the constructor)
     //////////////////////////////////////////////////////////////////////////////
@@ -250,6 +252,8 @@ public class Logger : ILogger, IDisposable
 
     private string _cachedNonColorPrefix;
     private string _cachedColorPrefix;
+
+    private List<Func<string>> _logPrefixes = new();
 
     private bool _disposed;
 
@@ -388,6 +392,23 @@ public class Logger : ILogger, IDisposable
                 this._name
             );
 
+    /// <summary>
+    /// Gets the constructed custom non-color prefix.
+    /// </summary>
+    /// <param name="prefixes">The prefixes.</param>
+    /// <returns>The constructed prefix.</returns>
+    protected static string _getConstructedCustomNonColorLogPrefix(List<Func<string>> prefixes)
+    {
+        if (prefixes is null || prefixes.Count == 0) return "";
+
+        var sb = new StringBuilder();
+
+        foreach (var prefix in prefixes)
+            sb.Append($"[{prefix()}]");
+
+        return sb.ToString();
+    }
+
     private string _getNonColorLogPrefix()
     {
         if (this._cutLogPrefix)
@@ -438,6 +459,23 @@ public class Logger : ILogger, IDisposable
     }
 
     /// <summary>
+    /// Gets the constructed custom color prefix.
+    /// </summary>
+    /// <param name="prefixes">The prefixes.</param>
+    /// <returns>The constructed prefix.</returns>
+    protected static string _getConstructedCustomColorLogPrefix(List<Func<string>> prefixes)
+    {
+        if (prefixes is null || prefixes.Count == 0) return "";
+
+        var sb = new StringBuilder();
+
+        foreach (var prefix in prefixes)
+            sb.Append(Logger._getColorSection(prefix()));
+
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Constructs the full non-color log message.
     /// </summary>
     /// <param name="logLevel">The log level.</param>
@@ -452,20 +490,24 @@ public class Logger : ILogger, IDisposable
 
         if (_cutLogPrefix)
             return string.Format(
-                "[{0}]{1}{2}[{3}] {4}\n",
+                "[{0}]{1}{2}{3}{4}[{5}] {6}\n",
                 Logger._getNowAsIso(),
                 this._logThreadId ? $"[{Logger._getCurrentThreadIdFormatted()}]" : "",
                 this._getNonColorLogPrefix(),
+                Logger._getConstructedCustomNonColorLogPrefix(this._logPrefixes),
+                Logger._getConstructedCustomNonColorLogPrefix(Logger._globalLogPrefixes),
                 logLevel.ToString().ToUpper(),
                 formattedMessage
             );
 
         return string.Format(
-            "[{0}][{1}][{2}]{3}[{4}] {5}\n",
+            "[{0}][{1}][{2}]{3}{4}{5}[{6}] {7}\n",
             Logger._getNowAsIso(),
             Logger._getProcessUptime(),
             this._logThreadId ? $"[{Logger._getCurrentThreadIdFormatted()}]" : "",
             this._getNonColorLogPrefix(),
+            Logger._getConstructedCustomNonColorLogPrefix(this._logPrefixes),
+            Logger._getConstructedCustomNonColorLogPrefix(Logger._globalLogPrefixes),
             logLevel.ToString().ToUpper(),
             formattedMessage
         );
@@ -487,10 +529,12 @@ public class Logger : ILogger, IDisposable
 
         if (_cutLogPrefix)
             return string.Format(
-                "{0}{1}{2}{3} {4}{5}{6}\n",
+                "{0}{1}{2}{3}{4}{5} {6}{7}{8}\n",
                 Logger._getColorSection(Logger._getNowAsIso()),
                 this._logThreadId ? Logger._getColorSection(Logger._getCurrentThreadIdFormatted()) : "",
                 this._getColorLogPrefix(),
+                Logger._getConstructedCustomColorLogPrefix(this._logPrefixes),
+                Logger._getConstructedCustomColorLogPrefix(Logger._globalLogPrefixes),
                 Logger._getColorSection(color, logLevel.ToString().ToUpper()),
                 Logger._getAnsiColorByLogColor(color),
                 formattedMessage,
@@ -498,11 +542,13 @@ public class Logger : ILogger, IDisposable
             );
 
         return string.Format(
-            "{0}{1}{2}{3}{4} {5}{6}{7}\n",
+            "{0}{1}{2}{3}{4}{5}{6} {7}{8}{9}\n",
             Logger._getColorSection(Logger._getNowAsIso()),
             Logger._getColorSection(Logger._getProcessUptime()),
             this._logThreadId ? Logger._getColorSection(Logger._getCurrentThreadIdFormatted()) : "",
             this._getColorLogPrefix(),
+            Logger._getConstructedCustomColorLogPrefix(this._logPrefixes),
+            Logger._getConstructedCustomColorLogPrefix(Logger._globalLogPrefixes),
             Logger._getColorSection(color, logLevel.ToString().ToUpper()),
             Logger._getAnsiColorByLogColor(color),
             formattedMessage,
@@ -797,6 +843,11 @@ public class Logger : ILogger, IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets the global log prefixes.
+    /// </summary>
+    public static List<Func<string>> GlobalLogPrefixes => Logger._globalLogPrefixes;
+
 
     ////////////////////////////////////////////////////////////////////////////////
     // Public Getters and Setters
@@ -895,6 +946,18 @@ public class Logger : ILogger, IDisposable
             if (this._disposed) throw new ObjectDisposedException(this.GetType().Name);
 
             this._logWithColor = value;
+        }
+    }
+
+    /// <inheritdoc cref="ILogger.CustomLogPrefixes"/>
+    public List<Func<string>> CustomLogPrefixes
+    {
+        get => this._logPrefixes;
+        set
+        {
+            if (this._disposed) throw new ObjectDisposedException(this.GetType().Name);
+
+            this._logPrefixes = value;
         }
     }
 

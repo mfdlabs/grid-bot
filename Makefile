@@ -1,4 +1,4 @@
-IMAGE_TAG ?= $(shell ./scripts/generate-image-tag.sh)
+IMAGE_TAG ?= $(shell $(CURDIR)/scripts/generate-image-tag.sh)
 
 SOLUTION ?= $(CURDIR)/grid-bot.sln
 

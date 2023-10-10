@@ -122,6 +122,12 @@ internal static class Runner
         }
 #endif
 
+#if DEBUG
+        var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        
+        Logger.GlobalLogPrefixes.Add(() => informationalVersion);
+#endif
+
         var globalSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(GlobalSettings)) as GlobalSettings;
 
         var logger = new Logger(
@@ -150,9 +156,7 @@ internal static class Runner
 
         var interactionServiceConfig = new InteractionServiceConfig()
         {
-#if DEBUG || DEBUG_LOGGING_IN_PROD
             LogLevel = LogSeverity.Debug,
-#endif
         };
 
         var gridSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(GridSettings)) as GridSettings;
@@ -181,6 +185,7 @@ internal static class Runner
             .AddSingleton<IRbxUsersUtility, RbxUsersUtility>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
+            .AddSingleton<ILoggerFactory, LoggerFactory>()
             .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>();
 
         services.AddSingleton(config)
