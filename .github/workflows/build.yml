@@ -69,7 +69,7 @@ on:
         type: choice
         options:
           - "production"
-          - "development"
+          - "staging"
 
 permissions:
   contents: write
@@ -95,7 +95,7 @@ jobs:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
       NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'dev' }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
 
       DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
@@ -164,6 +164,7 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ env.BUILD_CONFIGURATION == 'Debug' }}
           draft: false
+          target_commitish: ${{ github.sha }}
 
       - name: Upload Release Artifact
         if: ${{ env.UPLOAD_ARTIFACT == 'true' && steps.zip.outcome == 'success' }}

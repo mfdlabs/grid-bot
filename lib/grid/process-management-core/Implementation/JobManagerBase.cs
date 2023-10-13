@@ -15,11 +15,7 @@ using ComputeCloud;
 /// <summary>
 /// Represents the base abstract class for all job managers.
 /// </summary>
-/// <typeparam name="TInstance">The type of managed instances</typeparam>
-/// <typeparam name="TUnmanagedInstance">The type of unmanaged instances</typeparam>
-public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
-    where TInstance : IGridServerInstance
-    where TUnmanagedInstance : IUnmanagedGridServerInstance
+public abstract class JobManagerBase
 {
     private const int _MillisecondsInSecond = 1000;
     private const int _DefaultIntervalToQueryForRunningJobs = 3000;
@@ -38,7 +34,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// <summary>
     /// The active jobs.
     /// </summary>
-    protected readonly ConcurrentDictionary<IJob, TInstance> ActiveJobs = new();
+    protected readonly ConcurrentDictionary<IJob, IGridServerInstance> ActiveJobs = new();
 
     /// <summary>
     /// The Logger.
@@ -64,7 +60,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// <summary>
     /// The ready instances.
     /// </summary>
-    protected BlockingCollection<TInstance> ReadyInstances = new(new ConcurrentStack<TInstance>());
+    protected BlockingCollection<IGridServerInstance> ReadyInstances = new(new ConcurrentStack<IGridServerInstance>());
 
     private bool _IsRunning;
 
@@ -72,7 +68,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     private volatile bool _LastInstanceCreationFailed;
 
     /// <summary>
-    /// Constructs a new instance of <see cref="JobManagerBase{TInstance, TUnmanagedInstance}"/>
+    /// Constructs a new instance of <see cref="JobManagerBase"/>
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="settings">The <see cref="IJobManagerSettings"/></param>
@@ -163,7 +159,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// </summary>
     /// <param name="job">The job.</param>
     /// <param name="instance">The instancee.</param>
-    public void AddOrUpdateActiveJob(IJob job, TInstance instance) => ActiveJobs[job] = instance;
+    public void AddOrUpdateActiveJob(IJob job, IGridServerInstance instance) => ActiveJobs[job] = instance;
 
     /// <summary>
     /// Is a Grid Server resource available?
@@ -230,7 +226,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// <param name="addToActiveJobs">Add this job to the active jobs list?</param>
     /// <returns>The SOAP interface, the instance and a job rejection reason.</returns>
     /// <exception cref="Exception">annot create a new job, since job already exists</exception>
-    public (ComputeCloudServiceSoap soapInterface, TInstance instance, JobRejectionReason? rejectionReason) NewJob(
+    public (ComputeCloudServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
         IJob job,
         double expirationInSeconds,
         bool waitForReadyInstance = false,
@@ -357,7 +353,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// </summary>
     /// <param name="port">The port.</param>
     /// <returns>The new Grid Server instance.</returns>
-    protected abstract TInstance CreateNewGridServerInstance(int port);
+    protected abstract IGridServerInstance CreateNewGridServerInstance(int port);
 
     /// <summary>
     /// Find all unexpectedly exited game jobs.
@@ -375,14 +371,14 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
     /// Get all running Grid Server instances.
     /// </summary>
     /// <returns>The running Grid Server instances.</returns>
-    protected abstract IReadOnlyCollection<TUnmanagedInstance> GetRunningGridServerInstances();
+    protected abstract IReadOnlyCollection<IUnmanagedGridServerInstance> GetRunningGridServerInstances();
 
     /// <summary>
     /// Recover a managed Grid Server instance by an unmanaged Grid Server instance.
     /// </summary>
     /// <param name="unmanagedInstance">The unmanaged Grid Server instance.</param>
     /// <returns>The managed Grid Server instance.</returns>
-    protected abstract TInstance RecoverGridServerInstance(TUnmanagedInstance unmanagedInstance);
+    protected abstract IGridServerInstance RecoverGridServerInstance(IUnmanagedGridServerInstance unmanagedInstance);
 
     /// <summary>
     /// Invoked when a job exits.
@@ -483,9 +479,9 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
 
     private void KillOutOfDateReadyInstances()
     {
-        var readyInstances = new BlockingCollection<TInstance>(new ConcurrentStack<TInstance>());
+        var readyInstances = new BlockingCollection<IGridServerInstance>(new ConcurrentStack<IGridServerInstance>());
 
-        using var enumerator = ((IEnumerable<TInstance>)Interlocked.Exchange(ref ReadyInstances, readyInstances)).GetEnumerator();
+        using var enumerator = ((IEnumerable<IGridServerInstance>)Interlocked.Exchange(ref ReadyInstances, readyInstances)).GetEnumerator();
 
         while (enumerator.MoveNext())
         {
@@ -611,7 +607,7 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
                         continue;
                 }
 
-                var instance = default(TInstance);
+                var instance = default(IGridServerInstance);
                 var sw = Stopwatch.StartNew();
 
                 try
@@ -661,11 +657,11 @@ public abstract class JobManagerBase<TInstance, TUnmanagedInstance>
         }
     }
 
-    private (TInstance, JobRejectionReason?) GetReadyInstance(string jobId, double expirationInSeconds, bool waitForReadyInstance)
+    private (IGridServerInstance, JobRejectionReason?) GetReadyInstance(string jobId, double expirationInSeconds, bool waitForReadyInstance)
     {
         var sw = Stopwatch.StartNew();
 
-        TInstance instance;
+        IGridServerInstance instance;
         while (true)
         {
             if (waitForReadyInstance)

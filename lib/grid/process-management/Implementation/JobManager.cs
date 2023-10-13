@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using Logging;
 
 /// <summary>
-/// Represents the Process implementation for <see cref="JobManagerBase{TInstance, TUnmanagedInstance}"/>
+/// Represents the Process implementation for <see cref="JobManagerBase"/>
 /// </summary>
-public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGridServerProcess>
+public class ProcessJobManager : JobManagerBase
 {
     private readonly IGridServerProcessSettings _GridServerSettings;
     private readonly IGridServerFileHelper _FileHelper;
@@ -31,7 +31,7 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         ILogger logger,
         IPortAllocator portAllocator,
         IGridServerProcessSettings gridServerSettings,
-        ResourceAllocationTracker resourceAllocationTracker,
+        ResourceAllocationTracker resourceAllocationTracker = null,
         IGridServerFileHelper gridServerFileHelper = null
     )
         : base(logger, gridServerSettings, portAllocator, resourceAllocationTracker)
@@ -41,11 +41,11 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         _FileHelper = gridServerFileHelper ?? new GridServerFileHelper(gridServerSettings);
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetInstanceCount"/>
+    /// <inheritdoc cref="JobManagerBase.GetInstanceCount"/>
     public override int GetInstanceCount()
         => ListRunningProcesses().Count;
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetGridServerInstanceId(string)"/>
+    /// <inheritdoc cref="JobManagerBase.GetGridServerInstanceId(string)"/>
     public override string GetGridServerInstanceId(string jobId)
     {
         ActiveJobs.TryGetValue(new Job(jobId), out var container);
@@ -55,7 +55,7 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         return container.Id;
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.UpdateGridServerInstance(GridServerResourceJob)"/>
+    /// <inheritdoc cref="JobManagerBase.UpdateGridServerInstance(GridServerResourceJob)"/>
     public override bool UpdateGridServerInstance(GridServerResourceJob job)
     {
         try
@@ -73,14 +73,14 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         }
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetRunningActiveJobNames"/>
+    /// <inheritdoc cref="JobManagerBase.GetRunningActiveJobNames"/>
     protected override ISet<string> GetRunningActiveJobNames()
         => new HashSet<string>(
                 (from process in ListRunningProcesses()
                  select process.RawProcess.Id.ToString()).ToList()
            );
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetLatestGridServerVersion"/>
+    /// <inheritdoc cref="JobManagerBase.GetLatestGridServerVersion"/>
     protected override string GetLatestGridServerVersion() => ReadRccVersion();
 
     private string ReadRccVersion()
@@ -90,15 +90,15 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         return fileVersionInfo.FileVersion;
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.OnGridServerVersionChange(string, bool)"/>
+    /// <inheritdoc cref="JobManagerBase.OnGridServerVersionChange(string, bool)"/>
     protected override bool OnGridServerVersionChange(string newGridServerVersion, bool isStartup)
         => true;
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.CreateNewGridServerInstance(int)"/>
-    protected override GridServerProcess CreateNewGridServerInstance(int port)
-        => new(Logger, port, GridServerVersion, _GridServerSettings, new RawGridServerProcess(), _FileHelper);
+    /// <inheritdoc cref="JobManagerBase.CreateNewGridServerInstance(int)"/>
+    protected override IGridServerInstance CreateNewGridServerInstance(int port)
+        => new GridServerProcess(Logger, port, GridServerVersion, _GridServerSettings, new RawGridServerProcess(), _FileHelper);
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.FindUnexpectedExitGameJobs"/>
+    /// <inheritdoc cref="JobManagerBase.FindUnexpectedExitGameJobs"/>
     protected override IReadOnlyCollection<GameJob> FindUnexpectedExitGameJobs()
     {
         var processes = ListRunningProcesses();
@@ -117,22 +117,25 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         return jobs.Values;
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetRunningGridServerInstances"/>
-    protected override IReadOnlyCollection<UnmanagedGridServerProcess> GetRunningGridServerInstances()
+    /// <inheritdoc cref="JobManagerBase.GetRunningGridServerInstances"/>
+    protected override IReadOnlyCollection<IUnmanagedGridServerInstance> GetRunningGridServerInstances()
         => (from process in ListRunningProcesses()
             select new UnmanagedGridServerProcess(Logger, process)).ToArray();
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.RecoverGridServerInstance(TUnmanagedInstance)"/>
-    protected override GridServerProcess RecoverGridServerInstance(UnmanagedGridServerProcess instance)
+    /// <inheritdoc cref="JobManagerBase.RecoverGridServerInstance(IUnmanagedGridServerInstance)"/>
+    protected override IGridServerInstance RecoverGridServerInstance(IUnmanagedGridServerInstance instance)
     {
-        if (instance.Process.HasExited) return null;
+        if (instance is not UnmanagedGridServerProcess unmanagedGridServerProcess)
+            return null;
 
-        var name = instance.Process.RawProcess.Id.ToString();
-        var port = instance.Process.EndPoint.Port;
+        if (unmanagedGridServerProcess.Process.HasExited) return null;
+
+        var name = unmanagedGridServerProcess.Process.RawProcess.Id.ToString();
+        var port = unmanagedGridServerProcess.Process.EndPoint.Port;
 
         Logger.Information(
             "Found a running GridServer process. Process ID = {0} on TCP port: {1}",
-            instance.Process.RawProcess.Id,
+            unmanagedGridServerProcess.Process.RawProcess.Id,
             port
         );
 
@@ -141,7 +144,7 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
             port,
             GetVersion(),
             _GridServerSettings,
-            instance.Process,
+            unmanagedGridServerProcess.Process,
             _FileHelper
         )
         {
@@ -149,7 +152,7 @@ public class ProcessJobManager : JobManagerBase<GridServerProcess, UnmanagedGrid
         };
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.OnGetJobInstanceHasExited"/>
+    /// <inheritdoc cref="JobManagerBase.OnGetJobInstanceHasExited"/>
     protected override void OnGetJobInstanceHasExited()
     {
     }

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
     <ProjectReference Include="..\..\grid\docker\Grid.ProcessManagement.Docker.Core.csproj" />
     <ProjectReference Include="..\..\grid\process-management-core\Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="..\..\grid\process-management\Grid.ProcessManagement.csproj" />
   </ItemGroup>
 
   <ItemGroup>

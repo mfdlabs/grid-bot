@@ -82,6 +82,9 @@ public class BacktraceUtility : IBacktraceUtility
         var attachments = from file in Directory.EnumerateFiles(Path.GetDirectoryName(Logger.LogFileBaseDirectory))
                           select file;
 
+        if (!attachments.Any())
+            return null;
+
         var result = _client?.Send("Log files upload", attachmentPaths: attachments.ToList());
 
         if (delete)

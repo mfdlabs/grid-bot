@@ -12,9 +12,9 @@ using Random;
 using Logging;
 
 /// <summary>
-/// Represents the Docker implementation for <see cref="JobManagerBase{TInstance, TUnmanagedInstance}"/>
+/// Represents the Docker implementation for <see cref="JobManagerBase"/>
 /// </summary>
-public class DockerJobManager : JobManagerBase<GridServerDockerContainer, UnmanagedGridServerDockerContainer>
+public class DockerJobManager : JobManagerBase
 {
     private readonly Uri _DockerSocketUri = new("unix:/var/run/docker.sock");
     private readonly Uri _DockerHttpUri = new("http://host.docker.internal:2375");
@@ -47,25 +47,27 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
     )
         : base(logger, rccSettings, portAllocator, resourceAllocationTracker)
     {
+        _GridServerSettings = rccSettings ?? throw new ArgumentNullException(nameof(rccSettings));
+
         _ActiveContainerFilter = new ContainersListParameters
         {
             Filters = new Dictionary<string, IDictionary<string, bool>>
             {
                 ["name"] = new Dictionary<string, bool> { ["/grid-server-.*-gr"] = true },
-                ["status"] = new Dictionary<string, bool> { ["running"] = true }
+                ["status"] = new Dictionary<string, bool> { ["running"] = true },
+                ["label"] = new Dictionary<string, bool> { [$"{GridServerDockerContainer.ImageNameLabel}={_GridServerSettings.GridServerImageName}"] = true }
             }
         };
 
-        _GridServerSettings = rccSettings ?? throw new ArgumentNullException(nameof(rccSettings));
         _Random = random ?? throw new ArgumentNullException(nameof(random));
         _DockerClient = CreateDockerClient();
         _DockerAuthority = new GridServerDockerAuthority(Logger, _DockerClient, _GridServerSettings, serverInfo);
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetInstanceCount"/>
+    /// <inheritdoc cref="JobManagerBase.GetInstanceCount"/>
     public override int GetInstanceCount() => _DockerClient.Containers.ListContainersAsync(_ActiveContainerFilter, default).Result.Count;
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetGridServerInstanceId(string)"/>
+    /// <inheritdoc cref="JobManagerBase.GetGridServerInstanceId(string)"/>
     public override string GetGridServerInstanceId(string jobId)
     {
         ActiveJobs.TryGetValue(new Job(jobId), out var container);
@@ -75,7 +77,7 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
         return container.Id;
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.UpdateGridServerInstance(GridServerResourceJob)"/>
+    /// <inheritdoc cref="JobManagerBase.UpdateGridServerInstance(GridServerResourceJob)"/>
     public override bool UpdateGridServerInstance(GridServerResourceJob job)
     {
         try
@@ -94,17 +96,17 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
         }
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetRunningActiveJobNames"/>
+    /// <inheritdoc cref="JobManagerBase.GetRunningActiveJobNames"/>
     protected override ISet<string> GetRunningActiveJobNames()
         => new HashSet<string>(
                 (from container in ListRunningContainers()
                  select container.Names[0].Trim('/')).ToList()
            );
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetLatestGridServerVersion"/>
+    /// <inheritdoc cref="JobManagerBase.GetLatestGridServerVersion"/>
     protected override string GetLatestGridServerVersion() => _GridServerSettings.GridServerImageTag;
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.OnGridServerVersionChange(string, bool)"/>
+    /// <inheritdoc cref="JobManagerBase.OnGridServerVersionChange(string, bool)"/>
     protected override bool OnGridServerVersionChange(string newGridServerVersion, bool isStartup)
     {
         if (!isStartup)
@@ -120,17 +122,17 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
         return _DockerAuthority.CreateImageWithRetries(_GridServerSettings.GridServerImageName, newGridServerVersion);
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.CreateNewGridServerInstance(int)"/>
-    protected override GridServerDockerContainer CreateNewGridServerInstance(int port)
-        => new(Logger, port, GridServerVersion, _GridServerSettings, _DockerAuthority, _GridServerSettings.GridServerImageName);
+    /// <inheritdoc cref="JobManagerBase.CreateNewGridServerInstance(int)"/>
+    protected override IGridServerInstance CreateNewGridServerInstance(int port)
+        => new GridServerDockerContainer(Logger, port, GridServerVersion, _GridServerSettings, _DockerAuthority, _GridServerSettings.GridServerImageName);
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.FindUnexpectedExitGameJobs"/>
+    /// <inheritdoc cref="JobManagerBase.FindUnexpectedExitGameJobs"/>
     protected override IReadOnlyCollection<GameJob> FindUnexpectedExitGameJobs()
     {
         var containers = ListRunningContainers();
         Logger.Information("FindUnexpectedExitGameJobs. Got {0} running containers.", containers.Count);
 
-        var activeJobs = ActiveJobs.ToArray();
+        var activeJobs = ActiveJobs.Cast<KeyValuePair<Job, GridServerDockerContainer>>().ToArray();
         var jobs = new Dictionary<string, GameJob>();
 
         foreach (var activeJobKey in activeJobs)
@@ -143,22 +145,25 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
         return jobs.Values;
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.GetRunningGridServerInstances"/>
-    protected override IReadOnlyCollection<UnmanagedGridServerDockerContainer> GetRunningGridServerInstances()
+    /// <inheritdoc cref="JobManagerBase.GetRunningGridServerInstances"/>
+    protected override IReadOnlyCollection<IUnmanagedGridServerInstance> GetRunningGridServerInstances()
         => (from container in ListRunningContainers()
             select new UnmanagedGridServerDockerContainer(Logger, _DockerClient, _GridServerSettings, container)).ToArray();
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.RecoverGridServerInstance(TUnmanagedInstance)"/>
-    protected override GridServerDockerContainer RecoverGridServerInstance(UnmanagedGridServerDockerContainer instance)
+    /// <inheritdoc cref="JobManagerBase.RecoverGridServerInstance(IUnmanagedGridServerInstance)"/>
+    protected override IGridServerInstance RecoverGridServerInstance(IUnmanagedGridServerInstance instance)
     {
-        if (!instance.Container.Labels.ContainsKey(GridServerDockerContainer.PortLabel) ||
-            !instance.Container.Labels.ContainsKey(GridServerDockerContainer.GridServerVersionLabel) ||
-            instance.Container.Names.Count < 1)
+        if (!(instance is UnmanagedGridServerDockerContainer dockerContainer))
             return null;
 
-        var containerName = instance.Container.Names[0].Trim('/');
-        var version = instance.Container.Labels[GridServerDockerContainer.GridServerVersionLabel];
-        var tcpPort = Convert.ToInt32(instance.Container.Labels[GridServerDockerContainer.PortLabel]);
+        if (!dockerContainer.Container.Labels.ContainsKey(GridServerDockerContainer.PortLabel) ||
+            !dockerContainer.Container.Labels.ContainsKey(GridServerDockerContainer.GridServerVersionLabel) ||
+            dockerContainer.Container.Names.Count < 1)
+            return null;
+
+        var containerName = dockerContainer.Container.Names[0].Trim('/');
+        var version = dockerContainer.Container.Labels[GridServerDockerContainer.GridServerVersionLabel];
+        var tcpPort = Convert.ToInt32(dockerContainer.Container.Labels[GridServerDockerContainer.PortLabel]);
 
         var config = _DockerClient.Containers.InspectContainerAsync(instance.Id, default).Result.HostConfig;
         long maximumMemoryInMegabytes = config.Memory / 1024 / 1024;
@@ -168,7 +173,7 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
 
         Logger.Information(
             "Found a running GridServer container. Container ID = {0} with name {1} on TCP port: {2} with Grid Server Version: {3}, maximumCores: {4}, maximumMemoryInMegabytes: {5}",
-            instance.Container.ID,
+            dockerContainer.Container.ID,
             containerName,
             tcpPort,
             version,
@@ -185,14 +190,14 @@ public class DockerJobManager : JobManagerBase<GridServerDockerContainer, Unmana
             containerName
         )
         {
-            ContainerID = instance.Container.ID,
+            ContainerID = dockerContainer.Container.ID,
             ContainerName = containerName.Trim('/'),
             MaximumCores = maximumCores,
             MaximumMemoryInMegabytes = maximumMemoryInMegabytes
         };
     }
 
-    /// <inheritdoc cref="JobManagerBase{TInstance, TUnmanagedInstance}.OnGetJobInstanceHasExited"/>
+    /// <inheritdoc cref="JobManagerBase.OnGetJobInstanceHasExited"/>
     protected override void OnGetJobInstanceHasExited()
     {
     }

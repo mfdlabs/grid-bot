@@ -7,11 +7,7 @@ using Logging;
 /// <summary>
 /// Implementation for a Grid Server job manager.
 /// </summary>
-/// <typeparam name="TInstance">The type of instance.</typeparam>
-/// <typeparam name="TUnmanagedInstance">The type of unmanaged instances.</typeparam>
-public class JobManagerGridServer<TInstance, TUnmanagedInstance>
-    where TInstance : IGridServerInstance
-    where TUnmanagedInstance : IUnmanagedGridServerInstance
+public class JobManagerGridServer
 {
     /// <summary>
     /// The logger.
@@ -21,18 +17,18 @@ public class JobManagerGridServer<TInstance, TUnmanagedInstance>
     /// <summary>
     /// The job manager.
     /// </summary>
-    protected JobManagerBase<TInstance, TUnmanagedInstance> JobManager;
+    protected JobManagerBase JobManager;
 
     /// <summary>
-    /// Construct a new instance of <see cref="JobManagerGridServer{TInstance, TUnmanagedInstance}"/>
+    /// Construct a new instance of <see cref="JobManagerGridServer"/>
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/></param>
-    /// <param name="jobManager">The <see cref="JobManagerBase{TInstance, TUnmanagedInstance}"/></param>
+    /// <param name="jobManager">The <see cref="JobManagerBase"/></param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// </exception>
-    public JobManagerGridServer(ILogger logger, JobManagerBase<TInstance, TUnmanagedInstance> jobManager)
+    public JobManagerGridServer(ILogger logger, JobManagerBase jobManager)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         JobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
