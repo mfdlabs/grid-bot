@@ -42,7 +42,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     private readonly ILuaUtility _luaUtility;
     private readonly IFloodCheckerRegistry _floodCheckerRegistry;
     private readonly IBacktraceUtility _backtraceUtility;
-    private readonly DockerJobManager _dockerJobManager;
+    private readonly IJobManager _jobManager;
     private readonly IAdminUtility _adminUtility;
 
     /// <summary>
@@ -54,7 +54,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     /// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
     /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
-    /// <param name="dockerJobManager">The <see cref="DockerJobManager"/>.</param>
+    /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
@@ -63,7 +63,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     /// - <paramref name="luaUtility"/> cannot be null.
     /// - <paramref name="floodCheckerRegistry"/> cannot be null.
     /// - <paramref name="backtraceUtility"/> cannot be null.
-    /// - <paramref name="dockerJobManager"/> cannot be null.
+    /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
     /// </exception>
     public ExecuteScript(
@@ -73,7 +73,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         ILuaUtility luaUtility,
         IFloodCheckerRegistry floodCheckerRegistry,
         IBacktraceUtility backtraceUtility,
-        DockerJobManager dockerJobManager,
+        IJobManager jobManager,
         IAdminUtility adminUtility
     )
     {
@@ -83,7 +83,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
         _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
-        _dockerJobManager = dockerJobManager ?? throw new ArgumentNullException(nameof(dockerJobManager));
+        _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     }
 
@@ -310,7 +310,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
         try
         {
-            var (soap, _, rejectionReason) = _dockerJobManager.NewJob(job, _gridSettings.ScriptExecutionJobMaxTimeout.TotalSeconds, true);
+            var (soap, _, rejectionReason) = _jobManager.NewJob(job, _gridSettings.ScriptExecutionJobMaxTimeout.TotalSeconds, true);
 
             if (rejectionReason != null)
             {
@@ -328,7 +328,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
                 var serverResult = soap.BatchJobEx(gridJob, gserverCommand);
 
-                Task.Run(() => _dockerJobManager.CloseJob(job, true));
+                Task.Run(() => _jobManager.CloseJob(job, true));
 
                 var (newResult, metadata) = _luaUtility.ParseResult(serverResult);
 
@@ -339,7 +339,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         {
             sw.Stop();
 
-            Task.Run(() => _dockerJobManager.CloseJob(job, false));
+            Task.Run(() => _jobManager.CloseJob(job, false));
 
             if (ex is IOException)
             {

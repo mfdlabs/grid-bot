@@ -26,7 +26,7 @@ public class AvatarUtility : IAvatarUtility
     private readonly ILogger _logger;
     private readonly AvatarSettings _avatarSettings;
     private readonly IRandom _random;
-    private readonly DockerJobManager _jobManager;
+    private readonly IJobManager _jobManager;
 
     /// <summary>
     /// Construct a new instance of <see cref="AvatarUtility"/>.
@@ -34,7 +34,7 @@ public class AvatarUtility : IAvatarUtility
     /// <param name="logger">The <see cref="ILogger"/>.</param>
     /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
     /// <param name="random">The <see cref="IRandom"/>.</param>
-    /// <param name="jobManager">The <see cref="DockerJobManager"/>.</param>
+    /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="avatarSettings"/> cannot be null.
@@ -45,7 +45,7 @@ public class AvatarUtility : IAvatarUtility
         ILogger logger,
         AvatarSettings avatarSettings,
         IRandom random,
-        DockerJobManager jobManager
+        IJobManager jobManager
     )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
