@@ -5,7 +5,10 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+
+using Prometheus;
 
 using Logging;
 
@@ -16,6 +19,12 @@ public class OnLogMessage
 {
     private readonly DiscordSettings _settings;
     private readonly ILogger _logger;
+
+    private readonly Counter _totalLogMessages = Metrics.CreateCounter(
+        "grid_discord_log_messages_total",
+        "The total number of log messages.",
+        "log_severity"
+    );
 
     /// <summary>
     /// Construct a new instance of <see cref="OnLogMessage"/>.
@@ -42,6 +51,8 @@ public class OnLogMessage
     /// <param name="message">The <see cref="LogMessage"/></param>
     public Task Invoke(LogMessage message)
     {
+        _totalLogMessages.WithLabels(message.Severity.ToString()).Inc();
+
         if (message.Exception != null)
         {
 #if !DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS
@@ -54,6 +65,9 @@ public class OnLogMessage
 
         // Closed web socket exceptions are expected when the bot is shutting down.
         if (message.Exception.InnerException is WebSocketException)
+            return Task.CompletedTask;
+
+        if (message.Exception is WebSocketClosedException)
             return Task.CompletedTask;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD

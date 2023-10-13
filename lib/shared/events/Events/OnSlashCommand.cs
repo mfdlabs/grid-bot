@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Prometheus;
+
 using Utility;
 using Discord;
 
@@ -23,6 +25,52 @@ public class OnInteraction
     private readonly IServiceProvider _services;
     private readonly IAdminUtility _adminUtility;
     private readonly ILoggerFactory _loggerFactory;
+
+    private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
+        "grid_interactions_processed_total",
+        "The total number of interactions processed.",
+        "interaction_type",
+        "interaction_id",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
+
+    private readonly Counter _totalInteractionsFailedDueToMaintenance = Metrics.CreateCounter(
+        "grid_interactions_failed_due_to_maintenance_total",
+        "The total number of interactions failed due to maintenance.",
+        "interaction_type",
+        "interaction_id",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
+
+    private readonly Counter _totalBlacklistedUserAttemptedInteractions = Metrics.CreateCounter(
+        "grid_blacklisted_user_attempted_interactions_total",
+        "The total number of interactions attempted by blacklisted users.",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
+
+    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
+        "grid_users_bypassed_maintenance_total",
+        "The total number of users that bypassed maintenance.",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
+
+    private readonly Histogram _interactionProcessingTime = Metrics.CreateHistogram(
+        "grid_interaction_processing_time_seconds",
+        "The time it takes to process an interaction.",
+        new HistogramConfiguration
+        {
+            Buckets = Histogram.ExponentialBuckets(0.001, 2, 10),
+            LabelNames = new[] { "interaction_type", "interaction_id", "interaction_user_id", "interaction_channel_id", "interaction_guild_id" }
+        }
+    );
 
     /// <summary>
     /// Construct a new instance of <see cref="OnInteraction"/>.
@@ -61,6 +109,14 @@ public class OnInteraction
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
 
+    private string GetGuildId(SocketInteraction interaction)
+    {
+        if (interaction.Channel is SocketGuildChannel guildChannel)
+            return guildChannel.Guild.Id.ToString();
+
+        return "DM";
+    }
+
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
@@ -68,6 +124,14 @@ public class OnInteraction
     public async Task Invoke(SocketInteraction interaction)
     {
         if (interaction.User.IsBot) return;
+
+        _totalInteractionsProcessed.WithLabels(
+            interaction.Type.ToString(),
+            interaction.Id.ToString(),
+            interaction.User.Id.ToString(),
+            interaction.Channel.Id.ToString(),
+            GetGuildId(interaction)
+        ).Inc();
 
         await interaction.DeferAsync();
 
@@ -81,6 +145,14 @@ public class OnInteraction
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
+                _totalInteractionsFailedDueToMaintenance.WithLabels(
+                    interaction.Type.ToString(),
+                    interaction.Id.ToString(),
+                    interaction.User.Id.ToString(),
+                    interaction.Channel.Id.ToString(),
+                    GetGuildId(interaction)
+                ).Inc();
+
                 var guildName = string.Empty;
                 var guildId = 0UL;
 
@@ -112,10 +184,22 @@ public class OnInteraction
 
                 return;
             }
+
+            _totalUsersBypassedMaintenance.WithLabels(
+                interaction.User.Id.ToString(),
+                interaction.Channel.Id.ToString(),
+                GetGuildId(interaction)
+            ).Inc();
         }
 
         if (userIsBlacklisted)
         {
+            _totalBlacklistedUserAttemptedInteractions.WithLabels(
+                interaction.User.Id.ToString(),
+                interaction.Channel.Id.ToString(),
+                GetGuildId(interaction)
+            ).Inc();
+
             logger.Warning("Blacklisted user tried to use the bot.");
 
             try
@@ -153,6 +237,16 @@ public class OnInteraction
 
         Task.Run(async () =>
         {
+
+            using var _ = _interactionProcessingTime
+                .WithLabels(
+                    interaction.Type.ToString(),
+                    interaction.Id.ToString(),
+                    interaction.User.Id.ToString(),
+                    interaction.Channel.Id.ToString(),
+                    GetGuildId(interaction)
+                )
+                .NewTimer();
 
             var context = new ShardedInteractionContext(
                 _client,

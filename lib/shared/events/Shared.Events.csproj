@@ -16,6 +16,8 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
+
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>

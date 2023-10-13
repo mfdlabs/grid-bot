@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 
+using Prometheus;
+
 using Logging;
 
 using Utility;
@@ -23,6 +25,26 @@ public class OnInteractionExecuted
 
     private readonly ILogger _logger;
     private readonly IBacktraceUtility _backtraceUtility;
+
+    private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
+        "grid_interactions_processed_total",
+        "The total number of interactions processed.",
+        "interaction_type",
+        "interaction_id",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
+
+    private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
+        "grid_interactions_failed_total",
+        "The total number of interactions failed.",
+        "interaction_type",
+        "interaction_id",
+        "interaction_user_id",
+        "interaction_channel_id",
+        "interaction_guild_id"
+    );
 
     /// <summary>
     /// Construct a new instance of <see cref="OnInteractionExecuted"/>.
@@ -46,6 +68,11 @@ public class OnInteractionExecuted
         _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
     }
 
+    private string GetGuildId(IInteractionContext context)
+    {
+        return context.Guild?.Id.ToString() ?? "DM";
+    }
+
     /// <summary>
     /// Invoke the handler.
     /// </summary>
@@ -56,9 +83,26 @@ public class OnInteractionExecuted
     {
         var interaction = context.Interaction;
 
+        _totalInteractionsProcessed.WithLabels(
+            interaction.Type.ToString(),
+            interaction.Id.ToString(),
+            interaction.User.Id.ToString(),
+            interaction.ChannelId.ToString(),
+            GetGuildId(context)
+        ).Inc();
+
         if (!result.IsSuccess)
         {
             if (result.Error == InteractionCommandError.UnknownCommand) return;
+
+            _totalInteractionsFailed.WithLabels(
+                interaction.Type.ToString(),
+                interaction.Id.ToString(),
+                interaction.User.Id.ToString(),
+                interaction.ChannelId.ToString(),
+                GetGuildId(context)
+            ).Inc();
+
             if (result is not ExecuteResult executeResult)
             {
                 await interaction.FollowupAsync(result.ErrorReason);
@@ -116,10 +160,10 @@ public class OnInteractionExecuted
             return;
 #else
 
-                await interaction.FollowupAsync(
-                    $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
-                    $"<@!{_discordRolesSettings.BotOwnerId}>"
-                );
+            await interaction.FollowupAsync(
+                $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
+                $"<@!{_discordRolesSettings.BotOwnerId}>"
+            );
 #endif
         }
     }

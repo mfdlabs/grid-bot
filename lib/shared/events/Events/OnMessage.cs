@@ -13,6 +13,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
+using Prometheus;
+
 using Utility;
 
 /// <summary>
@@ -29,6 +31,45 @@ public class OnMessage
     private readonly DiscordShardedClient _client;
     private readonly IAdminUtility _adminUtility;
     private readonly ILoggerFactory _loggerFactory;
+
+    private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
+        "grid_messages_processed_total",
+        "The total number of messages processed."
+    );
+
+    private readonly Counter _totalUsersUsingPreviousPhaseCommands = Metrics.CreateCounter(
+        "grid_users_using_previous_phase_commands_total",
+        "The total number of users using previous phase commands.",
+        "message_user_id",
+        "message_channel_id",
+        "message_guild_id",
+        "command_name"
+    );
+
+    private readonly Counter _totalMessagesFailedDueToMaintenance = Metrics.CreateCounter(
+        "grid_messages_failed_due_to_maintenance_total",
+        "The total number of messages failed due to maintenance.",
+        "message_id",
+        "message_user_id",
+        "message_channel_id",
+        "message_guild_id"
+    );
+
+    private readonly Counter _totalBlacklistedUserAttemptedMessages = Metrics.CreateCounter(
+        "grid_blacklisted_user_attempted_messages_total",
+        "The total number of messages attempted by blacklisted users.",
+        "message_user_id",
+        "message_channel_id",
+        "message_guild_id"
+    );
+
+    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
+        "grid_users_bypassed_maintenance_total",
+        "The total number of users that bypassed maintenance.",
+        "message_user_id",
+        "message_channel_id",
+        "message_guild_id"
+    );
 
     /// <summary>
     /// Construct a new instance of <see cref="OnMessage"/>.
@@ -60,6 +101,14 @@ public class OnMessage
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
 
+    private string GetGuildId(SocketMessage message)
+    {
+        if (message.Channel is SocketGuildChannel guildChannel)
+            return guildChannel.Guild.Id.ToString();
+
+        return "DM";
+    }
+
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
@@ -68,6 +117,8 @@ public class OnMessage
     {
         if (rawMessage is not SocketUserMessage message) return;
         if (message.Author.IsBot) return;
+
+        _totalMessagesProcessed.Inc();
 
         using var logger = _loggerFactory.CreateLogger(message);
 
@@ -85,6 +136,13 @@ public class OnMessage
         if (string.IsNullOrEmpty(commandName)) return;
         if (!Regex.IsMatch(commandName, _allowedCommandRegex)) return;
         if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
+
+        _totalUsersUsingPreviousPhaseCommands.WithLabels(
+            message.Author.Id.ToString(),
+            message.Channel.Id.ToString(),
+            GetGuildId(message),
+            commandName
+        ).Inc();
 
         logger.Warning(
             "User tried to use previous phase command '{0}', but it is no longer supported.",
@@ -108,6 +166,13 @@ public class OnMessage
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
+                _totalMessagesFailedDueToMaintenance.WithLabels(
+                    message.Id.ToString(),
+                    message.Author.Id.ToString(),
+                    message.Channel.Id.ToString(),
+                    GetGuildId(message)
+                ).Inc();
+
                 var guildName = string.Empty;
                 var guildId = 0UL;
 
@@ -136,10 +201,22 @@ public class OnMessage
 
                 return;
             }
+
+            _totalUsersBypassedMaintenance.WithLabels(
+                message.Author.Id.ToString(),
+                message.Channel.Id.ToString(),
+                GetGuildId(message)
+            ).Inc();
         }
 
         if (userIsBlacklisted)
         {
+            _totalBlacklistedUserAttemptedMessages.WithLabels(
+                message.Author.Id.ToString(),
+                message.Channel.Id.ToString(),
+                GetGuildId(message)
+            ).Inc();
+
             logger.Warning("Blacklisted user tried to use the bot.");
 
             try
