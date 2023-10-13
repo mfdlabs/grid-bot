@@ -35,8 +35,8 @@ job "{{{NOMAD_JOB_NAME}}}" {
       }
 
       resources {
-        memory = 4096
-        cpu = 5000
+        memory = 1024
+        cpu = 2000
       }
 
       template {
