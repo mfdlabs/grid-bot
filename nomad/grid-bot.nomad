@@ -12,6 +12,8 @@ job "{{{NOMAD_JOB_NAME}}}" {
 
     network {
       mode = "host"
+
+      port "metrics" {}
     }
 
     task "runner" {
@@ -26,7 +28,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
           "/var/run/docker.sock:/var/run/docker.sock",
           "/tmp/.X11-unix:/tmp/.X11-unix",
           "/opt/grid/scripts:/opt/grid/scripts",
-          "/_/_logs/grid-bot:/local/logs"
+          "/_/_logs/grid-bot/{{{NOMAD_ENVIRONMENT}}}:/tmp/mfdlabs/logs"
         ]
 
         hostname = "grid-bot.nomad.vmminfra.dev"
@@ -48,6 +50,8 @@ IMAGE_TAG="{{{IMAGE_TAG}}}"
 # CONSUL
 CONSUL_ADDR="http://consul.service.consul:8500"
 DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
+
+MetricsPort="{{ env "NOMAD_PORT_metrics" }}"
 
 {{ with secret "grid-bot-settings/{{{NOMAD_ENVIRONMENT}}}" }}
 {{ if .Data.data }}
