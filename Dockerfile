@@ -1,5 +1,5 @@
 # Base Image: net6.0
-FROM mcr.microsoft.com/dotnet/runtime:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
 ARG IMAGE_TAG=
 
