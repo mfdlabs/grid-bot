@@ -9,7 +9,7 @@ using Logging;
 /// <summary>
 /// Settings provider for all arbiter related stuff.
 /// </summary>
-public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings
+public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGridServerProcessSettings
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.GridPath;
@@ -218,5 +218,23 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings
     public TimeSpan MaxTimeToWaitForInspectImage => GetOrDefault(
         nameof(MaxTimeToWaitForInspectImage),
         TimeSpan.FromSeconds(5)
+    );
+
+    /// <inheritdoc cref="IGridServerProcessSettings.GridServerExecutableName"/> 
+    public string GridServerExecutableName => GetOrDefault(
+        nameof(GridServerExecutableName),
+        "gridserver.exe"
+    );
+
+    /// <inheritdoc cref="IGridServerProcessSettings.GridServerExecutableName"/> 
+    public string GridServerRegistryKeyName => GetOrDefault(
+        nameof(GridServerRegistryKeyName),
+        @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\ROBLOX Corporation\Roblox"
+    );
+
+    /// <inheritdoc cref="IGridServerProcessSettings.GridServerExecutableName"/> 
+    public string GridServerRegistryValueName => GetOrDefault(
+        nameof(GridServerRegistryValueName),
+        "RccServicePath"
     );
 }
