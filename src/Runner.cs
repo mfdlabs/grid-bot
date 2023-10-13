@@ -6,6 +6,7 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +27,7 @@ using ClientSettings.Client;
 
 using Events;
 using Utility;
+using Prometheus;
 
 internal static class Runner
 {
@@ -124,7 +126,7 @@ internal static class Runner
 
 #if DEBUG
         var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-        
+
         Logger.GlobalLogPrefixes.Add(() => informationalVersion);
 #endif
 
@@ -212,22 +214,37 @@ internal static class Runner
         );
 
         var portAllocator = new PortAllocator(logger);
-        var dockerJobManager = new DockerJobManager(
-            logger,
-            portAllocator,
-            gridSettings,
-            RandomFactory.GetDefaultRandom()
-        );
 
-        var jobManagerGS = new JobManagerGridServer<GridServerDockerContainer, UnmanagedGridServerDockerContainer>(
-            logger,
-            dockerJobManager
-        );
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var jobManager = new ProcessJobManager(
+                logger,
+                portAllocator,
+                gridSettings
+            );
 
-        jobManagerGS.Start();
+            jobManager.Start();
 
-        services.AddSingleton(dockerJobManager);
-        services.AddSingleton(jobManagerGS);
+            services.AddSingleton(jobManager);
+            services.AddSingleton(_ => null as DockerJobManager);
+
+        }
+        else
+        {
+            var jobManager = new DockerJobManager(
+                logger,
+                portAllocator,
+                gridSettings,
+                RandomFactory.GetDefaultRandom()
+            );
+
+            jobManager.Start();
+
+            services.AddSingleton(jobManager);
+            services.AddSingleton(_ => null as ProcessJobManager);
+        }
+
+        services.AddSingleton<IJobManager, JobManager>();
     }
 
     private static void SetupFloodCheckersRedis(ServiceCollection services, FloodCheckerSettings floodCheckerSettings, ConsulSettings consulSettings, ILogger logger)
@@ -317,11 +334,14 @@ internal static class Runner
 
         client.ShardReady += onShardReady.Invoke;
 
-        if (!args.Contains("--no-gateway"))
-        {
-            await client.LoginAsync(TokenType.Bot, discordSettings.BotToken).ConfigureAwait(false);
-            await client.StartAsync().ConfigureAwait(false);
-        }
+        var globalSettings = services.GetRequiredService<GlobalSettings>();
+
+        new KestrelMetricServer(
+            port: globalSettings.MetricsPort
+        ).Start();
+
+        await client.LoginAsync(TokenType.Bot, discordSettings.BotToken).ConfigureAwait(false);
+        await client.StartAsync().ConfigureAwait(false);
 
         await Task.Delay(Timeout.Infinite).ConfigureAwait(false);
     }

@@ -8,7 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
 
-    <InformationalVersion Condition="'$(CI)' == 'true'" >$(IMAGE_TAG)</InformationalVersion>
+    <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
     <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
   </PropertyGroup>
 
@@ -28,6 +28,7 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

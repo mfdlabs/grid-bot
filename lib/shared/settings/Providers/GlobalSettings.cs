@@ -29,6 +29,14 @@ public class GlobalSettings : BaseSettingsProvider
     );
 
     /// <summary>
+    /// Gets the port for the metrics server.
+    /// </summary>
+    public int MetricsPort => GetOrDefault(
+        nameof(MetricsPort),
+        8080
+    );
+
+    /// <summary>
     /// Should the default logger log to console?
     /// </summary>
     public bool DefaultLoggerLogToConsole => GetOrDefault(
