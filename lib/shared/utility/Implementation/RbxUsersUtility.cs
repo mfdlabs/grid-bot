@@ -55,6 +55,6 @@ public class RbxUsersUtility : IRbxUsersUtility
 
         var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
 
-        return response.Data.First()?.Id;
+        return response.Data.FirstOrDefault()?.Id;
     }
 }
