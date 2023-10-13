@@ -16,7 +16,7 @@ public class LoggerFactory : ILoggerFactory
     {
         var name = interaction.User.Username;
         var logger = new Logger(
-            name: interaction.User.Username,
+            name: interaction.User.Id.ToString(),
             logLevel: LogLevel.Debug,
             logToFileSystem: false
         );
@@ -36,7 +36,7 @@ public class LoggerFactory : ILoggerFactory
     {
         var name = message.Author.Username;
         var logger = new Logger(
-            name: message.Author.Username,
+            name: message.Author.Id.ToString(),
             logLevel: LogLevel.Debug,
             logToFileSystem: false
         );
