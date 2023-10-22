@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup Label="DefaultWarnings">
+    <NoWarn>$(NoWarn);4014</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="LibStandard">
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <RootNamespace>Grid.Bot</RootNamespace>
+
+    <Configurations>debug;release</Configurations>
+
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <PropertyGroup Label="PackageMetadata">
+    <Company>MFDLABS</Company>
+    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
+
+    <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <VersionPrefix>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</VersionPrefix>
+
+    <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
+    <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Label="TestsProperties" Condition="$(MSBuildProjectName.Contains('.Tests'))">
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup Label="PackageProperties" Condition="'$(IsTestProject)' != 'true'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

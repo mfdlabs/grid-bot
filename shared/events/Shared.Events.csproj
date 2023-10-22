@@ -1,7 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="../../targets/shared.targets" />
-
   <PropertyGroup>
     <Description>Library containg event objects that are dispatched via the Discord gateway.</Description>
 
@@ -20,8 +17,11 @@
     <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="Logging" Version="2023.10.22" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
     <ProjectReference Include="../commands/Shared.Commands.csproj" />
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
     <ProjectReference Include="../utility/Shared.Utility.csproj" />

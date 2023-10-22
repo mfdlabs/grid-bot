@@ -1,7 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="../../targets/shared.targets" />
-
   <PropertyGroup>
     <Description>Shared library for commands used by grid-bot registered dynamically.</Description>
 
@@ -13,13 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
-    <ProjectReference Include="../../lib/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="../../lib/text/text/Text.csproj" />
-    <ProjectReference Include="../../lib/networking/networking/Networking.csproj" />
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="ClientSettings.Client" Version="2023.10.22" />
+    <PackageReference Include="FileSystem" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Core" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Redis" Version="2023.10.22" />
+    <PackageReference Include="Text" Version="2023.10.22" />
+    <PackageReference Include="Networking" Version="2023.10.22" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,27 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../../targets/shared.targets" />
   <PropertyGroup>
     <Description>Shared utility classes used by the grid-bot</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="../../lib/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="../../lib/grid/commands/Grid.Commands.csproj" />
-    <ProjectReference Include="../../lib/grid/compute-cloud/Grid.Client.csproj" />
-    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="../../lib/redis/redis/Redis.csproj" />
-    <ProjectReference Include="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="../../lib/threading/threading/Threading.csproj" />
-    <ProjectReference Include="../../lib/clients/users-client/Users.Client.csproj" />
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
-    <ProjectReference Include="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="../../lib/grid/job-management/Grid.JobManagement.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="FileSystem" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Core" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Redis" Version="2023.10.22" />
+    <PackageReference Include="Grid.Commands" Version="2023.10.22" />
+    <PackageReference Include="Grid.Client" Version="2023.10.22" />
+    <PackageReference Include="Logging" Version="2023.10.22" />
+    <PackageReference Include="Redis" Version="2023.10.22" />
+    <PackageReference Include="ServiceDiscovery" Version="2023.10.22" />
+    <PackageReference Include="Threading" Version="2023.10.22" />
+    <PackageReference Include="Users.Client" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Docker" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
+    <PackageReference Include="Grid.JobManagement" Version="2023.10.22" />
   </ItemGroup>
   
   <ItemGroup>

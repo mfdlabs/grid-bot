@@ -1,6 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configurations>$(Configurations);debug-vault;release-vault</Configurations>
+  </PropertyGroup>
 
-  <Import Project="../../targets/shared-vault.targets" />
+  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' ">
+    <OutputPath>bin\release\</OutputPath>
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' ">
+    <OutputPath>bin\debug\</OutputPath>
+    <DefineConstants>$(DefineConstants);DEBUG;USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
 
   <PropertyGroup>
     <Description>Shared library containing settings used by the grid-bot</Description>
@@ -18,13 +29,14 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../../lib/configuration/configuration-v2/ConfigurationV2.csproj" />
-    <ProjectReference Include="../../lib/redis/redis/Redis.csproj" />
-    <ProjectReference Include="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="../../lib/grid/docker/Grid.ProcessManagement.Docker.Core.csproj" />
-    <ProjectReference Include="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="ConfigurationV2" Version="2023.10.22" />
+    <PackageReference Include="Redis" Version="2023.10.22" />
+    <PackageReference Include="ServiceDiscovery" Version="2023.10.22" />
+
+    <PackageReference Include="Grid.ProcessManagement.Docker.Core" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement" Version="2023.10.22" />
   </ItemGroup>
 
   <ItemGroup>
