@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../targets/shared.targets" />
+  <PropertyGroup>
+    <Description>Shared utility classes used by the grid-bot</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../lib/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="../../lib/grid/commands/Grid.Commands.csproj" />
+    <ProjectReference Include="../../lib/grid/compute-cloud/Grid.Client.csproj" />
+    <ProjectReference Include="../../lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="../../lib/redis/redis/Redis.csproj" />
+    <ProjectReference Include="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="../../lib/threading/threading/Threading.csproj" />
+    <ProjectReference Include="../../lib/clients/users-client/Users.Client.csproj" />
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="../../lib/grid/job-management/Grid.JobManagement.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Backtrace" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+  </ItemGroup>
+</Project>

@@ -33,13 +33,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationV2", "lib\conf
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{4FA0281C-7E8F-45E6-820E-97554DE934AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "lib\shared\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "shared\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "lib\shared\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "shared\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "lib\shared\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "shared\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "lib\shared\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "shared\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "http-clients", "http-clients", "{752CA103-D6F8-4E66-89D3-E238E7BF8C92}"
 EndProject

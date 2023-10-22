@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../../targets/shared-vault.targets" />
+  <Import Project="../../targets/shared-vault.targets" />
 
   <PropertyGroup>
     <Description>Shared library containing settings used by the grid-bot</Description>
@@ -19,12 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\configuration\configuration-v2\ConfigurationV2.csproj" />
-    <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
-    <ProjectReference Include="..\..\service-discovery\service-discovery\ServiceDiscovery.csproj" />
-    <ProjectReference Include="..\..\grid\docker\Grid.ProcessManagement.Docker.Core.csproj" />
-    <ProjectReference Include="..\..\grid\process-management-core\Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="..\..\grid\process-management\Grid.ProcessManagement.csproj" />
+    <ProjectReference Include="../../lib/configuration/configuration-v2/ConfigurationV2.csproj" />
+    <ProjectReference Include="../../lib/redis/redis/Redis.csproj" />
+    <ProjectReference Include="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="../../lib/grid/docker/Grid.ProcessManagement.Docker.Core.csproj" />
+    <ProjectReference Include="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
   </ItemGroup>
 
   <ItemGroup>

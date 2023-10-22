@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../../targets/shared.targets" />
+  <Import Project="../../targets/shared.targets" />
 
   <PropertyGroup>
     <Description>Shared library for commands used by grid-bot registered dynamically.</Description>
@@ -13,16 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\clients\client-settings-client\ClientSettings.Client.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\file-system\file-system\FileSystem.csproj" />
-    <ProjectReference Include="..\..\floodcheckers\core\FloodCheckers.Core.csproj" />
-    <ProjectReference Include="..\..\floodcheckers\redis\FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="..\..\text\text\Text.csproj" />
-    <ProjectReference Include="..\..\networking\networking\Networking.csproj" />
-    <ProjectReference Include="..\utility\Shared.Utility.csproj" />
+    <ProjectReference Include="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
+    <ProjectReference Include="../../lib/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="../../lib/text/text/Text.csproj" />
+    <ProjectReference Include="../../lib/networking/networking/Networking.csproj" />
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
