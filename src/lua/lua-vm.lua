@@ -87,6 +87,8 @@ do
 	local max_log_line_length = FVariable:add_int("LuaVMMaxLogLineLength", 200)
 	local vm_enabled_for_admins = FVariable:add_flag("LuaVMEnabledForAdmins", true)
 
+	local enable_log_message_prefixes = FVariable:add_flag("LuaVMEnableLogMessagePrefixes", true)
+
 	FVariable:add_string("LuaVMBlacklistedClassNames", "")
 	FVariable:add_string("LuaVMBlacklistedClassProperties", "")
 	FVariable:add_string("LuaVMBlacklistedClassMethods", "")
@@ -500,7 +502,11 @@ do
 			if #log_milli < 3 then
 				log_milli = ("0"):rep(3 - #log_milli) .. log_milli
 			end
-			self._data ..=  ("%s -- %s.%s -- %s\n"):format(message_types[message_type], os.date("%X"), log_milli, message)
+			if enable_log_message_prefixes then
+				self._data ..=  ("%s -- %s.%s -- %s\n"):format(message_types[message_type], os.date("%X"), log_milli, message)
+			else
+				self_data ..= message
+			end
 			if #self._data >= max_log_length then
 				self._cap_exceeded = true
 			end
