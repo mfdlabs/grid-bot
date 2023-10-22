@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared utility classes used by the grid-bot</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="FileSystem" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Core" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Redis" Version="2023.10.22" />
+    <PackageReference Include="Grid.Commands" Version="2023.10.22" />
+    <PackageReference Include="Grid.Client" Version="2023.10.22" />
+    <PackageReference Include="Logging" Version="2023.10.22" />
+    <PackageReference Include="Redis" Version="2023.10.22" />
+    <PackageReference Include="ServiceDiscovery" Version="2023.10.22" />
+    <PackageReference Include="Threading" Version="2023.10.22" />
+    <PackageReference Include="Users.Client" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Docker" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
+    <PackageReference Include="Grid.JobManagement" Version="2023.10.22" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Backtrace" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+  </ItemGroup>
+</Project>

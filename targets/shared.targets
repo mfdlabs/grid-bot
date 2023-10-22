@@ -1,9 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <LangVersion>10</LangVersion>
-    <RootNamespace>Grid.Bot</RootNamespace>
-
-    <Configurations>debug;release</Configurations>
-  </PropertyGroup>
-</Project>

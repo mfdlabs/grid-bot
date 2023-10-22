@@ -34,11 +34,3 @@ This will help the primary members of the Web Team to identify issues that arise
 [@MFDLABS/GRID-TEAM](https://github.codeowners.vmminfra.dev/ui/@mfdlabs/grid)
 
 ---
-
-# Other information
-
-Other things that you may need are the Build Agent statuses, or the VM Tester reports:
-
-- [Build Statuses (Kairex)](https://7series.kairex.vmminfra.dev/ui/mfdlabs/project/grid-bot?tab=last-build)
-- [Build Statuses (TeamCity)](https://grid-bot.builders.arc-cloud.net/project/grid_systems?projectTab=overview)
-- [VM Tester Reports (Atlantic K.)](https://7series.atlantic-kilo.vmminfra.dev/ui/mfdlabs/atlantic-project/grid-bot/reports)
