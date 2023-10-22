@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Description>Library used for IP address parsing and more!</Description>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
-  </ItemGroup>
-</Project>

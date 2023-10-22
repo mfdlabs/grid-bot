@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Description>Shared logging library!</Description>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);CONCURRENT_LOGGING_ENABLED</DefineConstants>
-  </PropertyGroup>
-</Project>
