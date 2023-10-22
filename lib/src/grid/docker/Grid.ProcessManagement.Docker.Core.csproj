@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared library for interaction with Docker!</Description>
+
+    <RootNamespace>Grid</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Grid.ProcessManagement.Docker</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
+    <ProjectReference Include="..\process-management-core\Grid.ProcessManagement.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Redis client used for easy interaction with Redis servers.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
+    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../logging/logging/Logging.csproj" />
+    <ProjectReference Include="../../hashing/hashing/Hashing.csproj" />
+    <ProjectReference Include="../../service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="..\..\configuration\core\Configuration.Core.csproj" />
+  </ItemGroup>
+</Project>

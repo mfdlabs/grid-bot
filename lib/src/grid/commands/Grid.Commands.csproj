@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared library containing models used by grid-servers for specific script execution actions.</Description>
+  </PropertyGroup>
+</Project>

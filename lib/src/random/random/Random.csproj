@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Random helpers and more!</Description>
+  </PropertyGroup>
+</Project>
