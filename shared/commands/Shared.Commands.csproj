@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared library for commands used by grid-bot registered dynamically.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="ClientSettings.Client" Version="2023.10.22" />
+    <PackageReference Include="FileSystem" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Core" Version="2023.10.22" />
+    <PackageReference Include="FloodCheckers.Redis" Version="2023.10.22" />
+    <PackageReference Include="Text" Version="2023.10.22" />
+    <PackageReference Include="Networking" Version="2023.10.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
+    <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
+    <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.11" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.11.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Polly" Version="7.2.4" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,25 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../targets/service.targets" />
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);4014</NoWarn>
+  </PropertyGroup>
 
   <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
+    <OutputType>Exe</OutputType>
+
+    <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>MFDLABS</Company>
+    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
+
     <Description>Primary executable for the MFDLABS grid-bot.</Description>
     <RepositoryUrl>https://github.vmminfra.dev/mfdlabs/grid-bot</RepositoryUrl>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
 
+    <VersionPrefix>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</VersionPrefix>
+
     <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
     <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\lib\random\random\Random.csproj" />
-    <ProjectReference Include="..\lib\shared\commands\Shared.Commands.csproj" />
-    <ProjectReference Include="..\lib\shared\events\Shared.Events.csproj" />
-    <ProjectReference Include="..\lib\shared\settings\Shared.Settings.csproj" />
-    <ProjectReference Include="..\lib\shared\utility\Shared.Utility.csproj" />
-    <ProjectReference Include="..\lib\configuration\core\Configuration.Core.csproj" />
-    <ProjectReference Include="..\lib\redis\redis\Redis.csproj" />
+    <ProjectReference Include="..\shared\commands\Shared.Commands.csproj" />
+    <ProjectReference Include="..\shared\events\Shared.Events.csproj" />
+    <ProjectReference Include="..\shared\settings\Shared.Settings.csproj" />
+    <ProjectReference Include="..\shared\utility\Shared.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages">
+    <PackageReference Include="Random" Version="2023.10.22" />
+    <PackageReference Include="Redis" Version="2023.10.22" />
+    <PackageReference Include="Configuration.Core" Version="2023.10.22" />
   </ItemGroup>
 
   <ItemGroup>
