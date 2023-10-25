@@ -29,21 +29,13 @@ public class OnInteraction
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
         "grid_interactions_processed_total",
         "The total number of interactions processed.",
-        "interaction_type",
-        "interaction_id",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
+        "interaction_type"
     );
 
     private readonly Counter _totalInteractionsFailedDueToMaintenance = Metrics.CreateCounter(
         "grid_interactions_failed_due_to_maintenance_total",
         "The total number of interactions failed due to maintenance.",
-        "interaction_type",
-        "interaction_id",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
+        "interaction_type"
     );
 
     private readonly Counter _totalBlacklistedUserAttemptedInteractions = Metrics.CreateCounter(
@@ -68,7 +60,7 @@ public class OnInteraction
         new HistogramConfiguration
         {
             Buckets = Histogram.ExponentialBuckets(0.001, 2, 10),
-            LabelNames = new[] { "interaction_type", "interaction_id", "interaction_user_id", "interaction_channel_id", "interaction_guild_id" }
+            LabelNames = new[] { "interaction_type" }
         }
     );
 
@@ -126,11 +118,7 @@ public class OnInteraction
         if (interaction.User.IsBot) return;
 
         _totalInteractionsProcessed.WithLabels(
-            interaction.Type.ToString(),
-            interaction.Id.ToString(),
-            interaction.User.Id.ToString(),
-            interaction.Channel.Id.ToString(),
-            GetGuildId(interaction)
+            interaction.Type.ToString()
         ).Inc();
 
         await interaction.DeferAsync();
@@ -146,11 +134,7 @@ public class OnInteraction
             if (!userIsAdmin && !userIsPrivilaged)
             {
                 _totalInteractionsFailedDueToMaintenance.WithLabels(
-                    interaction.Type.ToString(),
-                    interaction.Id.ToString(),
-                    interaction.User.Id.ToString(),
-                    interaction.Channel.Id.ToString(),
-                    GetGuildId(interaction)
+                    interaction.Type.ToString()
                 ).Inc();
 
                 var guildName = string.Empty;
@@ -240,11 +224,7 @@ public class OnInteraction
 
             using var _ = _interactionProcessingTime
                 .WithLabels(
-                    interaction.Type.ToString(),
-                    interaction.Id.ToString(),
-                    interaction.User.Id.ToString(),
-                    interaction.Channel.Id.ToString(),
-                    GetGuildId(interaction)
+                    interaction.Type.ToString()
                 )
                 .NewTimer();
 
