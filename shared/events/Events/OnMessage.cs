@@ -40,19 +40,12 @@ public class OnMessage
     private readonly Counter _totalUsersUsingPreviousPhaseCommands = Metrics.CreateCounter(
         "grid_users_using_previous_phase_commands_total",
         "The total number of users using previous phase commands.",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id",
         "command_name"
     );
 
     private readonly Counter _totalMessagesFailedDueToMaintenance = Metrics.CreateCounter(
         "grid_messages_failed_due_to_maintenance_total",
-        "The total number of messages failed due to maintenance.",
-        "message_id",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
+        "The total number of messages failed due to maintenance."
     );
 
     private readonly Counter _totalBlacklistedUserAttemptedMessages = Metrics.CreateCounter(
@@ -138,9 +131,6 @@ public class OnMessage
         if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
 
         _totalUsersUsingPreviousPhaseCommands.WithLabels(
-            message.Author.Id.ToString(),
-            message.Channel.Id.ToString(),
-            GetGuildId(message),
             commandName
         ).Inc();
 
@@ -166,12 +156,7 @@ public class OnMessage
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalMessagesFailedDueToMaintenance.WithLabels(
-                    message.Id.ToString(),
-                    message.Author.Id.ToString(),
-                    message.Channel.Id.ToString(),
-                    GetGuildId(message)
-                ).Inc();
+                _totalMessagesFailedDueToMaintenance.Inc();
 
                 var guildName = string.Empty;
                 var guildId = 0UL;

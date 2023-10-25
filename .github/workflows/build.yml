@@ -5,6 +5,7 @@ on:
     paths:
       - "src/**"
       - "lib/**"
+      - "shared/**"
       - "targets/**"
       - "scripts/**"
       - "nomad/**"
