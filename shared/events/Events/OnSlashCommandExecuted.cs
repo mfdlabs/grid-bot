@@ -26,16 +26,6 @@ public class OnInteractionExecuted
     private readonly ILogger _logger;
     private readonly IBacktraceUtility _backtraceUtility;
 
-    private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
-        "grid_interactions_processed_total",
-        "The total number of interactions processed.",
-        "interaction_type",
-        "interaction_id",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
-    );
-
     private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
         "grid_interactions_failed_total",
         "The total number of interactions failed.",
@@ -82,14 +72,6 @@ public class OnInteractionExecuted
     public async Task Invoke(ICommandInfo command, IInteractionContext context, IResult result)
     {
         var interaction = context.Interaction;
-
-        _totalInteractionsProcessed.WithLabels(
-            interaction.Type.ToString(),
-            interaction.Id.ToString(),
-            interaction.User.Id.ToString(),
-            interaction.ChannelId.ToString(),
-            GetGuildId(context)
-        ).Inc();
 
         if (!result.IsSuccess)
         {
