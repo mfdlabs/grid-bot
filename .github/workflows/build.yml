@@ -159,12 +159,6 @@ jobs:
     needs: build
     runs-on: grid-bot-infra
     steps:
-      - name: Move to Checkout Path
-        run: |
-          mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}
-          mv * /_/_work/${{ github.repository }}/${{ github.sha }}
-          cd /_/_work/${{ github.repository }}/${{ github.sha }}
-
       - name: Create Zip
         if: ${{ env.CREATE_RELEASE == 'true' || env.UPLOAD_ARTIFACT == 'true' }}
         id: zip
@@ -297,6 +291,7 @@ jobs:
   clean:
     if: always()
     runs-on: grid-bot-infra
+    needs: build # This is the only job that is guaranteed to run
 
     steps:
       - name: Cleanup
