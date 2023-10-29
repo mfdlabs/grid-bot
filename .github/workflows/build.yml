@@ -211,7 +211,7 @@ jobs:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
       NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production') || 'staging' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || ((github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production') || 'staging' )) == 'production' && 'prod' || 'stage' }}
 
       IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
 
