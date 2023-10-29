@@ -84,23 +84,6 @@ jobs:
     env:
       BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
 
-      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev') || 'docker-dev.registries.vmminfra.dev' }}
-
-      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
-      CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
-      UPLOAD_ARTIFACT: ${{ github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#') }}
-
-      DEPLOY_TO_NOMAD: ${{ github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) }}
-
-      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
-      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
-
-      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
     outputs:
       version: ${{ steps.version.outputs.version }}
 
@@ -221,13 +204,13 @@ jobs:
           fi
 
   deploy-to-nomad:
-    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && (github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#'))) }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && (github.event.inputs.deploy_to_nomad || ((github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) || contains(github.event.head_commit.message, '#!deploy!#'))) }}
     needs: [build, create-docker-image]
     runs-on: grid-bot-infra
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
+      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production') || 'staging' }}
       NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
 
       IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
