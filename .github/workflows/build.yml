@@ -291,7 +291,7 @@ jobs:
   clean:
     if: always()
     runs-on: grid-bot-infra
-    needs: [build, create-docker-image, deploy-to-nomad]
+    needs: [build, release-artifacts, create-docker-image, deploy-to-nomad]
 
     steps:
       - name: Cleanup
