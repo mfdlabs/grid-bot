@@ -349,38 +349,10 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
             Task.Run(() => _jobManager.CloseJob(job, false));
 
-            if (ex is FaultException fault)
+            if (ex is FaultException)
             {
                 // Needs to be reported, get the original script, the fully constructed script and all information about channels, users, etc.
-                _backtraceUtility.UploadCrashLog(ex);
-
-                var userInfo = Context.User.ToString();
-                var guildInfo = Context.Guild?.ToString() ?? "DMs";
-                var channelInfo = Context.Channel.ToString();
-
-                // Script & original script in attachments
-                var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
-                var originalScriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(originalScript)), "original-script.lua");
-
-                var content = $"""
-                **User:** {userInfo}
-                **Guild:** {guildInfo}
-                **Channel:** {channelInfo}
-                **Script ID:** {scriptId}
-                **Script Name:** {scriptName}
-
-                The script execution failed with the following error:
-                ```{fault.Message}```
-                """;
-
-                await _discordWebhookAlertManager.SendAlertAsync(
-                    "Script Execution Fault", 
-                    content, 
-                    Color.Red, 
-                    new[] { scriptAttachment, originalScriptAttachment }
-                );
-
-                // Followup with the user
+                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
                 await FollowupAsync("There was an internal error, please try again later.");
 
                 return;
@@ -395,6 +367,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
             if (ex is TimeoutException)
             {
+                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
                 await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
@@ -434,6 +407,37 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
                 );
             }
         }
+    }
+
+    private async Task AlertForSystem(string script, string originalScript, string scriptId, string scriptName, Exception ex)
+    {
+        _backtraceUtility.UploadCrashLog(ex);
+
+        var userInfo = Context.User.ToString();
+        var guildInfo = Context.Guild?.ToString() ?? "DMs";
+        var channelInfo = Context.Channel.ToString();
+
+        // Script & original script in attachments
+        var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
+        var originalScriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(originalScript)), "original-script.lua");
+
+        var content = $"""
+                **User:** {userInfo}
+                **Guild:** {guildInfo}
+                **Channel:** {channelInfo}
+                **Script ID:** {scriptId}
+                **Script Name:** {scriptName}
+
+                The script execution failed with the following error:
+                ```{ex.Message}```
+                """;
+
+        await _discordWebhookAlertManager.SendAlertAsync(
+            "Script Execution Fault",
+            content,
+            Color.Red,
+            new[] { scriptAttachment, originalScriptAttachment }
+        );
     }
 
     /// <summary>
