@@ -185,6 +185,7 @@ internal static class Runner
             .AddSingleton<IAvatarUtility, AvatarUtility>()
             .AddSingleton<ILuaUtility, LuaUtility>()
             .AddSingleton<IRbxUsersUtility, RbxUsersUtility>()
+            .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<ILoggerFactory, LoggerFactory>()
@@ -201,6 +202,9 @@ internal static class Runner
             .AddSingleton<OnInteraction>()
             .AddSingleton<OnInteractionExecuted>()
             .AddSingleton<OnShardReady>();
+
+        // Http Client Factory
+        services.AddHttpClient();
 
         return services.BuildServiceProvider();
     }

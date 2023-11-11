@@ -41,4 +41,9 @@ public class DiscordRolesSettings : BaseSettingsProvider
     /// Gets the bot owner id.
     /// </summary>
     public ulong BotOwnerId => GetOrDefault(nameof(BotOwnerId), default(ulong));
+
+    /// <summary>
+    /// Gets the ID of the role that is used to create notifications for alerts.
+    /// </summary>
+    public ulong AlertRoleId => GetOrDefault(nameof(AlertRoleId), default(ulong));
 }
