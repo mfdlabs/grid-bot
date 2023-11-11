@@ -26,6 +26,7 @@
     <PackageReference Include="Grid.ProcessManagement.Docker" Version="2023.10.22" />
     <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
     <PackageReference Include="Grid.JobManagement" Version="2023.10.22" />
+    <PackageReference Include="Networking" Version="2023.10.22" />
   </ItemGroup>
   
   <ItemGroup>

@@ -5,7 +5,7 @@
 
   <PropertyGroup Label="LibStandard">
     <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>10</LangVersion>
+    <LangVersion>preview</LangVersion>
     <RootNamespace>Grid.Bot</RootNamespace>
 
     <Configurations>debug;release</Configurations>

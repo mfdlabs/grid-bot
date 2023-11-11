@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -44,6 +45,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     private readonly IBacktraceUtility _backtraceUtility;
     private readonly IJobManager _jobManager;
     private readonly IAdminUtility _adminUtility;
+    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
 
     /// <summary>
     /// Construct a new instance of <see cref="ExecuteScript"/>.
@@ -56,6 +58,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+    /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="gridSettings"/> cannot be null.
@@ -65,6 +68,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
+    /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
     /// </exception>
     public ExecuteScript(
         ILogger logger,
@@ -74,7 +78,8 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         IFloodCheckerRegistry floodCheckerRegistry,
         IBacktraceUtility backtraceUtility,
         IJobManager jobManager,
-        IAdminUtility adminUtility
+        IAdminUtility adminUtility,
+        IDiscordWebhookAlertManager discordWebhookAlertManager
     )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -85,6 +90,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+        _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
     }
 
     /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
@@ -279,6 +285,8 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         script = GetCodeBlockContents(script);
         script = EscapeQuotes(script);
 
+        var originalScript = script;
+
         if (ContainsUnicode(script))
         {
             await FollowupAsync("The script cannot contain unicode characters as grid-servers cannot support unicode in transit.");
@@ -341,6 +349,15 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
             Task.Run(() => _jobManager.CloseJob(job, false));
 
+            if (ex is FaultException)
+            {
+                // Needs to be reported, get the original script, the fully constructed script and all information about channels, users, etc.
+                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
+                await FollowupAsync("There was an internal error, please try again later.");
+
+                return;
+            }
+
             if (ex is IOException)
             {
                 _backtraceUtility.UploadCrashLog(ex);
@@ -350,6 +367,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
             if (ex is TimeoutException)
             {
+                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
                 await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
@@ -389,6 +407,37 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
                 );
             }
         }
+    }
+
+    private async Task AlertForSystem(string script, string originalScript, string scriptId, string scriptName, Exception ex)
+    {
+        _backtraceUtility.UploadCrashLog(ex);
+
+        var userInfo = Context.User.ToString();
+        var guildInfo = Context.Guild?.ToString() ?? "DMs";
+        var channelInfo = Context.Channel.ToString();
+
+        // Script & original script in attachments
+        var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
+        var originalScriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(originalScript)), "original-script.lua");
+
+        var content = $"""
+                **User:** {userInfo}
+                **Guild:** {guildInfo}
+                **Channel:** {channelInfo}
+                **Script ID:** {scriptId}
+                **Script Name:** {scriptName}
+
+                The script execution failed with the following error:
+                ```{ex.Message}```
+                """;
+
+        await _discordWebhookAlertManager.SendAlertAsync(
+            "Script Execution Fault",
+            content,
+            Color.Red,
+            new[] { scriptAttachment, originalScriptAttachment }
+        );
     }
 
     /// <summary>

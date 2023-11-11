@@ -67,4 +67,20 @@ public class GlobalSettings : BaseSettingsProvider
         nameof(DocumentationHubUrl),
         "https://grid-bot.ops.vmminfra.net"
     );
+
+    /// <summary>
+    /// Is alerting via Discord webhook enabled?
+    /// </summary>
+    public bool DiscordWebhookAlertingEnabled => GetOrDefault(
+        nameof(DiscordWebhookAlertingEnabled),
+        false
+    );
+
+    /// <summary>
+    /// Gets the Discord webhook URL for alerts.
+    /// </summary>
+    public string DiscordWebhookUrl => GetOrDefault(
+        nameof(DiscordWebhookUrl),
+        string.Empty
+    );
 }
