@@ -84,8 +84,22 @@ jobs:
     env:
       BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
 
-    outputs:
-      version: ${{ steps.version.outputs.version }}
+      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev') || 'docker-dev.registries.vmminfra.dev' }}
+
+      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
+      CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
+      UPLOAD_ARTIFACT: ${{ github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#') }}
+
+      DEPLOY_TO_NOMAD: ${{ github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) }}
+
+      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
+
+      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -131,99 +145,63 @@ jobs:
             -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
             -p:CI=true
 
-  release-artifacts:
-    env:
-      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
-      UPLOAD_ARTIFACT: ${{ github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#') }}
-
-      BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
-
-    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && ((github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#')) || (github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#'))) }}
-    needs: build
-    runs-on: grid-bot-infra
-    steps:
-      - name: Create Zip
-        if: ${{ env.CREATE_RELEASE == 'true' || env.UPLOAD_ARTIFACT == 'true' }}
+      - name: Create Release Artifact
+        if: ${{ env.CREATE_RELEASE == 'true' }}
         id: zip
         run: |
-          cd /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ needs.build.outputs.version }} && \
-          zip -r /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ needs.build.outputs.version }}.svc-arc \
+          cd /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} && \
+          zip -r /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc \
           .
-        
-      - name: Upload Release
-        if: ${{ env.CREATE_RELEASE == 'true' }}
+
+      - name: Write Release Artifact
+        if: ${{ env.CREATE_RELEASE == 'true' && steps.zip.outcome == 'success' }}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.DEPLOYER_TOKEN }}
         with:
           files: |
-            /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ needs.build.outputs.version }}.svc-arc
-          tag_name: ${{ needs.build.outputs.version }}
+            /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc
+          tag_name: ${{ steps.version.outputs.version }}
           generate_release_notes: true
           prerelease: ${{ env.BUILD_CONFIGURATION == 'Debug' }}
           draft: false
           target_commitish: ${{ github.sha }}
 
-      - name: Upload Action Artifact
-        if: ${{ env.UPLOAD_ARTIFACT == 'true' }}
+      - name: Upload Release Artifact
+        if: ${{ env.UPLOAD_ARTIFACT == 'true' && steps.zip.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ needs.build.outputs.version }}.svc-arc
-          path: /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ needs.build.outputs.version }}.svc-arc
+          name: ${{ steps.version.outputs.version }}.svc-arc
+          path: /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.svc-arc
           retention-days: 1
 
-  create-docker-image:
-    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && (github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#')) }}
-    needs: build
-    runs-on: grid-bot-infra
-    env:
-      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev') || 'docker-dev.registries.vmminfra.dev' }}
-
-      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-    steps:
       - name: Create Image
-        if: ${{ env.DOCKER_REGISTRY && env.DOCKER_USERNAME && env.DOCKER_PASSWORD }}
+        if: ${{ env.CREATE_IMAGE == 'true' && env.DOCKER_REGISTRY && env.DOCKER_USERNAME && env.DOCKER_PASSWORD }}
         id: image
         run: |
           echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin "${{ env.DOCKER_REGISTRY }}"
 
           cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
-            docker build -t ${{ env.IMAGE }}:${{ needs.build.outputs.version }} --build-arg IMAGE_TAG=${{ needs.build.outputs.version }} .
+            docker build -t ${{ env.IMAGE }}:${{ steps.version.outputs.version }} --build-arg IMAGE_TAG=${{ steps.version.outputs.version }} .
 
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            docker tag ${{ env.IMAGE }}:${{ needs.build.outputs.version }} ${{ env.IMAGE }}:latest
+            docker tag ${{ env.IMAGE }}:${{ steps.version.outputs.version }} ${{ env.IMAGE }}:latest
           fi
 
-          docker push ${{ env.IMAGE }}:${{ needs.build.outputs.version }}
+          docker push ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
 
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             docker push ${{ env.IMAGE }}:latest
           fi
 
-  deploy-to-nomad:
-    if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && (github.event.inputs.deploy_to_nomad || ((github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) || contains(github.event.head_commit.message, '#!deploy!#'))) }}
-    needs: [build, create-docker-image]
-    runs-on: grid-bot-infra
-    env:
-      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
-      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production') || 'staging' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || ((github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production') || 'staging' )) == 'production' && 'prod' || 'stage' }}
-
-      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
-
-    steps:
       - name: Setup Nomad CLI
-        if: ${{ env.NOMAD_ADDR }}
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: nferch/setup-nomad@v4.0.0
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
 
       - name: Set Initial GitHub Deployment Status
-        if: ${{ env.NOMAD_ADDR }}
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: chrnorm/deployment-action@v2
         id: deployment
         continue-on-error: true
@@ -233,7 +211,7 @@ jobs:
           environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
 
       - name: Deploy to Nomad
-        if: ${{ env.NOMAD_ADDR }}
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
         id: deploy
@@ -247,7 +225,7 @@ jobs:
 
           # Replace the template with the actual values
           sed -e "s,{{{IMAGE_NAME}}},${{ env.IMAGE }}," \
-              -e "s/{{{IMAGE_TAG}}}/${{ needs.build.outputs.version }}/" \
+              -e "s/{{{IMAGE_TAG}}}/${{ steps.version.outputs.version }}/" \
               -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
               -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
               /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
@@ -259,7 +237,7 @@ jobs:
           rm $NOMAD_JOB_FILE
 
       - name: Set GitHub Deployment Status
-        if: ${{ env.NOMAD_ADDR }}
+        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: chrnorm/deployment-status@v2
         continue-on-error: true
         with:
@@ -271,12 +249,6 @@ jobs:
           # If the "deploy" step succeeds, the deployment status will be set to "success"
           state: "${{ steps.deploy.outcome }}"
 
-  clean:
-    if: always()
-    runs-on: grid-bot-infra
-    needs: [build, release-artifacts, create-docker-image, deploy-to-nomad]
-
-    steps:
       - name: Cleanup
         if: always()
         continue-on-error: true
