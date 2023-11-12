@@ -581,7 +581,8 @@ do
 	setfenv(1, execution_env)
 end
 
-local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil; {0} end
+local ctx = function() local get_log_string = nil; local FVariable = nil; local execution_env = nil; local max_result_length = nil; {0} 
+end
 
 type ReturnMetadata = {
 	success: boolean?;
