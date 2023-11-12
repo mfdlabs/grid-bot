@@ -349,31 +349,24 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
             Task.Run(() => _jobManager.CloseJob(job, false));
 
+            await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
+
             if (ex is FaultException)
             {
                 // Needs to be reported, get the original script, the fully constructed script and all information about channels, users, etc.
-                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
                 await FollowupAsync("There was an internal error, please try again later.");
 
                 return;
             }
 
-            if (ex is IOException)
-            {
-                _backtraceUtility.UploadCrashLog(ex);
-
-                await FollowupAsync("There was an IO error when writing the script to the system, please try again later.");
-            }
-
             if (ex is TimeoutException)
             {
-                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
                 await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
             }
 
-            if (ex is not IOException) throw;
+            throw;
         }
         finally
         {
