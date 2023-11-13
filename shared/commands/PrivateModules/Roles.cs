@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Private;
 
 using System;
 using System.Threading.Tasks;
@@ -11,30 +11,25 @@ using Utility;
 /// <summary>
 /// Interaction handler for updating user bot roles.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="Roles"/>.
+/// </remarks>
+/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
+/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// - <paramref name="adminUtility"/> cannot be null.
+/// </exception>
 [Group("role", "Commands used for updating user bot roles.")]
 [RequireBotRole(BotRole.Administrator)]
-public class Roles : InteractionModuleBase<ShardedInteractionContext>
+public class Roles(
+    DiscordRolesSettings discordRolesSettings,
+    IAdminUtility adminUtility
+) : InteractionModuleBase<ShardedInteractionContext>
 {
-    private readonly DiscordRolesSettings _discordRolesSettings;
-    private readonly IAdminUtility _adminUtility;
+    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
 
-    /// <summary>
-    /// Construct a new instance of <see cref="Roles"/>.
-    /// </summary>
-    /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
-    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="discordRolesSettings"/> cannot be null.
-    /// - <paramref name="adminUtility"/> cannot be null.
-    /// </exception>
-    public Roles(
-        DiscordRolesSettings discordRolesSettings,
-        IAdminUtility adminUtility
-    )
-    {
-        _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
-        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-    }
 
     /// <summary>
     /// Updates the user's bot role.

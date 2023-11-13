@@ -17,14 +17,29 @@ using Utility;
 /// <summary>
 /// Invoked when slash commands are executed.
 /// </summary>
-public class OnInteractionExecuted
+/// <remarks>
+/// Construct a new instance of <see cref="OnInteractionExecuted"/>.
+/// </remarks>
+/// <param name="logger">The <see cref="ILogger"/>.</param>
+/// <param name="backtraceUtility">The <see cref="BacktraceUtility"/>.</param>
+/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="logger"/> cannot be null.
+/// - <paramref name="backtraceUtility"/> cannot be null.
+/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// </exception>
+public class OnInteractionExecuted(
+    ILogger logger,
+    IBacktraceUtility backtraceUtility,
+    DiscordRolesSettings discordRolesSettings
+)
 {
     private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command:";
 
-    private readonly DiscordRolesSettings _discordRolesSettings;
+    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
-    private readonly ILogger _logger;
-    private readonly IBacktraceUtility _backtraceUtility;
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
 
     private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
         "grid_interactions_failed_total",
@@ -35,28 +50,6 @@ public class OnInteractionExecuted
         "interaction_channel_id",
         "interaction_guild_id"
     );
-
-    /// <summary>
-    /// Construct a new instance of <see cref="OnInteractionExecuted"/>.
-    /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="backtraceUtility">The <see cref="BacktraceUtility"/>.</param>
-    /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="backtraceUtility"/> cannot be null.
-    /// - <paramref name="discordRolesSettings"/> cannot be null.
-    /// </exception>
-    public OnInteractionExecuted(
-        ILogger logger,
-        IBacktraceUtility backtraceUtility,
-        DiscordRolesSettings discordRolesSettings
-    )
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
-        _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
-    }
 
     private string GetGuildId(IInteractionContext context)
     {

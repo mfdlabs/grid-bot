@@ -17,39 +17,31 @@ using Networking;
 /// Handles sending alerts to a Discord webhook.
 /// </summary>
 /// <seealso cref="IDiscordWebhookAlertManager"/>
-public class DiscordWebhookAlertManager : IDiscordWebhookAlertManager
+/// <remarks>
+/// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
+/// </remarks>
+/// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
+/// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
+/// <param name="globalSettings">The <see cref="GlobalSettings"/> to use.</param>
+/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/> to use.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="localIpAddressProvider"/> cannot be null.
+/// - <paramref name="httpClientFactory"/> cannot be null.
+/// - <paramref name="globalSettings"/> cannot be null.
+/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// </exception>
+/// <seealso cref="DiscordWebhookAlertManager"/>
+public class DiscordWebhookAlertManager(
+    ILocalIpAddressProvider localIpAddressProvider,
+    IHttpClientFactory httpClientFactory,
+    GlobalSettings globalSettings,
+    DiscordRolesSettings discordRolesSettings
+) : IDiscordWebhookAlertManager
 {
-    private readonly ILocalIpAddressProvider _localIpAddressProvider;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly GlobalSettings _globalSettings;
-    private readonly DiscordRolesSettings _discordRolesSettings;
-
-    /// <summary>
-    /// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
-    /// </summary>
-    /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
-    /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
-    /// <param name="globalSettings">The <see cref="GlobalSettings"/> to use.</param>
-    /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/> to use.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="localIpAddressProvider"/> cannot be null.
-    /// - <paramref name="httpClientFactory"/> cannot be null.
-    /// - <paramref name="globalSettings"/> cannot be null.
-    /// - <paramref name="discordRolesSettings"/> cannot be null.
-    /// </exception>
-    /// <seealso cref="DiscordWebhookAlertManager"/>
-    public DiscordWebhookAlertManager(
-        ILocalIpAddressProvider localIpAddressProvider,
-        IHttpClientFactory httpClientFactory,
-        GlobalSettings globalSettings,
-        DiscordRolesSettings discordRolesSettings
-    )
-    {
-        _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
-        _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
-    }
+    private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
+    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>
     public async Task SendAlertAsync(string topic, string message, Color? color, IEnumerable<FileAttachment> attachments = null)

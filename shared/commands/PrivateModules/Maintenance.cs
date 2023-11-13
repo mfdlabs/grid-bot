@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Private;
 
 using System;
 using System.Threading.Tasks;
@@ -10,35 +10,28 @@ using Discord.Interactions;
 /// <summary>
 /// Interaction handler for the maintenance commands.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="Maintenance"/>.
+/// </remarks>
+/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
+/// <param name="discordShardedClient">The <see cref="DiscordShardedClient"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="discordSettings"/> cannot be null.
+/// - <paramref name="discordShardedClient"/> cannot be null.
+/// </exception>
 [Group("maintenance", "Commands used for grid-bot-maintenance.")]
 [RequireBotRole(BotRole.Administrator)]
-public class Maintenance : InteractionModuleBase<ShardedInteractionContext>
+public class Maintenance(
+    MaintenanceSettings maintenanceSettings,
+    DiscordSettings discordSettings,
+    DiscordShardedClient discordShardedClient
+) : InteractionModuleBase<ShardedInteractionContext>
 {
-    private readonly MaintenanceSettings _maintenanceSettings;
-    private readonly DiscordSettings _discordSettings;
-    private readonly DiscordShardedClient _discordShardedClient;
-
-    /// <summary>
-    /// Construct a new instance of <see cref="Maintenance"/>.
-    /// </summary>
-    /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
-    /// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
-    /// <param name="discordShardedClient">The <see cref="DiscordShardedClient"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="maintenanceSettings"/> cannot be null.
-    /// - <paramref name="discordSettings"/> cannot be null.
-    /// - <paramref name="discordShardedClient"/> cannot be null.
-    /// </exception>
-    public Maintenance(
-        MaintenanceSettings maintenanceSettings,
-        DiscordSettings discordSettings,
-        DiscordShardedClient discordShardedClient
-    )
-    {
-        _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
-        _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
-        _discordShardedClient = discordShardedClient ?? throw new ArgumentNullException(nameof(discordShardedClient));
-    }
+    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+    private readonly DiscordShardedClient _discordShardedClient = discordShardedClient ?? throw new ArgumentNullException(nameof(discordShardedClient));
 
     private string GetStatusText(string updateText)
         => string.IsNullOrEmpty(updateText) ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";

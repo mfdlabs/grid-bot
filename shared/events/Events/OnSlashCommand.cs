@@ -15,16 +15,42 @@ using Discord;
 /// <summary>
 /// Event handler for interactions.
 /// </summary>
-public class OnInteraction
+/// <remarks>
+/// Construct a new instance of <see cref="OnInteraction"/>.
+/// </remarks>
+/// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
+/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
+/// <param name="interactionService">The <see cref="InteractionService"/>.</param>
+/// <param name="services">The <see cref="IServiceProvider"/>.</param>
+/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+/// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="client"/> cannot be null.
+/// - <paramref name="interactionService"/> cannot be null.
+/// - <paramref name="services"/> cannot be null.
+/// - <paramref name="adminUtility"/> cannot be null.
+/// - <paramref name="loggerFactory"/> cannot be null.
+/// </exception>
+public class OnInteraction(
+    DiscordSettings discordSettings,
+    MaintenanceSettings maintenanceSettings,
+    DiscordShardedClient client,
+    InteractionService interactionService,
+    IServiceProvider services,
+    IAdminUtility adminUtility,
+    ILoggerFactory loggerFactory
+)
 {
-    private readonly DiscordSettings _discordSettings;
-    private readonly MaintenanceSettings _maintenanceSettings;
+    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
-    private readonly DiscordShardedClient _client;
-    private readonly InteractionService _interactionService;
-    private readonly IServiceProvider _services;
-    private readonly IAdminUtility _adminUtility;
-    private readonly ILoggerFactory _loggerFactory;
+    private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly InteractionService _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
+    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
         "grid_interactions_processed_total",
@@ -63,43 +89,6 @@ public class OnInteraction
             LabelNames = new[] { "interaction_type" }
         }
     );
-
-    /// <summary>
-    /// Construct a new instance of <see cref="OnInteraction"/>.
-    /// </summary>
-    /// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
-    /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
-    /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
-    /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
-    /// <param name="services">The <see cref="IServiceProvider"/>.</param>
-    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="maintenanceSettings"/> cannot be null.
-    /// - <paramref name="client"/> cannot be null.
-    /// - <paramref name="interactionService"/> cannot be null.
-    /// - <paramref name="services"/> cannot be null.
-    /// - <paramref name="adminUtility"/> cannot be null.
-    /// - <paramref name="loggerFactory"/> cannot be null.
-    /// </exception>
-    public OnInteraction(
-        DiscordSettings discordSettings,
-        MaintenanceSettings maintenanceSettings,
-        DiscordShardedClient client,
-        InteractionService interactionService,
-        IServiceProvider services,
-        IAdminUtility adminUtility,
-        ILoggerFactory loggerFactory
-    )
-    {
-        _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
-        _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
-        _services = services ?? throw new ArgumentNullException(nameof(services));
-        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-    }
 
     private string GetGuildId(SocketInteraction interaction)
     {

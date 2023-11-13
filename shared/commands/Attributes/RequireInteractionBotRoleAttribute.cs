@@ -13,18 +13,14 @@ using Utility;
 /// <summary>
 /// An attribute that validates if the user has the required bot role.
 /// </summary>
-public class RequireBotRoleAttribute : PreconditionAttribute
+/// <remarks>
+/// Construct a new instance of <see cref="RequireBotRoleAttribute"/>.
+/// </remarks>
+/// <param name="botRole">The <see cref="BotRole"/>.</param>
+public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : PreconditionAttribute
 {
-    private readonly BotRole _botRole;
+    private readonly BotRole _botRole = botRole;
 
-    /// <summary>
-    /// Construct a new instance of <see cref="RequireBotRoleAttribute"/>.
-    /// </summary>
-    /// <param name="botRole">The <see cref="BotRole"/>.</param>
-    public RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged)
-    {
-        _botRole = botRole;
-    }
 
     /// <inheritdoc cref="PreconditionAttribute.CheckRequirementsAsync(IInteractionContext, ICommandInfo, IServiceProvider)"/>
     public override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo commandInfo, IServiceProvider services)

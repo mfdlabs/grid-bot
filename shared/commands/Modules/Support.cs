@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Public;
 
 using System;
 using System.Reflection;
@@ -12,34 +12,28 @@ using Networking;
 /// <summary>
 /// Interaction handler for the support commands.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="Support"/>.
+/// </remarks>
+/// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
+/// <param name="globalSettings">The <see cref="GlobalSettings"/>.</param>
+/// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="gridSettings"/> cannot be null.
+/// - <paramref name="globalSettings"/> cannot be null.
+/// - <paramref name="localIpAddressProvider"/> cannot be null.
+/// </exception>
 [Group("support", "Commands used for grid-bot-support.")]
-public class Support : InteractionModuleBase<ShardedInteractionContext>
+public class Support(
+    GridSettings gridSettings,
+    GlobalSettings globalSettings,
+    ILocalIpAddressProvider localIpAddressProvider
+    ) : InteractionModuleBase<ShardedInteractionContext>
 {
-    private readonly GridSettings _gridSettings;
-    private readonly GlobalSettings _globalSettings;
-    private readonly ILocalIpAddressProvider _localIpAddressProvider;
+    private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
+    private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
+    private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
 
-    /// <summary>
-    /// Construct a new instance of <see cref="Support"/>.
-    /// </summary>
-    /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
-    /// <param name="globalSettings">The <see cref="GlobalSettings"/>.</param>
-    /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="gridSettings"/> cannot be null.
-    /// - <paramref name="globalSettings"/> cannot be null.
-    /// - <paramref name="localIpAddressProvider"/> cannot be null.
-    /// </exception>
-    public Support(
-        GridSettings gridSettings,
-        GlobalSettings globalSettings,
-        ILocalIpAddressProvider localIpAddressProvider
-    )
-    {
-        _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
-        _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
-        _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
-    }
 
     /// <summary>
     /// Gets informational links for the bot, in a stylish embed.
