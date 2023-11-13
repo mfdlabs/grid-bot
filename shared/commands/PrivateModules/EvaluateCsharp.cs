@@ -248,6 +248,10 @@ public partial class EvaluateCsharp(
 
             await HandleResponseAsync(ex.ToString(), null, timing);
         }
+        finally
+        {
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+        }
     }
 
     /// <summary>
