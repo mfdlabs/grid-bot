@@ -23,7 +23,7 @@ using Extensions;
 /// <summary>
 /// Context for the C# script execution.
 /// </summary>
-public struct CsharpExecutionContext
+public class CsharpExecutionContext
 {
     /// <summary>
     /// The <see cref="ShardedInteractionContext"/>.
