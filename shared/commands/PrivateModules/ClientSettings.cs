@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Private;
 
 using System;
 using System.IO;
@@ -19,12 +19,21 @@ using Extensions;
 /// <summary>
 /// Represents the interaction for ClientSettings.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="ClientSettingsModule"/>.
+/// </remarks>
+/// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/>.</param>
+/// <param name="clientSettingsClientSettings">The <see cref="ClientSettingsClientSettings"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="clientSettingsClient"/> cannot be null.
+/// - <paramref name="clientSettingsClientSettings"/> cannot be null.
+/// </exception>
 [Group("clientsettings", "Manage the client settings.")]
 [RequireBotRole(BotRole.Administrator)]
-public class ClientSettingsModule : InteractionModuleBase<ShardedInteractionContext>
+public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, ClientSettingsClientSettings clientSettingsClientSettings) : InteractionModuleBase<ShardedInteractionContext>
 {
-    private readonly IClientSettingsClient _clientSettingsClient;
-    private readonly ClientSettingsClientSettings _clientSettingsClientSettings;
+    private readonly IClientSettingsClient _clientSettingsClient = clientSettingsClient ?? throw new ArgumentNullException(nameof(clientSettingsClient));
+    private readonly ClientSettingsClientSettings _clientSettingsClientSettings = clientSettingsClientSettings ?? throw new ArgumentNullException(nameof(clientSettingsClientSettings));
 
     /// <summary>
     /// Represents the type of client setting.
@@ -48,21 +57,6 @@ public class ClientSettingsModule : InteractionModuleBase<ShardedInteractionCont
         /// </summary>
         [ChoiceDisplay("bool")]
         Bool,
-    }
-
-    /// <summary>
-    /// Construct a new instance of <see cref="ClientSettingsModule"/>.
-    /// </summary>
-    /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/>.</param>
-    /// <param name="clientSettingsClientSettings">The <see cref="ClientSettingsClientSettings"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="clientSettingsClient"/> cannot be null.
-    /// - <paramref name="clientSettingsClientSettings"/> cannot be null.
-    /// </exception>
-    public ClientSettingsModule(IClientSettingsClient clientSettingsClient, ClientSettingsClientSettings clientSettingsClientSettings)
-    {
-        _clientSettingsClient = clientSettingsClient ?? throw new ArgumentNullException(nameof(clientSettingsClient));
-        _clientSettingsClientSettings = clientSettingsClientSettings ?? throw new ArgumentNullException(nameof(clientSettingsClientSettings));
     }
 
     /// <summary>

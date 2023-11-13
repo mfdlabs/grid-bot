@@ -21,38 +21,30 @@ using GridJob = Grid.ComputeCloud.Job;
 /// Utility to be used when interacting with the rendering
 /// layer of the grid servers.
 /// </summary>
-public class AvatarUtility : IAvatarUtility
+/// <remarks>
+/// Construct a new instance of <see cref="AvatarUtility"/>.
+/// </remarks>
+/// <param name="logger">The <see cref="ILogger"/>.</param>
+/// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
+/// <param name="random">The <see cref="IRandom"/>.</param>
+/// <param name="jobManager">The <see cref="IJobManager"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="logger"/> cannot be null.
+/// - <paramref name="avatarSettings"/> cannot be null.
+/// - <paramref name="random"/> cannot be null.
+/// - <paramref name="jobManager"/> cannot be null.
+/// </exception>
+public class AvatarUtility(
+    ILogger logger,
+    AvatarSettings avatarSettings,
+    IRandom random,
+    IJobManager jobManager
+) : IAvatarUtility
 {
-    private readonly ILogger _logger;
-    private readonly AvatarSettings _avatarSettings;
-    private readonly IRandom _random;
-    private readonly IJobManager _jobManager;
-
-    /// <summary>
-    /// Construct a new instance of <see cref="AvatarUtility"/>.
-    /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
-    /// <param name="random">The <see cref="IRandom"/>.</param>
-    /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="avatarSettings"/> cannot be null.
-    /// - <paramref name="random"/> cannot be null.
-    /// - <paramref name="jobManager"/> cannot be null.
-    /// </exception>
-    public AvatarUtility(
-        ILogger logger,
-        AvatarSettings avatarSettings,
-        IRandom random,
-        IJobManager jobManager
-    )
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
-        _random = random ?? throw new ArgumentNullException(nameof(random));
-        _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-    }
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly AvatarSettings _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
+    private readonly IRandom _random = random ?? throw new ArgumentNullException(nameof(random));
+    private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
 
     private IEnumerable<object> GetThumbnailArgs(string url, int x, int y)
     {

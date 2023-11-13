@@ -8,19 +8,14 @@ using Discord;
 /// <summary>
 /// Utility class for administration.
 /// </summary>
-public class AdminUtility : IAdminUtility
+/// <remarks>
+/// Construct a new instance of <see cref="AdminUtility"/>.
+/// </remarks>
+/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
+/// <exception cref="ArgumentNullException"><paramref name="discordRolesSettings"/> cannot be null.</exception>
+public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUtility
 {
-    private readonly DiscordRolesSettings _discordRolesSettings;
-
-    /// <summary>
-    /// Construct a new instance of <see cref="AdminUtility"/>.
-    /// </summary>
-    /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="discordRolesSettings"/> cannot be null.</exception>
-    public AdminUtility(DiscordRolesSettings discordRolesSettings)
-    {
-        _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
-    }
+    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
     /// <inheritdoc cref="IAdminUtility.UserIsOwner(IUser)"/>
     public bool UserIsOwner(IUser user) 

@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>10</LangVersion>
     <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
     <OutputType>Exe</OutputType>

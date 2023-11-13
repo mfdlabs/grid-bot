@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <PropertyGroup Label="LibStandard">
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <RootNamespace>Grid.Bot</RootNamespace>
 

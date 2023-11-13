@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/debug/net6.0/Grid.Bot.dll",
+            "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/src",
             "console": "internalConsole",
             "stopAtEntry": false,

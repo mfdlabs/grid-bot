@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Public;
 
 using System;
 using System.Threading.Tasks;
@@ -12,50 +12,41 @@ using Utility;
 /// <summary>
 /// Interaction handler for rendering a Roblox character.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="Render"/>.
+/// </remarks>
+/// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
+/// <param name="logger">The <see cref="ILogger"/>.</param>
+/// <param name="rbxUsersUtility">The <see cref="IRbxUsersUtility"/>.</param>
+/// <param name="avatarUtility">The <see cref="IAvatarUtility"/>.</param>
+/// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
+/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="avatarSettings"/> cannot be null.
+/// - <paramref name="logger"/> cannot be null.
+/// - <paramref name="rbxUsersUtility"/> cannot be null.
+/// - <paramref name="avatarUtility"/> cannot be null.
+/// - <paramref name="floodCheckerRegistry"/> cannot be null.
+/// - <paramref name="adminUtility"/> cannot be null.
+/// </exception>
 [Group("render", "Commands used for rendering a Roblox character.")]
-public class Render : InteractionModuleBase<ShardedInteractionContext>
+public class Render(
+    AvatarSettings avatarSettings,
+    ILogger logger,
+    IRbxUsersUtility rbxUsersUtility,
+    IAvatarUtility avatarUtility,
+    IFloodCheckerRegistry floodCheckerRegistry,
+    IAdminUtility adminUtility
+    ) : InteractionModuleBase<ShardedInteractionContext>
 {
-    private readonly AvatarSettings _avatarSettings;
+    private readonly AvatarSettings _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
 
-    private readonly ILogger _logger;
-    private readonly IRbxUsersUtility _rbxUsersUtility;
-    private readonly IAvatarUtility _avatarUtility;
-    private readonly IFloodCheckerRegistry _floodCheckerRegistry;
-    private readonly IAdminUtility _adminUtility;
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IRbxUsersUtility _rbxUsersUtility = rbxUsersUtility ?? throw new ArgumentNullException(nameof(rbxUsersUtility));
+    private readonly IAvatarUtility _avatarUtility = avatarUtility ?? throw new ArgumentNullException(nameof(avatarUtility));
+    private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
+    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
 
-    /// <summary>
-    /// Construct a new instance of <see cref="Render"/>.
-    /// </summary>
-    /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
-    /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="rbxUsersUtility">The <see cref="IRbxUsersUtility"/>.</param>
-    /// <param name="avatarUtility">The <see cref="IAvatarUtility"/>.</param>
-    /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
-    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="avatarSettings"/> cannot be null.
-    /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="rbxUsersUtility"/> cannot be null.
-    /// - <paramref name="avatarUtility"/> cannot be null.
-    /// - <paramref name="floodCheckerRegistry"/> cannot be null.
-    /// - <paramref name="adminUtility"/> cannot be null.
-    /// </exception>
-    public Render(
-        AvatarSettings avatarSettings,
-        ILogger logger,
-        IRbxUsersUtility rbxUsersUtility,
-        IAvatarUtility avatarUtility,
-        IFloodCheckerRegistry floodCheckerRegistry,
-        IAdminUtility adminUtility
-    )
-    {
-        _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _rbxUsersUtility = rbxUsersUtility ?? throw new ArgumentNullException(nameof(rbxUsersUtility));
-        _avatarUtility = avatarUtility ?? throw new ArgumentNullException(nameof(avatarUtility));
-        _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
-        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-    }
 
     /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
     public override async Task BeforeExecuteAsync(ICommandInfo command)

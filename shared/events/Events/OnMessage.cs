@@ -20,17 +20,38 @@ using Utility;
 /// <summary>
 /// Event handler for messages.
 /// </summary>
-public class OnMessage
+/// <remarks>
+/// Construct a new instance of <see cref="OnMessage"/>.
+/// </remarks>
+/// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
+/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
+/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+/// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="commandsSettings"/> cannot be null.
+/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="client"/> cannot be null.
+/// - <paramref name="adminUtility"/> cannot be null.
+/// - <paramref name="loggerFactory"/> cannot be null.
+/// </exception>
+public class OnMessage(
+    CommandsSettings commandsSettings,
+    MaintenanceSettings maintenanceSettings,
+    DiscordShardedClient client,
+    IAdminUtility adminUtility,
+    ILoggerFactory loggerFactory
+)
 {
     // language=regex
     private const string _allowedCommandRegex = @"^[a-zA-Z-]*$";
 
-    private readonly CommandsSettings _commandsSettings;
-    private readonly MaintenanceSettings _maintenanceSettings;
+    private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
+    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
-    private readonly DiscordShardedClient _client;
-    private readonly IAdminUtility _adminUtility;
-    private readonly ILoggerFactory _loggerFactory;
+    private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
         "grid_messages_processed_total",
@@ -63,36 +84,6 @@ public class OnMessage
         "message_channel_id",
         "message_guild_id"
     );
-
-    /// <summary>
-    /// Construct a new instance of <see cref="OnMessage"/>.
-    /// </summary>
-    /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
-    /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
-    /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
-    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="commandsSettings"/> cannot be null.
-    /// - <paramref name="maintenanceSettings"/> cannot be null.
-    /// - <paramref name="client"/> cannot be null.
-    /// - <paramref name="adminUtility"/> cannot be null.
-    /// - <paramref name="loggerFactory"/> cannot be null.
-    /// </exception>
-    public OnMessage(
-        CommandsSettings commandsSettings,
-        MaintenanceSettings maintenanceSettings,
-        DiscordShardedClient client,
-        IAdminUtility adminUtility,
-        ILoggerFactory loggerFactory
-    )
-    {
-        _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
-        _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-    }
 
     private string GetGuildId(SocketMessage message)
     {

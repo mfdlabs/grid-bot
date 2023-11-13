@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions;
+namespace Grid.Bot.Interactions.Public;
 
 using System;
 using System.IO;
@@ -28,70 +28,63 @@ using GridJob = ComputeCloud.Job;
 /// <summary>
 /// Interaction handler for executing Luau code.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="ExecuteScript"/>.
+/// </remarks>
+/// <param name="logger">The <see cref="ILogger"/>.</param>
+/// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
+/// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
+/// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
+/// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
+/// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
+/// <param name="jobManager">The <see cref="IJobManager"/>.</param>
+/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+/// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="logger"/> cannot be null.
+/// - <paramref name="gridSettings"/> cannot be null.
+/// - <paramref name="scriptsSettings"/> cannot be null.
+/// - <paramref name="luaUtility"/> cannot be null.
+/// - <paramref name="floodCheckerRegistry"/> cannot be null.
+/// - <paramref name="backtraceUtility"/> cannot be null.
+/// - <paramref name="jobManager"/> cannot be null.
+/// - <paramref name="adminUtility"/> cannot be null.
+/// - <paramref name="discordWebhookAlertManager"/> cannot be null.
+/// </exception>
 [Group("execute", "Commands used for executing Luau code.")]
-public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
+public partial class ExecuteScript(
+    ILogger logger,
+    GridSettings gridSettings,
+    ScriptsSettings scriptsSettings,
+    ILuaUtility luaUtility,
+    IFloodCheckerRegistry floodCheckerRegistry,
+    IBacktraceUtility backtraceUtility,
+    IJobManager jobManager,
+    IAdminUtility adminUtility,
+    IDiscordWebhookAlertManager discordWebhookAlertManager
+) : InteractionModuleBase<ShardedInteractionContext>
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
 
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    private readonly GridSettings _gridSettings;
-    private readonly ScriptsSettings _scriptsSettings;
+    private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
+    private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
 
-    private readonly ILuaUtility _luaUtility;
-    private readonly IFloodCheckerRegistry _floodCheckerRegistry;
-    private readonly IBacktraceUtility _backtraceUtility;
-    private readonly IJobManager _jobManager;
-    private readonly IAdminUtility _adminUtility;
-    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
+    private readonly ILuaUtility _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
+    private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
+    private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
+    private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
+    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
 
-    /// <summary>
-    /// Construct a new instance of <see cref="ExecuteScript"/>.
-    /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
-    /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
-    /// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
-    /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
-    /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
-    /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
-    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
-    /// <exception cref="ArgumentNullException">
-    /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="gridSettings"/> cannot be null.
-    /// - <paramref name="scriptsSettings"/> cannot be null.
-    /// - <paramref name="luaUtility"/> cannot be null.
-    /// - <paramref name="floodCheckerRegistry"/> cannot be null.
-    /// - <paramref name="backtraceUtility"/> cannot be null.
-    /// - <paramref name="jobManager"/> cannot be null.
-    /// - <paramref name="adminUtility"/> cannot be null.
-    /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
-    /// </exception>
-    public ExecuteScript(
-        ILogger logger,
-        GridSettings gridSettings,
-        ScriptsSettings scriptsSettings,
-        ILuaUtility luaUtility,
-        IFloodCheckerRegistry floodCheckerRegistry,
-        IBacktraceUtility backtraceUtility,
-        IJobManager jobManager,
-        IAdminUtility adminUtility,
-        IDiscordWebhookAlertManager discordWebhookAlertManager
-    )
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
-        _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
-        _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
-        _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
-        _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
-        _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
-    }
+    
+    [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-GB")]
+    private static partial Regex CodeBlockRegex();
+    [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-GB")]
+    private static partial Regex QuotesRegex();
 
     /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
     public override async Task BeforeExecuteAsync(ICommandInfo command)
@@ -115,7 +108,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
 
     private static string GetCodeBlockContents(string s)
     {
-        var match = Regex.Match(s, @"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var match = CodeBlockRegex().Match(s);
 
         if (match != null && match.Groups.Count == 3)
         {
@@ -128,7 +121,7 @@ public class ExecuteScript : InteractionModuleBase<ShardedInteractionContext>
         return s.Replace("`", ""); // Return the value here again?
     }
 
-    private static string EscapeQuotes(string s) => Regex.Replace(s, "[\"“‘”]", "\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static string EscapeQuotes(string s) => QuotesRegex().Replace(s, "\"");
 
     private static bool ContainsUnicode(string s) => s.Any(c => c > 255);
 
