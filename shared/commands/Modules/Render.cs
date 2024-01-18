@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Discord.Interactions;
 
 using Logging;
-
+using Thumbnails.Client;
 using Utility;
 
 /// <summary>
@@ -102,6 +102,8 @@ public class Render(
             _avatarSettings.RenderYDimension
         );
 
+        try {
+
         var (stream, fileName) = _avatarUtility.RenderUser(
             id,
             _avatarSettings.PlaceIdForRenders,
@@ -121,6 +123,27 @@ public class Render(
                 stream,
                 fileName
             );
+
+        }
+        catch (Exception e)
+        {
+            _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", id, e);
+
+            if (e is ThumbnailResponseException thumbnailResponseException)
+            {
+                if (thumbnailResponseException.State == ThumbnailResponseState.InReview)
+                {
+                    // Bogus error here for the sake of the user. Like flood checker error.
+                    await FollowupAsync("You are sending render commands too quickly, please wait a few moments and try again.");
+
+                    return;
+                }
+
+                // Bogus error for anything else, we don't need this to be noted that we are using rbx-thumbnails.
+            }
+
+            await FollowupAsync("An error occurred while rendering the character.");
+        }
     }
 
     /// <summary>
