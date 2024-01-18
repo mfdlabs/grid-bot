@@ -27,6 +27,7 @@
     <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
     <PackageReference Include="Grid.JobManagement" Version="2023.10.22" />
     <PackageReference Include="Networking" Version="2023.10.22" />
+    <PackageReference Include="Thumbnails.Client" Version="2024.1.18" />
   </ItemGroup>
   
   <ItemGroup>

@@ -16,6 +16,7 @@
   <PropertyGroup Label="PackageMetadata">
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
+    <Authors>$(Company);Nikita Petko</Authors>
 
     <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

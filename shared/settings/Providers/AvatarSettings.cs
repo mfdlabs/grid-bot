@@ -63,7 +63,7 @@ public class AvatarSettings : BaseSettingsProvider
     /// </summary>
     public int RenderXDimension => GetOrDefault(
         nameof(RenderXDimension),
-        1068
+        720
     );
 
     /// <summary>
@@ -71,6 +71,38 @@ public class AvatarSettings : BaseSettingsProvider
     /// </summary>
     public int RenderYDimension => GetOrDefault(
         nameof(RenderYDimension),
-        1068
+        720
+    );
+
+    /// <summary>
+    /// Gets the rollout percentage for rbx-thumbnails.
+    /// </summary>
+    public int RbxThumbnailsRolloutPercent => GetOrDefault(
+        nameof(RbxThumbnailsRolloutPercent),
+        0
+    );
+
+    /// <summary>
+    /// Gets the url for rbx-thumbnails API.
+    /// </summary>
+    public string RbxThumbnailsUrl => GetOrDefault(
+        nameof(RbxThumbnailsUrl),
+        "https://thumbnails.roblox.com"
+    );
+
+    /// <summary>
+    /// Gets the render dimensions.
+    /// </summary>
+    public Thumbnails.Client.Size RenderDimensions => GetOrDefault(
+        nameof(RenderDimensions),
+        Thumbnails.Client.Size._720x720
+    );
+
+    /// <summary>
+    /// Gets the TTL for the local cache.
+    /// </summary>
+    public TimeSpan LocalCacheTtl => GetOrDefault(
+        nameof(LocalCacheTtl),
+        TimeSpan.FromMinutes(5)
     );
 }

@@ -15,6 +15,7 @@
   <PropertyGroup>
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
+    <Authors>$(Company);Nikita Petko</Authors>
 
     <Description>Primary executable for the MFDLABS grid-bot.</Description>
     <RepositoryUrl>https://github.vmminfra.dev/mfdlabs/grid-bot</RepositoryUrl>

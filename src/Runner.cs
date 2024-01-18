@@ -19,15 +19,18 @@ using Logging;
 using Redis;
 using Random;
 using Networking;
-using Users.Client;
 using Configuration;
 using Text.Extensions;
 using ServiceDiscovery;
+
+using Users.Client;
+using Thumbnails.Client;
 using ClientSettings.Client;
 
 using Events;
 using Utility;
 using Prometheus;
+
 
 internal static class Runner
 {
@@ -179,6 +182,10 @@ internal static class Runner
         );
 
         services.AddSingleton<IClientSettingsClient>(clientSettingsClient);
+
+        var avatarSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(AvatarSettings)) as AvatarSettings;
+        var thumbnailsClient = new ThumbnailsClient(avatarSettings.RbxThumbnailsUrl);
+        services.AddSingleton<IThumbnailsClient>(thumbnailsClient);
 
         services.AddSingleton<IBacktraceUtility, BacktraceUtility>()
             .AddSingleton<IAdminUtility, AdminUtility>()
