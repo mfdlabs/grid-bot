@@ -1,5 +1,5 @@
 # Base Image: net8.0
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0.1-jammy
 
 ARG IMAGE_TAG=
 
