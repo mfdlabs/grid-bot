@@ -11,13 +11,13 @@ on:
 jobs:
   codeql:
     if: ${{ !contains(github.event.head_commit.message, '#!skip-analysis!#') }}
-    runs-on: ubuntu-latest
+    runs-on: grid-bot-infra
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         continue-on-error: true
         id: init
         with:
@@ -26,7 +26,7 @@ jobs:
 
       - name: Autobuild
         if: ${{ steps.init.outcome == 'success' }}
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
         if: ${{ steps.init.outcome == 'success' }}
