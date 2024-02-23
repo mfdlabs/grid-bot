@@ -61,7 +61,7 @@ internal static class Runner
     {
         var backtraceUtility = _services?.GetService<IBacktraceUtility>();
 
-        backtraceUtility?.UploadCrashLog(ex);
+        backtraceUtility?.UploadException(ex);
     }
 
     private static void CollectLogsAndReportToBacktrace(BacktraceSettings backtraceSettings, IBacktraceUtility utility, IPercentageInvoker percentageInvoker)
