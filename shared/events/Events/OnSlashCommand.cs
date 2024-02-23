@@ -86,11 +86,11 @@ public class OnInteraction(
         new HistogramConfiguration
         {
             Buckets = Histogram.ExponentialBuckets(0.001, 2, 10),
-            LabelNames = new[] { "interaction_type" }
+            LabelNames = ["interaction_type"]
         }
     );
 
-    private string GetGuildId(SocketInteraction interaction)
+    private static string GetGuildId(SocketInteraction interaction)
     {
         if (interaction.Channel is SocketGuildChannel guildChannel)
             return guildChannel.Guild.Id.ToString();
@@ -210,7 +210,6 @@ public class OnInteraction(
 
         Task.Run(async () =>
         {
-
             using var _ = _interactionProcessingTime
                 .WithLabels(
                     interaction.Type.ToString()

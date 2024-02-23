@@ -35,7 +35,7 @@ using Utility;
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// </exception>
-public class OnMessage(
+public partial class OnMessage(
     CommandsSettings commandsSettings,
     MaintenanceSettings maintenanceSettings,
     DiscordShardedClient client,
@@ -45,6 +45,9 @@ public class OnMessage(
 {
     // language=regex
     private const string _allowedCommandRegex = @"^[a-zA-Z-]*$";
+    
+    [GeneratedRegex(_allowedCommandRegex)]
+    private static partial Regex GetAllowedCommandRegex();
 
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
@@ -85,7 +88,7 @@ public class OnMessage(
         "message_guild_id"
     );
 
-    private string GetGuildId(SocketMessage message)
+    private static string GetGuildId(SocketMessage message)
     {
         if (message.Channel is SocketGuildChannel guildChannel)
             return guildChannel.Guild.Id.ToString();
@@ -116,9 +119,12 @@ public class OnMessage(
          && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
         // Get the name of the command that was used.
-        var commandName = message.Content.Split(' ')[0][argPos..];
+        var commandName = message.Content.Split(' ')[0];
         if (string.IsNullOrEmpty(commandName)) return;
-        if (!Regex.IsMatch(commandName, _allowedCommandRegex)) return;
+
+        commandName = commandName[argPos..];
+        if (string.IsNullOrEmpty(commandName)) return;
+        if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
         if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
 
         _totalUsersUsingPreviousPhaseCommands.WithLabels(
@@ -173,7 +179,7 @@ public class OnMessage(
                 if (!string.IsNullOrEmpty(failureMessage))
                     embed.WithDescription(failureMessage);
 
-                await message.ReplyAsync("Maintenance is currently enabled, please try again later.", embeds: new[] { embed.Build() });
+                await message.ReplyAsync("Maintenance is currently enabled, please try again later.", embeds: [embed.Build()]);
 
                 return;
             }
@@ -218,4 +224,5 @@ public class OnMessage(
 
         await message.ReplyAsync("Text commands are no longer supported and will be permanently removed in the future, please use slash commands instead.");
     }
+
 }

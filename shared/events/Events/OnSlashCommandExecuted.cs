@@ -96,7 +96,7 @@ public class OnInteractionExecuted(
             }
 
             if (ex is not ApplicationException)
-                _backtraceUtility.UploadCrashLog(ex);
+                _backtraceUtility.UploadException(ex);
 
             var exceptionId = Guid.NewGuid();
 
