@@ -16,10 +16,10 @@ public interface IBacktraceUtility
     IBacktraceClient Client { get; }
 
     /// <summary>
-    /// Upload a crash log.
+    /// Upload an exception to Backtrace
     /// </summary>
     /// <param name="ex">The <see cref="Exception"/></param>
-    void UploadCrashLog(Exception ex);
+    void UploadException(Exception ex);
 
     /// <summary>
     /// Upload all log files

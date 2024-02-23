@@ -50,8 +50,8 @@ public class BacktraceUtility : IBacktraceUtility
     /// <inheritdoc cref="IBacktraceUtility.Client"/>
     public IBacktraceClient Client => _client;
 
-    /// <inheritdoc cref="IBacktraceUtility.UploadCrashLog(Exception)"/>
-    public void UploadCrashLog(Exception ex)
+    /// <inheritdoc cref="IBacktraceUtility.UploadException(Exception)"/>
+    public void UploadException(Exception ex)
     {
         if (ex == null)
             return;
