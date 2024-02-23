@@ -69,7 +69,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
         [Summary("application_name", "The name of the application to get the client settings for.")]
         string applicationName,
 
-        [Summary("use_api_key", "Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.")]
+        [Summary("use_api_key", "Should the API key be used?")]
         bool useApiKey = false
     )
     {
