@@ -63,10 +63,14 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// Gets the client settings for the specified application.
     /// </summary>
     /// <param name="applicationName">The name of the application.</param>
+    /// <param name="useApiKey">Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.</param>
     [SlashCommand("get_all", "Gets all client settings for the specified application.")]
     public async Task GetAllAsync(
         [Summary("application_name", "The name of the application to get the client settings for.")]
-        string applicationName
+        string applicationName,
+
+        [Summary("use_api_key", "Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.")]
+        bool useApiKey = false
     )
     {
         if (string.IsNullOrWhiteSpace(applicationName))
@@ -80,7 +84,10 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
 
         try
         {
-            var clientSettings = await _clientSettingsClient.GetApplicationSettingsAsync(applicationName).ConfigureAwait(false);
+            var clientSettings = await _clientSettingsClient.GetApplicationSettingsAsync(
+                applicationName,
+                useApiKey ? _clientSettingsClientSettings.ClientSettingsApiKey : null
+            ).ConfigureAwait(false);
 
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(clientSettings, Formatting.Indented)));
 
@@ -92,9 +99,9 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
                 await FollowupAsync(
                     text: "The specified application does not exist."
                 );
-            else if (ex.StatusCode == 403)
+            else if (ex.StatusCode == (int)HttpStatusCode.Unauthorized)
                 await FollowupAsync(
-                    text: "The specified application does not have permission to be written to client settings API."
+                    text: "The specified application cannot be returned from the client settings API without an API key. Please set the use_api_key parameter to true."
                 );
             else
                 throw;
@@ -222,9 +229,9 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
                 await FollowupAsync(
                     text: "The specified application does not exist."
                 );
-            else if (ex.StatusCode == 403)
+            else if (ex.StatusCode == (int)HttpStatusCode.NotFound)
                 await FollowupAsync(
-                    text: "The specified application does not have permission to be written to client settings API."
+                    text: "The specified application setting does not exist."
                 );
             else
                 throw;
@@ -328,10 +335,6 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
             if (ex.StatusCode == (int)HttpStatusCode.BadRequest)
                 await FollowupAsync(
                     text: "The specified application does not exist."
-                );
-            else if (ex.StatusCode == 403)
-                await FollowupAsync(
-                    text: "The specified application does not have permission to be written to client settings API."
                 );
             else
                 throw;

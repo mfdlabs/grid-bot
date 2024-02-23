@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages">
-    <PackageReference Include="ClientSettings.Client" Version="2023.10.22" />
+    <PackageReference Include="ClientSettings.Client" Version="2024.2.23" />
     <PackageReference Include="FileSystem" Version="2023.10.22" />
     <PackageReference Include="FloodCheckers.Core" Version="2023.10.22" />
     <PackageReference Include="FloodCheckers.Redis" Version="2023.10.22" />
