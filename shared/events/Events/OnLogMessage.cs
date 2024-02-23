@@ -12,13 +12,21 @@ using Prometheus;
 
 using Logging;
 
+using Utility;
+
 /// <summary>
 /// Event invoked when Discord.Net creates a log message.
 /// </summary>
 public class OnLogMessage
 {
     private readonly DiscordSettings _settings;
-    private readonly ILogger _logger;
+    
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
+    private readonly IBacktraceUtility _backtraceUtility;
+#endif
+
+    private readonly Logger _logger;
 
     private readonly Counter _totalLogMessages = Metrics.CreateCounter(
         "grid_discord_log_messages_total",
@@ -26,17 +34,34 @@ public class OnLogMessage
         "log_severity"
     );
 
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+    /// <summary>
+    /// Construct a new instance of <see cref="OnLogMessage"/>.
+    /// </summary>
+    /// <param name="settings">The <see cref="DiscordSettings"/>.</param>
+    /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
+    /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
+    /// <exception cref="ArgumentNullException">
+    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
+    /// - <paramref name="backtraceUtility"/> cannot be null.
+    /// </exception>
+    public OnLogMessage(DiscordSettings settings, IDiscordWebhookAlertManager discordWebhookAlertManager, IBacktraceUtility backtraceUtility)
+#else
     /// <summary>
     /// Construct a new instance of <see cref="OnLogMessage"/>.
     /// </summary>
     /// <param name="settings">The <see cref="DiscordSettings"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="settings"/> cannot be null.</exception>
     public OnLogMessage(DiscordSettings settings)
+#endif
     {
-        if (settings is null)
-            throw new ArgumentNullException(nameof(settings));
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-        _settings = settings;
+#if DEBUG || DEBUG_LOGGING_IN_PROD
+        _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
+        _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
+#endif
 
         _logger = new Logger(
             name: _settings.DiscordLoggerName,
@@ -55,29 +80,44 @@ public class OnLogMessage
 
         if (message.Exception != null)
         {
-#if !DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS
-            if (message.Exception?.InnerException is WebSocketClosedException)
-                return Task.CompletedTask;
-#endif
-
-        if (message.Exception is GatewayReconnectException)
-            return Task.CompletedTask;
-
-        // Closed web socket exceptions are expected when the bot is shutting down.
-        if (message.Exception.InnerException is WebSocketException)
-            return Task.CompletedTask;
-
-        if (message.Exception is WebSocketClosedException)
-            return Task.CompletedTask;
-
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-            if (!(message.Exception is TaskCanceledException &&
-                  !_settings.DebugAllowTaskCanceledExceptions))
-                _logger.Error("Source = {0}, Message = {1}, Exception = {2}",
-                    message.Source,
-                    message.Message,
-                    message.Exception.ToString()
-                );
+            if (message.Exception is GatewayReconnectException)
+                return Task.CompletedTask;
+
+            // Closed web socket exceptions are expected when the bot is shutting down.
+            if (message.Exception.InnerException is WebSocketException)
+                return Task.CompletedTask;
+
+            if (message.Exception is WebSocketClosedException || message.Exception.InnerException is WebSocketClosedException)
+                return Task.CompletedTask;
+
+            if (message.Exception is TaskCanceledException &&
+                !_settings.DebugAllowTaskCanceledExceptions)
+                return Task.CompletedTask;
+
+            _logger.Error(
+                "Source = {0}, Message = {1}, Exception = {2}",
+                message.Source,
+                message.Message,
+                message.Exception.ToString()
+            );
+
+            _backtraceUtility.UploadException(message.Exception);
+
+            var content = $"""
+                **Severity**: {message.Severity}
+                **Source**: {message.Source}
+                **Message**: {message.Message ?? "No message"}
+
+                The global exception handler caught an exception:
+                ```{message.Exception}```
+                """;
+
+            _discordWebhookAlertManager.SendAlertAsync(
+                "Discord.Net Log Message Exception",
+                content,
+                Color.Red
+            );
 #endif
             return Task.CompletedTask;
         }

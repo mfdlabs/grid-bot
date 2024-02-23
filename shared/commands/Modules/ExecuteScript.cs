@@ -384,7 +384,7 @@ public partial class ExecuteScript(
             }
             catch (Exception ex)
             {
-                _backtraceUtility.UploadCrashLog(ex);
+                _backtraceUtility.UploadException(ex);
 
                 _logger.Warning(
                     "Failed to delete the user script '{0}' because '{1}'",
@@ -397,7 +397,11 @@ public partial class ExecuteScript(
 
     private async Task AlertForSystem(string script, string originalScript, string scriptId, string scriptName, Exception ex)
     {
-        _backtraceUtility.UploadCrashLog(ex);
+        // No alert for a timeout, as it is most likely just a user running an infinite loop.
+        if (ex is TimeoutException)
+            return;
+
+        _backtraceUtility.UploadException(ex);
 
         var userInfo = Context.User.ToString();
         var guildInfo = Context.Guild?.ToString() ?? "DMs";
@@ -422,7 +426,7 @@ public partial class ExecuteScript(
             "Script Execution Fault",
             content,
             Color.Red,
-            new[] { scriptAttachment, originalScriptAttachment }
+            [scriptAttachment, originalScriptAttachment]
         );
     }
 
