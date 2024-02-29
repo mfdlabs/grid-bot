@@ -17,8 +17,12 @@
     <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages">
-    <PackageReference Include="Logging" Version="2023.10.22" />
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="Logging" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+    <ProjectReference Include="../../lib/src/logging/logging/Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>
