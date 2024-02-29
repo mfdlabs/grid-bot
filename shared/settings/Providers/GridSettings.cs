@@ -227,14 +227,14 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     );
 
     /// <inheritdoc cref="IGridServerProcessSettings.GridServerExecutableName"/> 
-    public string GridServerRegistryKeyName => GetOrDefault(
+    public string GridServerRegistryKeyName => GetOrDefault<string>(
         nameof(GridServerRegistryKeyName),
-        @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\ROBLOX Corporation\Roblox"
+        () => throw new InvalidOperationException($"Missing required configuration value '{nameof(GridServerRegistryKeyName)}")
     );
 
     /// <inheritdoc cref="IGridServerProcessSettings.GridServerExecutableName"/> 
-    public string GridServerRegistryValueName => GetOrDefault(
+    public string GridServerRegistryValueName => GetOrDefault<string>(
         nameof(GridServerRegistryValueName),
-        "RccServicePath"
+        () => throw new InvalidOperationException($"Missing required configuration value '{nameof(GridServerRegistryValueName)}")
     );
 }

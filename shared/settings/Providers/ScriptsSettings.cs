@@ -23,4 +23,12 @@ public class ScriptsSettings : BaseSettingsProvider
         nameof(ScriptExecutionMaxResultSizeKb),
         50
     );
+
+    /// <summary>
+    /// Determines if the LuaVM is enabled.
+    /// </summary>
+    public bool LuaVMEnabled => GetOrDefault(
+        nameof(LuaVMEnabled),
+        true
+    );
 }
