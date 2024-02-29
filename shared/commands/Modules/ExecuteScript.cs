@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 using Discord;
@@ -23,7 +24,7 @@ using Utility;
 using Commands;
 using Extensions;
 
-using GridJob = ComputeCloud.Job;
+using GridJob = Client.Job;
 
 /// <summary>
 /// Interaction handler for executing Luau code.
@@ -40,6 +41,7 @@ using GridJob = ComputeCloud.Job;
 /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
+/// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="gridSettings"/> cannot be null.
@@ -50,6 +52,7 @@ using GridJob = ComputeCloud.Job;
 /// - <paramref name="jobManager"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
+/// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 [Group("execute", "Commands used for executing Luau code.")]
 public partial class ExecuteScript(
@@ -61,7 +64,8 @@ public partial class ExecuteScript(
     IBacktraceUtility backtraceUtility,
     IJobManager jobManager,
     IAdminUtility adminUtility,
-    IDiscordWebhookAlertManager discordWebhookAlertManager
+    IDiscordWebhookAlertManager discordWebhookAlertManager,
+    IGridServerFileHelper gridServerFileHelper
 ) : InteractionModuleBase<ShardedInteractionContext>
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
@@ -79,8 +83,9 @@ public partial class ExecuteScript(
     private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
+    private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
-    
+
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-GB")]
     private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-GB")]
@@ -235,11 +240,10 @@ public partial class ExecuteScript(
 
             if (errorString.Length > _maxErrorLength)
             {
-                var truncated = errorString.Substring(0, _maxErrorLength - 20);
+                var remaining = errorString.Length - _maxErrorLength;
+                var remainingString = $"\n({remaining} characters remaining...)";
 
-                truncated += string.Format("({0} characters remaing...)", errorString.Length - (_maxErrorLength + 20));
-
-                errorString = truncated;
+                errorString = string.Concat(errorString.AsSpan(0, _maxErrorLength - remainingString.Length), remainingString);
             }
 
             var embed = new EmbedBuilder()
@@ -292,17 +296,29 @@ public partial class ExecuteScript(
 
         var scriptId = Guid.NewGuid().ToString();
         var filesafeScriptId = scriptId.Replace("-", "");
-        var scriptName = Path.Combine(
-            _gridSettings.GridServerSharedDirectoryInternalScripts,
-            "scripts",
-            filesafeScriptId + ".lua"
-        );
+        var scriptName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? _gridServerFileHelper.GetGridServerScriptPath(filesafeScriptId)
+            : Path.Combine(
+                _gridSettings.GridServerSharedDirectoryInternalScripts,
+                "scripts",
+                filesafeScriptId + ".lua"
+            );
 
+        if (_scriptsSettings.LuaVMEnabled) // Disable if pre-luau, or wait for the file to be updated to support pre-luau
+            script = string.Format(_luaUtility.LuaVMTemplate, script);
+
+#if !PRE_JSON_EXECUTION
         // isAdmin allows a bypass of disabled methods and virtualized globals
         var settings = new ExecuteScriptSettings(filesafeScriptId, new Dictionary<string, object>() { { "is_admin", _adminUtility.UserIsAdmin(Context.User) } });
         var gserverCommand = new ExecuteScriptCommand(settings);
+#else
+        var gserverCommand = Lua.NewScript(
+            scriptId,
+            script,
+            new Dictionary<string, object>() { { "is_admin", _adminUtility.UserIsAdmin(Context.User) } }
+        );
+#endif
 
-        script = string.Format(_luaUtility.LuaVMTemplate, script);
 
         var gridJob = new GridJob() { id = scriptId, expirationInSeconds = _gridSettings.ScriptExecutionJobMaxTimeout.TotalSeconds };
         var job = new Job(Guid.NewGuid().ToString());
@@ -325,7 +341,9 @@ public partial class ExecuteScript(
             using (soap)
             {
 
+#if !PRE_JSON_EXECUTION
                 File.WriteAllText(scriptName, script, Encoding.ASCII);
+#endif
 
                 var serverResult = soap.BatchJobEx(gridJob, gserverCommand);
 
@@ -365,6 +383,7 @@ public partial class ExecuteScript(
         {
             sw.Stop();
 
+#if !PRE_JSON_EXECUTION
             try
             {
                 _logger.Debug(
@@ -392,6 +411,7 @@ public partial class ExecuteScript(
                     ex.Message
                 );
             }
+#endif
         }
     }
 

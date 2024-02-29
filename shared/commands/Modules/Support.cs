@@ -2,7 +2,9 @@ namespace Grid.Bot.Interactions.Public;
 
 using System;
 using System.Reflection;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 using Discord;
 using Discord.Interactions;
@@ -18,22 +20,25 @@ using Networking;
 /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
 /// <param name="globalSettings">The <see cref="GlobalSettings"/>.</param>
 /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/>.</param>
+/// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="gridSettings"/> cannot be null.
 /// - <paramref name="globalSettings"/> cannot be null.
 /// - <paramref name="localIpAddressProvider"/> cannot be null.
+/// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 [Group("support", "Commands used for grid-bot-support.")]
 public class Support(
     GridSettings gridSettings,
     GlobalSettings globalSettings,
-    ILocalIpAddressProvider localIpAddressProvider
+    ILocalIpAddressProvider localIpAddressProvider,
+    IGridServerFileHelper gridServerFileHelper
     ) : InteractionModuleBase<ShardedInteractionContext>
 {
     private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
     private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
     private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
-
+    private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
     /// <summary>
     /// Gets informational links for the bot, in a stylish embed.
@@ -43,6 +48,10 @@ public class Support(
     {
         var entryAssembly = Assembly.GetEntryAssembly();
         var informationalVersion = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
+        var gridServerVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? FileVersionInfo.GetVersionInfo(_gridServerFileHelper.GetFullyQualifiedGridServerPath()).FileVersion
+            : _gridSettings.GridServerImageTag;
 
         var embed = new EmbedBuilder()
             .WithTitle("Grid Bot")
@@ -57,7 +66,7 @@ public class Support(
             .AddField("Machine Host", _localIpAddressProvider.GetHostName())
             .AddField("Local IP Address", _localIpAddressProvider.AddressV4)
             .AddField("Bot Version", informationalVersion)
-            .AddField("Grid Server Version", _gridSettings.GridServerImageTag)
+            .AddField("Grid Server Version", gridServerVersion)
             .Build();
 
         await FollowupAsync(embed: embed);
