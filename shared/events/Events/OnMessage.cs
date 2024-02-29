@@ -45,7 +45,7 @@ public partial class OnMessage(
 {
     // language=regex
     private const string _allowedCommandRegex = @"^[a-zA-Z-]*$";
-    
+
     [GeneratedRegex(_allowedCommandRegex)]
     private static partial Regex GetAllowedCommandRegex();
 
@@ -122,10 +122,19 @@ public partial class OnMessage(
         var commandName = message.Content.Split(' ')[0];
         if (string.IsNullOrEmpty(commandName)) return;
 
-        commandName = commandName[argPos..];
-        if (string.IsNullOrEmpty(commandName)) return;
-        if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
-        if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
+        // Try catch here temporary until mfdlabs/grid-bot#279 is resolved.
+        try
+        {
+            commandName = commandName[argPos..];
+            if (string.IsNullOrEmpty(commandName)) return;
+            if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
+            if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
+        }
+        catch (ArgumentException ex)
+        {
+            logger.Error("Failed to get the command name because: {0}, Raw Text: {1}", ex, message.Content);
+            return;
+        }
 
         _totalUsersUsingPreviousPhaseCommands.WithLabels(
             commandName
@@ -154,15 +163,6 @@ public partial class OnMessage(
             if (!userIsAdmin && !userIsPrivilaged)
             {
                 _totalMessagesFailedDueToMaintenance.Inc();
-
-                var guildName = string.Empty;
-                var guildId = 0UL;
-
-                if (message.Channel is SocketGuildChannel guildChannel)
-                {
-                    guildName = guildChannel.Guild.Name;
-                    guildId = guildChannel.Guild.Id;
-                }
 
                 logger.Warning(
                     "User tried to use the command '{0}', but maintenance is enabled.",
@@ -217,12 +217,11 @@ public partial class OnMessage(
             return;
         }
 
-        if (message.Content.ToLower().Contains("@everyone") || message.Content.ToLower().Contains("@here") && !userIsAdmin)
+        if (message.Content.Contains("@everyone", StringComparison.CurrentCultureIgnoreCase) ||
+            message.Content.Contains("@here", StringComparison.CurrentCultureIgnoreCase) &&
+            !userIsAdmin)
             return;
-
-
 
         await message.ReplyAsync("Text commands are no longer supported and will be permanently removed in the future, please use slash commands instead.");
     }
-
 }

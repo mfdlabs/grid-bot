@@ -18,7 +18,6 @@ using Discord;
 /// <remarks>
 /// Construct a new instance of <see cref="OnInteraction"/>.
 /// </remarks>
-/// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
@@ -34,7 +33,6 @@ using Discord;
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// </exception>
 public class OnInteraction(
-    DiscordSettings discordSettings,
     MaintenanceSettings maintenanceSettings,
     DiscordShardedClient client,
     InteractionService interactionService,
@@ -43,7 +41,6 @@ public class OnInteraction(
     ILoggerFactory loggerFactory
 )
 {
-    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -175,18 +172,9 @@ public class OnInteraction(
 
             logger.Warning("Blacklisted user tried to use the bot.");
 
-            try
-            {
-                var dmChannel = await interaction.User.CreateDMChannelAsync();
-
-                await dmChannel?.SendMessageAsync(
-                    "You are blacklisted from using the bot, please contact the bot owner for more information."
-                );
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Failed to send blacklisted user a DM because: {0}", ex);
-            }
+            await interaction.FollowupAsync(
+                "You are blacklisted from using the bot, please contact the bot owner for more information."
+            );
 
             return;
         }
