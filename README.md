@@ -7,7 +7,7 @@ This repository contains code for the Grid Bot, this bot is designed to interact
 
 # Notice
 
-## Usage of Roblox, or any of its assets
+## Usage of Roblox, or any of its assets.
 
 # ***This project is not affiliated with Roblox Corporation.***
 
@@ -19,9 +19,9 @@ The API of this executable must also be provide by the user, we provide a simple
 
 ## Copyright and Licensing
 
-This project is licensed under the Apache-2.0 License, and is provided as is. The project is not intended to be used for any commercial purposes, and is not intended to be used for any commercial gain.
+This project is licensed under the Apache-2.0 License, and is provided as is. The project is not intended to be used for any commercial purposes.
 
-All code and releases in this repository, that were made before the license was added, are subject to copyright and are unlicensed. The license only applies to code and releases made after the license was added. Usage of code and releases made before the license was added is at your own risk, but is distribution of code and releases made after the license was added is subject to DMCA takedown requests.
+All code and releases in this repository, that were made before the license was added, are subject to copyright and are unlicensed. The license only applies to code and releases made after the license was added. Usage of code and releases made before the license was added is at your own risk, but distribution of code and releases made before the license was added is subject to DMCA takedown requests.
 
 This notice only serves the purpose of giving a clear understanding of project boundaries and limitations, and should be taken into account when using this project.
 
@@ -77,8 +77,6 @@ You may find information about these settings, and other settings in their respe
 
 This method of fetching configuration simply turns to the environment to search for strings.
 The settings cannot be persisted this way.
-
-If a .env file is present in the working directory, then any variables from that file will take priority over manually defined variables.
 
 Examples:
 
