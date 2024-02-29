@@ -1,6 +1,0 @@
-name: "Code QL Configuration"
-
-paths:
-    - ./src
-    - ./lib
-    - ./targets
