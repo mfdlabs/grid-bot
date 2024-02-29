@@ -10,6 +10,36 @@
                 "SOLUTION=${workspaceFolder}/grid-bot.sln"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-local",
+            "command": "make",
+            "type": "process",
+            "args": [
+                "build-local-debug",
+                "SOLUTION=${workspaceFolder}/grid-bot.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-vault",
+            "command": "make",
+            "type": "process",
+            "args": [
+                "build-debug-vault",
+                "SOLUTION=${workspaceFolder}/grid-bot.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-local-vault",
+            "command": "make",
+            "type": "process",
+            "args": [
+                "build-local-debug-vault",
+                "SOLUTION=${workspaceFolder}/grid-bot.sln"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
