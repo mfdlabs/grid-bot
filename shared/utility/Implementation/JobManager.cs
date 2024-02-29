@@ -3,7 +3,7 @@ namespace Grid.Bot.Utility;
 using System;
 using System.Collections.Generic;
 
-using ComputeCloud;
+using Client;
 
 /// <summary>
 /// A class that manages the jobs for the bot.
@@ -61,7 +61,7 @@ public class JobManager : IJobManager
     public void RenewLease(IJob job, double leaseTimeInSeconds) => GetJobManager().RenewLease(job, leaseTimeInSeconds);
 
     /// <inheritdoc cref="IJobManager.NewJob(IJob, double, bool, bool)"/>
-    public (ComputeCloudServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
+    public (GridServerServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
         IJob job,
         double expirationInSeconds,
         bool waitForReadyInstance = false,
@@ -69,7 +69,7 @@ public class JobManager : IJobManager
     ) => GetJobManager().NewJob(job, expirationInSeconds, waitForReadyInstance, addToActiveJobs);
 
     /// <inheritdoc cref="IJobManager.GetJob(IJob)"/>
-    public ComputeCloudServiceSoap GetJob(IJob job) => GetJobManager().GetJob(job);
+    public GridServerServiceSoap GetJob(IJob job) => GetJobManager().GetJob(job);
 
     /// <inheritdoc cref="IJobManager.CloseJob(IJob, bool)"/>
     public void CloseJob(IJob job, bool removeFromActiveJobs = true) => GetJobManager().CloseJob(job, removeFromActiveJobs);
@@ -80,8 +80,8 @@ public class JobManager : IJobManager
     /// <inheritdoc cref="IJobManager.GetUnexpectedExitGameJobs"/>
     public IReadOnlyCollection<GameJob> GetUnexpectedExitGameJobs() => GetJobManager().GetUnexpectedExitGameJobs();
 
-    /// <inheritdoc cref="IJobManager.DispatchRequestToAllActiveJobs(Action{ComputeCloudServiceSoap})"/>
-    public void DispatchRequestToAllActiveJobs(Action<ComputeCloudServiceSoap> action) => GetJobManager().DispatchRequestToAllActiveJobs(action);
+    /// <inheritdoc cref="IJobManager.DispatchRequestToAllActiveJobs(Action{GridServerServiceSoap})"/>
+    public void DispatchRequestToAllActiveJobs(Action<GridServerServiceSoap> action) => GetJobManager().DispatchRequestToAllActiveJobs(action);
 
     /// <inheritdoc cref="IJobManager.GetGridServerInstanceId(string)"/>
     public string GetGridServerInstanceId(string jobId) => GetJobManager().GetGridServerInstanceId(jobId);

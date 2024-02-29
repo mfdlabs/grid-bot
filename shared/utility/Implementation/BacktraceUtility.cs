@@ -62,16 +62,16 @@ public class BacktraceUtility : IBacktraceUtility
         {
             try
             {
-                Console.WriteLine(Resources.BacktraceUtility_UploadCrashLog_Running);
+                Console.WriteLine("Uploading exception to Backtrace...");
                 Console.WriteLine(traceBack);
 
                 _client?.Send(ex);
 
-                Console.WriteLine(Resources.BacktraceUtility_UploadCrashLog_Success);
+                Console.WriteLine("Exception uploaded to Backtrace.");
             }
             catch (Exception e)
             {
-                Console.WriteLine(Resources.BacktraceUtility_UploadCrashLog_Failure, e.ToString());
+                Console.WriteLine("Failed to upload exception to Backtrace: {0}", e);
             }
         });
     }

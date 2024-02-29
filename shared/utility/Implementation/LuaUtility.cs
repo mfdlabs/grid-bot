@@ -2,18 +2,23 @@
 
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 
-using Grid.ComputeCloud;
+using Client;
 
 /// <summary>
 /// Utility for interacting with grid-server Lua.
 /// </summary>
 public class LuaUtility : ILuaUtility
 {
+    private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
+    private const string _luaVmResource = "Grid.Bot.Lua.LuaVMTemplate.lua";
+
     private static string FixFormatString(string input)
     {
         //language=regex
@@ -29,7 +34,14 @@ public class LuaUtility : ILuaUtility
 
     /// <inheritdoc cref="ILuaUtility.LuaVMTemplate"/>
     public string LuaVMTemplate
-        => FixFormatString(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "lua", "lua-vm.lua")));
+    {
+        get {
+            using var stream = _assembly.GetManifestResourceStream(_luaVmResource);
+            using var reader = new StreamReader(stream);
+
+            return FixFormatString(reader.ReadToEnd());
+        }
+    }
 
     /// <inheritdoc cref="ILuaUtility.ParseResult(IEnumerable{LuaValue})"/>
     public (string result, ReturnMetadata metadata) ParseResult(IEnumerable<LuaValue> result)

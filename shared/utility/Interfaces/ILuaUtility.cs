@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
-using ComputeCloud;
+using Client;
 
 /// <summary>
 /// Represents the metadata returned by the lua-vm script.

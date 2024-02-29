@@ -3,7 +3,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Users.Client;
 
@@ -27,13 +26,13 @@ public class RbxUsersUtility(IUsersClient usersClient) : IRbxUsersUtility
             var request = new MultiGetByUserIdRequest
             {
                 ExcludeBannedUsers = false,
-                UserIds = new List<long> { id }
+                UserIds = [id]
             };
 
             var response = await _usersClient.MultiGetUsersByIdsAsync(request);
             return response.Data.Count == 0;
         }
-        catch 
+        catch
         {
             return false;
         }
@@ -45,11 +44,18 @@ public class RbxUsersUtility(IUsersClient usersClient) : IRbxUsersUtility
         var request = new MultiGetByUsernameRequest
         {
             ExcludeBannedUsers = false,
-            Usernames = new List<string> { username }
+            Usernames = [username]
         };
 
-        var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
+        try
+        {
+            var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
 
-        return response.Data.FirstOrDefault()?.Id;
+            return response.Data.FirstOrDefault()?.Id;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

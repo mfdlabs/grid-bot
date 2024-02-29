@@ -3,7 +3,7 @@ namespace Grid.Bot.Utility;
 using System;
 using System.Collections.Generic;
 
-using ComputeCloud;
+using Client;
 
 /// <summary>
 /// Interface for a job manager.
@@ -70,7 +70,7 @@ public interface IJobManager
     /// <param name="addToActiveJobs">Add this job to the active jobs list?</param>
     /// <returns>The SOAP interface, the instance and a job rejection reason.</returns>
     /// <exception cref="Exception">Cannot create a new job, since job already exists</exception>
-    (ComputeCloudServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
+    (GridServerServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
         IJob job,
         double expirationInSeconds,
         bool waitForReadyInstance = false,
@@ -86,7 +86,7 @@ public interface IJobManager
     /// - Job not found.
     /// - Job found but the instance has already exited.
     /// </exception>
-    ComputeCloudServiceSoap GetJob(IJob job);
+    GridServerServiceSoap GetJob(IJob job);
 
     /// <summary>
     /// Close a job.
@@ -111,7 +111,7 @@ public interface IJobManager
     /// Dispatch a SOAP message to every running job.
     /// </summary>
     /// <param name="action">The SOAP message.</param>
-    void DispatchRequestToAllActiveJobs(Action<ComputeCloudServiceSoap> action);
+    void DispatchRequestToAllActiveJobs(Action<GridServerServiceSoap> action);
 
     /// <summary>
     /// Get the instance id for an Grid Server by it's job id.
