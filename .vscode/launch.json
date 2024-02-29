@@ -17,9 +17,49 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
-            "name": ".NET Core Attach",
+            "name": "Grid.Bot (Local)",
             "type": "coreclr",
-            "request": "attach"
+            "request": "launch",
+            "preLaunchTask": "build-local",
+            "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
+            "cwd": "${workspaceFolder}/src",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Grid.Bot (Vault)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-vault",
+            "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
+            "cwd": "${workspaceFolder}/src",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Grid.Bot (Local Vault)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-local-vault",
+            "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
+            "cwd": "${workspaceFolder}/src",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

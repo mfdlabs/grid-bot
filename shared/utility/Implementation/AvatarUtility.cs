@@ -15,7 +15,7 @@ using Threading.Extensions;
 
 using Grid.Commands;
 
-using GridJob = Grid.ComputeCloud.Job;
+using GridJob = Grid.Client.Job;
 
 /// <summary>
 /// Exception thrown when rbx-thumbnails returns a state that is not pending or completed.
@@ -247,8 +247,18 @@ public class AvatarUtility : IAvatarUtility
             ? ThumbnailCommandType.Avatar_R15_Action
             : ThumbnailCommandType.Closeup;
 
+
         var settings = new ThumbnailSettings(thumbType, GetThumbnailArgs(url, sizeX, sizeY).ToArray());
+
+#if !PRE_JSON_EXECUTION
         var renderScript = new ThumbnailCommand(settings);
+#else
+        var renderScript = Lua.NewScript(
+            thumbType.ToString(),
+            ScriptProvider.GetScript(thumbType),
+            GetThumbnailArgs(url, sizeX, sizeY).ToArray()
+        );
+#endif
 
         var job = new Job(Guid.NewGuid().ToString());
 

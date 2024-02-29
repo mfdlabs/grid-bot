@@ -9,8 +9,6 @@
     <RootNamespace>Grid.Bot</RootNamespace>
 
     <Configurations>debug;release</Configurations>
-
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <PropertyGroup Label="PackageMetadata">

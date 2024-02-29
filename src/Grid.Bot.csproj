@@ -6,7 +6,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>10</LangVersion>
-    <Configurations>debug;release;debug-deploy;release-deploy;debug-vault;release-vault;debug-vault-deploy;release-vault-deploy</Configurations>
+    <Configurations>debug;release</Configurations>
     <OutputType>Exe</OutputType>
 
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
@@ -18,7 +18,7 @@
     <Authors>$(Company);Nikita Petko</Authors>
 
     <Description>Primary executable for the MFDLABS grid-bot.</Description>
-    <RepositoryUrl>https://github.vmminfra.dev/mfdlabs/grid-bot</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
@@ -36,10 +36,16 @@
     <ProjectReference Include="..\shared\utility\Shared.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages">
-    <PackageReference Include="Random" Version="2023.10.22" />
-    <PackageReference Include="Redis" Version="2023.10.22" />
-    <PackageReference Include="Configuration.Core" Version="2023.10.22" />
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="Random" Version="1.0.1" />
+    <PackageReference Include="Redis" Version="1.0.1" />
+    <PackageReference Include="Configuration.Core" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+    <ProjectReference Include="../lib/src/random/random/Random.csproj" />
+    <ProjectReference Include="../lib/src/redis/redis/Redis.csproj" />
+    <ProjectReference Include="../lib/src/configuration/core/Configuration.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,14 +57,26 @@
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <!-- Copy ./src/lua to the output -->
-    <Exec Command="cp -r $(ProjectDir)lua $(OutDir)" />
+  <!-- Linux targets -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
+    <Exec Command="cp $(SolutionDir)LICENSE $(OutDir)" />
+    <Exec Command="cp $(SolutionDir)README.md $(OutDir)" />
   </Target>
 
-  <!-- Copy src/lua after publish -->
-  <Target Name="CopyLua" AfterTargets="Publish">
-    <Exec Command="cp -r $(ProjectDir)lua $(PublishDir)" />
+  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
+    <Exec Command="cp $(SolutionDir)LICENSE $(PublishDir)" />
+    <Exec Command="cp $(SolutionDir)README.md $(PublishDir)" />
+  </Target>
+
+  <!-- Windows targets -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="xcopy /y $(SolutionDir)LICENSE $(OutDir)" />
+    <Exec Command="xcopy /y $(SolutionDir)README.md $(OutDir)" />
+  </Target>
+
+  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="xcopy /y $(SolutionDir)LICENSE $(PublishDir)" />
+    <Exec Command="xcopy /y $(SolutionDir)README.md $(PublishDir)" />
   </Target>
 
 </Project>

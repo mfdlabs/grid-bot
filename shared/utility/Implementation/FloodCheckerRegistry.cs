@@ -10,7 +10,7 @@ using FloodCheckers.Core;
 using FloodCheckers.Redis;
 
 /// <summary>
-/// Registry for the flood-checkers.
+/// Registry for the floodcheckers.
 /// </summary>
 public class FloodCheckerRegistry : IFloodCheckerRegistry
 {

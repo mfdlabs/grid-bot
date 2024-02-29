@@ -21,7 +21,7 @@ internal static class SettingsProvidersDefaults
     public const string BacktracePath = $"{ProviderPathPrefix}/backtrace/{ProviderPathConfiguration}";
     public const string MaintenancePath = $"{ProviderPathPrefix}/maintenance/{ProviderPathConfiguration}";
     public const string CommandsPath = $"{ProviderPathPrefix}/commands/{ProviderPathConfiguration}";
-    public const string FloodCheckerPath = $"{ProviderPathPrefix}/flood-checkers/{ProviderPathConfiguration}";
+    public const string FloodCheckerPath = $"{ProviderPathPrefix}/floodcheckers/{ProviderPathConfiguration}";
     public const string ConsulPath = $"{ProviderPathPrefix}/consul/{ProviderPathConfiguration}";
     public const string UsersClientPath = $"{ProviderPathPrefix}/users-client/{ProviderPathConfiguration}";
     public const string ScriptsPath = $"{ProviderPathPrefix}/scripts/{ProviderPathConfiguration}";
@@ -30,7 +30,4 @@ internal static class SettingsProvidersDefaults
 
     public const string DefaultMountPath = "grid-bot-settings";
     public static string MountPath = Environment.GetEnvironmentVariable(_vaultMountEnvVar) ?? DefaultMountPath;
-
-    public static readonly TimeSpan DefaultRefreshInterval = TimeSpan.FromMinutes(45);
-    public static readonly TimeSpan VaultClientTokenRefreshInterval = TimeSpan.FromHours(.75);
 }

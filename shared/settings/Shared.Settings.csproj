@@ -1,16 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Configurations>$(Configurations);debug-vault;release-vault</Configurations>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'release-vault' ">
-    <OutputPath>bin\release\</OutputPath>
+  <PropertyGroup Condition=" '$(USE_VAULT_SETTINGS_PROVIDER)' == 'true' ">
     <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'debug-vault' ">
-    <OutputPath>bin\debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);DEBUG;USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -29,35 +19,32 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages">
-    <PackageReference Include="ConfigurationV2" Version="2023.10.22" />
-    <PackageReference Include="Redis" Version="2023.10.22" />
-    <PackageReference Include="ServiceDiscovery" Version="2023.10.22" />
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="Configuration" Version="1.0.1" />
+    <PackageReference Include="Redis" Version="1.0.1" />
+    <PackageReference Include="ServiceDiscovery" Version="1.0.1" />
 
-    <PackageReference Include="Grid.ProcessManagement.Docker.Core" Version="2023.10.22" />
-    <PackageReference Include="Grid.ProcessManagement.Core" Version="2023.10.22" />
-    <PackageReference Include="Grid.ProcessManagement" Version="2023.10.22" />
+    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.1" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.1" />
+    <PackageReference Include="Grid.ProcessManagement" Version="1.0.1" />
     
-    <PackageReference Include="Thumbnails.Client" Version="2024.1.18" />
+    <PackageReference Include="Thumbnails.Client" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+    <ProjectReference Include="../../lib/src/configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="../../lib/src/redis/redis/Redis.csproj" />
+    <ProjectReference Include="../../lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+
+    <ProjectReference Include="../../lib/src/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="../../lib/src/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="../../lib/src/grid/process-management/Grid.ProcessManagement.csproj" />
+
+    <ProjectReference Include="../../lib/src/clients/thumbnails-client/Thumbnails.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

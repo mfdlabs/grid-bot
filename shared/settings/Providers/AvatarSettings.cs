@@ -43,14 +43,6 @@ public class AvatarSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Gets the blacklisted usernames for rendering, helps deter issues with specific users.
-    /// </summary>
-    public string[] BlacklistedUsernamesForRendering => GetOrDefault(
-        nameof(BlacklistedUsernamesForRendering),
-        Array.Empty<string>()
-    );
-
-    /// <summary>
     /// Gets the ID of the place used to inherit character settings from in avatar-fetch models.
     /// </summary>
     public long PlaceIdForRenders => GetOrDefault<long>(

@@ -7,6 +7,7 @@ using Discord.Interactions;
 
 using Logging;
 using Thumbnails.Client;
+
 using Utility;
 
 /// <summary>
@@ -37,7 +38,7 @@ public class Render(
     IAvatarUtility avatarUtility,
     IFloodCheckerRegistry floodCheckerRegistry,
     IAdminUtility adminUtility
-    ) : InteractionModuleBase<ShardedInteractionContext>
+) : InteractionModuleBase<ShardedInteractionContext>
 {
     private readonly AvatarSettings _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
 
