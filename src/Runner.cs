@@ -39,8 +39,6 @@ internal static class Runner
                                      "THAN NEEDED, PLEASE RUN THIS ON RELEASE FOR PRODUCTION SCENARIOS.";
 #endif
     private const string _noBotToken = "The setting \"BotToken\" was null when it is required.";
-    private const string _badActorMessage = "THIS SOFTWARE IS UNLICENSED, IF YOU DO NOT HAVE EXPLICIT WRITTEN PERMISSION " +
-                                           "BY THE CONTRIBUTORS OR THE PRIMARY DEVELOPER TO USE THIS, DELETE IT IMMEDIATELY!";
 
 #if DEBUG
     private const string _environmentName = "development";
@@ -78,16 +76,6 @@ internal static class Runner
     {
         var services = new ServiceCollection();
 
-#if USE_VAULT_SETTINGS_PROVIDER
-        // If we are using vault, we need to set up the configuration provider
-        ConfigurationProvider.SetUp();
-
-        // List off all the providers we have and add them to the service collection, ensure they are unique types
-        foreach (var provider in ConfigurationProvider.RegisteredProviders)
-            services.AddSingleton(provider.GetType(), provider);
-
-        var singletons = ConfigurationProvider.RegisteredProviders;
-#else
         // Add each individual provider, iterate through the via Reflection
         // Assembly is Shared.Settings
         var ns = typeof(BaseSettingsProvider).Namespace;
@@ -124,14 +112,11 @@ internal static class Runner
             if (singleton == null) continue;
 
             services.AddSingleton(singleton.GetType(), singleton);
+
+            // If they implement interfaces, add those too.
+            foreach (var iface in singleton.GetType().GetInterfaces())
+                services.AddSingleton(iface, singleton);
         }
-#endif
-
-#if DEBUG
-        var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-
-        Logger.GlobalLogPrefixes.Add(() => informationalVersion);
-#endif
 
         var globalSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(GlobalSettings)) as GlobalSettings;
 
@@ -142,6 +127,15 @@ internal static class Runner
         );
 
         services.AddSingleton<ILogger>(logger);
+
+        var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
+        logger.Information($"Starting Grid.Bot, Version = {informationalVersion}");
+
+#if DEBUG
+
+        Logger.GlobalLogPrefixes.Add(() => informationalVersion);
+#endif
 
         var config = new DiscordSocketConfig()
         {
@@ -196,7 +190,8 @@ internal static class Runner
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<ILoggerFactory, LoggerFactory>()
-            .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>();
+            .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>()
+            .AddSingleton<IGridServerFileHelper, GridServerFileHelper>();
 
         services.AddSingleton(config)
             .AddSingleton(interactionServiceConfig)
@@ -310,8 +305,6 @@ internal static class Runner
         _services = services;
 
         var logger = services.GetRequiredService<ILogger>();
-
-        logger.Warning(_badActorMessage);
 
 #if DEBUG
         logger.Warning(_debugMode);
