@@ -13,14 +13,16 @@ job "{{{NOMAD_JOB_NAME}}}" {
     network {
       mode = "host"
 
-      port "metrics" {}
+      port "metrics" {
+        to = 8101
+      }
     }
 
     task "runner" {
       driver = "docker"
 
       config {
-        image        = "${IMAGE_NAME}:${IMAGE_TAG}"
+        image        = "{{{IMAGE_NAME}}}:{{{IMAGE_TAG}}}"
         network_mode = "host"
 
         # /var/run/docker.sock:/var/run/docker.sock
@@ -44,23 +46,10 @@ job "{{{NOMAD_JOB_NAME}}}" {
 
 DISPLAY=:0
 
-IMAGE_NAME="{{{IMAGE_NAME}}}"
-IMAGE_TAG="{{{IMAGE_TAG}}}"
-
 # CONSUL
-CONSUL_ADDR="http://consul.service.consul:8500"
 DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
-
-MetricsPort="{{ env "NOMAD_PORT_metrics" }}"
-
-{{ with secret "grid-bot-settings/{{{NOMAD_ENVIRONMENT}}}" }}
-{{ if .Data.data }}
-{{ range $key, $value := .Data.data }}
-{{ $key }} = "{{ $value }}"
-{{ end }}
-{{ end }}
-
-{{ end }}
+VAULT_ADDR="http://vault.service.consul:8200"
+VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
 EOF
         destination = "secrets/grid-bot.env"
         env         = true

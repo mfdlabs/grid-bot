@@ -12,6 +12,10 @@
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(USE_VAULT_SETTINGS_PROVIDER)' == 'true'">
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
