@@ -78,36 +78,9 @@ internal static class Runner
 
         // Add each individual provider, iterate through the via Reflection
         // Assembly is Shared.Settings
-        var ns = typeof(BaseSettingsProvider).Namespace;
-        var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
+        var providers = GetSettingsProviders();
 
-        var singletons = assembly
-            .GetTypes()
-            .Where(t => string.Equals(t.Namespace, ns, StringComparison.Ordinal) &&
-                        t.BaseType.Name == typeof(BaseSettingsProvider).Name) // finicky
-            .Select(t =>
-            {
-                // Construct the singleton.
-                var constructor = t.GetConstructor(Type.EmptyTypes);
-                if (constructor == null)
-                {
-                    Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
-
-                    return null;
-                }
-
-                var singleton = constructor.Invoke(null);
-                if (singleton == null)
-                {
-                    Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
-
-                    return null;
-                }
-
-                return singleton;
-            });
-
-        foreach (var singleton in singletons)
+        foreach (var singleton in providers)
         {
             if (singleton == null) continue;
 
@@ -118,7 +91,7 @@ internal static class Runner
                 services.AddSingleton(iface, singleton);
         }
 
-        var globalSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(GlobalSettings)) as GlobalSettings;
+        var globalSettings = providers.FirstOrDefault(s => s.GetType() == typeof(GlobalSettings)) as GlobalSettings;
 
         var logger = new Logger(
             name: globalSettings.DefaultLoggerName,
@@ -158,18 +131,18 @@ internal static class Runner
             LogLevel = LogSeverity.Debug,
         };
 
-        var gridSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(GridSettings)) as GridSettings;
+        var gridSettings = providers.FirstOrDefault(s => s.GetType() == typeof(GridSettings)) as GridSettings;
         SetupJobManager(services, gridSettings);
 
-        var floodCheckerSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(FloodCheckerSettings)) as FloodCheckerSettings;
-        var consulSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(ConsulSettings)) as ConsulSettings;
+        var floodCheckerSettings = providers.FirstOrDefault(s => s.GetType() == typeof(FloodCheckerSettings)) as FloodCheckerSettings;
+        var consulSettings = providers.FirstOrDefault(s => s.GetType() == typeof(ConsulSettings)) as ConsulSettings;
         SetupFloodCheckersRedis(services, floodCheckerSettings, consulSettings, logger);
 
-        var usersClientSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(UsersClientSettings)) as UsersClientSettings;
+        var usersClientSettings = providers.FirstOrDefault(s => s.GetType() == typeof(UsersClientSettings)) as UsersClientSettings;
         var usersClient = new UsersClient(usersClientSettings.UsersApiBaseUrl);
         services.AddSingleton<IUsersClient>(usersClient);
 
-        var clientSettingsClientSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(ClientSettingsClientSettings)) as ClientSettingsClientSettings;
+        var clientSettingsClientSettings = providers.FirstOrDefault(s => s.GetType() == typeof(ClientSettingsClientSettings)) as ClientSettingsClientSettings;
         var clientSettingsClient = new ClientSettingsClient(
             clientSettingsClientSettings.ClientSettingsApiBaseUrl,
             clientSettingsClientSettings.ClientSettingsCertificateValidationEnabled
@@ -177,7 +150,7 @@ internal static class Runner
 
         services.AddSingleton<IClientSettingsClient>(clientSettingsClient);
 
-        var avatarSettings = singletons.FirstOrDefault(s => s.GetType() == typeof(AvatarSettings)) as AvatarSettings;
+        var avatarSettings = providers.FirstOrDefault(s => s.GetType() == typeof(AvatarSettings)) as AvatarSettings;
         var thumbnailsClient = new ThumbnailsClient(avatarSettings.RbxThumbnailsUrl);
         services.AddSingleton<IThumbnailsClient>(thumbnailsClient);
 
@@ -209,6 +182,40 @@ internal static class Runner
         services.AddHttpClient();
 
         return services.BuildServiceProvider();
+    }
+
+    private static IEnumerable<IConfigurationProvider> GetSettingsProviders()
+    {
+        var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
+        var ns = typeof(BaseSettingsProvider).Namespace;
+
+        var singletons = assembly
+            .GetTypes()
+            .Where(t => string.Equals(t.Namespace, ns, StringComparison.Ordinal) &&
+                        t.BaseType.Name == typeof(BaseSettingsProvider).Name) // finicky
+            .Select(t =>
+            {
+                // Construct the singleton.
+                var constructor = t.GetConstructor(Type.EmptyTypes);
+                if (constructor == null)
+                {
+                    Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
+
+                    return null;
+                }
+
+                var singleton = constructor.Invoke(null);
+                if (singleton == null)
+                {
+                    Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
+
+                    return null;
+                }
+
+                return singleton;
+            });
+
+        return singletons.Cast<IConfigurationProvider>();
     }
 
     private static void SetupJobManager(ServiceCollection services, GridSettings gridSettings)
@@ -289,12 +296,17 @@ internal static class Runner
 
         if (args.Contains("--write-local-config"))
         {
-            ConfigurationProvider.SetUp(false);
+            var providers = GetSettingsProviders();
 
+            Logger.Singleton.LogLevel = LogLevel.Trace;
             Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
 
-            foreach (var provider in ConfigurationProvider.RegisteredProviders.Cast<IVaultProvider>())
+            foreach (var provider in providers.Cast<IVaultProvider>())
+            {
+                provider.SetLogger(Logger.Singleton);
+
                 provider.ApplyCurrent();
+            }
 
             Console.ReadKey();
             return;
