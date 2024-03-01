@@ -1,0 +1,42 @@
+name: MkDocs Deploy
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+      - "mkdocs.yml"
+permissions:
+  contents: write
+
+jobs:
+  mkdocs:
+    if: "!contains(toJSON(github.event.commits.*.message), '!#skip-build#!')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9.7"
+      
+      - name: Install dependencies
+        run: |
+          pip install mkdocs-material mkdocs-minify-plugin
+      
+      - name: Configure Git user
+        run: |
+          git config --local user.email "ops+grid-bot-gh@vmminfra.net"
+          git config --local user.name "grid-bot-gh"
+      
+      - name: Deploy docs
+        run: |
+          mkdocs gh-deploy --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPLOYER_TOKEN }}

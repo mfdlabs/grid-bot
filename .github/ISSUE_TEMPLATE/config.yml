@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Guild Invite
+    url: https://discord.gg/DURUeUcfar
+    about: Join this Guild if you want to talk directly to the owner of the bot.
+  - name: Discord Bot Invite
+    url: https://discord.com/api/oauth2/authorize?client_id=819791451436482600&permissions=2147798080&response_type=code&scope=bot%20applications.commands%20messages.read
+    about: If you wish to add the bot to your guilds, use this invite url to do so.
+  - name: Grid Bot Moderation Guidelines
+    url: https://grid-bot.ops.vmminfra.net/moderation
+    about: Please refer to here before opening Blacklist appeals.
+  - name: Grid Bot Terms of Service
+    url: https://grid-bot.ops.vmminfra.net/legal/tos
+    about: Please refer to here for the terms and conditions for using or integrating this bot within Discord.
+  - name: Grid Bot Privacy Policy
+    url: https://grid-bot.ops.vmminfra.net/legal/privacy-policy
+    about: Please refer to here for the information on how we use your data internally.

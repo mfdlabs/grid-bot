@@ -1,0 +1,80 @@
+name: Bug Report
+description: File a bug report, use this if you have discovered a bug in production and wish the internal team to investigate.
+title: "[Bug]: "
+labels: ["kind: fix", "status: backlogged", "status: needs-review"]
+assignees: ["nikita-petko"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    attributes:
+      label: Check if there is an existing issue or pull request.
+      description: Please check the [issues](https://github.com/mfdlabs/grid-bot/issues) to determine if your issue has already been filed.
+      options:
+      - label: "I double checked issues and couldn't find any duplicates."
+        required: true
+  - type: checkboxes
+    attributes:
+      label: This occurs on the latest version of the bot.
+      description: If this bug occurs on a previous version of the bot, please check this box. There will be a version string in the README.md that will correlate to a version that you can check on the bot.
+      options:
+      - label: I verified that the bot is running on the latest version.
+        required: true
+  - type: checkboxes
+    attributes:
+      label: Does this bug occur frequently?
+      description: If this bug occurs frequently, please tick this box.
+      options:
+      - label: This bug occurs frequently.
+        required: false
+  - type: textarea
+    id: description
+    attributes: 
+      label: Description
+      description: A detailed explination of the bug.
+      placeholder: When rendering, it will throw an error.
+    validations:
+      required: true
+  - type: input
+    id: deployment-id
+    attributes:
+      label: The deployment ID of the bot.
+      description: This refers to the deployment ID of the bot, there will be a command that lets you retrieve this value (/support). Use this if it's version specific.
+      placeholder: ex. 2022.03.06-01.36.27_master_561a09f-net48-Release
+    validations:
+      required: false
+  - type: input
+    id: dates-of-occurrence
+    attributes:
+      label: The dates of occurrence of the bug.
+      description: This refers to the dates of occurrence of the bug. These can be on any time zone, but must include the year, month, day, hour, minute, and second (if possible). This accepts multiple dates, separated by commas.
+      placeholder: ex. 2022/03/06 01:36:27 UTC+1, 2022/03/06 01:37:28 UTC+1, 2022/03/06 01:38:11 UTC+1
+    validations:
+      required: false
+  - type: input
+    id: machine-id
+    attributes:
+      label: The hostname, Machine ID and IP of the machine
+      description: This refers to the hostname, Machine ID and IP of the machine, there will be a command that lets you retrieve this value (/support). This is optional, but is very helpful for debugging.
+      placeholder: ex. dapp181-dec.distrubuted.jfk01-us-east-01.mfdlabs.local, JFK01-DApp181, 10.128.29.28
+    validations:
+      required: false
+  - type: textarea
+    id: images
+    attributes: 
+      label: Images
+      description: Attach images to the bug report. This is optional.
+    validations:
+      required: false
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide steps to reproduce the bug. This is optional, but is highly recommended.
+      placeholder: >
+        1. Execute command /execute script script:BLAH BLAH
+        2. Paste this code in blah blah.
+        3. Magic!!
+    validations:
+      required: false
