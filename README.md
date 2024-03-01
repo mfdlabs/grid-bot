@@ -107,7 +107,7 @@ If you are using this method you will have to define the following environment v
 
 - VAULT_ADDR - The address to the Vault server.
 - VAULT_TOKEN or VAULT_CREDENTIAL - The token or credential to use, if using approle, the format is as follows: `{roleName|roleId}:{secretId}`
-- VAULT_MOUNT - Optional, if not set it defaults to `grid-bot-settings`, but allows you to override the mount point for settings (see [SettingsProviderDefaults.cs](./shared/settings/SettingsProviderDefaults.cs))
+- VAULT_MOUNT - Optional, if not set it defaults to `grid-bot-settings`, but allows you to override the mount point for settings (see [SettingsProvidersDefaults.cs](./shared/settings/SettingsProvidersDefaults.cs))
 
 These all supply a path that is dependent on the current build configuration, e.g, grid-bot-settings/grid-bot/discord/debug, would contain the settings for the DiscordProvider in Debug mode:
 
