@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  <link
+    rel="stylesheet"
+    href="{{ 'overrides/assets/stylesheets/main.css' | url }}"
+  />
+  {% if page and page.meta and page.meta.robots %}
+    <meta property="robots" content="{{ page.meta.robots }}" />
+  {% else %}
+    <meta property="robots" content="index, follow" />
+  {% endif %}
+{% endblock %}

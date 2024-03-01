@@ -1,0 +1,78 @@
+name: Blacklist Appeal
+description: Request a blacklist appeal. File this if you would like to appeal a blacklist for yourself or a guild you own.
+title: "[Appeal]: "
+labels: ["kind: appeal", "status: backlogged", "status: needs-review"]
+assignees: ["nikita-petko"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this blacklist appeal!
+  - type: checkboxes
+    attributes:
+      label: You have read the blacklist guidelines?
+      description: Please check the [guidelines](https://grid-bot.ops.vmminfra.net/moderation) to determine if your appeal conforms to them.
+      options:
+      - label: "I double checked the guidelines and my appeal conforms to them."
+        required: true
+  - type: checkboxes
+    attributes:
+      label: You haven't been blacklisted before?
+      description: If you have been blacklisted before, then don't file an appeal as you'll get declined.
+      options:
+      - label: "I double checked the blacklist and I haven't been blacklisted before."
+        required: true
+  - type: input
+    id: discord-user-id
+    attributes:
+      label: The ID of the Discord User you are appealing for. If you are appealing for a guild this must be the ID of the owner.
+      description: Please refer to the [Discord Helpcenter](https://support.discord.com/hc/en-us/articles/206346498) for more information on how to find the Discord ID of a user.
+      placeholder: ex. 819791451436482600
+    validations:
+      required: true
+  - type: input
+    id: date-blacklisted
+    attributes:
+      label: The date you were blacklisted.
+      description: You must provide the date you were blacklisted. As the moderation team will need to determine *why* you were blacklisted. In the format of `YYYY-MM-DD HH:MM:SS`.
+      placeholder: ex. 2020-01-01 00:00:00
+    validations:
+      required: true
+  - type: input
+    id: guild-id
+    attributes:
+      label: The ID of the guild you think you were blacklisted in or you are getting a blacklist revoked for.
+      description: Please refer to the [Discord Helpcenter](https://support.discord.com/hc/en-us/articles/206346498) for more information on how to find the ID of a guild.
+      placeholder: ex. 559083251805978644
+    validations:
+      required: true
+  - type: input
+    id: channel-id
+    attributes:
+      label: The ID of the channel you think you were blacklisted in. This does not apply if you are appealing guild blacklist.
+      description: Please refer to the [Discord Helpcenter](https://support.discord.com/hc/en-us/articles/206346498) for more information on how to find the ID of a channel.
+      placeholder: ex. 954168914273767484
+    validations:
+      required: false
+  - type: textarea
+    id: appeal-reason
+    attributes: 
+      label: The reason you are appealing.
+      description: Minimum of 50 characters on why you are appealing.
+      placeholder: I am appealing because I was blacklisted for spamming...
+    validations:
+      required: true
+  - type: textarea
+    id: apology
+    attributes: 
+      label: An apology for the moderation team.
+      description: Minimum of 100 characters apology towards the moderation team and the clients who use the bot.
+      placeholder: I am sorry for the spamming and I am trying to get this removed.
+    validations:
+      required: true
+  - type: textarea
+    id: images
+    attributes: 
+      label: Images
+      description: Attach images to the appeal. This is optional if you have evidence to prove your innocence.
+    validations:
+      required: false

@@ -5,6 +5,18 @@ This repository contains code for the Grid Bot, this bot is designed to interact
 - Rendering Roblox characters.
 - Executing Luau code.
 
+# Want to report an issue?
+
+These issue reports apply to the currently deployed bot.
+
+You can request the following: 
+1. [Bug Reports](https://github.com/mfdlabs/grid-bot/issues/new?assignees=nikita-petko&labels=kind:%20fix%2Cstatus:%20backlogged%2Cstatus:%20required-review&template=bug_report.yml&title=%5BBug%5D%3A+)
+2. [Feature Requests](https://github.com/mfdlabs/grid-bot/issues/new?assignees=nikita-petko&labels=kind:%20feature%2Ckind:%20enhancement%2Cstatus:%20backlogged%2Cstatus:%20required-review&template=feature_request.yml&title=%5BFeature%5D%3A+)
+3. [Security Issues](https://github.com/mfdlabs/grid-bot/issues/new?assignees=nikita-petko&labels=kind:%20hotfix%2Cpriority:%20key%20deliverable%2Cstatus:%20backlogged%2Cstatus:%20required-review&template=security_vulnerabilty.yml&title=%5BVulnerability%5D%3A+)
+4. [Blacklist Appeals](https://github.com/mfdlabs/grid-bot/issues/new?assignees=nikita-petko&labels=kind:%20appeal%2Cstatus:%20backlogged%2Cstatus:%20required-review&template=blacklist_appeal.yml&title=%5BAppeal%5D%3A+)
+
+These should be carried out with utmost professionalism and care, as otherwise they will be ignored, or will make it harder for the developer team to implement them.
+
 # Notice
 
 ## Usage of Roblox, or any of its assets.

@@ -1,0 +1,43 @@
+name: Feature Request
+description: Request a new feature. File this if you would like to see a new feature added to the bot.
+title: "[Feature]: "
+labels: ["kind: feature", "kind: enhancement", "status: backlogged", "status: needs-review"]
+assignees: ["nikita-petko"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this feature request!
+  - type: checkboxes
+    attributes:
+      label: Check if there is an existing issue or pull request
+      description: Please check the [issues](https://github.com/mfdlabs/grid-bot/issues) to determine if your feature request is already in the works or has already been requested.
+      options:
+      - label: "I double checked issues and couldn't find any duplicates."
+        required: true
+  - type: checkboxes
+    attributes:
+      label: Verify Feature Quality.
+      description: > 
+        If your feature is actually worth being integrated. This includes things like:
+        - Does it work?
+        - Is it a good idea?
+        - Does it benefit the user?
+        - Will it generate traffic?
+      options:
+      - label: I verified the feature I requested, and it is worth being integrated.
+        required: true
+  - type: textarea
+    id: description
+    attributes: 
+      label: Description
+      description: A detailed explaintion of the feature. Be as detailed as possible. Going from how the feature works to the benefits of the feature.
+      placeholder: It adds new code and stuff blah blah.
+    validations:
+      required: true
+  - type: textarea
+    id: images
+    attributes: 
+      label: Images
+      description: Attach images to the feature request.
+    validations:
+      required: false

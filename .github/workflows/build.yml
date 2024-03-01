@@ -9,7 +9,7 @@ on:
       - "targets/**"
       - "scripts/**"
       - "nomad/**"
-      - ".github/workflows/**"
+      - ".github/workflows/build.yml"
       - "Dockerfile"
       - "Makefile"
       - ".dockerignore"
