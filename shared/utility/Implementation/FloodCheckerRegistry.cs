@@ -52,7 +52,8 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
             () => _floodCheckerSettings.ScriptExecutionFloodCheckerWindow,
             () => _floodCheckerSettings.ScriptExecutionFloodCheckingEnabled,
             _logger,
-            _redisClient
+            _redisClient,
+            _floodCheckerSettings
         );
 
         RenderFloodChecker = new RedisRollingWindowFloodChecker(
@@ -62,7 +63,8 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
             () => _floodCheckerSettings.RenderFloodCheckerWindow,
             () => _floodCheckerSettings.RenderFloodCheckingEnabled,
             _logger,
-            _redisClient
+            _redisClient,
+            _floodCheckerSettings
         );
     }
 
@@ -89,7 +91,8 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
             () => _floodCheckerSettings.ScriptExecutionPerUserFloodCheckerWindow,
             () => _floodCheckerSettings.ScriptExecutionPerUserFloodCheckingEnabled,
             _logger,
-            _redisClient
+            _redisClient,
+            _floodCheckerSettings
         );
     }
 
@@ -102,7 +105,8 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
             () => _floodCheckerSettings.RenderPerUserFloodCheckerWindow,
             () => _floodCheckerSettings.RenderPerUserFloodCheckingEnabled,
             _logger,
-            _redisClient
+            _redisClient,
+            _floodCheckerSettings
         );
     }
 }
