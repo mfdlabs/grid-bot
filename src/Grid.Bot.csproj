@@ -41,9 +41,9 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Random" Version="1.0.1" />
-    <PackageReference Include="Redis" Version="1.0.1" />
-    <PackageReference Include="Configuration.Core" Version="1.0.1" />
+    <PackageReference Include="Random" Version="1.0.2" />
+    <PackageReference Include="Redis" Version="1.0.2" />
+    <PackageReference Include="Configuration.Core" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">

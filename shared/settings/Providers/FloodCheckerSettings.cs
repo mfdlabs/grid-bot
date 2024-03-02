@@ -4,10 +4,12 @@ using System;
 
 using Redis;
 
+using IFloodCheckerSettings = FloodCheckers.Redis.ISettings;
+
 /// <summary>
 /// Settings provider for the render and script execution flood checkers.
 /// </summary>
-public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProviderSettings
+public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProviderSettings, IFloodCheckerSettings
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.FloodCheckerPath;
@@ -136,5 +138,11 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     public TimeSpan InitialDiscoveryWaitTime => GetOrDefault(
         "FloodCheckers" + nameof(InitialDiscoveryWaitTime),
         TimeSpan.FromSeconds(10)
+    );
+
+    /// <inheritdoc cref="IFloodCheckerSettings.FloodCheckerMinimumWindowPeriod"/>
+    public TimeSpan FloodCheckerMinimumWindowPeriod => GetOrDefault(
+        nameof(FloodCheckerMinimumWindowPeriod),
+        TimeSpan.FromSeconds(1)
     );
 }
