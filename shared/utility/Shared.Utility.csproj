@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup Condition="'$(USE_VAULT_SETTINGS_PROVIDER)' == 'true'">
+    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Description>Shared utility classes used by the grid-bot</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -16,6 +16,7 @@ using Threading.Extensions;
 using Grid.Commands;
 
 using GridJob = Grid.Client.Job;
+using System.Collections.Concurrent;
 
 /// <summary>
 /// Exception thrown when rbx-thumbnails returns a state that is not pending or completed.
@@ -54,6 +55,7 @@ public class AvatarUtility : IAvatarUtility
     private readonly IPercentageInvoker _percentageInvoker;
 
     private readonly ExpirableDictionary<(long, ThumbnailCommandType), string> _localCachedPaths;
+    private readonly ConcurrentBag<long> _idsNotToUse = new(); // These IDs error out when trying to render (they are blocked? or they are moderated?)
 
     /// <summary>
     /// Construct a new instance of <see cref="AvatarUtility"/>.
@@ -82,7 +84,42 @@ public class AvatarUtility : IAvatarUtility
 
         _localCachedPaths = new(avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
+
+#if USE_VAULT_SETTINGS_PROVIDER
+        foreach (var id in avatarSettings.BlacklistUserIds)
+            _idsNotToUse.Add(id);
+
+        if (!_idsNotToUse.IsEmpty)
+            _logger.Warning("Blacklisted user IDs: {0}", string.Join(", ", avatarSettings.BlacklistUserIds));
+
+        Task.Factory.StartNew(PersistBlacklistedIds, TaskCreationOptions.LongRunning);
+#endif
     }
+
+#if USE_VAULT_SETTINGS_PROVIDER
+    private void PersistBlacklistedIds()
+    {
+        while (true)
+        {
+            Task.Delay(_avatarSettings.BlacklistPersistPeriod).Wait();
+
+            if (_avatarSettings.BlacklistUserIds.SequenceEqual(_idsNotToUse))
+                continue;
+
+            // Logging purposes: grab any new ones that were added.
+            var newIds = _idsNotToUse.Except(_avatarSettings.BlacklistUserIds).ToArray();
+            var removedIds = _avatarSettings.BlacklistUserIds.Except(_idsNotToUse).ToArray();
+
+            _logger.Warning(
+                "Blacklisted user IDs were updated. New IDs: {0}, Removed IDs: {1}",
+                string.Join(", ", newIds),
+                string.Join(", ", removedIds)
+            );
+
+            _avatarSettings.BlacklistUserIds = [.. _idsNotToUse];
+        }
+    }
+#endif
 
     private void OnLocalCacheEntryRemoved(string path, RemovalReason reason)
     {
@@ -117,7 +154,7 @@ public class AvatarUtility : IAvatarUtility
         yield return 0; // cameraOffsetY
     }
 
-    private static string PollUntilCompleted(Func<ThumbnailResponse> func)
+    private string PollUntilCompleted(long userId, Func<ThumbnailResponse> func)
     {
         var response = func() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response was null.");
 
@@ -125,7 +162,12 @@ public class AvatarUtility : IAvatarUtility
             return response.ImageUrl;
 
         if (response.State != ThumbnailResponseState.Pending)
+        {
+            if (response.State != ThumbnailResponseState.InReview)
+                _idsNotToUse.Add(userId);
+
             throw new ThumbnailResponseException(response.State.GetValueOrDefault(), "The thumbnail response was not pending.");
+        }
 
         while (response.State == ThumbnailResponseState.Pending)
         {
@@ -135,7 +177,12 @@ public class AvatarUtility : IAvatarUtility
         }
 
         if (response.State != ThumbnailResponseState.Completed)
+        {
+            if (response.State != ThumbnailResponseState.InReview)
+                _idsNotToUse.Add(userId);
+
             throw new ThumbnailResponseException(response.State.GetValueOrDefault(), "The thumbnail response was not completed.");
+        }
 
         return response.ImageUrl;
     }
@@ -158,6 +205,12 @@ public class AvatarUtility : IAvatarUtility
 
     private (Stream, string) GetThumbnail(long userId, ThumbnailCommandType thumbnailCommandType)
     {
+        if (userId == 0)
+            throw new ArgumentException("The user ID cannot be 0.", nameof(userId));
+
+        if (_idsNotToUse.Contains(userId))
+            throw new ThumbnailResponseException(ThumbnailResponseState.Blocked, "The user ID is blacklisted.");
+
         if (thumbnailCommandType != ThumbnailCommandType.Closeup && thumbnailCommandType != ThumbnailCommandType.Avatar_R15_Action)
             throw new ArgumentException("The thumbnail command type must be either closeup or avatar_r15_action.", nameof(thumbnailCommandType));
 
@@ -180,6 +233,7 @@ public class AvatarUtility : IAvatarUtility
                 {
                     case ThumbnailCommandType.Closeup:
                         url = PollUntilCompleted(
+                            userId,
                             () => _thumbnailsClient.GetAvatarHeadshotThumbnailAsync(
                                 userIds,
                                 _avatarSettings.RenderDimensions,
@@ -191,6 +245,7 @@ public class AvatarUtility : IAvatarUtility
                         return DownloadFile(url);
                     case ThumbnailCommandType.Avatar_R15_Action:
                         url = PollUntilCompleted(
+                            userId,
                             () => _thumbnailsClient.GetAvatarThumbnailAsync(
                                 userIds,
                                 _avatarSettings.RenderDimensions,

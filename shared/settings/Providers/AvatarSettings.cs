@@ -97,4 +97,25 @@ public class AvatarSettings : BaseSettingsProvider
         nameof(LocalCacheTtl),
         TimeSpan.FromMinutes(5)
     );
+
+#if USE_VAULT_SETTINGS_PROVIDER
+    /// <summary>
+    /// A list of user IDs that should be automatically blacklisted.
+    /// </summary>
+    public long[] BlacklistUserIds {
+        get => GetOrDefault(
+            nameof(BlacklistUserIds),
+            Array.Empty<long>()
+        );
+        set => Set(nameof(BlacklistUserIds), value);
+    }
+
+    /// <summary>
+    /// Gets the period to wait before persisting the blacklist.
+    /// </summary>
+    public TimeSpan BlacklistPersistPeriod => GetOrDefault(
+        nameof(BlacklistPersistPeriod),
+        TimeSpan.FromMinutes(5)
+    );
+#endif
 }
