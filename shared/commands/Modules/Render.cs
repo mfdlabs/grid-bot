@@ -103,45 +103,48 @@ public class Render(
             _avatarSettings.RenderYDimension
         );
 
-        try {
-
-        var (stream, fileName) = _avatarUtility.RenderUser(
-            id,
-            _avatarSettings.PlaceIdForRenders,
-            _avatarSettings.RenderXDimension,
-            _avatarSettings.RenderYDimension
-        );
-
-        if (stream == null)
+        try
         {
-            await FollowupAsync("An error occurred while rendering the character.");
 
-            return;
-        }
-
-        using (stream)
-            await FollowupWithFileAsync(
-                stream,
-                fileName
+            var (stream, fileName) = _avatarUtility.RenderUser(
+                id,
+                _avatarSettings.PlaceIdForRenders,
+                _avatarSettings.RenderXDimension,
+                _avatarSettings.RenderYDimension
             );
 
+            if (stream == null)
+            {
+                await FollowupAsync("An error occurred while rendering the character.");
+
+                return;
+            }
+
+            using (stream)
+                await FollowupWithFileAsync(
+                    stream,
+                    fileName
+                );
+
+        }
+        catch (ThumbnailResponseException e)
+        {
+            _logger.Warning("The thumbnail service responded with the following state: {0}, message: {1}", e.State, e.Message);
+
+            if (e.State == ThumbnailResponseState.InReview)
+            {
+                // Bogus error here for the sake of the user. Like flood checker error.
+                await FollowupAsync("The thumbnail service placed the request in review, please try again later.");
+
+                return;
+            }
+
+            // Bogus error for anything else, we don't need this to be noted that we are using rbx-thumbnails.
+            await FollowupAsync($"The thumbnail service responded with the following state: {e.State}");
         }
         catch (Exception e)
         {
             _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", id, e);
-
-            if (e is ThumbnailResponseException thumbnailResponseException)
-            {
-                if (thumbnailResponseException.State == ThumbnailResponseState.InReview)
-                {
-                    // Bogus error here for the sake of the user. Like flood checker error.
-                    await FollowupAsync("You are sending render commands too quickly, please wait a few moments and try again.");
-
-                    return;
-                }
-
-                // Bogus error for anything else, we don't need this to be noted that we are using rbx-thumbnails.
-            }
 
             await FollowupAsync("An error occurred while rendering the character.");
         }
