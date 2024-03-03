@@ -107,6 +107,7 @@ public partial class OnMessage(
 
         _totalMessagesProcessed.Inc();
 
+        // Try catch here temporary until mfdlabs/grid-bot#279 is resolved.
         using var logger = _loggerFactory.CreateLogger(message);
 
         var userIsAdmin = _adminUtility.UserIsAdmin(message.Author);
@@ -115,26 +116,16 @@ public partial class OnMessage(
 
         int argPos = 0;
 
-        if (!message.HasStringPrefix(_commandsSettings.Prefix, ref argPos)
-         && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
+        if (!message.HasStringPrefix(_commandsSettings.Prefix, ref argPos, StringComparison.OrdinalIgnoreCase)) return;
 
         // Get the name of the command that was used.
         var commandName = message.Content.Split(' ')[0];
         if (string.IsNullOrEmpty(commandName)) return;
 
-        // Try catch here temporary until mfdlabs/grid-bot#279 is resolved.
-        try
-        {
-            commandName = commandName[argPos..];
-            if (string.IsNullOrEmpty(commandName)) return;
-            if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
-            if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
-        }
-        catch (ArgumentException ex)
-        {
-            logger.Error("Failed to get the command name because: {0}, Raw Text: {1}", ex, message.Content);
-            return;
-        }
+        commandName = commandName[argPos..];
+        if (string.IsNullOrEmpty(commandName)) return;
+        if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
+        if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
 
         _totalUsersUsingPreviousPhaseCommands.WithLabels(
             commandName
