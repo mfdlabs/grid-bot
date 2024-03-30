@@ -44,7 +44,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
       template {
         data        = <<EOF
 
-DISPLAY=:0
+DISPLAY=:1
 
 # CONSUL
 DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
