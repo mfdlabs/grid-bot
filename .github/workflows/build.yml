@@ -29,11 +29,11 @@ on:
       image:
         description: "Image Name"
         required: true
-        default: "docker.registries.vmminfra.dev/grid/grid-bot"
+        default: "cloud-registry.simulpong.com/grid/grid-bot"
       registry:
         description: "Docker Registry"
         required: true
-        default: "docker.registries.vmminfra.dev"
+        default: "cloud-registry.simulpong.com"
 
       create_release:
         description: "Create Release"
@@ -85,8 +85,8 @@ jobs:
     env:
       BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
 
-      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev/grid/grid-bot') || 'docker-dev.registries.vmminfra.dev/grid/grid-bot' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'docker.registries.vmminfra.dev') || 'docker-dev.registries.vmminfra.dev' }}
+      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'cloud-registry.simulpong.com/grid/grid-bot') || 'registry.simulpong.com/grid/grid-bot' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'cloud-registry.simulpong.com') || 'registry.simulpong.com' }}
 
       CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
       CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
