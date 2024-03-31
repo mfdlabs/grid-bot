@@ -20,16 +20,16 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Configuration" Version="1.0.3" />
-    <PackageReference Include="Redis" Version="1.0.3" />
-    <PackageReference Include="ServiceDiscovery" Version="1.0.3" />
-    <PackageReference Include="FloodCheckers.Redis" Version="1.0.3" />
+    <PackageReference Include="Configuration" Version="1.0.4" />
+    <PackageReference Include="Redis" Version="1.0.4" />
+    <PackageReference Include="ServiceDiscovery" Version="1.0.4" />
+    <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
 
-    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.3" />
-    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.3" />
-    <PackageReference Include="Grid.ProcessManagement" Version="1.0.3" />
+    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.4" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.4" />
+    <PackageReference Include="Grid.ProcessManagement" Version="1.0.4" />
     
-    <PackageReference Include="Thumbnails.Client" Version="1.0.3" />
+    <PackageReference Include="Thumbnails.Client" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">

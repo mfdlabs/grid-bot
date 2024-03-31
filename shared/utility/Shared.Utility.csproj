@@ -17,20 +17,20 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="FileSystem" Version="1.0.3" />
-    <PackageReference Include="FloodCheckers.Core" Version="1.0.3" />
-    <PackageReference Include="FloodCheckers.Redis" Version="1.0.3" />
-    <PackageReference Include="Grid.Commands" Version="1.0.3" />
-    <PackageReference Include="Grid.Client" Version="1.0.3" />
-    <PackageReference Include="Logging" Version="1.0.3" />
-    <PackageReference Include="Redis" Version="1.0.3" />
-    <PackageReference Include="ServiceDiscovery" Version="1.0.3" />
-    <PackageReference Include="Threading" Version="1.0.3" />
-    <PackageReference Include="Users.Client" Version="1.0.3" />
-    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.3" />
-    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.3" />
-    <PackageReference Include="Networking" Version="1.0.3" />
-    <PackageReference Include="Thumbnails.Client" Version="1.0.3" />
+    <PackageReference Include="FileSystem" Version="1.0.4" />
+    <PackageReference Include="FloodCheckers.Core" Version="1.0.4" />
+    <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
+    <PackageReference Include="Grid.Commands" Version="1.0.4" />
+    <PackageReference Include="Grid.Client" Version="1.0.4" />
+    <PackageReference Include="Logging" Version="1.0.4" />
+    <PackageReference Include="Redis" Version="1.0.4" />
+    <PackageReference Include="ServiceDiscovery" Version="1.0.4" />
+    <PackageReference Include="Threading" Version="1.0.4" />
+    <PackageReference Include="Users.Client" Version="1.0.4" />
+    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.4" />
+    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.4" />
+    <PackageReference Include="Networking" Version="1.0.4" />
+    <PackageReference Include="Thumbnails.Client" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
