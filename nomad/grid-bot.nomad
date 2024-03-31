@@ -7,6 +7,10 @@ job "{{{NOMAD_JOB_NAME}}}" {
     policies = ["vault_secret_grid_settings_read_write"]
   }
 
+  meta {
+    environment = "{{{NOMAD_ENVIRONMENT}}}"
+  }
+
   group "grid-bot" {
     count = 1
 
@@ -50,6 +54,7 @@ DISPLAY=:1
 DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
 VAULT_ADDR="http://vault.service.consul:8200"
 VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
+ENVIRONMENT="{{ env "NOMAD_META_environment" }}"
 EOF
         destination = "secrets/grid-bot.env"
         env         = true

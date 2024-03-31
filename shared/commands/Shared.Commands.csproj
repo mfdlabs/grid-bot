@@ -14,12 +14,12 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="ClientSettings.Client" Version="1.0.3" />
-    <PackageReference Include="FileSystem" Version="1.0.3" />
-    <PackageReference Include="FloodCheckers.Core" Version="1.0.3" />
-    <PackageReference Include="FloodCheckers.Redis" Version="1.0.3" />
-    <PackageReference Include="Text" Version="1.0.3" />
-    <PackageReference Include="Networking" Version="1.0.3" />
+    <PackageReference Include="ClientSettings.Client" Version="1.0.4" />
+    <PackageReference Include="FileSystem" Version="1.0.4" />
+    <PackageReference Include="FloodCheckers.Core" Version="1.0.4" />
+    <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
+    <PackageReference Include="Text" Version="1.0.4" />
+    <PackageReference Include="Networking" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">

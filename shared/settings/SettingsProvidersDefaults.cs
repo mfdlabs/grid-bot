@@ -5,28 +5,23 @@ using System;
 internal static class SettingsProvidersDefaults
 {
     private const string _vaultMountEnvVar = "VAULT_MOUNT";
+    private const string _providerEnvironmentNameEnvVar = "ENVIRONMENT";
+    private const string _defaultEnvironmentName = "development";
+    private static string _providerEnvironmentName = Environment.GetEnvironmentVariable(_providerEnvironmentNameEnvVar) ?? _defaultEnvironmentName;
 
-#if DEBUG
-    private const string ProviderPathConfiguration = "debug";
-#else
-    private const string ProviderPathConfiguration = "release";
-#endif
-
-    public const string ProviderPathPrefix = "grid-bot";
-
-    public const string DiscordPath = $"{ProviderPathPrefix}/discord/{ProviderPathConfiguration}";
-    public const string DiscordRolesPath = $"{ProviderPathPrefix}/discord-roles/{ProviderPathConfiguration}";
-    public const string AvatarPath = $"{ProviderPathPrefix}/avatar/{ProviderPathConfiguration}";
-    public const string GridPath = $"{ProviderPathPrefix}/grid/{ProviderPathConfiguration}";
-    public const string BacktracePath = $"{ProviderPathPrefix}/backtrace/{ProviderPathConfiguration}";
-    public const string MaintenancePath = $"{ProviderPathPrefix}/maintenance/{ProviderPathConfiguration}";
-    public const string CommandsPath = $"{ProviderPathPrefix}/commands/{ProviderPathConfiguration}";
-    public const string FloodCheckerPath = $"{ProviderPathPrefix}/floodcheckers/{ProviderPathConfiguration}";
-    public const string ConsulPath = $"{ProviderPathPrefix}/consul/{ProviderPathConfiguration}";
-    public const string UsersClientPath = $"{ProviderPathPrefix}/users-client/{ProviderPathConfiguration}";
-    public const string ScriptsPath = $"{ProviderPathPrefix}/scripts/{ProviderPathConfiguration}";
-    public const string ClientSettingsClientPath = $"{ProviderPathPrefix}/client-settings-client/{ProviderPathConfiguration}";
-    public const string GlobalPath = $"{ProviderPathPrefix}/global/{ProviderPathConfiguration}";
+    public static string DiscordPath => $"{_providerEnvironmentName}/discord";
+    public static string DiscordRolesPath => $"{_providerEnvironmentName}/discord-roles";
+    public static string AvatarPath => $"{_providerEnvironmentName}/avatar";
+    public static string GridPath => $"{_providerEnvironmentName}/grid";
+    public static string BacktracePath => $"{_providerEnvironmentName}/backtrace";
+    public static string MaintenancePath => $"{_providerEnvironmentName}/maintenance";
+    public static string CommandsPath => $"{_providerEnvironmentName}/commands";
+    public static string FloodCheckerPath => $"{_providerEnvironmentName}/floodcheckers";
+    public static string ConsulPath => $"{_providerEnvironmentName}/consul";
+    public static string UsersClientPath => $"{_providerEnvironmentName}/users-client";
+    public static string ScriptsPath => $"{_providerEnvironmentName}/scripts";
+    public static string ClientSettingsClientPath => $"{_providerEnvironmentName}/client-settings-client";
+    public static string GlobalPath => $"{_providerEnvironmentName}/global";
 
     public const string DefaultMountPath = "grid-bot-settings";
     public static string MountPath = Environment.GetEnvironmentVariable(_vaultMountEnvVar) ?? DefaultMountPath;
