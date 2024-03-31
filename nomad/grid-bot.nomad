@@ -18,7 +18,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
       mode = "host"
 
       port "metrics" {
-        to = 8101
+        static = 8101
       }
     }
 
@@ -41,8 +41,8 @@ job "{{{NOMAD_JOB_NAME}}}" {
       }
 
       resources {
-        memory = 1024
-        cpu = 2000
+        memory = {{{NOMAD_MEMORY}}}
+        cpu = {{{NOMAD_CPU}}}}
       }
 
       template {
@@ -61,11 +61,19 @@ EOF
       }
 
       service {
-        name = "grid-bot"
+        name = "{{{NOMAD_JOB_NAME}}}"
+        port = "metrics"
 
         tags = [
           "{{{NOMAD_ENVIRONMENT}}}"
         ]
+
+        check {
+          type     = "http"
+          path     = "/metrics"
+          interval = "2s"
+          timeout  = "2s"
+        }
       }
     }
   }
