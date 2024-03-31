@@ -73,6 +73,11 @@ on:
           - "production"
           - "staging"
 
+      nomad_resources:
+        description: "Nomad Resources (CPU:Memory)"
+        required: true
+        default: "2000:1024"
+
 permissions:
   contents: write
   deployments: write
@@ -98,6 +103,7 @@ jobs:
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
       NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
       NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
+      NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
 
       DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
@@ -232,6 +238,8 @@ jobs:
               -e "s/{{{IMAGE_TAG}}}/${{ steps.version.outputs.version }}/" \
               -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
               -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
+              -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
+              -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
               /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
 
           # Run the job but do not wait for longer than 5 minutes
