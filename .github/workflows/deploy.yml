@@ -1,0 +1,99 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Image Name"
+        required: true
+        default: "cloud-registry.simulprod.com/grid/grid-bot"
+      image_tag:
+        description: "Image Tag"
+        required: true
+        default: "latest"
+      registry:
+        description: "Docker Registry"
+        required: true
+        default: "cloud-registry.simulprod.com"
+
+      nomad_job_name:
+        description: "Nomad Job Name"
+        required: true
+        default: "grid-bot"
+
+      nomad_enviroment:
+        description: "Nomad Environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - "production"
+          - "staging"
+
+permissions:
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: grid-bot-infra
+    env:
+      IMAGE: ${{ github.event.inputs.image || 'cloud-registry.simulprod.com/grid/grid-bot'}}
+      IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || 'cloud-registry.simulprod.com' }}
+
+      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
+
+    steps:
+      - name: Setup Nomad CLI
+        uses: nferch/setup-nomad@v4.0.0
+        env:
+          NOMAD_TLS_SKIP_VERIFY: 1
+
+      - name: Set Initial GitHub Deployment Status
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        continue-on-error: true
+        with:
+          token: "${{ github.token }}"
+          environment: ${{ env.NOMAD_ENVIRONMENT }}
+          environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
+
+      - name: Deploy to Nomad
+        env:
+          NOMAD_TLS_SKIP_VERIFY: 1
+        id: deploy
+        continue-on-error: true
+        run: |
+          # Template file is at ${workspace}/nomad/grid-bot.nomad
+          # Replace {{{IMAGE_NAME}}} and {{{IMAGE_TAG}}} with the actual values
+
+          # Create a temporary file
+          NOMAD_JOB_FILE=$(mktemp)
+
+          # Replace the template with the actual values
+          sed -e "s,{{{IMAGE_NAME}}},${{ env.IMAGE }}," \
+              -e "s/{{{IMAGE_TAG}}}/${{ env.IMAGE_TAG }}/" \
+              -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
+              -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
+              /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
+
+          # Run the job but do not wait for longer than 5 minutes
+          nomad job run $NOMAD_JOB_FILE
+
+          # Cleanup
+          rm $NOMAD_JOB_FILE
+
+      - name: Set GitHub Deployment Status
+        uses: chrnorm/deployment-status@v2
+        continue-on-error: true
+        with:
+          token: "${{ github.token }}"
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          environment-url: "${{ steps.deployment.outputs.environment_url }}"
+
+          # If the "deploy" step fails, the deployment status will be set to "failure"
+          # If the "deploy" step succeeds, the deployment status will be set to "success"
+          state: "${{ steps.deploy.outcome }}"
