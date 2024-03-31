@@ -47,6 +47,9 @@ jobs:
       NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Nomad CLI
         uses: nferch/setup-nomad@v4.0.0
         env:
