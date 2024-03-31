@@ -42,7 +42,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
 
       resources {
         memory = {{{NOMAD_MEMORY}}}
-        cpu = {{{NOMAD_CPU}}}}
+        cpu = {{{NOMAD_CPU}}}
       }
 
       template {
