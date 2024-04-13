@@ -101,7 +101,11 @@ public class BacktraceUtility : IBacktraceUtility
                           select file;
 
         if (!attachments.Any())
+        {
+            _logger.Warning("No log files found to upload!");
+        
             return null;
+        }
 
         _logger.Information("Uploading the following log files to Backtrace: {0}", string.Join(", ", from log in attachments select Path.GetFileName(log)));
 
