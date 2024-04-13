@@ -103,6 +103,8 @@ public class BacktraceUtility : IBacktraceUtility
         if (!attachments.Any())
             return null;
 
+        _logger.Information("Uploading the following log files to Backtrace: {0}", string.Join(", ", from log in attachments select Path.GetFileName(log)));
+
         var result = _client?.Send("Log files upload", attachmentPaths: attachments.ToList());
 
         if (delete)
