@@ -62,14 +62,21 @@ internal static class Runner
         backtraceUtility?.UploadException(ex);
     }
 
-    private static void CollectLogsAndReportToBacktrace(BacktraceSettings backtraceSettings, IBacktraceUtility utility, IPercentageInvoker percentageInvoker)
+    private static void CollectLogsAndReportToBacktrace(ILogger logger, BacktraceSettings backtraceSettings, IBacktraceUtility utility, IPercentageInvoker percentageInvoker)
     {
         if (utility == null) return;
 
-        percentageInvoker.InvokeAction(
-            () => utility.UploadAllLogFiles(true),
-            backtraceSettings.UploadLogFilesToBacktraceEnabledPercent
-        );
+        try
+        {
+            percentageInvoker.InvokeAction(
+                () => utility.UploadAllLogFiles(true),
+                backtraceSettings.UploadLogFilesToBacktraceEnabledPercent
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.Warning($"Log file upload to Backtrace failed: {ex}");
+        }
     }
 
     private static ServiceProvider InitializeServices()
@@ -326,7 +333,7 @@ internal static class Runner
         var backtraceUtility = services.GetRequiredService<IBacktraceUtility>();
         var percentageInvoker = services.GetRequiredService<IPercentageInvoker>();
 
-        Task.Run(() => CollectLogsAndReportToBacktrace(backtraceSettings, backtraceUtility, percentageInvoker));
+        CollectLogsAndReportToBacktrace(logger, backtraceSettings, backtraceUtility, percentageInvoker);
 
         var discordSettings = services.GetRequiredService<DiscordSettings>();
 
