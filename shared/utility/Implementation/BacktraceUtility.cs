@@ -76,10 +76,28 @@ public class BacktraceUtility : IBacktraceUtility
         });
     }
 
+    private static bool IsFileLocked(string filePath)
+    {
+        try
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+
+            stream.Close();
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     /// <inheritdoc cref="IBacktraceUtility.UploadAllLogFiles(bool)"/>
     public BacktraceResult UploadAllLogFiles(bool delete = true)
     {
-        var attachments = from file in Directory.EnumerateFiles(Path.GetDirectoryName(Logger.LogFileBaseDirectory))
+        var attachments = from file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory)
+                          // Do not include files that are in use.
+                          where File.Exists(file) && !IsFileLocked(file)
                           select file;
 
         if (!attachments.Any())
