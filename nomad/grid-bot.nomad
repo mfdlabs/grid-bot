@@ -51,7 +51,6 @@ job "{{{NOMAD_JOB_NAME}}}" {
 DISPLAY=:1
 
 # CONSUL
-DEFAULT_LOG_FILE_DIRECTORY="/local/logs"
 VAULT_ADDR="http://vault.service.consul:8200"
 VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
 ENVIRONMENT="{{ env "NOMAD_META_environment" }}"
