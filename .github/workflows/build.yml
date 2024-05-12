@@ -154,7 +154,7 @@ jobs:
             -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
             -p:CI=true \
             -p:USE_VAULT_SETTINGS_PROVIDER=true
-
+            
       - name: Create Release Artifact
         if: ${{ env.CREATE_RELEASE == 'true' }}
         id: zip
