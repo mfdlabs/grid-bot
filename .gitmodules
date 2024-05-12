@@ -1,6 +1,3 @@
 [submodule "lib"]
 	path = lib
 	url = git@github.com:mfdlabs/grid-bot-libraries.git
-[submodule "services/grid-server"]
-	path = services/grid-server
-	url = git@github.com:mfdlabs/grid-server.git
