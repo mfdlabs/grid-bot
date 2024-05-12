@@ -14,6 +14,11 @@
   <PropertyGroup>
     <LocalBuild>false</LocalBuild>
   </PropertyGroup>
+  
+  <PropertyGroup Label="RootDirectory">
+    <RootDirectory Condition="'$(SolutionDir)' != ''">$(SolutionDir)</RootDirectory>
+    <RootDirectory Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</RootDirectory>
+  </PropertyGroup>
 
   <PropertyGroup Label="PackageMetadata">
     <Company>MFDLABS</Company>

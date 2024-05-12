@@ -38,6 +38,7 @@ using ILogger = Logging.ILogger;
 using LoggerFactory = Utility.LoggerFactory;
 using ILoggerFactory = Utility.ILoggerFactory;
 
+using LogLevel = Logging.LogLevel;
 using MELLogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 internal static class Runner

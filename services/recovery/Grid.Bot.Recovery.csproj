@@ -47,32 +47,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="$(SolutionDir)proto\grid_bot.proto" GrpcServices="Client" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <!-- Linux targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
-    <Exec Command="cp $(SolutionDir)LICENSE $(OutDir)" />
-    <Exec Command="cp $(SolutionDir)README.md $(OutDir)" />
+    <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
+    <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
-    <Exec Command="cp $(SolutionDir)LICENSE $(PublishDir)" />
-    <Exec Command="cp $(SolutionDir)README.md $(PublishDir)" />
+    <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
+    <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
   </Target>
 
   <!-- Windows targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(SolutionDir)LICENSE $(OutDir)" />
-    <Exec Command="xcopy /y $(SolutionDir)README.md $(OutDir)" />
+    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(OutDir)" />
+    <Exec Command="xcopy /y $(RootDirectory)README.md $(OutDir)" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(SolutionDir)LICENSE $(PublishDir)" />
-    <Exec Command="xcopy /y $(SolutionDir)README.md $(PublishDir)" />
+    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
+    <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
   </Target>
 
 </Project>

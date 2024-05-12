@@ -69,7 +69,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="$(SolutionDir)proto\grid_bot.proto" GrpcServices="Server" />
+    <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>

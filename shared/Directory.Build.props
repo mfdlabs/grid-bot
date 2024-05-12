@@ -36,4 +36,9 @@
   <PropertyGroup Label="PackageProperties" Condition="'$(IsTestProject)' != 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup Label="RootDirectory">
+    <RootDirectory Condition="'$(SolutionDir)' != ''">$(SolutionDir)</RootDirectory>
+    <RootDirectory Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)../</RootDirectory>
+  </PropertyGroup>
 </Project>
