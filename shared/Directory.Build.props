@@ -11,6 +11,10 @@
     <Configurations>debug;release</Configurations>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <LocalBuild>false</LocalBuild>
+  </PropertyGroup>
+
   <PropertyGroup Label="PackageMetadata">
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
