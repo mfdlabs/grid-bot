@@ -1,0 +1,39 @@
+<Project>
+  <PropertyGroup Label="DefaultWarnings">
+    <NoWarn>$(NoWarn);4014</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="LibStandard">
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>Grid.Bot</RootNamespace>
+
+    <Configurations>debug;release</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LocalBuild>false</LocalBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="PackageMetadata">
+    <Company>MFDLABS</Company>
+    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
+    <Authors>$(Company);Nikita Petko</Authors>
+
+    <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <VersionPrefix>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</VersionPrefix>
+
+    <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
+    <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Label="TestsProperties" Condition="$(MSBuildProjectName.Contains('.Tests'))">
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup Label="PackageProperties" Condition="'$(IsTestProject)' != 'true'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

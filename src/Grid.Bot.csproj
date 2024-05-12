@@ -4,8 +4,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>10</LangVersion>
     <Configurations>debug;release</Configurations>
     <OutputType>Exe</OutputType>
 
@@ -17,20 +15,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Company>MFDLABS</Company>
-    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
-    <Authors>$(Company);Nikita Petko</Authors>
-
     <Description>Primary executable for the MFDLABS grid-bot.</Description>
-    <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
-
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
-
-    <VersionPrefix>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</VersionPrefix>
-
-    <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
-    <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,6 +45,7 @@
     <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
   </ItemGroup>
 
   <!-- Linux targets -->
@@ -82,5 +69,11 @@
     <Exec Command="xcopy /y $(SolutionDir)LICENSE $(PublishDir)" />
     <Exec Command="xcopy /y $(SolutionDir)README.md $(PublishDir)" />
   </Target>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>
