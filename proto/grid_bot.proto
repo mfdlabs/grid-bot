@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package grid.bot.v1;
+
+option csharp_namespace = "Grid.Bot.V1";
+
+// GridBotAPI defines the gRPC service for checking health
+service GridBotAPI {
+    // CheckHealth checks the health of the service.
+    // Used by the recovery instance to determine if recovery is needed.
+    rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse);
+};
+
+// CheckHealthRequest is the request for the CheckHealth RPC.
+message CheckHealthRequest {
+};
+
+// CheckHealthResponse is the response for the CheckHealth RPC.
+message CheckHealthResponse {
+    // latency is the latency of the Discord.Net API.
+    int32 latency = 1;
+
+    // status is the status of the Discord.Net API.
+    string status = 2;
+
+    // shards is a list of shard display names.
+    repeated string shards = 3;
+};
