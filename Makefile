@@ -1,6 +1,7 @@
 IMAGE_TAG ?= $(shell $(CURDIR)/scripts/generate-image-tag.sh)
 
-SOLUTION ?= $(CURDIR)/grid-bot.sln
+SOLUTION ?= $(CURDIR)/grid-bot.sln#
+BARE_SOLUTION ?= $(CURDIR)/grid-bot-bare.sln
 
 .DEFAULT_GOAL := all
 
@@ -17,7 +18,7 @@ all:
 
 build-debug:
 
-	dotnet build $(SOLUTION) \
+	dotnet build $(BARE_SOLUTION) \
 	-c debug \
 	-p:IMAGE_TAG=$(IMAGE_TAG)-dev \
 	-p:CI=true \
@@ -26,7 +27,7 @@ build-debug:
 
 build-release:
 
-	dotnet build $(SOLUTION) \
+	dotnet build $(BARE_SOLUTION) \
 	-c release \
 	-p:IMAGE_TAG=$(IMAGE_TAG) \
 	-p:CI=true \
@@ -53,7 +54,7 @@ build-local-release:
 
 build-debug-vault:
 
-	dotnet build $(SOLUTION) \
+	dotnet build $(BARE_SOLUTION) \
 	-c debug \
 	-p:IMAGE_TAG=$(IMAGE_TAG)-dev \
 	-p:CI=true \
@@ -62,7 +63,7 @@ build-debug-vault:
 
 build-release-vault:
 
-	dotnet build $(SOLUTION) \
+	dotnet build $(BARE_SOLUTION) \
 	-c release \
 	-p:IMAGE_TAG=$(IMAGE_TAG) \
 	-p:CI=true \

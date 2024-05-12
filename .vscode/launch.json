@@ -8,10 +8,11 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/src",
-            "console": "internalConsole",
+            "console": "externalTerminal",
             "stopAtEntry": false,
             "logging": {
-                "moduleLoad": false
+                "moduleLoad": false,
+                "programOutput": true
             },
             "requireExactSource": false,
             "envFile": "${workspaceFolder}/.env"
@@ -23,10 +24,11 @@
             "preLaunchTask": "build-local",
             "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/src",
-            "console": "internalConsole",
+            "console": "externalTerminal",
             "stopAtEntry": false,
             "logging": {
-                "moduleLoad": false
+                "moduleLoad": false,
+                "programOutput": true
             },
             "requireExactSource": false,
             "envFile": "${workspaceFolder}/.env"
@@ -38,10 +40,11 @@
             "preLaunchTask": "build-vault",
             "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/src",
-            "console": "internalConsole",
+            "console": "externalTerminal",
             "stopAtEntry": false,
             "logging": {
-                "moduleLoad": false
+                "moduleLoad": false,
+                "programOutput": true
             },
             "requireExactSource": false,
             "envFile": "${workspaceFolder}/.env"
@@ -53,10 +56,11 @@
             "preLaunchTask": "build-local-vault",
             "program": "${workspaceFolder}/src/bin/debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/src",
-            "console": "internalConsole",
+            "console": "externalTerminal",
             "stopAtEntry": false,
             "logging": {
-                "moduleLoad": false
+                "moduleLoad": false,
+                "programOutput": true
             },
             "requireExactSource": false,
             "envFile": "${workspaceFolder}/.env"

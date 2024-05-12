@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "shared\s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "shared\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{5A960687-FC84-4DF9-9606-2B4CA560BFA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot.Recovery", "services\recovery\Grid.Bot.Recovery.csproj", "{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,10 @@ Global
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Debug|Any CPU.Build.0 = debug|Any CPU
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Release|Any CPU.ActiveCfg = release|Any CPU
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Release|Any CPU.Build.0 = release|Any CPU
+		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Debug|Any CPU.ActiveCfg = debug|Any CPU
+		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Debug|Any CPU.Build.0 = debug|Any CPU
+		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Release|Any CPU.ActiveCfg = release|Any CPU
+		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Release|Any CPU.Build.0 = release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,5 +61,6 @@ Global
 		{67005F02-FE69-4DCF-8D29-07989E8B4C18} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
 		{425ECFC3-749B-4725-AF7B-A2CC56A06E6B} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
+		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC} = {5A960687-FC84-4DF9-9606-2B4CA560BFA8}
 	EndGlobalSection
 EndGlobal

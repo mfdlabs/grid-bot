@@ -10,32 +10,20 @@
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(USE_VAULT_SETTINGS_PROVIDER)' == 'true'">
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup>
-    <Description>Primary executable for the MFDLABS grid-bot.</Description>
-    <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
+    <Description>Recovery executable for the MFDLABS grid-bot.</Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\shared\commands\Shared.Commands.csproj" />
-    <ProjectReference Include="..\shared\events\Shared.Events.csproj" />
-    <ProjectReference Include="..\shared\settings\Shared.Settings.csproj" />
-    <ProjectReference Include="..\shared\utility\Shared.Utility.csproj" />
-  </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Random" Version="1.0.4" />
-    <PackageReference Include="Redis" Version="1.0.4" />
-    <PackageReference Include="Configuration.Core" Version="1.0.4" />
+    <PackageReference Include="Configuration" Version="1.0.4" />
+    <PackageReference Include="Logging" Version="1.0.4" />
+    <PackageReference Include="Networking" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="../lib/src/random/random/Random.csproj" />
-    <ProjectReference Include="../lib/src/redis/redis/Redis.csproj" />
-    <ProjectReference Include="../lib/src/configuration/core/Configuration.Core.csproj" />
+    <ProjectReference Include="../../lib/src/configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="..\..\lib\src\logging\logging\Logging.csproj" />
+    <ProjectReference Include="../../lib/src/networking/networking/Networking.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,9 +33,22 @@
     <PackageReference Include="Discord.Net.Commands" Version="3.11.0" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.11.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
-    <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
   </ItemGroup>
 
+  <!-- Protobuf -->
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.23.4" />
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.55.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.56.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Client" />
+  </ItemGroup>
 
   <!-- Linux targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
@@ -70,11 +71,5 @@
     <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
   </Target>
-
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

@@ -148,13 +148,13 @@ jobs:
       - name: Build
         run: |
           cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
-          dotnet publish /_/_work/${{ github.repository }}/${{ github.sha }}/grid-bot-bare.sln \
+          dotnet publish /_/_work/${{ github.repository }}/${{ github.sha }}/src/Grid.Bot.csproj \
             -c ${{ env.BUILD_CONFIGURATION }} \
             -o /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} \
             -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
             -p:CI=true \
             -p:USE_VAULT_SETTINGS_PROVIDER=true
-
+            
       - name: Create Release Artifact
         if: ${{ env.CREATE_RELEASE == 'true' }}
         id: zip

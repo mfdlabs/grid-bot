@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
-
-using Logging;
 
 using Redis;
 using Random;
@@ -31,6 +32,14 @@ using Events;
 using Utility;
 using Prometheus;
 
+using Logger = Logging.Logger;
+using ILogger = Logging.ILogger;
+
+using LoggerFactory = Utility.LoggerFactory;
+using ILoggerFactory = Utility.ILoggerFactory;
+
+using LogLevel = Logging.LogLevel;
+using MELLogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 internal static class Runner
 {
@@ -188,6 +197,8 @@ internal static class Runner
         // Http Client Factory
         services.AddHttpClient();
 
+        services.AddGrpc();
+
         return services.BuildServiceProvider();
     }
 
@@ -296,6 +307,92 @@ internal static class Runner
         services.AddSingleton<IFloodCheckerRegistry>(floodCheckerRegistry);
     }
 
+    private class MicrosoftLogger(ILogger logger) : Microsoft.Extensions.Logging.ILogger
+    {
+        private class NoopDisposable : IDisposable
+        {
+            public void Dispose() { }
+        }
+
+        private readonly ILogger _logger = logger;
+
+        public IDisposable BeginScope<TState>(TState state) => new NoopDisposable();
+
+        public bool IsEnabled(MELLogLevel logLevel) => true;
+
+        public void Log<TState>(MELLogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            var message = formatter(state, exception);
+
+            switch (logLevel)
+            {
+                case MELLogLevel.Trace:
+                    _logger.Trace(message);
+                    break;
+                case MELLogLevel.Debug:
+                    _logger.Debug(message);
+                    break;
+                case MELLogLevel.Information:
+                    _logger.Information(message);
+                    break;
+                case MELLogLevel.Warning:
+                    _logger.Warning(message);
+                    break;
+                case MELLogLevel.Error:
+                case MELLogLevel.Critical:
+                    _logger.Error(message);
+                    break;
+                default:
+                    _logger.Warning(message);
+                    break;
+            }
+        }
+    }
+
+    private class MicrosoftLoggerProvider(ILogger logger) : ILoggerProvider
+    {
+        private readonly ILogger _logger = logger;
+
+        public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName) => new MicrosoftLogger(_logger);
+
+        public void Dispose() { }
+    }
+
+    private static void StartGrpcServer(IEnumerable<string> args, IServiceProvider services)
+    {
+        var client = services.GetRequiredService<DiscordShardedClient>();
+        var globalSettings = services.GetRequiredService<GlobalSettings>();
+        var logger = new Logger(
+            name: globalSettings.GrpcServerLoggerName,
+            logLevel: globalSettings.GrpcServerLoggerLevel,
+            logToConsole: true,
+            logToFileSystem: false
+        );
+
+        logger.Information("Starting gRPC server on {0}", globalSettings.GridBotGrpcServerEndpoint);
+
+        var builder = WebApplication.CreateBuilder(args.ToArray());
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
+
+        builder.Services.AddSingleton(client);
+
+        builder.Services.AddGrpc();
+
+        // Use HTTP/2
+        builder.Services.Configure<KestrelServerOptions>(options =>
+        {
+            options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
+        });
+
+        var app = builder.Build();
+
+        app.MapGrpcService<GridBotGrpcServer>();
+
+        app.Run(globalSettings.GridBotGrpcServerEndpoint);
+    }
+
     private static async Task InvokeAsync(IEnumerable<string> args)
     {
 
@@ -345,6 +442,8 @@ internal static class Runner
             // (they got assemblies but no configuration)
             throw new InvalidOperationException(_noBotToken);
         }
+
+        Task.Factory.StartNew(() => StartGrpcServer(args, services), TaskCreationOptions.LongRunning);
 
         var client = services.GetRequiredService<DiscordShardedClient>();
         var interactions = services.GetRequiredService<InteractionService>();

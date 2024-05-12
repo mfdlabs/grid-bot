@@ -63,6 +63,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thumbnails.Client", "lib\sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Client", "lib\src\clients\users-client\Users.Client.csproj", "{8702A9B1-8180-41FE-A639-AFE807B08512}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{2966E9F3-00E1-46B1-864A-5E7D889B47BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot.Recovery", "services\recovery\Grid.Bot.Recovery.csproj", "{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +185,10 @@ Global
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Debug|Any CPU.Build.0 = debug|Any CPU
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Release|Any CPU.ActiveCfg = release|Any CPU
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Release|Any CPU.Build.0 = release|Any CPU
+		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Debug|Any CPU.ActiveCfg = debug|Any CPU
+		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Debug|Any CPU.Build.0 = debug|Any CPU
+		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Release|Any CPU.ActiveCfg = release|Any CPU
+		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Release|Any CPU.Build.0 = release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -214,5 +222,6 @@ Global
 		{FDE94473-0D43-4FBC-9CDD-E29A3938BC1E} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
 		{067AC4F9-F1E9-435B-B837-9A9B05DDD621} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
 		{8702A9B1-8180-41FE-A639-AFE807B08512} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
+		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0} = {2966E9F3-00E1-46B1-864A-5E7D889B47BB}
 	EndGlobalSection
 EndGlobal

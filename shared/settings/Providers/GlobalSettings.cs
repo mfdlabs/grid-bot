@@ -83,4 +83,28 @@ public class GlobalSettings : BaseSettingsProvider
         nameof(DiscordWebhookUrl),
         string.Empty
     );
+
+    /// <summary>
+    /// Gets the endpoint for the Grid Bot gRPC server.
+    /// </summary>
+    public string GridBotGrpcServerEndpoint => GetOrDefault(
+        nameof(GridBotGrpcServerEndpoint),
+        "http://+:5000"
+    );
+
+    /// <summary>
+    /// ASP.NET Core logger name for the gRPC server.
+    /// </summary>
+    public string GrpcServerLoggerName => GetOrDefault(
+        nameof(GrpcServerLoggerName),
+        "grpc"
+    );
+
+    /// <summary>
+    /// ASP.NET Core logger level for the gRPC server.
+    /// </summary>
+    public LogLevel GrpcServerLoggerLevel => GetOrDefault(
+        nameof(GrpcServerLoggerLevel),
+        LogLevel.Information
+    );
 }

@@ -25,20 +25,17 @@ using Utility;
 /// </remarks>
 /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
-/// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="commandsSettings"/> cannot be null.
 /// - <paramref name="maintenanceSettings"/> cannot be null.
-/// - <paramref name="client"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// </exception>
 public partial class OnMessage(
     CommandsSettings commandsSettings,
     MaintenanceSettings maintenanceSettings,
-    DiscordShardedClient client,
     IAdminUtility adminUtility,
     ILoggerFactory loggerFactory
 )
@@ -52,7 +49,6 @@ public partial class OnMessage(
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
-    private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 

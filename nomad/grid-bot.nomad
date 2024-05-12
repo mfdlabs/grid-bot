@@ -20,6 +20,10 @@ job "{{{NOMAD_JOB_NAME}}}" {
       port "metrics" {
         static = 8101
       }
+
+      port "grpc" {
+        static = 5000
+      }
     }
 
     task "runner" {
