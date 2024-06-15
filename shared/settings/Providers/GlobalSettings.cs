@@ -1,5 +1,7 @@
 namespace Grid.Bot;
 
+using System;
+
 using Configuration;
 
 using Logging;
@@ -106,5 +108,29 @@ public class GlobalSettings : BaseSettingsProvider
     public LogLevel GrpcServerLoggerLevel => GetOrDefault(
         nameof(GrpcServerLoggerLevel),
         LogLevel.Information
+    );
+
+    /// <summary>
+    /// Determines if the gRPC server should use TLS.
+    /// </summary>
+    public bool GrpcServerUseTls => GetOrDefault(
+        nameof(GrpcServerUseTls),
+        true
+    );
+
+    /// <summary>
+    /// Gets the certificate path for the gRPC server.
+    /// </summary>
+    public string GrpcServerCertificatePath => GetOrDefault<string>(
+        nameof(GrpcServerCertificatePath),
+        () => throw new InvalidOperationException($"'{nameof(GrpcServerCertificatePath)}' is required when '{nameof(GrpcServerUseTls)}' is true.")
+    );
+
+    /// <summary>
+    /// Gets the certificate password for the gRPC server.
+    /// </summary>
+    public string GrpcServerCertificatePassword => GetOrDefault<string>(
+        nameof(GrpcServerCertificatePassword),
+        () => throw new InvalidOperationException($"'{nameof(GrpcServerCertificatePassword)}' is required when '{nameof(GrpcServerUseTls)}' is true.")
     );
 }

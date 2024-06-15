@@ -6,8 +6,10 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Security.Authentication;
 using System.Runtime.InteropServices;
 
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -380,23 +382,42 @@ internal static class Runner
 
         builder.Services.AddGrpc();
 
-        // Use HTTP/2
-        builder.Services.Configure<KestrelServerOptions>(options =>
+        if (globalSettings.GrpcServerUseTls)
         {
-            options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
-        });
+            builder.Services.Configure<KestrelServerOptions>(options =>
+            {
+                options.ConfigureEndpointDefaults(listenOptions =>
+                {
+                    listenOptions.Protocols = HttpProtocols.Http2;
+                    listenOptions.UseHttps(globalSettings.GrpcServerCertificatePath, globalSettings.GrpcServerCertificatePassword, httpsOptions =>
+                    {
+                        httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
+                    });
+                });
+            });
+
+            // set urls
+        } else
+        {
+            builder.Services.Configure<KestrelServerOptions>(options =>
+            {
+                options.ConfigureEndpointDefaults(listenOptions =>
+                {
+                    listenOptions.Protocols = HttpProtocols.Http2;
+                });
+            });
+        }
 
         var app = builder.Build();
 
         app.MapGrpcService<GridBotGrpcServer>();
+
 
         app.Run(globalSettings.GridBotGrpcServerEndpoint);
     }
 
     private static async Task InvokeAsync(IEnumerable<string> args)
     {
-
-#if USE_VAULT_SETTINGS_PROVIDER
 
         if (args.Contains("--write-local-config"))
         {
@@ -415,7 +436,7 @@ internal static class Runner
             Console.ReadKey();
             return;
         }
-#endif
+        
         var services = InitializeServices();
 
         _services = services;
