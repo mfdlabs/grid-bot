@@ -117,8 +117,7 @@ jobs:
       - name: Move to Checkout Path
         run: |
           mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}
-          mv * /_/_work/${{ github.repository }}/${{ github.sha }}
-          cd /_/_work/${{ github.repository }}/${{ github.sha }}
+          (shopt -s dotglob; mv * /_/_work/${{ github.repository }}/${{ github.sha }})
 
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v3
@@ -152,8 +151,7 @@ jobs:
             -c ${{ env.BUILD_CONFIGURATION }} \
             -o /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} \
             -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
-            -p:CI=true \
-            -p:USE_VAULT_SETTINGS_PROVIDER=true
+            -p:CI=true
             
       - name: Create Release Artifact
         if: ${{ env.CREATE_RELEASE == 'true' }}
