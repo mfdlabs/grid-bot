@@ -3,6 +3,7 @@
 using System;
 
 using Redis;
+using Configuration;
 
 using IFloodCheckerSettings = FloodCheckers.Redis.ISettings;
 
@@ -135,6 +136,7 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     );
 
     /// <inheritdoc cref="IHybridRedisClientProviderSettings.InitialDiscoveryWaitTime"/>
+    [SettingName("FloodCheckers" + nameof(InitialDiscoveryWaitTime))]
     public TimeSpan InitialDiscoveryWaitTime => GetOrDefault(
         "FloodCheckers" + nameof(InitialDiscoveryWaitTime),
         TimeSpan.FromSeconds(10)

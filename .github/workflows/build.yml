@@ -210,13 +210,14 @@ jobs:
 
       - name: Set Initial GitHub Deployment Status
         if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
-        uses: chrnorm/deployment-action@v2
+        uses: chrnorm/deployment-action@v2.0.7
         id: deployment
         continue-on-error: true
         with:
           token: "${{ github.token }}"
           environment: ${{ env.NOMAD_ENVIRONMENT }}
           environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
+          description: "Version: ${{ steps.version.outputs.version }}"
 
       - name: Deploy to Nomad
         if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
@@ -254,6 +255,7 @@ jobs:
           token: "${{ github.token }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
           environment-url: "${{ steps.deployment.outputs.environment_url }}"
+          description: "Version: ${{ steps.version.outputs.version }}"
 
           # If the "deploy" step fails, the deployment status will be set to "failure"
           # If the "deploy" step succeeds, the deployment status will be set to "success"
