@@ -2,6 +2,8 @@
 
 using System;
 
+using Configuration;
+
 using IServiceDiscoverySettings = global::ServiceDiscovery.ISettings;
 
 /// <summary>
@@ -13,6 +15,7 @@ public class ConsulSettings : BaseSettingsProvider, IServiceDiscoverySettings
     public override string Path => SettingsProvidersDefaults.ConsulPath;
 
     /// <inheritdoc cref="IServiceDiscoverySettings.ConsulAddress"/>
+    [SettingName("CONSUL_ADDR")]
     public string ConsulAddress => GetOrDefault(
         "CONSUL_ADDR", // Accom for local ENV var.
         "http://127.0.0.1:8500"
