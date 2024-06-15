@@ -73,4 +73,9 @@ public interface ISettings
     /// Gets the Discord webhook URL for alerts.
     /// </summary>
     string DiscordWebhookUrl { get; }
+
+    /// <summary>
+    /// Determines if the gRPC client should use TLS.
+    /// </summary>
+    bool GrpcClientUseTls { get; }
 }
