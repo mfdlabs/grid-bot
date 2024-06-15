@@ -28,12 +28,20 @@ public class GridBotGrpcServer(DiscordShardedClient client) : GridBotAPI.GridBot
     {
         var response = new CheckHealthResponse();
 
-        if (_client.LoginState == LoginState.LoggedOut) 
+        if (_client.LoginState == LoginState.LoggedOut || _client.LoginState == LoginState.LoggingOut || _client.LoginState == LoginState.LoggingIn)
             return Task.FromResult(response);
 
-        response.Status = _client.Status.ToString();
-        response.Latency = _client.Latency;
-        response.Shards.AddRange(_client.Shards.Select(x => x.ShardId.ToString()).ToList());
+        try
+        {
+            response.Status = _client.Status.ToString();
+            response.Latency = _client.Latency;
+            response.Shards.AddRange(_client.Shards.Select(x => x.ShardId.ToString()).ToList());
+        }
+        catch (Exception)
+        {
+            response.Status = "error";
+            response.Latency = 0;
+        }
 
         return Task.FromResult(response);
     }

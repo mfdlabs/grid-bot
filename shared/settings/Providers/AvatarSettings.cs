@@ -98,7 +98,6 @@ public class AvatarSettings : BaseSettingsProvider
         TimeSpan.FromMinutes(5)
     );
 
-#if USE_VAULT_SETTINGS_PROVIDER
     /// <summary>
     /// A list of user IDs that should be automatically blacklisted.
     /// </summary>
@@ -117,5 +116,4 @@ public class AvatarSettings : BaseSettingsProvider
         nameof(BlacklistPersistPeriod),
         TimeSpan.FromMinutes(5)
     );
-#endif
 }

@@ -10,10 +10,6 @@
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(USE_VAULT_SETTINGS_PROVIDER)' == 'true'">
-    <DefineConstants>$(DefineConstants);USE_VAULT_SETTINGS_PROVIDER</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup>
     <Description>Primary executable for the MFDLABS grid-bot.</Description>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>

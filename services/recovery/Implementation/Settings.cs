@@ -47,7 +47,7 @@ public class Settings : EnvironmentProvider, ISettings
     public bool StandaloneMode => GetOrDefault(nameof(StandaloneMode), false);
 
     /// <inheritdoc cref="ISettings.BotCheckWorkerDelay"/>
-    public TimeSpan BotCheckWorkerDelay => GetOrDefault(nameof(BotCheckWorkerDelay), TimeSpan.FromMinutes(1));
+    public TimeSpan BotCheckWorkerDelay => GetOrDefault(nameof(BotCheckWorkerDelay), TimeSpan.FromSeconds(15));
 
     /// <inheritdoc cref="ISettings.MaxContinuousFailures"/>
     public int MaxContinuousFailures => GetOrDefault(nameof(MaxContinuousFailures), 2);
@@ -60,4 +60,7 @@ public class Settings : EnvironmentProvider, ISettings
         nameof(DiscordWebhookUrl), 
         () => throw new ApplicationException($"{nameof(DiscordWebhookUrl)} is required.")
     );
+
+    /// <inheritdoc cref="ISettings.GrpcClientUseTls"/>
+    public bool GrpcClientUseTls => GetOrDefault(nameof(GrpcClientUseTls), false);
 }
