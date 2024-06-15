@@ -89,7 +89,7 @@ jobs:
               -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
               -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
               -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
-              /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
+              ./nomad/grid-bot.nomad > $NOMAD_JOB_FILE
 
           # Run the job but do not wait for longer than 5 minutes
           nomad job run $NOMAD_JOB_FILE
