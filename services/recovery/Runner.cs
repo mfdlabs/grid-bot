@@ -2,10 +2,12 @@
 
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +22,7 @@ using Logging;
 using V1;
 using Events;
 using Prometheus;
+using Networking;
 
 internal static class Runner
 {
@@ -76,7 +79,9 @@ internal static class Runner
             .AddSingleton<OnMessage>()
             .AddSingleton<OnInteraction>()
             .AddSingleton<OnShardReady>()
-            .AddSingleton<IBotManager, BotManager>();
+            .AddSingleton<IBotManager, BotManager>()
+            .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
+            .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>();
 
         // Http Client Factory
         services.AddHttpClient();
@@ -92,9 +97,24 @@ internal static class Runner
         if (settings.StandaloneMode)
             return null;
 
-        var channel = GrpcChannel.ForAddress(settings.GridBotEndpoint);
+        GrpcChannel channel;
 
-        System.AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+        if (settings.GridBotEndpoint.StartsWith("https"))
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+
+            var httpClient = new HttpClient(handler);
+            channel = GrpcChannel.ForAddress(settings.GridBotEndpoint, new GrpcChannelOptions { HttpClient = httpClient });
+        }
+        else
+        {
+            channel = GrpcChannel.ForAddress(settings.GridBotEndpoint);
+
+            System.AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+        }
 
         return new GridBotAPI.GridBotAPIClient(channel);
     }
