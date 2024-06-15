@@ -115,17 +115,19 @@ dotnet Grid.Bot.dll
 ## Vault
 
 This method of fetching configuration fetches settings from Vault.
+If a setting is not found in Vault, it will fall back to the [environment](#environment)
 If you are using this method you will have to define the following environment variables beforehand:
 
-- VAULT_ADDR - The address to the Vault server.
+- VAULT_ADDR - The address to the Vault server, this is optional and if not using this the [environment](#environment) will be forced.
 - VAULT_TOKEN or VAULT_CREDENTIAL - The token or credential to use, if using approle, the format is as follows: `{roleName|roleId}:{secretId}`
 - VAULT_MOUNT - Optional, if not set it defaults to `grid-bot-settings`, but allows you to override the mount point for settings (see [SettingsProvidersDefaults.cs](./shared/settings/SettingsProvidersDefaults.cs))
 
-These all supply a path that is dependent on the current build configuration, e.g, grid-bot-settings/grid-bot/discord/debug, would contain the settings for the DiscordProvider in Debug mode:
+These all supply a path that is dependent on an environment variable called ENVIRONMENT, which defaults to development.
+e.g, grid-bot-settings/development/discord/debug, would contain the settings for the DiscordProvider for the development environment:
 
-![](https://infrastructure.cdn.arc-cloud.net/share/gb-dev/2024-02-24%2015-34-11.png)
+![](https://infrastructure.cdn.arc-cloud.net/perma-share/gb-user/2024-06-15+234623.png)
 
-The format of these are normally: grid-bot/{providerName}/{configuration}, and the providerName changes to the lowercase and replaces word splits with dashes (UsersClientSettings -> users-client)
+The format of these are normally: {environmentName}/{providerName}, and the providerName changes to the lowercase and replaces word splits with dashes (UsersClientSettings -> users-client)
 
 # Pre-JSON execution and pre-Luau
 

@@ -85,7 +85,6 @@ public class AvatarUtility : IAvatarUtility
         _localCachedPaths = new(avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
 
-#if USE_VAULT_SETTINGS_PROVIDER
         foreach (var id in avatarSettings.BlacklistUserIds)
             _idsNotToUse.Add(id);
 
@@ -93,10 +92,8 @@ public class AvatarUtility : IAvatarUtility
             _logger.Warning("Blacklisted user IDs: {0}", string.Join(", ", avatarSettings.BlacklistUserIds));
 
         Task.Factory.StartNew(PersistBlacklistedIds, TaskCreationOptions.LongRunning);
-#endif
     }
 
-#if USE_VAULT_SETTINGS_PROVIDER
     private void PersistBlacklistedIds()
     {
         while (true)
@@ -119,7 +116,6 @@ public class AvatarUtility : IAvatarUtility
             _avatarSettings.BlacklistUserIds = [.. _idsNotToUse];
         }
     }
-#endif
 
     private void OnLocalCacheEntryRemoved(string path, RemovalReason reason)
     {
