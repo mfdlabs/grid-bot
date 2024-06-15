@@ -69,6 +69,7 @@ jobs:
           token: "${{ github.token }}"
           environment: ${{ env.NOMAD_ENVIRONMENT }}
           environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
+          description: "Version: ${{ env.IMAGE_TAG }}"
 
       - name: Deploy to Nomad
         env:
@@ -104,6 +105,7 @@ jobs:
           token: "${{ github.token }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
           environment-url: "${{ steps.deployment.outputs.environment_url }}"
+          description: "Version: ${{ env.IMAGE_TAG }}"
 
           # If the "deploy" step fails, the deployment status will be set to "failure"
           # If the "deploy" step succeeds, the deployment status will be set to "success"
