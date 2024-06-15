@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot;
 
 using System;
 using System.Text;
@@ -11,6 +11,7 @@ using Discord;
 
 using Newtonsoft.Json;
 
+using Logging;
 using Networking;
 
 /// <summary>
@@ -23,21 +24,25 @@ using Networking;
 /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
 /// <param name="settings">The <see cref="ISettings"/> to use.</param>
-/// <exception cref="ArgumentNullException">
+/// <param name="logger">The <see cref="ILogger"/> to use.</param>
+/// /// <exception cref="ArgumentNullException">
 /// - <paramref name="localIpAddressProvider"/> cannot be null.
 /// - <paramref name="httpClientFactory"/> cannot be null.
 /// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="logger"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
     ILocalIpAddressProvider localIpAddressProvider,
     IHttpClientFactory httpClientFactory,
-    ISettings settings
+    ISettings settings,
+    ILogger logger
 ) : IDiscordWebhookAlertManager
 {
     private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>
     public async Task SendAlertAsync(string topic, string message, Color? color, IEnumerable<FileAttachment> attachments = null)
@@ -82,6 +87,13 @@ public class DiscordWebhookAlertManager(
             foreach (var attachment in attachments)
                 multipartContent.Add(new StreamContent(attachment.Stream), attachment.FileName, attachment.FileName);
 
-        await client.PostAsync(url, multipartContent);
+        try
+        {
+            await client.PostAsync(url, multipartContent);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Error sending alert: {0}", ex.Message);
+        }
     }
 }

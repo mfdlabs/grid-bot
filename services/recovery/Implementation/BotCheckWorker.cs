@@ -55,41 +55,54 @@ public class BotCheckWorker(
         {
             while (true)
             {
-                if (await CallToHealthCheck())
-                    await Reset();
-                else
+                try
                 {
-                    _continousFailures++;
-
-                    _logger.Warning(
-                        "Bot check failed {0} times.",
-                        _continousFailures
-                    );
-
-                    _discordWebhookAlertManager.SendAlertAsync(
-                        "Bot Check Failure",
-                        $"Bot check failed {_continousFailures} times. Last health check response: Latency = {_lastHealthCheckResponse?.Latency}, Status = {_lastHealthCheckResponse?.Status}, Shards = {string.Join(", ", _lastHealthCheckResponse?.Shards)}"
-                    );
-
-                    if (_continousFailures >= _settings.MaxContinuousFailures && !_botRunning)
+                    if (await CallToHealthCheck())
+                        await Reset();
+                    else
                     {
+                        _continousFailures++;
+
                         _logger.Warning(
-                            "The continuous failures have reached the limit of {0}, starting bot.",
-                            _settings.MaxContinuousFailures
+                            "Bot check failed {0} times.",
+                            _continousFailures
                         );
 
-                        _discordWebhookAlertManager.SendAlertAsync(
+                        var shards = _lastHealthCheckResponse != null
+                            ? string.Join(", ", _lastHealthCheckResponse.Shards)
+                            : "unknown";
+
+                        await _discordWebhookAlertManager.SendAlertAsync(
                             "Bot Check Failure",
-                            $"The continuous failures have reached the limit of {_settings.MaxContinuousFailures}, starting bot."
+                            $"Bot check failed {_continousFailures} times. Last health check response: Latency = {_lastHealthCheckResponse?.Latency.ToString() ?? "unknown"}, Status = {_lastHealthCheckResponse?.Status.ToString()  ?? "unknown"}, Shards = {shards}"
                         );
 
-                        await _botManager.StartAsync();
+                        if (_continousFailures >= _settings.MaxContinuousFailures && !_botRunning)
+                        {
+                            _logger.Warning(
+                                "The continuous failures have reached the limit of {0}, starting bot.",
+                                _settings.MaxContinuousFailures
+                            );
 
-                        _botRunning = true;
+                            await _discordWebhookAlertManager.SendAlertAsync(
+                                "Bot Check Failure",
+                                $"The continuous failures have reached the limit of {_settings.MaxContinuousFailures}, starting bot."
+                            );
+
+                            await _botManager.StartAsync();
+
+                            _botRunning = true;
+                        }
                     }
-                }
 
-                await Task.Delay(_settings.BotCheckWorkerDelay);
+                    await Task.Delay(_settings.BotCheckWorkerDelay);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex);
+
+                    await Task.Delay(_settings.BotCheckWorkerDelay);
+                }
             }
         }, TaskCreationOptions.LongRunning);
     }
@@ -102,7 +115,7 @@ public class BotCheckWorker(
         {
             _logger.Warning("Bot check succeeded, stopping bot.");
 
-            _discordWebhookAlertManager.SendAlertAsync(
+            await _discordWebhookAlertManager.SendAlertAsync(
                 "Bot Check Success",
                 "Bot check succeeded, stopping bot."
             );
