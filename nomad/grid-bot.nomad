@@ -41,7 +41,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
           "/_/_logs/grid-bot/{{{NOMAD_ENVIRONMENT}}}:/tmp/mfdlabs/logs"
         ]
 
-        hostname = "grid-bot.nomad.vmminfra.dev"
+        hostname = "{{{NOMAD_JOB_NAME}}}.service.consul"
       }
 
       resources {
