@@ -54,6 +54,8 @@ job "{{{NOMAD_JOB_NAME}}}" {
 
 DISPLAY=:1
 
+DEFAULT_LOG_LEVEL={{{NOMAD_LOG_LEVEL}}}
+
 # CONSUL
 VAULT_ADDR="http://vault.service.consul:8200"
 VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
