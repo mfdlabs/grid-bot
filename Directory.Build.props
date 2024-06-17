@@ -20,6 +20,8 @@
     <RootDirectory Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</RootDirectory>
   </PropertyGroup>
 
+  <Import Project="$(RootDirectory)targets/git-metadata.targets" Condition="Exists('$(RootDirectory)targets/git-metadata.targets')" />
+
   <PropertyGroup Label="PackageMetadata">
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
@@ -28,8 +30,9 @@
     <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
-    <VersionPrefix>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</VersionPrefix>
+    <Version>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</Version>
 
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>
     <InformationalVersion Condition="'$(CI)' != 'true'">dev</InformationalVersion>
   </PropertyGroup>

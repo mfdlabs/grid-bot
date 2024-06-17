@@ -114,13 +114,13 @@ internal static class Runner
         services.AddSingleton<ILogger>(logger);
 
         var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        var metadataAttributes = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>();
 
-        logger.Information($"Starting Grid.Bot, Version = {informationalVersion}");
+        var buildTimeStamp = DateTime.Parse(metadataAttributes.FirstOrDefault(a => a.Key == "BuildTimestamp")?.Value ?? "1/1/1970");
+        var gitHash = metadataAttributes.FirstOrDefault(a => a.Key == "GitHash")?.Value ?? "Unknown";
+        var gitBranch = metadataAttributes.FirstOrDefault(a => a.Key == "GitBranch")?.Value ?? "Unknown";
 
-#if DEBUG
-
-        Logger.GlobalLogPrefixes.Add(() => informationalVersion);
-#endif
+        logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
 
         var config = new DiscordSocketConfig()
         {
