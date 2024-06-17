@@ -35,6 +35,19 @@ on:
         required: true
         default: "2000:1024"
 
+      log_level:
+        description: "The log level of the default logger"
+        required: true
+        default: "Information"
+        type: choice
+        options:
+          - "None"
+          - "Error"
+          - "Warning"
+          - "Information"
+          - "Debug"
+          - "Trace"
+
 permissions:
   deployments: write
 
@@ -51,6 +64,7 @@ jobs:
       NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
       NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
       NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
+      NOMAD_LOG_LEVEL: ${{ github.event.inputs.log_level || 'Information' }}
 
     steps:
       - name: Checkout
@@ -90,6 +104,7 @@ jobs:
               -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
               -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
               -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
+              -e "s/{{{NOMAD_LOG_LEVEL}}}/${{ env.NOMAD_LOG_LEVEL }}/" \
               ./nomad/grid-bot.nomad > $NOMAD_JOB_FILE
 
           # Run the job but do not wait for longer than 5 minutes

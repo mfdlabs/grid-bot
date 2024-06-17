@@ -17,7 +17,7 @@
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
     <PackageReference Include="Configuration" Version="1.0.5" />
     <PackageReference Include="Logging" Version="1.0.4" />
-    <PackageReference Include="Networking" Version="1.0.4" />
+    <PackageReference Include="Networking" Version="1.0.5" />
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">

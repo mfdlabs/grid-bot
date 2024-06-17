@@ -51,12 +51,6 @@ internal static class Runner
 #endif
     private const string _noBotToken = "The setting \"BotToken\" was null when it is required.";
 
-#if DEBUG
-    private const string _environmentName = "development";
-#else
-    private const string _environmentName = "production";
-#endif
-
     private static IServiceProvider _services;
 
     public static void Invoke(string[] args)
@@ -120,13 +114,13 @@ internal static class Runner
         services.AddSingleton<ILogger>(logger);
 
         var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        var metadataAttributes = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>();
 
-        logger.Information($"Starting Grid.Bot, Version = {informationalVersion}");
+        var buildTimeStamp = DateTime.Parse(metadataAttributes.FirstOrDefault(a => a.Key == "BuildTimestamp")?.Value ?? "1/1/1970");
+        var gitHash = metadataAttributes.FirstOrDefault(a => a.Key == "GitHash")?.Value ?? "Unknown";
+        var gitBranch = metadataAttributes.FirstOrDefault(a => a.Key == "GitBranch")?.Value ?? "Unknown";
 
-#if DEBUG
-
-        Logger.GlobalLogPrefixes.Add(() => informationalVersion);
-#endif
+        logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
 
         var config = new DiscordSocketConfig()
         {
@@ -288,7 +282,7 @@ internal static class Runner
             logger,
             consulClientProvider,
             floodCheckerSettings.ToSingleSetting(s => s.FloodCheckersConsulServiceName),
-            _environmentName,
+            EnvironmentProvider.EnvironmentName,
             floodCheckerSettings.FloodCheckersRedisUseServiceDiscovery
         );
 

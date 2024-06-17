@@ -8,7 +8,7 @@ job "{{{NOMAD_JOB_NAME}}}" {
   }
 
   meta {
-    environment = "{{{NOMAD_ENVIRONMENT}}}"
+    ENVIRONMENT = "{{{NOMAD_ENVIRONMENT}}}"
   }
 
   group "grid-bot" {
@@ -54,10 +54,11 @@ job "{{{NOMAD_JOB_NAME}}}" {
 
 DISPLAY=:1
 
+DEFAULT_LOG_LEVEL={{{NOMAD_LOG_LEVEL}}}
+
 # CONSUL
 VAULT_ADDR="http://vault.service.consul:8200"
 VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
-ENVIRONMENT="{{ env "NOMAD_META_environment" }}"
 EOF
         destination = "secrets/grid-bot.env"
         env         = true

@@ -1,0 +1,32 @@
+<Project>
+    <Target Name="AddGitMetadaAssemblyAttributes"
+        BeforeTargets="GetAssemblyAttributes">
+
+        <!--Executes the Git Commands to get the Hash and Branch-->
+        <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true"
+            StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitHash)' == '' "
+            WorkingDirectory="$(RootDirectory)">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
+        </Exec>
+        <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true"
+            StandardOutputImportance="low" IgnoreExitCode="true"
+            Condition=" '$(CommitShortHash)' == '' " WorkingDirectory="$(RootDirectory)">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CommitShortHash" />
+        </Exec>
+        <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true"
+            StandardOutputImportance="low" IgnoreExitCode="true"
+            Condition=" '$(CommitBranch)' == '' " WorkingDirectory="$(RootDirectory)">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CommitBranch" />
+        </Exec>
+
+        <ItemGroup>
+            <AssemblyMetadata Include="BuildTimestamp"
+                Value="$([System.DateTime]::UtcNow.ToString(yyyy-MM-ddTHH:mm:ssK))" />
+            <AssemblyMetadata Condition=" $(CommitHash) != '' " Include="GitHash"
+                Value="$(CommitHash)" />
+            <AssemblyMetadata Condition=" $(CommitBranch) != '' " Include="GitBranch"
+                Value="$(CommitBranch)" />
+        </ItemGroup>
+    </Target>
+
+</Project>
