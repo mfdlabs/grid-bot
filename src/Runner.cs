@@ -51,12 +51,6 @@ internal static class Runner
 #endif
     private const string _noBotToken = "The setting \"BotToken\" was null when it is required.";
 
-#if DEBUG
-    private const string _environmentName = "development";
-#else
-    private const string _environmentName = "production";
-#endif
-
     private static IServiceProvider _services;
 
     public static void Invoke(string[] args)
@@ -288,7 +282,7 @@ internal static class Runner
             logger,
             consulClientProvider,
             floodCheckerSettings.ToSingleSetting(s => s.FloodCheckersConsulServiceName),
-            _environmentName,
+            EnvironmentProvider.EnvironmentName,
             floodCheckerSettings.FloodCheckersRedisUseServiceDiscovery
         );
 
