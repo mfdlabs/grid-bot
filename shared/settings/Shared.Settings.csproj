@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Configuration" Version="1.0.5" />
+    <PackageReference Include="Configuration" Version="1.0.7" /> 
     <PackageReference Include="Redis" Version="1.0.4" />
     <PackageReference Include="ServiceDiscovery" Version="1.0.4" />
     <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
