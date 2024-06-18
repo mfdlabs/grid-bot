@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <Description>Recovery executable for the MFDLABS grid-bot.</Description>
-  </PropertyGroup>
+  </PropertyGroup> 
 
   <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
     <PackageReference Include="Configuration" Version="1.0.7" />
