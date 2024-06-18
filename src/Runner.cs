@@ -203,31 +203,39 @@ internal static class Runner
         var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
         var ns = typeof(BaseSettingsProvider).Namespace;
 
-        var singletons = assembly
+        var types = assembly
             .GetTypes()
             .Where(t => string.Equals(t.Namespace, ns, StringComparison.Ordinal) &&
-                        t.BaseType.Name == typeof(BaseSettingsProvider).Name) // finicky
-            .Select(t =>
+                        t.BaseType.Name == typeof(BaseSettingsProvider).Name)
+            .ToList(); // finicky
+
+        var singletons = new List<IConfigurationProvider>();
+
+        foreach (var t in types)
+        {
+            // Construct the singleton.
+            var constructor = t.GetConstructor(Type.EmptyTypes);
+            if (constructor == null)
             {
-                // Construct the singleton.
-                var constructor = t.GetConstructor(Type.EmptyTypes);
-                if (constructor == null)
-                {
-                    Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
+                Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
 
-                    return null;
-                }
+                singletons.Add(null);
 
-                var singleton = constructor.Invoke(null);
-                if (singleton == null)
-                {
-                    Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
+                continue;
+            }
 
-                    return null;
-                }
+            var singleton = constructor.Invoke(null);
+            if (singleton == null || singleton is not IConfigurationProvider provider)
+            {
+                Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
 
-                return singleton;
-            });
+                singletons.Add(null);
+
+                continue;
+            }
+
+            singletons.Add(provider);
+        }
 
         return singletons.Cast<IConfigurationProvider>();
     }
@@ -383,10 +391,17 @@ internal static class Runner
                 options.ConfigureEndpointDefaults(listenOptions =>
                 {
                     listenOptions.Protocols = HttpProtocols.Http2;
-                    listenOptions.UseHttps(globalSettings.GrpcServerCertificatePath, globalSettings.GrpcServerCertificatePassword, httpsOptions =>
+
+                    try
                     {
-                        httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
-                    });
+                        listenOptions.UseHttps(globalSettings.GrpcServerCertificatePath, globalSettings.GrpcServerCertificatePassword, httpsOptions =>
+                        {
+                            httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
+                        });
+                    } catch (Exception ex)
+                    {
+                        logger.Warning("Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!", ex.Message);
+                    }
                 });
             });
 
