@@ -14,13 +14,13 @@
     <Description>Recovery executable for the MFDLABS grid-bot.</Description>
   </PropertyGroup> 
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Configuration" Version="1.0.7" />
-    <PackageReference Include="Logging" Version="1.0.4" />
-    <PackageReference Include="Networking" Version="1.0.5" />
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.Configuration" Version="1.0.7" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.0.5" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
     <ProjectReference Include="../../lib/src/configuration/configuration/Configuration.csproj" />
     <ProjectReference Include="..\..\lib\src\logging\logging\Logging.csproj" />
     <ProjectReference Include="../../lib/src/networking/networking/Networking.csproj" />

@@ -13,16 +13,16 @@
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="ClientSettings.Client" Version="1.0.4" />
-    <PackageReference Include="FileSystem" Version="1.0.4" />
-    <PackageReference Include="FloodCheckers.Core" Version="1.0.4" />
-    <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
-    <PackageReference Include="Text" Version="1.0.4" />
-    <PackageReference Include="Networking" Version="1.0.5" />
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.ClientSettings.Client" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Text" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.0.5" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
     <ProjectReference Include="../../lib/src/clients/client-settings-client/ClientSettings.Client.csproj" />
     <ProjectReference Include="../../lib/src/file-system/file-system/FileSystem.csproj" />
     <ProjectReference Include="../../lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />

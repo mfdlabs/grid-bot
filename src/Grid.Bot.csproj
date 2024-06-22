@@ -22,13 +22,13 @@
     <ProjectReference Include="..\shared\utility\Shared.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Random" Version="1.0.4" />
-    <PackageReference Include="Redis" Version="1.0.4" />
-    <PackageReference Include="Configuration.Core" Version="1.0.4" />
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.Random" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.0.4" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
     <ProjectReference Include="../lib/src/random/random/Random.csproj" />
     <ProjectReference Include="../lib/src/redis/redis/Redis.csproj" />
     <ProjectReference Include="../lib/src/configuration/core/Configuration.Core.csproj" />

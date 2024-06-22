@@ -41,8 +41,8 @@ This notice only serves the purpose of giving a clear understanding of project b
 
 The installation of this project is simple, and can go as follows:
 
-- Either through the basic method of cloning the repository and having it fetch dependencies from the private NuGet repository.
-- or by removing [nuget.config](nuget.config), cloning the repository with `--recurse-submodules` and then running a target within [Makefile](Makefile) that has `local` in the name (e.g. `make build-local-debug`), or going into each library manually [Grid.Bot](./src/Grid.Bot.csproj), [Shared.Commands](./shared/commands/Shared.Commands.csproj), [Shared.Events](./shared/events/Shared.Events.csproj), [Shared.Settings](./shared/settings/Shared.Settings.csproj) and [Shared.Utility](./shared/utility/Shared.Utility.csproj), and then defining the property `LocalBuild` in the configuration:
+- Either through the basic method of cloning the repository and having it fetch dependencies from NuGet by using the solution [grid-bot-bare.sln](./grid-bot-bare.sln).
+- or by cloning the repository with `--recurse-submodules` and then setting the property `LocalBuild` in [Directory.Build.props](./Directory.Build.props) and [shared/Directory.Build.props](./shared/Directory.Build.props), and using the solution [grid-bot.sln](./grid-bot.sln)
     
     ```xml
     <PropertyGroup>
@@ -50,9 +50,9 @@ The installation of this project is simple, and can go as follows:
     </PropertyGroup>
     ```
 
-This repository also provides a [Dockerfile](Dockerfile) to build the project in a container, but the current setup only works in CI/CD environments, as the container requires that the code be 'published' to the ./deploy directory beforehand (see [build.yml](.github/workflows/build.yml)).
+This repository provides Docker builds at [Docker](https://hub.docker.com/r/mfdlabs/grid-bot).
 
-This repository also supplies [releases](https://github.com/mfdlabs/grid-bot/releases), which can be ran with any distribution of [.NET 8.0.1](https://dotnet.microsoft.com/download/dotnet/8.0) or higher:
+This repository also supplies [releases](https://github.com/mfdlabs/grid-bot/releases), which can be ran with any distribution of [.NET 8.0.1](https://dotnet.microsoft.com/download/dotnet/8.0) or higher
     
 ```bash
 dotnet Grid.Bot.dll

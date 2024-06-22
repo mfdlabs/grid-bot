@@ -17,11 +17,11 @@
     <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Logging" Version="1.0.4" />
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.4" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
     <ProjectReference Include="../../lib/src/logging/logging/Logging.csproj" />
   </ItemGroup>
 
