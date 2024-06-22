@@ -15,20 +15,20 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.11.0" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="Configuration" Version="1.0.7" /> 
-    <PackageReference Include="Redis" Version="1.0.4" />
-    <PackageReference Include="ServiceDiscovery" Version="1.0.4" />
-    <PackageReference Include="FloodCheckers.Redis" Version="1.0.4" />
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.Configuration" Version="1.0.7" /> 
+    <PackageReference Include="mfdlabs.Redis" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.4" />
 
-    <PackageReference Include="Grid.ProcessManagement.Docker" Version="1.0.4" />
-    <PackageReference Include="Grid.ProcessManagement.Core" Version="1.0.4" />
-    <PackageReference Include="Grid.ProcessManagement" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Docker" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Core" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Grid.ProcessManagement" Version="1.0.4" />
     
-    <PackageReference Include="Thumbnails.Client" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Thumbnails.Client" Version="1.0.4" />
   </ItemGroup>
 
-  <ItemGroup Label="PrivatePackages" Condition=" '$(LocalBuild)' == 'true' ">
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
     <ProjectReference Include="../../lib/src/configuration/configuration/Configuration.csproj" />
     <ProjectReference Include="../../lib/src/redis/redis/Redis.csproj" />
     <ProjectReference Include="../../lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
