@@ -6,15 +6,11 @@ on:
       image:
         description: "Image Name"
         required: true
-        default: "cloud-registry.simulprod.com/grid/grid-bot"
+        default: "mfdlabs/grid-bot"
       image_tag:
         description: "Image Tag"
         required: true
         default: "latest"
-      registry:
-        description: "Docker Registry"
-        required: true
-        default: "cloud-registry.simulprod.com"
 
       nomad_job_name:
         description: "Nomad Job Name"
@@ -55,9 +51,8 @@ jobs:
   deploy:
     runs-on: grid-bot-infra
     env:
-      IMAGE: ${{ github.event.inputs.image || 'cloud-registry.simulprod.com/grid/grid-bot'}}
+      IMAGE: ${{ github.event.inputs.image || 'mfdlabs/grid-bot'}}
       IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || 'cloud-registry.simulprod.com' }}
 
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
@@ -66,10 +61,9 @@ jobs:
       NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
       NOMAD_LOG_LEVEL: ${{ github.event.inputs.log_level || 'Information' }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL: "https://raw.githubusercontent.com/mfdlabs/grid-bot/${{ github.sha }}/nomad/grid-bot.nomad"
 
+    steps:
       - name: Setup Nomad CLI
         uses: nferch/setup-nomad@v4.0.0
         env:
@@ -80,7 +74,7 @@ jobs:
         id: deployment
         continue-on-error: true
         with:
-          token: "${{ github.token }}"
+          token: "${{ secrets.DEPLOYER_TOKEN }}"
           environment: ${{ env.NOMAD_ENVIRONMENT }}
           environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
           description: "Version: ${{ env.IMAGE_TAG }}"
@@ -95,7 +89,11 @@ jobs:
           # Replace {{{IMAGE_NAME}}} and {{{IMAGE_TAG}}} with the actual values
 
           # Create a temporary file
+          NOMAD_TEMPLATE_FILE=$(mktemp)
           NOMAD_JOB_FILE=$(mktemp)
+
+          # Write the template to the temporary file
+          curl -sL $RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL > $NOMAD_TEMPLATE_FILE
 
           # Replace the template with the actual values
           sed -e "s,{{{IMAGE_NAME}}},${{ env.IMAGE }}," \
@@ -105,19 +103,20 @@ jobs:
               -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
               -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
               -e "s/{{{NOMAD_LOG_LEVEL}}}/${{ env.NOMAD_LOG_LEVEL }}/" \
-              ./nomad/grid-bot.nomad > $NOMAD_JOB_FILE
+              $NOMAD_TEMPLATE_FILE > $NOMAD_JOB_FILE
 
           # Run the job but do not wait for longer than 5 minutes
           nomad job run $NOMAD_JOB_FILE
 
           # Cleanup
           rm $NOMAD_JOB_FILE
+          rm $NOMAD_TEMPLATE_FILE
 
       - name: Set GitHub Deployment Status
         uses: chrnorm/deployment-status@v2
         continue-on-error: true
         with:
-          token: "${{ github.token }}"
+          token: "${{ secrets.DEPLOYER_TOKEN }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
           environment-url: "${{ steps.deployment.outputs.environment_url }}"
           description: "Version: ${{ env.IMAGE_TAG }}"

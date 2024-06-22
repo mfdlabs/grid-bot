@@ -29,11 +29,11 @@ on:
       image:
         description: "Image Name"
         required: true
-        default: "cloud-registry.simulprod.com/grid/grid-bot"
+        default: "mfdlabs/grid-bot"
       registry:
         description: "Docker Registry"
         required: true
-        default: "cloud-registry.simulprod.com"
+        default: "docker.io"
 
       create_release:
         description: "Create Release"
@@ -86,38 +86,30 @@ jobs:
   build:
     if: ${{ !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') }}
 
-    runs-on: grid-bot-infra
+    runs-on: ubuntu-latest
     env:
       BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
 
-      IMAGE: ${{ github.event.inputs.image || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'cloud-registry.simulprod.com/grid/grid-bot') || 'registry.simulpong.com/grid/grid-bot' }}
-      DOCKER_REGISTRY: ${{ github.event.inputs.registry || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'cloud-registry.simulprod.com') || 'registry.simulpong.com' }}
+      IMAGE: ${{ github.event.inputs.image || 'mfdlabs/grid-bot' }}
+      DOCKER_REGISTRY: ${{ github.event.inputs.registry || 'docker.io' }}
 
       CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
       CREATE_IMAGE: ${{ github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#') }}
       UPLOAD_ARTIFACT: ${{ github.event.inputs.upload_artifact || contains(github.event.head_commit.message, '#!upload-artifact!#') }}
 
-      DEPLOY_TO_NOMAD: ${{ github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) }}
-
-      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
-      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
-      NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
-
       DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image-step-outcome: ${{ steps.image.outcome }}
+      image: ${{ env.IMAGE }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Move to Checkout Path
-        run: |
-          mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}
-          (shopt -s dotglob; mv * /_/_work/${{ github.repository }}/${{ github.sha }})
 
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v3
@@ -126,7 +118,7 @@ jobs:
 
       - name: Create Deployment Directory
         run: |
-          mkdir -p /_/_work/${{ github.repository }}/${{ github.sha }}/deploy
+          mkdir -p ./deploy
 
       # Generate version and allow it as an output
       - name: Generate Version
@@ -146,10 +138,9 @@ jobs:
 
       - name: Build
         run: |
-          cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
-          dotnet publish /_/_work/${{ github.repository }}/${{ github.sha }}/src/Grid.Bot.csproj \
+          dotnet publish ./src/Grid.Bot.csproj \
             -c ${{ env.BUILD_CONFIGURATION }} \
-            -o /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} \
+            -o ./deploy/${{ steps.version.outputs.version }} \
             -p:IMAGE_TAG=${{ steps.version.outputs.version }} \
             -p:CI=true
             
@@ -157,8 +148,8 @@ jobs:
         if: ${{ env.CREATE_RELEASE == 'true' }}
         id: zip
         run: |
-          cd /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }} && \
-          zip -r /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.zip \
+          cd ./deploy/${{ steps.version.outputs.version }} && \
+          zip -r ../${{ steps.version.outputs.version }}.zip \
           .
 
       - name: Write Release Artifact
@@ -168,7 +159,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DEPLOYER_TOKEN }}
         with:
           files: |
-            /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.zip
+            ./deploy/${{ steps.version.outputs.version }}.zip
           tag_name: ${{ steps.version.outputs.version }}
           generate_release_notes: true
           prerelease: ${{ env.BUILD_CONFIGURATION == 'Debug' }}
@@ -180,7 +171,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.version.outputs.version }}.zip
-          path: /_/_work/${{ github.repository }}/${{ github.sha }}/deploy/${{ steps.version.outputs.version }}.zip
+          path: ./deploy/${{ steps.version.outputs.version }}.zip
           retention-days: 1
 
       - name: Create Image
@@ -189,7 +180,7 @@ jobs:
         run: |
           echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin "${{ env.DOCKER_REGISTRY }}"
 
-          cd /_/_work/${{ github.repository }}/${{ github.sha }} && \
+          cd . && \
             docker build -t ${{ env.IMAGE }}:${{ steps.version.outputs.version }} --build-arg IMAGE_TAG=${{ steps.version.outputs.version }} .
 
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
@@ -202,25 +193,38 @@ jobs:
             docker push ${{ env.IMAGE }}:latest
           fi
 
+  deploy:
+    runs-on: grid-bot-infra
+    needs: build
+
+    if: ${{ needs.build.outputs.image-step-outcome == 'success' && !contains(github.event.head_commit.message, '#!skip-build-and-deploy!#') && github.event.inputs.deploy_to_nomad || (github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '#!skip-deploy!#')) && vars.NOMAD_ADDR }}
+
+    env:
+      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
+      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
+      NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
+
+      RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL: "https://raw.githubusercontent.com/mfdlabs/grid-bot/master/nomad/grid-bot.nomad"
+
+    steps:
       - name: Setup Nomad CLI
-        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: nferch/setup-nomad@v4.0.0
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
 
       - name: Set Initial GitHub Deployment Status
-        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: chrnorm/deployment-action@v2.0.7
         id: deployment
         continue-on-error: true
         with:
-          token: "${{ github.token }}"
+          token: "${{ secrets.DEPLOYER_TOKEN }}"
           environment: ${{ env.NOMAD_ENVIRONMENT }}
           environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
-          description: "Version: ${{ steps.version.outputs.version }}"
+          description: "Version: ${{ needs.build.outputs.version }}"
 
       - name: Deploy to Nomad
-        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
         id: deploy
@@ -230,40 +234,38 @@ jobs:
           # Replace {{{IMAGE_NAME}}} and {{{IMAGE_TAG}}} with the actual values
 
           # Create a temporary file
+          NOMAD_TEMPLATE_FILE=$(mktemp)
           NOMAD_JOB_FILE=$(mktemp)
 
+          # Write the template to the temporary file
+          curl -sL $RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL > $NOMAD_TEMPLATE_FILE
+
           # Replace the template with the actual values
-          sed -e "s,{{{IMAGE_NAME}}},${{ env.IMAGE }}," \
-              -e "s/{{{IMAGE_TAG}}}/${{ steps.version.outputs.version }}/" \
+          sed -e "s,{{{IMAGE_NAME}}},${{ needs.build.outputs.image }}," \
+              -e "s/{{{IMAGE_TAG}}}/${{ needs.build.outputs.version }}/" \
               -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
               -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
               -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
               -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
               -e "s/{{{NOMAD_LOG_LEVEL}}}/Information/" \
-              /_/_work/${{ github.repository }}/${{ github.sha }}/nomad/grid-bot.nomad > $NOMAD_JOB_FILE
+              $NOMAD_TEMPLATE_FILE > $NOMAD_JOB_FILE
 
           # Run the job but do not wait for longer than 5 minutes
           nomad job run $NOMAD_JOB_FILE
 
           # Cleanup
           rm $NOMAD_JOB_FILE
+          rm $NOMAD_TEMPLATE_FILE
 
       - name: Set GitHub Deployment Status
-        if: ${{ env.DEPLOY_TO_NOMAD == 'true' && env.NOMAD_ADDR && steps.image.outcome == 'success' }}
         uses: chrnorm/deployment-status@v2
         continue-on-error: true
         with:
-          token: "${{ github.token }}"
+          token: "${{ secrets.DEPLOYER_TOKEN }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
           environment-url: "${{ steps.deployment.outputs.environment_url }}"
-          description: "Version: ${{ steps.version.outputs.version }}"
+          description: "Version: ${{ needs.build.outputs.version }}"
 
           # If the "deploy" step fails, the deployment status will be set to "failure"
           # If the "deploy" step succeeds, the deployment status will be set to "success"
           state: "${{ steps.deploy.outcome }}"
-
-      - name: Cleanup
-        if: always()
-        continue-on-error: true
-        run: |
-          rm -rf /_/_work/${{ github.repository }}/${{ github.sha }}
