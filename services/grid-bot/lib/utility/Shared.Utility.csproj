@@ -30,22 +30,21 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="../../lib/src/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="../../lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="../../lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="../../lib/src/grid/commands/Grid.Commands.csproj" />
-    <ProjectReference Include="../../lib/src/grid/client/Grid.Client.csproj" />
-    <ProjectReference Include="../../lib/src/logging/logging/Logging.csproj" />
-    <ProjectReference Include="../../lib/src/redis/redis/Redis.csproj" />
-    <ProjectReference Include="../../lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="../../lib/src/threading/threading/Threading.csproj" />
-    <ProjectReference Include="../../lib/src/clients/users-client/Users.Client.csproj" />
-    <ProjectReference Include="../../lib/src/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
-    <ProjectReference Include="../../lib/src/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="../../lib/src/networking/networking/Networking.csproj" />
-    <ProjectReference Include="../../lib/src/clients/thumbnails-client/Thumbnails.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/grid/commands/Grid.Commands.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/grid/client/Grid.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/logging/logging/Logging.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/redis/redis/Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/threading/threading/Threading.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/clients/users-client/Users.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/networking/networking/Networking.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/clients/thumbnails-client/Thumbnails.Client.csproj" />
   </ItemGroup>
-
   
   <ItemGroup>
     <PackageReference Include="Backtrace" Version="2.1.9" />

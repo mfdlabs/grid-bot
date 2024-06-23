@@ -23,12 +23,12 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="../../lib/src/clients/client-settings-client/ClientSettings.Client.csproj" />
-    <ProjectReference Include="../../lib/src/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="../../lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="../../lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="../../lib/src/text/text/Text.csproj" />
-    <ProjectReference Include="../../lib/src/networking/networking/Networking.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/clients/client-settings-client/ClientSettings.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/text/text/Text.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/networking/networking/Networking.csproj" />
   </ItemGroup>
 
   <ItemGroup>

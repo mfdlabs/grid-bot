@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Grid.Bot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "VAULT_ADDR": "https://vault.simulpong.com",
+        "VAULT_TOKEN": "hvs.c0quGPS9HBvYiG855XDpR4z1",
+        "DEFAULT_PROVIDER_REFRESH_INTERVAL": "00:00:30",
+        "DEFAULT_LOG_LEVEL": "Trace"
+      }
+    }
+  }
+}

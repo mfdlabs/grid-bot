@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="../../lib/src/logging/logging/Logging.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/logging/logging/Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

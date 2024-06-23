@@ -7,19 +7,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{6A79B4E5-D43
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot", "src\Grid.Bot.csproj", "{0E52E530-CE60-4F43-81F5-03FE7FA56ECF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{4FA0281C-7E8F-45E6-820E-97554DE934AE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{4FA0281C-7E8F-45E6-820E-97554DE934AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "shared\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "lib\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "shared\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "lib\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "shared\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "lib\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "shared\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{5A960687-FC84-4DF9-9606-2B4CA560BFA8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot.Recovery", "services\recovery\Grid.Bot.Recovery.csproj", "{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "lib\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +43,6 @@ Global
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Debug|Any CPU.Build.0 = debug|Any CPU
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Release|Any CPU.ActiveCfg = release|Any CPU
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}.Release|Any CPU.Build.0 = release|Any CPU
-		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Debug|Any CPU.ActiveCfg = debug|Any CPU
-		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Debug|Any CPU.Build.0 = debug|Any CPU
-		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Release|Any CPU.ActiveCfg = release|Any CPU
-		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC}.Release|Any CPU.Build.0 = release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +53,5 @@ Global
 		{67005F02-FE69-4DCF-8D29-07989E8B4C18} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
 		{425ECFC3-749B-4725-AF7B-A2CC56A06E6B} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
 		{AB0EF72D-505F-4F0E-94AD-BA236218CEB7} = {4FA0281C-7E8F-45E6-820E-97554DE934AE}
-		{C5A061F9-2C2C-4F55-B596-101BA5C2DADC} = {5A960687-FC84-4DF9-9606-2B4CA560BFA8}
 	EndGlobalSection
 EndGlobal
