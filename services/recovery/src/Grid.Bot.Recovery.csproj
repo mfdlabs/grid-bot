@@ -51,12 +51,12 @@
   </ItemGroup>
 
   <!-- Linux targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
     <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
   </Target>
 
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
+  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' != 'Windows_NT'">
     <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
   </Target>

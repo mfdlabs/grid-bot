@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0.1-jammy
 WORKDIR /opt/grid
 COPY . /opt/grid/
 
-COPY /opt/grid/ssl/global-root-ca.crt /usr/local/share/ca-certificates/global-root-ca.crt
+COPY ./ssl/global-root-ca.crt /usr/local/share/ca-certificates/global-root-ca.crt
 RUN chmod 644 /usr/local/share/ca-certificates/global-root-ca.crt && update-ca-certificates
 
 RUN mkdir /opt/grid/logs

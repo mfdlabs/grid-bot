@@ -46,13 +46,13 @@
 
 
   <!-- Linux targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
     <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
     <Exec Command="cp -r ../ssl $(OutDir)" />
   </Target>
 
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
+  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' != 'Windows_NT'">
     <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
     <Exec Command="cp -r ../ssl $(PublishDir)" />
