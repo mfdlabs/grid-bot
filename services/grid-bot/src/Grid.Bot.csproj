@@ -45,17 +45,26 @@
   </ItemGroup>
 
 
-  <!-- Linux targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <None Update="$(RootDirectory)LICENSE" CopyToOutputDirectory="Always" />
-    <None Update="$(RootDirectory)README.md" CopyToOutputDirectory="Always" />
-    <None Update="../ssl" CopyToOutputDirectory="Always" />
+    <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(OutDir)" />
+
+    <ItemGroup>
+      <SslFiles Include="$(ProjectDir)ssl\*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish">
     <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(PublishDir)" />
     <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(PublishDir)" />
-    <Copy SourceFiles="../ssl" DestinationFolder="$(PublishDir)" />
+
+    <ItemGroup>
+      <SslFiles Include="$(ProjectDir)ssl\*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
   </Target>
 
   <ItemGroup>

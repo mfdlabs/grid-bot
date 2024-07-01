@@ -50,10 +50,9 @@
     <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Client" />
   </ItemGroup>
 
-  <!-- Linux targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <None Update="$(RootDirectory)LICENSE" CopyToOutputDirectory="Always" />
-    <None Update="$(RootDirectory)README.md" CopyToOutputDirectory="Always" />
+    <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(OutDir)" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish">
