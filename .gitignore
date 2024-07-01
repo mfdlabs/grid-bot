@@ -366,3 +366,4 @@ deploy/
 .idea/
 .AssemblyAttributes
 .env
+launchSettings.json

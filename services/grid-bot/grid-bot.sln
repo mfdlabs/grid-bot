@@ -9,63 +9,59 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot", "src\Grid.Bot.cs
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{4FA0281C-7E8F-45E6-820E-97554DE934AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "shared\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Commands", "lib\commands\Shared.Commands.csproj", "{1001AAF4-840C-4C30-92A4-AF96EC23B905}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "shared\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Events", "lib\events\Shared.Events.csproj", "{67005F02-FE69-4DCF-8D29-07989E8B4C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "shared\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Settings", "lib\settings\Shared.Settings.csproj", "{425ECFC3-749B-4725-AF7B-A2CC56A06E6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "shared\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Utility", "lib\utility\Shared.Utility.csproj", "{AB0EF72D-505F-4F0E-94AD-BA236218CEB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vault", "lib\src\vault\vault\Vault.csproj", "{63EF0F2E-0900-4978-AD6F-2139563D1652}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vault", "..\..\lib\src\vault\vault\Vault.csproj", "{63EF0F2E-0900-4978-AD6F-2139563D1652}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Threading", "lib\src\threading\threading\Threading.csproj", "{75D2B9D6-FADB-4530-8F0F-D83FF5A5A894}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Threading", "..\..\lib\src\threading\threading\Threading.csproj", "{75D2B9D6-FADB-4530-8F0F-D83FF5A5A894}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Text", "lib\src\text\text\Text.csproj", "{ADED602D-5A69-43FD-800F-E992475F5FFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Text", "..\..\lib\src\text\text\Text.csproj", "{ADED602D-5A69-43FD-800F-E992475F5FFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDiscovery", "lib\src\service-discovery\service-discovery\ServiceDiscovery.csproj", "{885AA444-D911-4F4E-B295-09BEFE08F846}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDiscovery", "..\..\lib\src\service-discovery\service-discovery\ServiceDiscovery.csproj", "{885AA444-D911-4F4E-B295-09BEFE08F846}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redis", "lib\src\redis\redis\Redis.csproj", "{44898F0A-9227-472D-87DA-64CD2094327C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redis", "..\..\lib\src\redis\redis\Redis.csproj", "{44898F0A-9227-472D-87DA-64CD2094327C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Random", "lib\src\random\random\Random.csproj", "{5F5947A9-7E88-4815-9741-CB6D76077F45}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Random", "..\..\lib\src\random\random\Random.csproj", "{5F5947A9-7E88-4815-9741-CB6D76077F45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking", "lib\src\networking\networking\Networking.csproj", "{480E8037-1B40-4C17-8D5B-9CD90EDEA74E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking", "..\..\lib\src\networking\networking\Networking.csproj", "{480E8037-1B40-4C17-8D5B-9CD90EDEA74E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logging", "lib\src\logging\logging\Logging.csproj", "{0F388123-894C-4C4F-B1F4-7F0AE4CF66DA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logging", "..\..\lib\src\logging\logging\Logging.csproj", "{0F388123-894C-4C4F-B1F4-7F0AE4CF66DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hashing", "lib\src\hashing\hashing\Hashing.csproj", "{E5F76385-1B73-4EA7-8FAD-E213012E9DA2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hashing", "..\..\lib\src\hashing\hashing\Hashing.csproj", "{E5F76385-1B73-4EA7-8FAD-E213012E9DA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement.Docker", "lib\src\grid\process-management-docker\Grid.ProcessManagement.Docker.csproj", "{35F1DF37-9093-4EB5-ABE9-636283D87836}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement.Docker", "..\..\lib\src\grid\process-management-docker\Grid.ProcessManagement.Docker.csproj", "{35F1DF37-9093-4EB5-ABE9-636283D87836}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement.Core", "lib\src\grid\process-management-core\Grid.ProcessManagement.Core.csproj", "{61DF548F-B4F3-4DBB-8544-4DC19039F0F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement.Core", "..\..\lib\src\grid\process-management-core\Grid.ProcessManagement.Core.csproj", "{61DF548F-B4F3-4DBB-8544-4DC19039F0F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement", "lib\src\grid\process-management\Grid.ProcessManagement.csproj", "{47B90C52-CD8D-402D-810D-2C271AEBF1CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.ProcessManagement", "..\..\lib\src\grid\process-management\Grid.ProcessManagement.csproj", "{47B90C52-CD8D-402D-810D-2C271AEBF1CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.PortManagement", "lib\src\grid\port-management\Grid.PortManagement.csproj", "{780DDDF0-4C07-4C84-A163-75691E3169BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.PortManagement", "..\..\lib\src\grid\port-management\Grid.PortManagement.csproj", "{780DDDF0-4C07-4C84-A163-75691E3169BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Commands", "lib\src\grid\commands\Grid.Commands.csproj", "{DE37CF4C-917A-4573-8F89-183EE317C77A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Commands", "..\..\lib\src\grid\commands\Grid.Commands.csproj", "{DE37CF4C-917A-4573-8F89-183EE317C77A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Client", "lib\src\grid\client\Grid.Client.csproj", "{1ED35C53-C0F8-4231-9A1A-ED76CE099F27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Client", "..\..\lib\src\grid\client\Grid.Client.csproj", "{1ED35C53-C0F8-4231-9A1A-ED76CE099F27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloodCheckers.Redis", "lib\src\floodcheckers\redis\FloodCheckers.Redis.csproj", "{1331B3CB-5704-49A4-96B2-EBD1B2538A97}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloodCheckers.Redis", "..\..\lib\src\floodcheckers\redis\FloodCheckers.Redis.csproj", "{1331B3CB-5704-49A4-96B2-EBD1B2538A97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloodCheckers.Core", "lib\src\floodcheckers\core\FloodCheckers.Core.csproj", "{3D447B44-7B13-4F51-948A-4FA9C7AF0C1B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloodCheckers.Core", "..\..\lib\src\floodcheckers\core\FloodCheckers.Core.csproj", "{3D447B44-7B13-4F51-948A-4FA9C7AF0C1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystem", "lib\src\file-system\file-system\FileSystem.csproj", "{67C7D321-75F2-4ADC-9C24-BC02E345E0E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystem", "..\..\lib\src\file-system\file-system\FileSystem.csproj", "{67C7D321-75F2-4ADC-9C24-BC02E345E0E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration", "lib\src\configuration\configuration\Configuration.csproj", "{689B303F-6238-4F1A-8F24-2C8B4FE6C8BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration", "..\..\lib\src\configuration\configuration\Configuration.csproj", "{689B303F-6238-4F1A-8F24-2C8B4FE6C8BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration.Core", "lib\src\configuration\core\Configuration.Core.csproj", "{0F99E3B7-B8A2-4166-94DD-E14E10B82782}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration.Core", "..\..\lib\src\configuration\core\Configuration.Core.csproj", "{0F99E3B7-B8A2-4166-94DD-E14E10B82782}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSettings.Client", "lib\src\clients\client-settings-client\ClientSettings.Client.csproj", "{FDE94473-0D43-4FBC-9CDD-E29A3938BC1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSettings.Client", "..\..\lib\src\clients\client-settings-client\ClientSettings.Client.csproj", "{FDE94473-0D43-4FBC-9CDD-E29A3938BC1E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thumbnails.Client", "lib\src\clients\thumbnails-client\Thumbnails.Client.csproj", "{067AC4F9-F1E9-435B-B837-9A9B05DDD621}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thumbnails.Client", "..\..\lib\src\clients\thumbnails-client\Thumbnails.Client.csproj", "{067AC4F9-F1E9-435B-B837-9A9B05DDD621}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Client", "lib\src\clients\users-client\Users.Client.csproj", "{8702A9B1-8180-41FE-A639-AFE807B08512}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{2966E9F3-00E1-46B1-864A-5E7D889B47BB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid.Bot.Recovery", "services\recovery\Grid.Bot.Recovery.csproj", "{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Client", "..\..\lib\src\clients\users-client\Users.Client.csproj", "{8702A9B1-8180-41FE-A639-AFE807B08512}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -185,10 +181,6 @@ Global
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Debug|Any CPU.Build.0 = debug|Any CPU
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Release|Any CPU.ActiveCfg = release|Any CPU
 		{8702A9B1-8180-41FE-A639-AFE807B08512}.Release|Any CPU.Build.0 = release|Any CPU
-		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Debug|Any CPU.ActiveCfg = debug|Any CPU
-		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Debug|Any CPU.Build.0 = debug|Any CPU
-		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Release|Any CPU.ActiveCfg = release|Any CPU
-		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0}.Release|Any CPU.Build.0 = release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -222,6 +214,5 @@ Global
 		{FDE94473-0D43-4FBC-9CDD-E29A3938BC1E} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
 		{067AC4F9-F1E9-435B-B837-9A9B05DDD621} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
 		{8702A9B1-8180-41FE-A639-AFE807B08512} = {6A79B4E5-D433-4FCF-9E6E-AED94F97099D}
-		{EECA80FA-0EDC-4F23-BD61-9648A6CD40B0} = {2966E9F3-00E1-46B1-864A-5E7D889B47BB}
 	EndGlobalSection
 EndGlobal

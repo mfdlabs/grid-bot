@@ -39,7 +39,6 @@
   </PropertyGroup>
 
   <PropertyGroup Label="RootDirectory">
-    <RootDirectory Condition="'$(SolutionDir)' != ''">$(SolutionDir)</RootDirectory>
-    <RootDirectory Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)../</RootDirectory>
+    <RootDirectory>$(MSBuildThisFileDirectory)..\..\..\</RootDirectory>
   </PropertyGroup>
 </Project>

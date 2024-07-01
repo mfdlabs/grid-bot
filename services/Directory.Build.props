@@ -16,8 +16,7 @@
   </PropertyGroup>
   
   <PropertyGroup Label="RootDirectory">
-    <RootDirectory Condition="'$(SolutionDir)' != ''">$(SolutionDir)</RootDirectory>
-    <RootDirectory Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</RootDirectory>
+    <RootDirectory>$(MSBuildThisFileDirectory)..\</RootDirectory>
   </PropertyGroup>
 
   <Import Project="$(RootDirectory)targets/git-metadata.targets" Condition="Exists('$(RootDirectory)targets/git-metadata.targets')" />

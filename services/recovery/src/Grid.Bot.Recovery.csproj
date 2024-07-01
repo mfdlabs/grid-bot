@@ -50,26 +50,14 @@
     <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Client" />
   </ItemGroup>
 
-  <!-- Linux targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
-    <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
-    <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(OutDir)" />
   </Target>
 
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
-    <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
-    <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
-  </Target>
-
-  <!-- Windows targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(OutDir)" />
-    <Exec Command="xcopy /y $(RootDirectory)README.md $(OutDir)" />
-  </Target>
-
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
-    <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
+  <Target Name="PostPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(PublishDir)" />
+    <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(PublishDir)" />
   </Target>
 
 </Project>
