@@ -37,9 +37,9 @@ deployment:
         mode: host
         ports:
           metrics:
-            to: 8101
+            static: 8101
           grpc:
-            to: 5000
+            static: 5000
       services:
         - name: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
           port: metrics
