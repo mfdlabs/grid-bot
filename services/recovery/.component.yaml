@@ -1,0 +1,17 @@
+component: grid-bot-recovery
+
+# This is only used by the build worklow,
+# it determines how the component is built
+# Docker only relevant when the argument
+# 
+build:
+  project_file: src/Grid.Bot.Recovery.csproj
+  component_directory: ./.deploy
+
+  additional_args:
+    - -p:IMAGE_TAG=${{ env.NOMAD_VERSION }}
+    - -p:CI=true
+
+  docker:
+    docker_file: Dockerfile
+    image_name: mfdlabs/grid-bot-recovery

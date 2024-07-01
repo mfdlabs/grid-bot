@@ -1,0 +1,64 @@
+component: grid-bot
+
+# This is only used by the build worklow,
+# it determines how the component is built
+# Docker only relevant when the argument
+# 
+build:
+  project_file: src/Grid.Bot.csproj
+  component_directory: ./.deploy
+
+  additional_args:
+    - -p:IMAGE_TAG=${{ env.NOMAD_VERSION }}
+    - -p:CI=true
+
+  docker:
+    docker_file: Dockerfile
+    image_name: mfdlabs/grid-bot
+    
+deployment:
+  count: 1
+
+  job: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
+
+  vault_policies:
+    - vault_secret_grid_settings_read_write
+
+  # Passed to the meta section in Nomad
+  meta:
+    ENVIRONMENT: ${{ env.NOMAD_ENVIRONMENT }}
+
+  containers: # Maps to the groups section in Nomad
+    - image: mfdlabs/grid-bot
+      resources:
+        cpu: 2000
+        ram: 1000
+      network:
+        mode: host
+        ports:
+          metrics:
+            to: 8101
+          grpc:
+            to: 5000
+      services:
+        - name: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
+          port: metrics
+          tags:
+            - ${{ env.NOMAD_ENVIRONMENT }}
+          checks:
+            - type: http
+              path: /metrics
+      volumes:
+        - '/var/run/docker.sock:/var/run/docker.sock'
+        - '/tmp/.X11-unix:/tmp/.X11-unix'
+        - '/opt/grid/scripts:/opt/grid/scripts'
+        - '/_/_logs/grid-bot/${{ env.NOMAD_ENVIRONMENT }}:/tmp/mfdlabs/logs'
+      config_maps:
+        - destination: secrets/file.env
+          env: true
+          on_change: restart
+          data: |
+            DISPLAY=:1
+            DEFAULT_LOG_LEVEL=Information
+            VAULT_ADDR="http://vault.service.consul:8200"
+            VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
