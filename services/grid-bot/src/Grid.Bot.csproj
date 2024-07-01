@@ -68,7 +68,7 @@
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
-    <Exec Command="xcopy /y /i /w ..\ssl $(PublishDir)ssl" />
+    <Exec Command="xcopy /y /i ..\ssl $(PublishDir)ssl" />
   </Target>
 
   <ItemGroup>
