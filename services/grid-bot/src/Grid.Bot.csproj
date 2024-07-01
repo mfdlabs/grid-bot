@@ -47,15 +47,15 @@
 
   <!-- Linux targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
-    <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
-    <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
-    <Exec Command="cp -r ../ssl $(OutDir)" />
+    <Exec Command="cp --verbose -rf $(RootDirectory)LICENSE $(OutDir)" />
+    <Exec Command="cp --verbose -rf $(RootDirectory)README.md $(OutDir)" />
+    <Exec Command="cp --verbose -rf ../ssl $(OutDir)" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' != 'Windows_NT'">
-    <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
-    <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
-    <Exec Command="cp -r ../ssl $(PublishDir)" />
+    <Exec Command="cp --verbose -rf $(RootDirectory)LICENSE $(PublishDir)" />
+    <Exec Command="cp --verbose -rf $(RootDirectory)README.md $(PublishDir)" />
+    <Exec Command="cp --verbose -rf ../ssl $(PublishDir)" />
   </Target>
 
   <!-- Windows targets -->
