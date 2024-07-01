@@ -46,29 +46,16 @@
 
 
   <!-- Linux targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
-    <Exec Command="cp --verbose -rf $(RootDirectory)LICENSE $(OutDir)" />
-    <Exec Command="cp --verbose -rf $(RootDirectory)README.md $(OutDir)" />
-    <Exec Command="cp --verbose -rf ../ssl $(OutDir)" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <None Update="$(RootDirectory)LICENSE" CopyToOutputDirectory="Always" />
+    <None Update="$(RootDirectory)README.md" CopyToOutputDirectory="Always" />
+    <None Update="../ssl" CopyToOutputDirectory="Always" />
   </Target>
 
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' != 'Windows_NT'">
-    <Exec Command="cp --verbose -rf $(RootDirectory)LICENSE $(PublishDir)" />
-    <Exec Command="cp --verbose -rf $(RootDirectory)README.md $(PublishDir)" />
-    <Exec Command="cp --verbose -rf ../ssl $(PublishDir)" />
-  </Target>
-
-  <!-- Windows targets -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(OutDir)" />
-    <Exec Command="xcopy /y $(RootDirectory)README.md $(OutDir)" />
-    <Exec Command="xcopy /y /i ..\ssl $(OutDir)ssl" />
-  </Target>
-
-  <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
-    <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
-    <Exec Command="xcopy /y /i ..\ssl $(PublishDir)ssl" />
+  <Target Name="PostPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(RootDirectory)LICENSE" DestinationFolder="$(PublishDir)" />
+    <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(PublishDir)" />
+    <Copy SourceFiles="../ssl" DestinationFolder="$(PublishDir)" />
   </Target>
 
   <ItemGroup>
