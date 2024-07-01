@@ -21,7 +21,7 @@ on:
       nomad_resources:
         description: "The resources to use when deploying"
         required: false
-        default: ""
+        default: "grid-bot,2000:1024"
         type: string
 
 permissions:
