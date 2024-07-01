@@ -50,7 +50,7 @@
     <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(OutDir)" />
 
     <ItemGroup>
-      <SslFiles Include="$(ProjectDir)ssl\*" />
+      <SslFiles Include="$(ProjectDir)..\ssl\*" />
     </ItemGroup>
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
@@ -61,7 +61,7 @@
     <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(PublishDir)" />
 
     <ItemGroup>
-      <SslFiles Include="$(ProjectDir)ssl\*" />
+      <SslFiles Include="$(ProjectDir)..\ssl\*" />
     </ItemGroup>
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
