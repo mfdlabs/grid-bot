@@ -3,65 +3,70 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
-      image:
-        description: "Image Name"
+      components:
+        description: "The list of components to deploy"
         required: true
-        default: "mfdlabs/grid-bot"
-      image_tag:
-        description: "Image Tag"
-        required: true
-        default: "latest"
+        type: string
 
-      nomad_job_name:
-        description: "Nomad Job Name"
-        required: true
-        default: "grid-bot"
-
-      nomad_enviroment:
-        description: "Nomad Environment"
+      nomad_environment:
+        description: "The environment to deploy to"
         required: true
         default: "production"
         type: choice
         options:
-          - "production"
-          - "staging"
-          
-      nomad_resources:
-        description: "Nomad Resources (CPU:Memory)"
-        required: true
-        default: "2000:1024"
+          - staging
+          - production
 
-      log_level:
-        description: "The log level of the default logger"
-        required: true
-        default: "Information"
-        type: choice
-        options:
-          - "None"
-          - "Error"
-          - "Warning"
-          - "Information"
-          - "Debug"
-          - "Trace"
+      # In the form of "component,cpu:ram;component2,cpu:ram"
+      nomad_resources:
+        description: "The resources to use when deploying"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   deployments: write
-
+     
 jobs:
-  deploy:
-    runs-on: grid-bot-infra
-    env:
-      IMAGE: ${{ github.event.inputs.image || 'mfdlabs/grid-bot'}}
-      IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
+  parse-input-components:
+    name: Validate and find component directories
+    runs-on: ubuntu-latest
 
+    outputs:
+      nomad-files: ${{ steps.components-to-nomad-jobs.outputs.nomad-files }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate and Find components
+        uses: mfdlabs/component-finder-action@v8
+        id: find-component-directories
+        with:
+          components: ${{ github.event.inputs.components }}
+          component-search-directories: services
+
+      - name: Components to Nomad Jobs
+        uses: mfdlabs/component-nomad-parser-action@v9
+        id: components-to-nomad-jobs
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          NOMAD_SHORT_ENVIRONMENT: ${{ github.event.inputs.nomad_environment == 'production' && 'prod' || 'stage' }}
+        with:
+          components: ${{ steps.find-component-directories.outputs.components }}
+          resources: ${{ github.event.inputs.nomad_resources }}
+
+  deploy-nomad-jobs:
+    name: Deploy Nomad Jobs
+    runs-on: grid-bot-infra
+
+    needs: parse-input-components
+
+    if: ${{ needs.parse-input-components.outputs.nomad-files != '{}' && needs.parse-input-components.outputs.nomad-files != '' }}
+
+    env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_enviroment || 'production' }}
-      NOMAD_JOB_NAME: ${{ github.event.inputs.nomad_job_name || 'grid-bot' }}-${{ (github.event.inputs.nomad_enviroment || 'production') == 'production' && 'prod' || 'stage' }}
-      NOMAD_RESOURCES: ${{ github.event.inputs.nomad_resources || '2000:1024' }}
-      NOMAD_LOG_LEVEL: ${{ github.event.inputs.log_level || 'Information' }}
-
-      RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL: "https://raw.githubusercontent.com/mfdlabs/grid-bot/${{ github.sha }}/nomad/grid-bot.nomad"
 
     steps:
       - name: Setup Nomad CLI
@@ -75,42 +80,43 @@ jobs:
         continue-on-error: true
         with:
           token: "${{ secrets.DEPLOYER_TOKEN }}"
-          environment: ${{ env.NOMAD_ENVIRONMENT }}
-          environment-url: "${{ env.NOMAD_ADDR }}/ui/jobs/${{ env.NOMAD_JOB_NAME }}"
-          description: "Version: ${{ env.IMAGE_TAG }}"
+          environment: "${{ github.event.inputs.nomad_environment }}"
+          description: "Components: ${{ github.event.inputs.components }}"
 
-      - name: Deploy to Nomad
-        env:
-          NOMAD_TLS_SKIP_VERIFY: 1
-        id: deploy
+      - name: Deploy Nomad Jobs
+        uses: actions/github-script@v7
+        id: deploy-nomad-jobs
         continue-on-error: true
-        run: |
-          # Template file is at ${workspace}/nomad/grid-bot.nomad
-          # Replace {{{IMAGE_NAME}}} and {{{IMAGE_TAG}}} with the actual values
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const child_process = require('child_process');
 
-          # Create a temporary file
-          NOMAD_TEMPLATE_FILE=$(mktemp)
-          NOMAD_JOB_FILE=$(mktemp)
+            let jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
+            jobs = new Map(Object.entries(jobs));
 
-          # Write the template to the temporary file
-          curl -sL $RAW_NOMAD_JOB_TEMPLATE_DOWNLOAD_URL > $NOMAD_TEMPLATE_FILE
+            const failedJobs = [];
 
-          # Replace the template with the actual values
-          sed -e "s,{{{IMAGE_NAME}}},${{ env.IMAGE }}," \
-              -e "s/{{{IMAGE_TAG}}}/${{ env.IMAGE_TAG }}/" \
-              -e "s/{{{NOMAD_JOB_NAME}}}/${{ env.NOMAD_JOB_NAME }}/" \
-              -e "s/{{{NOMAD_ENVIRONMENT}}}/${{ env.NOMAD_ENVIRONMENT }}/" \
-              -e "s/{{{NOMAD_CPU}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f1)/" \
-              -e "s/{{{NOMAD_MEMORY}}}/$(echo ${{ env.NOMAD_RESOURCES }} | cut -d: -f2)/" \
-              -e "s/{{{NOMAD_LOG_LEVEL}}}/${{ env.NOMAD_LOG_LEVEL }}/" \
-              $NOMAD_TEMPLATE_FILE > $NOMAD_JOB_FILE
+            for (const [jobName, jobDefinition] of jobs) {
+              const [componentName] = jobName.split(':'); 
 
-          # Run the job but do not wait for longer than 5 minutes
-          nomad job run $NOMAD_JOB_FILE
+              // Equivalent to mktemp 
+              const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
 
-          # Cleanup
-          rm $NOMAD_JOB_FILE
-          rm $NOMAD_TEMPLATE_FILE
+              fs.writeFileSync(tempFile, jobDefinition);
+
+              // Poll the job status
+              try {
+                child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
+              } catch (error) {
+                failedJobs.push(jobName);
+              }
+            }
+
+            if (failedJobs.length > 0) {
+              core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
+            }
 
       - name: Set GitHub Deployment Status
         uses: chrnorm/deployment-status@v2
@@ -118,9 +124,9 @@ jobs:
         with:
           token: "${{ secrets.DEPLOYER_TOKEN }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          environment-url: "${{ steps.deployment.outputs.environment_url }}"
-          description: "Version: ${{ env.IMAGE_TAG }}"
+          description: "Components: ${{ github.event.inputs.components }}"
 
           # If the "deploy" step fails, the deployment status will be set to "failure"
           # If the "deploy" step succeeds, the deployment status will be set to "success"
-          state: "${{ steps.deploy.outcome }}"
+          state: "${{ steps.deploy-nomad-jobs.outcome }}"
+
