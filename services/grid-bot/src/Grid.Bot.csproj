@@ -49,22 +49,26 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Unix'">
     <Exec Command="cp $(RootDirectory)LICENSE $(OutDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(OutDir)" />
+    <Exec Command="cp -r ../ssl $(OutDir)" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Unix'">
     <Exec Command="cp $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="cp $(RootDirectory)README.md $(PublishDir)" />
+    <Exec Command="cp -r ../ssl $(PublishDir)" />
   </Target>
 
   <!-- Windows targets -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="xcopy /y $(RootDirectory)LICENSE $(OutDir)" />
     <Exec Command="xcopy /y $(RootDirectory)README.md $(OutDir)" />
+    <Exec Command="xcopy /y /i ..\ssl $(OutDir)ssl" />
   </Target>
 
   <Target Name="PostPublish" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="xcopy /y $(RootDirectory)LICENSE $(PublishDir)" />
     <Exec Command="xcopy /y $(RootDirectory)README.md $(PublishDir)" />
+    <Exec Command="xcopy /y /i /w ..\ssl $(PublishDir)ssl" />
   </Target>
 
   <ItemGroup>
