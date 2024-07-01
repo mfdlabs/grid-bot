@@ -47,7 +47,7 @@ jobs:
           component-search-directories: services
 
       - name: Components to Nomad Jobs
-        uses: mfdlabs/component-nomad-parser-action@v9
+        uses: mfdlabs/component-nomad-parser-action@v10
         id: components-to-nomad-jobs
         env:
           NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
