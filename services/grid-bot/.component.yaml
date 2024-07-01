@@ -31,8 +31,8 @@ deployment:
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
       resources:
-        cpu: 2000
-        ram: 1000
+        cpu: ${{ env.NOMAD_CPU }}
+        ram: ${{ env.NOMAD_RAM }}
       network:
         mode: host
         ports:
