@@ -191,6 +191,8 @@ public class AvatarUtility : IAvatarUtility
         using var client = new HttpClient();
         using var stream = client.GetStreamAsync(url).SyncOrDefault();
 
+        if (stream == null) throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response stream was null");
+
         stream.CopyTo(file);
 
         file.Close();

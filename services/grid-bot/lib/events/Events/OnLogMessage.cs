@@ -1,8 +1,10 @@
 ﻿namespace Grid.Bot.Events;
 
 using System;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Discord;
 using Discord.Net;
@@ -20,7 +22,7 @@ using Utility;
 public class OnLogMessage
 {
     private readonly DiscordSettings _settings;
-    
+
 #if DEBUG || DEBUG_LOGGING_IN_PROD
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
     private readonly IBacktraceUtility _backtraceUtility;
@@ -33,6 +35,16 @@ public class OnLogMessage
         "The total number of log messages.",
         "log_severity"
     );
+
+    // These are specific strings that fill the log files up drastically.
+    private static readonly HashSet<string> _messagesToBeConsideredDebug = new()
+    {
+        "Disconnecting",
+        "Disconnected",
+        "Connecting",
+        "Connected",
+        "Resumed previous session"
+    };
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
     /// <summary>
@@ -134,7 +146,10 @@ public class OnLogMessage
                 _logger.Debug("{0}: {1}", message.Source, message.Message);
                 break;
             case { Severity: LogSeverity.Info }:
-                _logger.Information("{0}: {1}", message.Source, message.Message);
+                if (_messagesToBeConsideredDebug.Any(m => m.Equals(message.Message, StringComparison.Ordinal)))
+                    _logger.Debug("{0}: {1}", message.Source, message.Message);
+                else
+                    _logger.Information("{0}: {1}", message.Source, message.Message);
                 break;
             case { Severity: LogSeverity.Verbose }:
                 _logger.Debug("{0}: {1}", message.Source, message.Message);
