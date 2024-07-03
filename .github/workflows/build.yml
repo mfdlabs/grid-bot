@@ -463,10 +463,12 @@ jobs:
             let deployableComponentsMap = '';
 
             for (const component of deployableComponents.split(',')) {
-              const [name] = component.split(':');
+              const [name, version] = component.split(':');
+
+              if (!version) version = 'latest';
 
               if (deployableComponents.includes(name)) {
-                deployableComponentsMap += `${component},`;
+                deployableComponentsMap += `${component}:${version},`;
               }
             }
 
