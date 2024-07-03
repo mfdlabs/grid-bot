@@ -42,6 +42,7 @@ using ILoggerFactory = Utility.ILoggerFactory;
 
 using LogLevel = Logging.LogLevel;
 using MELLogLevel = Microsoft.Extensions.Logging.LogLevel;
+using Discord.Rest;
 
 internal static class Runner
 {
@@ -180,6 +181,7 @@ internal static class Runner
 
         services.AddSingleton(config)
             .AddSingleton(interactionServiceConfig)
+            .AddSingleton<IRestClientProvider>(x => x.GetRequiredService<DiscordShardedClient>())
             .AddSingleton<DiscordShardedClient>()
             .AddSingleton<InteractionService>();
 
