@@ -189,8 +189,7 @@ public class AvatarUtility : IAvatarUtility
         var file = File.OpenWrite(path);
 
         using var client = new HttpClient();
-        using var stream = client.GetStreamAsync(url).SyncOrDefault();
-
+        using var stream = client.GetStreamAsync(url).SyncOrDefault() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response stream was null");
         stream.CopyTo(file);
 
         file.Close();
