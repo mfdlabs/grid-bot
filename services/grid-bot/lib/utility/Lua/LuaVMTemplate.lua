@@ -189,6 +189,15 @@ do
 			end,
 
 			__index = function(self: VirtualizedSignal, key: any): any
+				if key:lower() == "wait" then
+					return function(signal)
+						if signal ~= self._proxy then
+							return
+						end
+						local method = self._signal[key]
+						method(self._signal)
+					end
+				end
 				if key:lower() == "connect" or key:lower() == "connectparallel" or key:lower() == "once" then
 					local method = self._signal[key]
 					if typeof(method) ~= "function" then
