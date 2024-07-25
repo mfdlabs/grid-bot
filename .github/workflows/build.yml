@@ -463,7 +463,7 @@ jobs:
             let deployableComponentsMap = '';
 
             for (const component of deployableComponents.split(',')) {
-              const [name, version] = component.split(':');
+              let [name, version] = component.split(':');
 
               if (!version) version = 'latest';
 
