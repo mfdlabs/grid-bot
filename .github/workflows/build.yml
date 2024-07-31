@@ -457,12 +457,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const components = '${{ env.COMPONENTS }}';
+            const components = ${{ env.COMPONENTS }};
             const deployableComponents = '${{ env.DEPLOYABLE_COMPONENTS }}';
 
             let deployableComponentsMap = '';
 
-            for (const component of deployableComponents.split(',')) {
+            for (const component of components) {
               let [name, version] = component.split(':');
 
               if (!version) version = 'latest';
