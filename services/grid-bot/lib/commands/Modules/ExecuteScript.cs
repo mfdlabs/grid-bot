@@ -103,7 +103,7 @@ public partial class ExecuteScript(
 
             var perUserFloodChecker = _floodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(Context.User.Id);
             if (perUserFloodChecker.IsFlooded())
-                throw new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again.");
+                throw new ApplicationException("You are sending execute script commands too quickly, please wait a few moments and try again.");
 
             perUserFloodChecker.UpdateCount();
         }

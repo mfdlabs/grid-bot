@@ -87,6 +87,19 @@ public class OnInteractionExecuted(
 
             var ex = executeResult.Exception;
 
+            if (ex is not InteractionException interactionException)
+            {
+                _backtraceUtility.UploadException(ex);
+
+                await interaction.FollowupAsync(
+                    $"An unexpected Exception has occurred. Exception ID: {Guid.NewGuid()}, send this ID to <@!{_discordRolesSettings.BotOwnerId}>"
+                );
+
+                return;
+            }
+
+            ex = interactionException.InnerException;
+
             // Check if it is a Missing Permissions exception from Discord.
             if (ex is Discord.Net.HttpException httpException && httpException.DiscordCode == DiscordErrorCode.MissingPermissions)
             {
