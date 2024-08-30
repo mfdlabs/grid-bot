@@ -93,6 +93,7 @@ public class OnLogMessage
         if (message.Exception != null)
         {
 #if DEBUG || DEBUG_LOGGING_IN_PROD
+#if !DEBUG // Don't log these exceptions outside of debug mode.
             if (message.Exception is GatewayReconnectException)
                 return Task.CompletedTask;
 
@@ -106,6 +107,7 @@ public class OnLogMessage
             if (message.Exception is TaskCanceledException &&
                 !_settings.DebugAllowTaskCanceledExceptions)
                 return Task.CompletedTask;
+#endif
 
             _logger.Error(
                 "Source = {0}, Message = {1}, Exception = {2}",
