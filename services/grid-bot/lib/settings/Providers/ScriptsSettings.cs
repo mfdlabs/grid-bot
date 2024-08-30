@@ -61,4 +61,12 @@ public class ScriptsSettings : BaseSettingsProvider
         );
         set => Set(nameof(LoggedScriptHashes), value);
     }
+
+    /// <summary>
+    /// Gets the interval to persist the logged script hashes.
+    /// </summary>
+    public TimeSpan LoggedScriptHashesPersistInterval => GetOrDefault(
+        nameof(LoggedScriptHashesPersistInterval),
+        TimeSpan.FromMinutes(5)
+    );
 }
