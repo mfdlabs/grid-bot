@@ -82,7 +82,7 @@ public class ScriptLogger : IScriptLogger
 
         // Get a SHA256 hash of the script (hex)
         var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
-        if (_scriptsSettings.LoggedScriptHashes.Contains(scriptHash)) return;
+        if (_scriptHashes.Contains(scriptHash)) return;
 
         // username based off machine info
         var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
