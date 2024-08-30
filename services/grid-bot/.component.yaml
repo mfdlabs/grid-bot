@@ -18,6 +18,7 @@ build:
     
 deployment:
   count: 1
+  namespace: grid-bot
 
   job: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
 
