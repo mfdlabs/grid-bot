@@ -173,6 +173,7 @@ internal static class Runner
             .AddSingleton<ILuaUtility, LuaUtility>()
             .AddSingleton<IRbxUsersUtility, RbxUsersUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
+            .AddSingleton<IScriptLogger, ScriptLogger>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<ILoggerFactory, LoggerFactory>()
