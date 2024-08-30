@@ -2,6 +2,7 @@ namespace Grid.Bot.Interactions.Public;
 
 using System;
 using System.IO;
+using System.Xml;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
@@ -41,6 +42,7 @@ using GridJob = Client.Job;
 /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
+/// <param name="scriptLogger">The <see cref="IScriptLogger"/>.</param>
 /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="logger"/> cannot be null.
@@ -52,6 +54,7 @@ using GridJob = Client.Job;
 /// - <paramref name="jobManager"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
+/// - <paramref name="scriptLogger"/> cannot be null.
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 [Group("execute", "Commands used for executing Luau code.")]
@@ -65,6 +68,7 @@ public partial class ExecuteScript(
     IJobManager jobManager,
     IAdminUtility adminUtility,
     IDiscordWebhookAlertManager discordWebhookAlertManager,
+    IScriptLogger scriptLogger,
     IGridServerFileHelper gridServerFileHelper
 ) : InteractionModuleBase<ShardedInteractionContext>
 {
@@ -83,13 +87,18 @@ public partial class ExecuteScript(
     private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
+    private readonly IScriptLogger _scriptLogger = scriptLogger ?? throw new ArgumentNullException(nameof(scriptLogger));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
 
-    [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-GB")]
+    [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
-    [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-GB")]
+    [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex QuotesRegex();
+    [GeneratedRegex(@"Execute Script:(\d+): (.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex GridSyntaxErrorRegex();
+
+    private const string _ErrorConvertingToJson = "Can't convert to JSON";
 
     /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
     public override async Task BeforeExecuteAsync(ICommandInfo command)
@@ -163,6 +172,9 @@ public partial class ExecuteScript(
 
         return (input, null);
     }
+
+    private async Task LuaErrorAsync(string error)
+        => await HandleResponseAsync(null, new() { ErrorMessage = error, ExecutionTime = 0, Success = false });
 
     private async Task HandleResponseAsync(string result, ReturnMetadata metadata)
     {
@@ -284,6 +296,8 @@ public partial class ExecuteScript(
 
         var originalScript = script;
 
+        await _scriptLogger.LogScriptAsync(script, Context);
+
         if (ContainsUnicode(script))
         {
             await FollowupAsync("The script cannot contain unicode characters as grid-servers cannot support unicode in transit.");
@@ -360,12 +374,47 @@ public partial class ExecuteScript(
 
             Task.Run(() => _jobManager.CloseJob(job, false));
 
-            await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
-
             if (ex is FaultException)
             {
-                // Needs to be reported, get the original script, the fully constructed script and all information about channels, users, etc.
-                await FollowupAsync("There was an internal error, please try again later.");
+                var message = ex.Message;
+                if (GridSyntaxErrorRegex().IsMatch(message))
+                {
+                    var match = GridSyntaxErrorRegex().Match(message);
+                    var line = match.Groups[1].Value;
+                    var error = match.Groups[2].Value;
+
+                    // We need to subtract the lines that the template adds (otherwise for one liners it will appear to be on line like 500 and something)
+                    if (_scriptsSettings.LuaVMEnabled)
+                    {
+                        const string _marker = "{0}";
+
+                        var template = _luaUtility.LuaVMTemplate;
+                        var templateLines = template.Split('\n');
+
+                        var lineIndex = Array.FindIndex(templateLines, line => line.StartsWith(_marker));
+
+                        if (lineIndex != -1)
+                            line = (int.Parse(line) - lineIndex).ToString();
+                    }
+
+                    await LuaErrorAsync($"Line {line}: {error}");
+
+                    return;
+                }
+
+                if (message.Contains(_ErrorConvertingToJson))
+                {
+                    await LuaErrorAsync("The script returned a value that could not be converted to JSON.");
+
+                    return;
+                }
+            }
+
+            // If ex.InnerException.InnerException is a XmlException, it's likely that the script returned invalid ASCII characters.
+            // Catch this and alert the user (only in the case of ex is CommunicationException, ex.InnerException is InvalidOperationException and ex.InnerException.InnerException is XmlException)
+            if (ex is CommunicationException && ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException)
+            {
+                await LuaErrorAsync("The script returned invalid ASCII characters.");
 
                 return;
             }
@@ -376,6 +425,8 @@ public partial class ExecuteScript(
 
                 return;
             }
+
+            await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
 
             throw;
         }
