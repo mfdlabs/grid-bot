@@ -50,7 +50,7 @@
     <PackageReference Include="Backtrace" Version="2.1.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="3.15.2" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.15.3" />
   </ItemGroup>
 
   <!-- Protobuf -->
