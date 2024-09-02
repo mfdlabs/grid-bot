@@ -253,6 +253,8 @@ jobs:
                 }
               }
 
+              console.log(dotnetCommand);
+
               try {
                 child_process.execSync(dotnetCommand, { stdio: 'inherit' });
               } catch (error) {
@@ -263,6 +265,8 @@ jobs:
 
               // Zip the component, and move it to the deploy directory
               const zipCommand = `zip -r ${path.resolve(deployDirectory, `${componentConfig.component}.zip`)} .`;
+
+              console.log(zipCommand);
 
               try {
                 child_process.execSync(zipCommand, { stdio: 'inherit', cwd: componentConfig.build.component_directory });
