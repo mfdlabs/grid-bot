@@ -286,7 +286,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: components
-          path: ${{ steps.build-components.outputs.deploy-directory }}/
+          path: .deploy/*.zip
         
 
   # No need for checkout, downloads the component archives from the
