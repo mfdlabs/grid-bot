@@ -94,6 +94,8 @@ public class OnShardReady(
 #if DEBUG
             if (_discordSettings.DebugGuildId != 0)
                 await _interactionService.RegisterCommandsToGuildAsync(_discordSettings.DebugGuildId);
+            else
+                await _interactionService.RegisterCommandsGloballyAsync();
 #else
             await _interactionService.RegisterCommandsGloballyAsync();
 #endif
