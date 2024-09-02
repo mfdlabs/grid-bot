@@ -275,6 +275,15 @@ jobs:
 
                  return;
               }
+
+              const lsCommand = `ls -la ${deployDirectory}`
+              try {
+                child_process.execSync(lsCommand, { stdio: 'inherit' });
+              } catch (error) {
+                core.setFailed(`Failed to ls component ${component}`);
+
+                 return;
+              }
             }
 
 
