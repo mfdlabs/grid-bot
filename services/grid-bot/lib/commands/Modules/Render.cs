@@ -3,6 +3,7 @@ namespace Grid.Bot.Interactions.Public;
 using System;
 using System.Threading.Tasks;
 
+using Discord;
 using Discord.Interactions;
 
 using Logging;
@@ -31,6 +32,8 @@ using Utility;
 /// - <paramref name="adminUtility"/> cannot be null.
 /// </exception>
 [Group("render", "Commands used for rendering a Roblox character.")]
+[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
 public class Render(
     AvatarSettings avatarSettings,
     ILogger logger,

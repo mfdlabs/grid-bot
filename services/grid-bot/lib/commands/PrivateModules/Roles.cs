@@ -20,8 +20,10 @@ using Utility;
 /// - <paramref name="discordRolesSettings"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// </exception>
-[Group("role", "Commands used for updating user bot roles.")]
 [RequireBotRole(BotRole.Administrator)]
+[CommandContextType(InteractionContextType.Guild)]
+[IntegrationType(ApplicationIntegrationType.GuildInstall)]
+[Group("role", "Commands used for updating user bot roles.")]
 public class Roles(
     DiscordRolesSettings discordRolesSettings,
     IAdminUtility adminUtility

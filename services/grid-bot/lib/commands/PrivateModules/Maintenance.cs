@@ -21,8 +21,10 @@ using Discord.Interactions;
 /// - <paramref name="discordSettings"/> cannot be null.
 /// - <paramref name="discordShardedClient"/> cannot be null.
 /// </exception>
-[Group("maintenance", "Commands used for grid-bot-maintenance.")]
 [RequireBotRole(BotRole.Administrator)]
+[CommandContextType(InteractionContextType.Guild)]
+[IntegrationType(ApplicationIntegrationType.GuildInstall)]
+[Group("maintenance", "Commands used for grid-bot-maintenance.")]
 public class Maintenance(
     MaintenanceSettings maintenanceSettings,
     DiscordSettings discordSettings,
