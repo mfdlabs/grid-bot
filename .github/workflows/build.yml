@@ -296,6 +296,8 @@ jobs:
         with:
           name: components
           path: .deploy/*.zip
+          if-no-files-found: error
+          include-hidden-files: true
         
 
   # No need for checkout, downloads the component archives from the
