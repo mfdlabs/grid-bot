@@ -28,8 +28,10 @@ using Extensions;
 /// - <paramref name="clientSettingsClient"/> cannot be null.
 /// - <paramref name="clientSettingsClientSettings"/> cannot be null.
 /// </exception>
-[Group("clientsettings", "Manage the client settings.")]
 [RequireBotRole(BotRole.Administrator)]
+[CommandContextType(InteractionContextType.Guild)]
+[IntegrationType(ApplicationIntegrationType.GuildInstall)]
+[Group("clientsettings", "Manage the client settings.")]
 public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, ClientSettingsClientSettings clientSettingsClientSettings) : InteractionModuleBase<ShardedInteractionContext>
 {
     private readonly IClientSettingsClient _clientSettingsClient = clientSettingsClient ?? throw new ArgumentNullException(nameof(clientSettingsClient));

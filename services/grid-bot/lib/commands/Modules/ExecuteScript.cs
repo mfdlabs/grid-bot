@@ -58,6 +58,8 @@ using GridJob = Client.Job;
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 [Group("execute", "Commands used for executing Luau code.")]
+[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
 public partial class ExecuteScript(
     ILogger logger,
     GridSettings gridSettings,
@@ -143,6 +145,19 @@ public partial class ExecuteScript(
     {
         if (string.IsNullOrEmpty(input)) return (null, null);
 
+        // Check if the input matches grid syntax error
+        if (GridSyntaxErrorRegex().IsMatch(input))
+        {
+            var match = GridSyntaxErrorRegex().Match(input);
+            var line = match.Groups[1].Value;
+            var error = match.Groups[2].Value;
+
+            input = $"Line {line}: {error}";
+        }
+
+        // Replace backticks with escaped backticks
+        input = input.Replace("`", "\\`");
+
         if (input.Length > _maxErrorLength)
         {
             var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
@@ -159,6 +174,9 @@ public partial class ExecuteScript(
     private (string, MemoryStream) DetermineResult(string input, string fileName)
     {
         if (string.IsNullOrEmpty(input)) return (null, null);
+
+        // Replace backticks with escaped backticks
+        input = input.Replace("`", "\\`");
 
         if (input.Length > _maxResultLength)
         {
@@ -259,10 +277,10 @@ public partial class ExecuteScript(
             }
 
             var embed = new EmbedBuilder()
-                .WithTitle("Luau Syntax Error")
+                .WithTitle("Lua Error")
                 .WithAuthor(Context.User)
                 .WithCurrentTimestamp()
-                .WithColor(0xff, 0x00, 0x00)
+                .WithColor(Color.Red)
                 .WithDescription($"```\n{errorString}\n```")
                 .Build();
 

@@ -28,6 +28,8 @@ using Networking;
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 [Group("support", "Commands used for grid-bot-support.")]
+[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
 public class Support(
     GridSettings gridSettings,
     GlobalSettings globalSettings,

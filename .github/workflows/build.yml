@@ -253,6 +253,8 @@ jobs:
                 }
               }
 
+              console.log(dotnetCommand);
+
               try {
                 child_process.execSync(dotnetCommand, { stdio: 'inherit' });
               } catch (error) {
@@ -264,10 +266,21 @@ jobs:
               // Zip the component, and move it to the deploy directory
               const zipCommand = `zip -r ${path.resolve(deployDirectory, `${componentConfig.component}.zip`)} .`;
 
+              console.log(zipCommand);
+
               try {
                 child_process.execSync(zipCommand, { stdio: 'inherit', cwd: componentConfig.build.component_directory });
               } catch (error) {
                 core.setFailed(`Failed to zip component ${component}`);
+
+                 return;
+              }
+
+              const lsCommand = `ls -la ${deployDirectory}`
+              try {
+                child_process.execSync(lsCommand, { stdio: 'inherit' });
+              } catch (error) {
+                core.setFailed(`Failed to ls component ${component}`);
 
                  return;
               }
@@ -282,7 +295,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: components
-          path: ${{ steps.build-components.outputs.deploy-directory }}/*.zip
+          path: .deploy/*.zip
+          if-no-files-found: error
+          include-hidden-files: true
         
 
   # No need for checkout, downloads the component archives from the
