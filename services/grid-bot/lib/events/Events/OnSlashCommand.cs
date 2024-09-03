@@ -89,6 +89,7 @@ public class OnInteraction(
 
     private static string GetGuildId(SocketInteraction interaction)
     {
+        /* Always false in private thread channels, please look into discord-net/Discord.Net#2997 and mfdlabs/grid-bot#335 */
         if (interaction.Channel is SocketGuildChannel guildChannel)
             return guildChannel.Guild.Id.ToString();
 
@@ -123,15 +124,6 @@ public class OnInteraction(
                     interaction.Type.ToString()
                 ).Inc();
 
-                var guildName = string.Empty;
-                var guildId = 0UL;
-
-                if (interaction.Channel is SocketGuildChannel guildChannel)
-                {
-                    guildName = guildChannel.Guild.Name;
-                    guildId = guildChannel.Guild.Id;
-                }
-
                 logger.Warning("Maintenance enabled user tried to use the bot.");
 
                 var failureMessage = _maintenanceSettings.MaintenanceStatus;
@@ -157,7 +149,8 @@ public class OnInteraction(
 
             _totalUsersBypassedMaintenance.WithLabels(
                 interaction.User.Id.ToString(),
-                interaction.Channel.Id.ToString(),
+                /* Temporary until mfdlabs/grid-bot#335 is resolved */
+                interaction.Channel?.Id.ToString() ?? interaction.ChannelId?.ToString() ?? "Thread",
                 GetGuildId(interaction)
             ).Inc();
         }
@@ -166,7 +159,8 @@ public class OnInteraction(
         {
             _totalBlacklistedUserAttemptedInteractions.WithLabels(
                 interaction.User.Id.ToString(),
-                interaction.Channel.Id.ToString(),
+                /* Temporary until mfdlabs/grid-bot#335 is resolved */
+                interaction.Channel?.Id.ToString() ?? interaction.ChannelId?.ToString() ?? "Thread",
                 GetGuildId(interaction)
             ).Inc();
 

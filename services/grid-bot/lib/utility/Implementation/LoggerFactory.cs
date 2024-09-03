@@ -21,7 +21,7 @@ public class LoggerFactory : ILoggerFactory
             logToFileSystem: false
         );
 
-        logger.CustomLogPrefixes.Add(() => interaction.ChannelId.ToString());
+        logger.CustomLogPrefixes.Add(() => interaction.ChannelId?.ToString() ?? "Thread");
         logger.CustomLogPrefixes.Add(() => interaction.User.Id.ToString());
 
         // Add guild id if the interaction is from a guild.
@@ -45,6 +45,7 @@ public class LoggerFactory : ILoggerFactory
         logger.CustomLogPrefixes.Add(() => message.Author.Id.ToString());
 
         // Add guild id if the message is from a guild.
+        /* Always false in private thread channels, please look into discord-net/Discord.Net#2997 and mfdlabs/grid-bot#335 */
         if (message.Channel is SocketGuildChannel guildChannel)
             logger.CustomLogPrefixes.Add(() => guildChannel.Guild.Id.ToString());
 

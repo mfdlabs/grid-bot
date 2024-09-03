@@ -494,7 +494,9 @@ public partial class ExecuteScript(
 
         var userInfo = Context.User.ToString();
         var guildInfo = Context.Guild?.ToString() ?? "DMs";
-        var channelInfo = Context.Channel.ToString();
+
+        /* Temporary until mfdlabs/grid-bot#335 is resolved */
+        var channelInfo = Context.Channel?.ToString() ?? Context.Interaction.ChannelId?.ToString() ?? "Thread";
 
         // Script & original script in attachments
         var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");

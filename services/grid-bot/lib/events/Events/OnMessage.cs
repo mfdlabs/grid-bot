@@ -173,7 +173,7 @@ public partial class OnMessage(
 
             _totalUsersBypassedMaintenance.WithLabels(
                 message.Author.Id.ToString(),
-                message.Channel.Id.ToString(),
+                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
                 GetGuildId(message)
             ).Inc();
         }
@@ -182,7 +182,7 @@ public partial class OnMessage(
         {
             _totalBlacklistedUserAttemptedMessages.WithLabels(
                 message.Author.Id.ToString(),
-                message.Channel.Id.ToString(),
+                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
                 GetGuildId(message)
             ).Inc();
 

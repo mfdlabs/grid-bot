@@ -74,7 +74,8 @@ public class OnInteractionExecuted(
                 interaction.Type.ToString(),
                 interaction.Id.ToString(),
                 interaction.User.Id.ToString(),
-                interaction.ChannelId.ToString(),
+                /* Temporary until mfdlabs/grid-bot#335 is resolved */
+                interaction.ChannelId?.ToString() ?? "Thread",
                 GetGuildId(context)
             ).Inc();
 

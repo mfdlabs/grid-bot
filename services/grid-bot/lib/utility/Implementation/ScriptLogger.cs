@@ -84,9 +84,9 @@ public class ScriptLogger : IScriptLogger
         var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
         var userInfo = context.User.ToString();
         var guildInfo = context.Guild?.ToString() ?? "DMs";
-        var channelInfo = context.Channel?.ToString() ?? "Forum Channel";
 
-
+        /* Temporary until mfdlabs/grid-bot#335 is resolved */
+        var channelInfo = context.Channel?.ToString() ?? context.Interaction.ChannelId?.ToString() ?? "Thread";
 
         // Get a SHA256 hash of the script (hex)
         var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
