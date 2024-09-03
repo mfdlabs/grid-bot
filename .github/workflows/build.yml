@@ -134,7 +134,7 @@ jobs:
 
           # If we have a version suffix, append it
           if [ -n "${{ env.VERSION_SUFFIX }}" ]; then
-            VERSION="$VERSION${{ env.VERSION_SUFFIX }}"
+            VERSION="$(VERSION)${{ env.VERSION_SUFFIX }}"
           fi
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
