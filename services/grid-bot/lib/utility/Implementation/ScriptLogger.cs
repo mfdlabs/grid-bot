@@ -80,16 +80,16 @@ public class ScriptLogger : IScriptLogger
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
 
-        // Get a SHA256 hash of the script (hex)
-        var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
-        if (_scriptHashes.Contains(scriptHash)) return;
-
         // username based off machine info
         var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
         var userInfo = context.User.ToString();
         var guildInfo = context.Guild?.ToString() ?? "DMs";
-        var channelInfo = context.Channel.ToString();
+        var channelInfo = context.Channel?.ToString() ?? "Forum Channel";
 
+
+
+        // Get a SHA256 hash of the script (hex)
+        var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
         var content = $"""
                 **User:** {userInfo}
                 **Guild:** {guildInfo}
@@ -99,6 +99,26 @@ public class ScriptLogger : IScriptLogger
 
         using var client = _httpClientFactory.CreateClient();
         var url = _scriptsSettings.ScriptLoggingDiscordWebhookUrl;
+
+
+        if (_scriptHashes.Contains(scriptHash))
+        {
+            // Just log the hash
+            content += "\n\n**Script already logged**";
+
+            var existsPayload = new
+            {
+                username,
+                content
+            };
+
+            var existsJson = JsonConvert.SerializeObject(existsPayload);
+
+            await client.PostAsync(url, new StringContent(existsJson, Encoding.UTF8, "application/json"));
+
+            return;
+        }
+
         var payload = new
         {
             username,
