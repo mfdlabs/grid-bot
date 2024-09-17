@@ -4,13 +4,14 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
 
 using Prometheus;
 
 using Utility;
-using Discord;
+using Extensions;
 
 /// <summary>
 /// Event handler for interactions.
@@ -87,13 +88,8 @@ public class OnInteraction(
         }
     );
 
-    private static string GetGuildId(SocketInteraction interaction)
-    {
-        if (interaction.Channel is SocketGuildChannel guildChannel)
-            return guildChannel.Guild.Id.ToString();
-
-        return "DM";
-    }
+    private string GetGuildId(SocketInteraction interaction)
+        => interaction.GetGuild(_client).ToString() ?? "DM";
 
     /// <summary>
     /// Invoke the event handler.
@@ -123,15 +119,6 @@ public class OnInteraction(
                     interaction.Type.ToString()
                 ).Inc();
 
-                var guildName = string.Empty;
-                var guildId = 0UL;
-
-                if (interaction.Channel is SocketGuildChannel guildChannel)
-                {
-                    guildName = guildChannel.Guild.Name;
-                    guildId = guildChannel.Guild.Id;
-                }
-
                 logger.Warning("Maintenance enabled user tried to use the bot.");
 
                 var failureMessage = _maintenanceSettings.MaintenanceStatus;
@@ -157,7 +144,7 @@ public class OnInteraction(
 
             _totalUsersBypassedMaintenance.WithLabels(
                 interaction.User.Id.ToString(),
-                interaction.Channel.Id.ToString(),
+                interaction.GetChannelAsString(),
                 GetGuildId(interaction)
             ).Inc();
         }
@@ -166,7 +153,7 @@ public class OnInteraction(
         {
             _totalBlacklistedUserAttemptedInteractions.WithLabels(
                 interaction.User.Id.ToString(),
-                interaction.Channel.Id.ToString(),
+                interaction.GetChannelAsString(),
                 GetGuildId(interaction)
             ).Inc();
 

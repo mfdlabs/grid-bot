@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Discord;
+using Discord.WebSocket;
 using Discord.Interactions;
 
 using Prometheus;
@@ -13,6 +14,8 @@ using Prometheus;
 using Logging;
 
 using Utility;
+using Extensions;
+
 
 /// <summary>
 /// Invoked when slash commands are executed.
@@ -23,15 +26,18 @@ using Utility;
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="backtraceUtility">The <see cref="BacktraceUtility"/>.</param>
 /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
+/// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="backtraceUtility"/> cannot be null.
 /// - <paramref name="discordRolesSettings"/> cannot be null.
+/// - <paramref name="discordClient"/> cannot be null.
 /// </exception>
 public class OnInteractionExecuted(
     ILogger logger,
     IBacktraceUtility backtraceUtility,
-    DiscordRolesSettings discordRolesSettings
+    DiscordRolesSettings discordRolesSettings,
+    DiscordShardedClient discordClient
 )
 {
     private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command:";
@@ -40,6 +46,7 @@ public class OnInteractionExecuted(
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
+    private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
 
     private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
         "grid_interactions_failed_total",
@@ -51,9 +58,9 @@ public class OnInteractionExecuted(
         "interaction_guild_id"
     );
 
-    private string GetGuildId(IInteractionContext context)
+    private string GetGuildId(SocketInteraction interaction)
     {
-        return context.Guild?.Id.ToString() ?? "DM";
+        return interaction.GetGuild(_discordClient)?.Id.ToString() ?? "DM";
     }
 
     /// <summary>
@@ -64,7 +71,8 @@ public class OnInteractionExecuted(
     /// <param name="result">The <see cref="IResult"/>.</param>
     public async Task Invoke(ICommandInfo command, IInteractionContext context, IResult result)
     {
-        var interaction = context.Interaction;
+        if (context.Interaction is not SocketInteraction interaction)
+            return;
 
         if (!result.IsSuccess)
         {
@@ -74,8 +82,9 @@ public class OnInteractionExecuted(
                 interaction.Type.ToString(),
                 interaction.Id.ToString(),
                 interaction.User.Id.ToString(),
-                interaction.ChannelId.ToString(),
-                GetGuildId(context)
+                /* Temporary until mfdlabs/grid-bot#335 is resolved */
+                interaction.GetChannelAsString(),
+                GetGuildId(interaction)
             ).Inc();
 
             if (result is not ExecuteResult executeResult)

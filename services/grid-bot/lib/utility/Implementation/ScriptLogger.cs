@@ -9,12 +9,16 @@ using System.Security.Cryptography;
 using System.Collections.Concurrent;
 
 using Discord;
+using Discord.WebSocket;
 using Discord.Interactions;
 
 using Newtonsoft.Json;
 
 using Random;
 using Networking;
+
+using Extensions;
+
 
 /// <summary>
 /// Handles sending alerts to a Discord webhook.
@@ -26,6 +30,7 @@ public class ScriptLogger : IScriptLogger
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ScriptsSettings _scriptsSettings;
+    private readonly DiscordShardedClient _discordClient;
 
     private readonly ConcurrentBag<string> _scriptHashes = new();
 
@@ -36,23 +41,27 @@ public class ScriptLogger : IScriptLogger
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/> to use.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
     /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/> to use.</param>
+    /// <param name="discordClient">The <see cref="DiscordShardedClient"/> to use.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="localIpAddressProvider"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="scriptsSettings"/> cannot be null.
+    /// - <paramref name="discordClient"/> cannot be null.
     /// </exception>
     public ScriptLogger(
         ILocalIpAddressProvider localIpAddressProvider,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
-        ScriptsSettings scriptsSettings
+        ScriptsSettings scriptsSettings,
+        DiscordShardedClient discordClient
     )
     {
         _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
+        _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
 
         foreach (var hash in _scriptsSettings.LoggedScriptHashes)
             _scriptHashes.Add(hash);
@@ -80,16 +89,14 @@ public class ScriptLogger : IScriptLogger
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
 
-        // Get a SHA256 hash of the script (hex)
-        var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
-        if (_scriptHashes.Contains(scriptHash)) return;
-
         // username based off machine info
         var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
         var userInfo = context.User.ToString();
-        var guildInfo = context.Guild?.ToString() ?? "DMs";
-        var channelInfo = context.Channel.ToString();
+        var guildInfo = context.Interaction.GetGuild(_discordClient)?.ToString() ?? "DMs";
+        var channelInfo = context.Interaction.GetChannelAsString();
 
+        // Get a SHA256 hash of the script (hex)
+        var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
         var content = $"""
                 **User:** {userInfo}
                 **Guild:** {guildInfo}
@@ -99,6 +106,26 @@ public class ScriptLogger : IScriptLogger
 
         using var client = _httpClientFactory.CreateClient();
         var url = _scriptsSettings.ScriptLoggingDiscordWebhookUrl;
+
+
+        if (_scriptHashes.Contains(scriptHash))
+        {
+            // Just log the hash
+            content += "\n\n**Script already logged**";
+
+            var existsPayload = new
+            {
+                username,
+                content
+            };
+
+            var existsJson = JsonConvert.SerializeObject(existsPayload);
+
+            await client.PostAsync(url, new StringContent(existsJson, Encoding.UTF8, "application/json"));
+
+            return;
+        }
+
         var payload = new
         {
             username,

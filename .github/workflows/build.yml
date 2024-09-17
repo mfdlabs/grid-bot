@@ -37,6 +37,11 @@ on:
         default: true
         type: boolean
 
+      version_suffix:
+        description: "Version Suffix"
+        required: false
+        type: string
+
 permissions:
   contents: write
   deployments: write
@@ -85,6 +90,8 @@ jobs:
 
       COMPONENT_NAMES: ${{ github.event.inputs.components || needs.get-component-names.outputs.components }}
 
+      VERSION_SUFFIX: ${{ github.event.inputs.version_suffix || '' }}
+
     outputs:
       components: ${{ steps.build-components.outputs.components }}
       version: ${{ steps.version.outputs.version }}
@@ -123,6 +130,11 @@ jobs:
           # If we are building debug, append -dev
           if [ "${{ env.BUILD_CONFIGURATION }}" == "Debug" ]; then
             VERSION="$VERSION-dev"
+          fi
+
+          # If we have a version suffix, append it
+          if [ -n "${{ env.VERSION_SUFFIX }}" ]; then
+            VERSION="${VERSION}${{ env.VERSION_SUFFIX }}"
           fi
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
