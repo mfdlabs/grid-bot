@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 using Discord;
+using Discord.WebSocket;
 using Discord.Interactions;
 
 using Loretta.CodeAnalysis;
@@ -25,7 +26,7 @@ using Utility;
 using Commands;
 using Extensions;
 
-using GridJob = Client.Job;
+using ClientJob = Client.Job;
 
 /// <summary>
 /// Interaction handler for executing Luau code.
@@ -36,6 +37,7 @@ using GridJob = Client.Job;
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
 /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
+/// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
 /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
 /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
@@ -48,6 +50,7 @@ using GridJob = Client.Job;
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="gridSettings"/> cannot be null.
 /// - <paramref name="scriptsSettings"/> cannot be null.
+/// - <paramref name="discordClient"/> cannot be null.
 /// - <paramref name="luaUtility"/> cannot be null.
 /// - <paramref name="floodCheckerRegistry"/> cannot be null.
 /// - <paramref name="backtraceUtility"/> cannot be null.
@@ -64,6 +67,7 @@ public partial class ExecuteScript(
     ILogger logger,
     GridSettings gridSettings,
     ScriptsSettings scriptsSettings,
+    DiscordShardedClient discordClient,
     ILuaUtility luaUtility,
     IFloodCheckerRegistry floodCheckerRegistry,
     IBacktraceUtility backtraceUtility,
@@ -83,6 +87,7 @@ public partial class ExecuteScript(
     private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
     private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
 
+    private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
     private readonly ILuaUtility _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
     private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
@@ -304,12 +309,20 @@ public partial class ExecuteScript(
     {
         if (string.IsNullOrWhiteSpace(script))
         {
-            await FollowupAsync("The script cannot be empty.");
+            await LuaErrorAsync("The script cannot be empty!");
 
             return;
         }
 
         script = GetCodeBlockContents(script);
+
+        if (string.IsNullOrEmpty(script))
+        {
+            await LuaErrorAsync("There must be content within a code block!");
+
+            return;
+        }
+
         script = EscapeQuotes(script);
 
         var originalScript = script;
@@ -318,7 +331,7 @@ public partial class ExecuteScript(
 
         if (ContainsUnicode(script))
         {
-            await FollowupAsync("The script cannot contain unicode characters as grid-servers cannot support unicode in transit.");
+            await LuaErrorAsync("Scripts can only contain ASCII characters!");
 
             return;
         }
@@ -352,7 +365,7 @@ public partial class ExecuteScript(
 #endif
 
 
-        var gridJob = new GridJob() { id = scriptId, expirationInSeconds = _gridSettings.ScriptExecutionJobMaxTimeout.TotalSeconds };
+        var gridJob = new ClientJob() { id = scriptId, expirationInSeconds = _gridSettings.ScriptExecutionJobMaxTimeout.TotalSeconds };
         var job = new Job(Guid.NewGuid().ToString());
 
         var sw = Stopwatch.StartNew();
@@ -461,9 +474,8 @@ public partial class ExecuteScript(
                     scriptName
                 );
                 scriptName.PollDeletion(
-                    10,
-                    ex => _logger.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                    () => _logger.Debug(
+                    onFailure: ex => _logger.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
+                    onSuccess: () => _logger.Debug(
                         "Successfully deleted the script '{0}' at path '{1}'!",
                             scriptId,
                             scriptName
@@ -493,10 +505,8 @@ public partial class ExecuteScript(
         _backtraceUtility.UploadException(ex);
 
         var userInfo = Context.User.ToString();
-        var guildInfo = Context.Guild?.ToString() ?? "DMs";
-
-        /* Temporary until mfdlabs/grid-bot#335 is resolved */
-        var channelInfo = Context.Channel?.ToString() ?? Context.Interaction.ChannelId?.ToString() ?? "Thread";
+        var guildInfo = Context.Interaction.GetGuild(_discordClient)?.ToString() ?? "DMs";
+        var channelInfo = Context.Interaction.GetChannelAsString();
 
         // Script & original script in attachments
         var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");

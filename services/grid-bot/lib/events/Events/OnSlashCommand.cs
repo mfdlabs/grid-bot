@@ -4,13 +4,14 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
 
 using Prometheus;
 
 using Utility;
-using Discord;
+using Extensions;
 
 /// <summary>
 /// Event handler for interactions.
@@ -87,14 +88,8 @@ public class OnInteraction(
         }
     );
 
-    private static string GetGuildId(SocketInteraction interaction)
-    {
-        /* Always false in private thread channels, please look into discord-net/Discord.Net#2997 and mfdlabs/grid-bot#335 */
-        if (interaction.Channel is SocketGuildChannel guildChannel)
-            return guildChannel.Guild.Id.ToString();
-
-        return "DM";
-    }
+    private string GetGuildId(SocketInteraction interaction)
+        => interaction.GetGuild(_client).ToString() ?? "DM";
 
     /// <summary>
     /// Invoke the event handler.
@@ -149,8 +144,7 @@ public class OnInteraction(
 
             _totalUsersBypassedMaintenance.WithLabels(
                 interaction.User.Id.ToString(),
-                /* Temporary until mfdlabs/grid-bot#335 is resolved */
-                interaction.Channel?.Id.ToString() ?? interaction.ChannelId?.ToString() ?? "Thread",
+                interaction.GetChannelAsString(),
                 GetGuildId(interaction)
             ).Inc();
         }
@@ -159,8 +153,7 @@ public class OnInteraction(
         {
             _totalBlacklistedUserAttemptedInteractions.WithLabels(
                 interaction.User.Id.ToString(),
-                /* Temporary until mfdlabs/grid-bot#335 is resolved */
-                interaction.Channel?.Id.ToString() ?? interaction.ChannelId?.ToString() ?? "Thread",
+                interaction.GetChannelAsString(),
                 GetGuildId(interaction)
             ).Inc();
 
