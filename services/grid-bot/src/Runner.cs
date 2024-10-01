@@ -17,6 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
 using Discord.WebSocket;
+
+using Discord.Commands;
 using Discord.Interactions;
 
 using Redis;
@@ -142,6 +144,15 @@ internal static class Runner
         var interactionServiceConfig = new InteractionServiceConfig()
         {
             LogLevel = LogSeverity.Debug,
+            ThrowOnError = false
+        };
+
+        var commandServiceConfig = new CommandServiceConfig()
+        {
+            LogLevel = LogSeverity.Debug,
+            CaseSensitiveCommands = false,
+            IgnoreExtraArgs = true,
+            ThrowOnError = false
         };
 
         var gridSettings = providers.FirstOrDefault(s => s.GetType() == typeof(GridSettings)) as GridSettings;
@@ -184,14 +195,16 @@ internal static class Runner
             .AddSingleton(interactionServiceConfig)
             .AddSingleton<IRestClientProvider>(x => x.GetRequiredService<DiscordShardedClient>())
             .AddSingleton<DiscordShardedClient>()
-            .AddSingleton<InteractionService>();
+            .AddSingleton<InteractionService>()
+            .AddSingleton<CommandService>();
 
         // Event Handlers
         services.AddSingleton<OnLogMessage>()
             .AddSingleton<OnMessage>()
             .AddSingleton<OnInteraction>()
             .AddSingleton<OnInteractionExecuted>()
-            .AddSingleton<OnShardReady>();
+            .AddSingleton<OnShardReady>()
+            .AddSingleton<OnCommandExecuted>();
 
         // Http Client Factory
         services.AddHttpClient();
@@ -480,12 +493,14 @@ internal static class Runner
 
         var client = services.GetRequiredService<DiscordShardedClient>();
         var interactions = services.GetRequiredService<InteractionService>();
+        var commands = services.GetRequiredService<CommandService>();
 
         var onLogMessage = services.GetRequiredService<OnLogMessage>();
         var onShardReady = services.GetRequiredService<OnShardReady>();
 
         client.Log += onLogMessage.Invoke;
         interactions.Log += onLogMessage.Invoke;
+        commands.Log += onLogMessage.Invoke;
 
         client.ShardReady += onShardReady.Invoke;
 
