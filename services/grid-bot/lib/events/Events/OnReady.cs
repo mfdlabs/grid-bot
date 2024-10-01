@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
+
+using Discord.Commands;
 using Discord.Interactions;
 
 using Logging;
 
 using Threading;
 using Text.Extensions;
+
 
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
@@ -24,20 +27,24 @@ using Text.Extensions;
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
+/// <param name="commandService">The <see cref="CommandService"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <param name="onMessageEvent">The <see cref="OnMessage"/>.</param>
 /// <param name="onInteractionEvent">The <see cref="OnInteraction"/>.</param>
 /// <param name="onInteractionExecutedEvent">The <see cref="OnInteractionExecuted"/>.</param>
+/// <param name="onCommandExecutedEvent">The <see cref="OnCommandExecuted"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="discordSettings"/> cannot be null.
 /// - <paramref name="maintenanceSettings"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="interactionService"/> cannot be null.
+/// - <paramref name="commandService"/> cannot be null.
 /// - <paramref name="services"/> cannot be null.
 /// - <paramref name="onMessageEvent"/> cannot be null.
 /// - <paramref name="onInteractionEvent"/> cannot be null.
 /// - <paramref name="onInteractionExecutedEvent"/> cannot be null.
+/// - <paramref name="onCommandExecutedEvent"/> cannot be null.	
 /// </exception>
 public class OnShardReady(
     DiscordSettings discordSettings,
@@ -45,10 +52,12 @@ public class OnShardReady(
     ILogger logger,
     DiscordShardedClient client,
     InteractionService interactionService,
+    CommandService commandService,
     IServiceProvider services,
     OnMessage onMessageEvent,
     OnInteraction onInteractionEvent,
-    OnInteractionExecuted onInteractionExecutedEvent
+    OnInteractionExecuted onInteractionExecutedEvent,
+    OnCommandExecuted onCommandExecutedEvent
 )
 {
     private static readonly Assembly _commandsAssembly = Assembly.Load("Shared.Commands");
@@ -61,11 +70,13 @@ public class OnShardReady(
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly InteractionService _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
+    private readonly CommandService _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
     private readonly OnMessage _onMessageEvent = onMessageEvent ?? throw new ArgumentNullException(nameof(onMessageEvent));
     private readonly OnInteraction _onInteractionEvent = onInteractionEvent ?? throw new ArgumentNullException(nameof(onInteractionEvent));
     private readonly OnInteractionExecuted _onInteractionExecutedEvent = onInteractionExecutedEvent ?? throw new ArgumentNullException(nameof(onInteractionExecutedEvent));
+    private readonly OnCommandExecuted _onCommandExecutedEvent = onCommandExecutedEvent ?? throw new ArgumentNullException(nameof(onCommandExecutedEvent));
 
     private static string GetStatusText(string updateText)
         => updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
@@ -90,6 +101,7 @@ public class OnShardReady(
             _logger.Debug("Final shard ready!");
 
             await _interactionService.AddModulesAsync(_commandsAssembly, _services);
+            await _commandService.AddModulesAsync(_commandsAssembly, _services);
 
 #if DEBUG
             if (_discordSettings.DebugGuildId != 0)
@@ -100,10 +112,13 @@ public class OnShardReady(
             await _interactionService.RegisterCommandsGloballyAsync();
 #endif
 
+            _onMessageEvent.Initialize();
+
             _client.MessageReceived += _onMessageEvent.Invoke;
             _client.InteractionCreated += _onInteractionEvent.Invoke;
 
             _interactionService.InteractionExecuted += _onInteractionExecutedEvent.Invoke;
+            _commandService.CommandExecuted += _onCommandExecutedEvent.Invoke;
 
             if (_maintenanceSettings.MaintenanceEnabled)
             {
