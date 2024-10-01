@@ -23,8 +23,9 @@ using Logging;
 using FileSystem;
 
 using Utility;
-using Commands;
 using Extensions;
+
+using Grid.Commands;
 
 using ClientJob = Client.Job;
 
@@ -37,7 +38,6 @@ using ClientJob = Client.Job;
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
 /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
-/// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
 /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
 /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
@@ -50,7 +50,6 @@ using ClientJob = Client.Job;
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="gridSettings"/> cannot be null.
 /// - <paramref name="scriptsSettings"/> cannot be null.
-/// - <paramref name="discordClient"/> cannot be null.
 /// - <paramref name="luaUtility"/> cannot be null.
 /// - <paramref name="floodCheckerRegistry"/> cannot be null.
 /// - <paramref name="backtraceUtility"/> cannot be null.
@@ -67,7 +66,6 @@ public partial class ExecuteScript(
     ILogger logger,
     GridSettings gridSettings,
     ScriptsSettings scriptsSettings,
-    DiscordShardedClient discordClient,
     ILuaUtility luaUtility,
     IFloodCheckerRegistry floodCheckerRegistry,
     IBacktraceUtility backtraceUtility,
@@ -76,7 +74,7 @@ public partial class ExecuteScript(
     IDiscordWebhookAlertManager discordWebhookAlertManager,
     IScriptLogger scriptLogger,
     IGridServerFileHelper gridServerFileHelper
-) : InteractionModuleBase<ShardedInteractionContext>
+) : InteractionModuleBase
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
@@ -87,7 +85,6 @@ public partial class ExecuteScript(
     private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
     private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
 
-    private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
     private readonly ILuaUtility _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
     private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
@@ -314,15 +311,6 @@ public partial class ExecuteScript(
             return;
         }
 
-        script = GetCodeBlockContents(script);
-
-        if (string.IsNullOrEmpty(script))
-        {
-            await LuaErrorAsync("There must be content within a code block!");
-
-            return;
-        }
-
         script = EscapeQuotes(script);
 
         var originalScript = script;
@@ -457,7 +445,8 @@ public partial class ExecuteScript(
                 return;
             }
 
-            await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
+            if (ex is not Discord.Net.HttpException)
+                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
 
             throw;
         }
@@ -498,15 +487,13 @@ public partial class ExecuteScript(
 
     private async Task AlertForSystem(string script, string originalScript, string scriptId, string scriptName, Exception ex)
     {
-        // No alert for a timeout, as it is most likely just a user running an infinite loop.
-        if (ex is TimeoutException)
-            return;
-
         _backtraceUtility.UploadException(ex);
 
+        var interaction = Context.Interaction as SocketInteraction;
+
         var userInfo = Context.User.ToString();
-        var guildInfo = Context.Interaction.GetGuild(_discordClient)?.ToString() ?? "DMs";
-        var channelInfo = Context.Interaction.GetChannelAsString();
+        var guildInfo = interaction.GetGuild(Context.Client)?.ToString() ?? "DMs";
+        var channelInfo = interaction.GetChannelAsString();
 
         // Script & original script in attachments
         var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
