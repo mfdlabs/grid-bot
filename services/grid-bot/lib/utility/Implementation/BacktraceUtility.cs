@@ -56,14 +56,11 @@ public class BacktraceUtility : IBacktraceUtility
         if (ex == null)
             return;
 
-        var traceBack = $"Error: {ex}\nTrace: {Environment.StackTrace}";
-
         Task.Factory.StartNew(() =>
         {
             try
             {
                 Console.WriteLine("Uploading exception to Backtrace...");
-                Console.WriteLine(traceBack);
 
                 _client?.Send(ex);
 
