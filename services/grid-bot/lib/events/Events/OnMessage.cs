@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 #if DEBUG
@@ -21,29 +22,38 @@ using Utility;
 /// Event handler for messages.
 /// </summary>
 /// <remarks>
-/// Construct a new instance of <see cref="OnMessage"/>.
+/// Initializes a new instance of the <see cref="OnMessage"/> class.
 /// </remarks>
 /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
+/// <param name="commandService">The <see cref="CommandService"/>.</param>
+/// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
+/// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="commandsSettings"/> cannot be null.
 /// - <paramref name="maintenanceSettings"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
+/// - <paramref name="commandService"/> cannot be null.
+/// - <paramref name="discordClient"/> cannot be null.
+/// - <paramref name="services"/> cannot be null.
 /// </exception>
 public partial class OnMessage(
     CommandsSettings commandsSettings,
     MaintenanceSettings maintenanceSettings,
     IAdminUtility adminUtility,
-    ILoggerFactory loggerFactory
+    ILoggerFactory loggerFactory,
+    CommandService commandService,
+    DiscordShardedClient discordClient,
+    IServiceProvider services
 )
 {
     // language=regex
-    private const string _allowedCommandRegex = @"^[a-zA-Z-]*$";
+    private const string _allowedCommandRegex = @"^[a-zA-Z-_]*$";
 
-    [GeneratedRegex(_allowedCommandRegex)]
+    [GeneratedRegex(_allowedCommandRegex, RegexOptions.Singleline)]
     private static partial Regex GetAllowedCommandRegex();
 
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
@@ -52,14 +62,20 @@ public partial class OnMessage(
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
+    private readonly CommandService _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+    private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
+    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+
+    private readonly HashSet<string> _commandAliases = []; // Used to filter out commands that are not meant for the bot.
+
     private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
         "grid_messages_processed_total",
         "The total number of messages processed."
     );
 
-    private readonly Counter _totalUsersUsingPreviousPhaseCommands = Metrics.CreateCounter(
-        "grid_users_using_previous_phase_commands_total",
-        "The total number of users using previous phase commands.",
+    private readonly Counter _totalUsersUsingTextCommands = Metrics.CreateCounter(
+        "grid_users_using_text_commands_total",
+        "The total number of users using text commands.",
         "command_name"
     );
 
@@ -84,6 +100,40 @@ public partial class OnMessage(
         "message_guild_id"
     );
 
+    private readonly Histogram _commandProcessingTime = Metrics.CreateHistogram(
+        "grid_command_processing_time_seconds",
+        "The time it takes to process an command.",
+        new HistogramConfiguration
+        {
+            Buckets = Histogram.ExponentialBuckets(0.001, 2, 10)
+        }
+    );
+
+
+    /// <summary>
+    /// Initialize the event handler.
+    /// </summary>
+    public void Initialize()
+    {
+        var modules = _commandService.Modules;
+
+        _commandAliases.Clear();
+
+        _commandAliases.UnionWith(
+            modules.SelectMany(x => x.Aliases)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x.ToLowerInvariant())
+        );
+
+        _commandAliases.UnionWith(
+            modules.SelectMany(x => x.Commands)
+                .SelectMany(x => x.Aliases)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x.ToLowerInvariant())
+                .Select(x => x.Split(' ').First())
+        );
+    }
+
     private static string GetGuildId(SocketMessage message)
     {
         if (message.Channel is SocketGuildChannel guildChannel)
@@ -103,34 +153,28 @@ public partial class OnMessage(
 
         _totalMessagesProcessed.Inc();
 
-        // Try catch here temporary until mfdlabs/grid-bot#279 is resolved.
+        int argPos = 0;
+
+        if (!message.HasStringPrefix(_commandsSettings.Prefix, ref argPos, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Get the name of the command that was used.
+        var commandName = message.Content.Split(' ').First();
+        if (string.IsNullOrEmpty(commandName)) return;
+
+        commandName = commandName[argPos..];
+        if (string.IsNullOrEmpty(commandName)) return;
+        if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
+        if (!_commandAliases.Contains(commandName.ToLowerInvariant())) return;
+
         using var logger = _loggerFactory.CreateLogger(message);
 
         var userIsAdmin = _adminUtility.UserIsAdmin(message.Author);
         var userIsPrivilaged = _adminUtility.UserIsPrivilaged(message.Author);
         var userIsBlacklisted = _adminUtility.UserIsBlacklisted(message.Author);
 
-        int argPos = 0;
-
-        if (!message.HasStringPrefix(_commandsSettings.Prefix, ref argPos, StringComparison.OrdinalIgnoreCase)) return;
-
-        // Get the name of the command that was used.
-        var commandName = message.Content.Split(' ')[0];
-        if (string.IsNullOrEmpty(commandName)) return;
-
-        commandName = commandName[argPos..];
-        if (string.IsNullOrEmpty(commandName)) return;
-        if (!GetAllowedCommandRegex().IsMatch(commandName)) return;
-        if (!_commandsSettings.PreviousPhaseCommands.Contains(commandName.ToLowerInvariant())) return;
-
-        _totalUsersUsingPreviousPhaseCommands.WithLabels(
+        _totalUsersUsingTextCommands.WithLabels(
             commandName
         ).Inc();
-
-        logger.Warning(
-            "User tried to use previous phase command '{0}', but it is no longer supported.",
-            commandName
-        );
 
 #if DEBUG
 
@@ -209,6 +253,23 @@ public partial class OnMessage(
             !userIsAdmin)
             return;
 
-        await message.ReplyAsync("Text commands are no longer supported and will be permanently removed in the future, please use slash commands instead.");
+        if (!_commandsSettings.EnableTextCommands)
+        {
+            if (!_commandsSettings.ShouldWarnWhenCommandsAreDisabled)
+                return;
+
+            if (string.IsNullOrEmpty(_commandsSettings.TextCommandsDisabledWarningText))
+                await message.ReplyAsync("Text commands are disabled, please use slash commands instead.");
+            else
+                await message.ReplyAsync(_commandsSettings.TextCommandsDisabledWarningText);
+
+            return;
+        }
+
+        using var _ = _commandProcessingTime.NewTimer();
+
+        var context = new ShardedCommandContext(_discordClient, message);
+
+        await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
     }
 }
