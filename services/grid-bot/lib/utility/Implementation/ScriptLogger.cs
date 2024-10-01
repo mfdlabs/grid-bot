@@ -10,7 +10,6 @@ using System.Collections.Concurrent;
 
 using Discord;
 using Discord.WebSocket;
-using Discord.Interactions;
 
 using Newtonsoft.Json;
 
@@ -18,6 +17,7 @@ using Random;
 using Networking;
 
 using Extensions;
+using Discord.Commands;
 
 
 /// <summary>
@@ -81,19 +81,43 @@ public class ScriptLogger : IScriptLogger
         }
     }
 
-    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, ShardedInteractionContext)"/>
-    public async Task LogScriptAsync(string script, ShardedInteractionContext context)
+    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, IInteractionContext)"/>
+    public async Task LogScriptAsync(string script, IInteractionContext context)
     {
         if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
+        if (context.Interaction is not SocketInteraction interaction) return;
 
         // username based off machine info
-        var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
         var userInfo = context.User.ToString();
-        var guildInfo = context.Interaction.GetGuild(_discordClient)?.ToString() ?? "DMs";
-        var channelInfo = context.Interaction.GetChannelAsString();
+        var guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
+        var channelInfo = interaction.GetChannelAsString();
+
+        await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
+    }
+
+    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, ICommandContext)"/>
+    public async Task LogScriptAsync(string script, ICommandContext context)
+    {
+        if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
+        ArgumentNullException.ThrowIfNull(context, nameof(context));
+
+        if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
+        if (context.Message is not SocketUserMessage message) return;
+
+        // username based off machine info
+        var userInfo = context.User.ToString();
+        var guildInfo = context.Guild?.Id.ToString() ?? "DMs";
+        var channelInfo = message.Channel?.ToString();
+        
+        await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
+    }
+
+    private async Task DoLogScriptAsync(string script, string userInfo, string guildInfo, string channelInfo)
+    {
+        var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
 
         // Get a SHA256 hash of the script (hex)
         var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
@@ -105,6 +129,7 @@ public class ScriptLogger : IScriptLogger
                 """;
 
         using var client = _httpClientFactory.CreateClient();
+
         var url = _scriptsSettings.ScriptLoggingDiscordWebhookUrl;
 
 
@@ -154,4 +179,5 @@ public class ScriptLogger : IScriptLogger
         // Add the hash to the list of logged hashes
         _scriptHashes.Add(scriptHash);
     }
+
 }
