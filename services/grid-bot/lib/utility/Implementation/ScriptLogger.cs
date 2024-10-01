@@ -30,7 +30,6 @@ public class ScriptLogger : IScriptLogger
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ScriptsSettings _scriptsSettings;
-    private readonly DiscordShardedClient _discordClient;
 
     private readonly ConcurrentBag<string> _scriptHashes = new();
 
@@ -41,27 +40,23 @@ public class ScriptLogger : IScriptLogger
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/> to use.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
     /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/> to use.</param>
-    /// <param name="discordClient">The <see cref="DiscordShardedClient"/> to use.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="localIpAddressProvider"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="scriptsSettings"/> cannot be null.
-    /// - <paramref name="discordClient"/> cannot be null.
     /// </exception>
     public ScriptLogger(
         ILocalIpAddressProvider localIpAddressProvider,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
-        ScriptsSettings scriptsSettings,
-        DiscordShardedClient discordClient
+        ScriptsSettings scriptsSettings
     )
     {
         _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
-        _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
 
         foreach (var hash in _scriptsSettings.LoggedScriptHashes)
             _scriptHashes.Add(hash);
