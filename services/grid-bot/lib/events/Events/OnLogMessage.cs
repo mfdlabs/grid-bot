@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using Discord.Commands;
+using Discord.Interactions;
 
 using Prometheus;
 
@@ -108,6 +110,8 @@ public class OnLogMessage
                 !_settings.DebugAllowTaskCanceledExceptions)
                 return Task.CompletedTask;
 #endif
+            if (message.Exception is InteractionException or CommandException)
+                return Task.CompletedTask;
 
             _logger.Error(
                 "Source = {0}, Message = {1}, Exception = {2}",
