@@ -1,11 +1,14 @@
-namespace Grid.Bot.Interactions.Private;
+namespace Grid.Bot.Commands.Private;
 
 using System;
 using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
-using Discord.Interactions;
+
+using Discord.Commands;
+
+using Extensions;
 
 /// <summary>
 /// Interaction handler for the maintenance commands.
@@ -21,47 +24,42 @@ using Discord.Interactions;
 /// - <paramref name="discordSettings"/> cannot be null.
 /// - <paramref name="discordShardedClient"/> cannot be null.
 /// </exception>
+[LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
-[CommandContextType(InteractionContextType.Guild)]
-[IntegrationType(ApplicationIntegrationType.GuildInstall)]
-[Group("maintenance", "Commands used for grid-bot-maintenance.")]
+[Group("maintenance"), Summary("Commands used for enabling and disabling maintenance mode."), Alias("maint", "m")]
 public class Maintenance(
     MaintenanceSettings maintenanceSettings,
     DiscordSettings discordSettings,
     DiscordShardedClient discordShardedClient
-) : InteractionModuleBase<ShardedInteractionContext>
+) : ModuleBase
 {
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
     private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
     private readonly DiscordShardedClient _discordShardedClient = discordShardedClient ?? throw new ArgumentNullException(nameof(discordShardedClient));
 
-    private string GetStatusText(string updateText)
+    private static string GetStatusText(string updateText)
         => string.IsNullOrEmpty(updateText) ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
 
     /// <summary>
     /// Enables maintenance mode.
     /// </summary>
     /// <param name="statusText">The status text to set.</param>
-    [SlashCommand("enable", "Enables maintenance mode.")]
+    [Command("enable"), Summary("Enables maintenance mode.")]
     public async Task EnableMaintenanceAsync(
-        [Summary("status_text", "The status text to set.")]
+        [Summary("The status text to set."), Remainder]
         string statusText = null
     )
     {
-        var slashCommand = (SocketSlashCommand)Context.Interaction;
-
         if (_maintenanceSettings.MaintenanceEnabled)
         {
             if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
             {
-                await FollowupAsync("The maintenance status is already enabled, and it appears you have a different message, " +
-                                    "if you want to update the exsting message, please re-run the command like: " +
-                                    $"'/{slashCommand.CommandName} update `status_text:{statusText}`'");
+                await this.ReplyWithReferenceAsync("The maintenance status is already enabled, and it appears you have a different message.");
 
                 return;
             }
 
-            await FollowupAsync("Maintenance is already enabled.");
+            await this.ReplyWithReferenceAsync("Maintenance is already enabled.");
 
             return;
         }
@@ -77,22 +75,18 @@ public class Maintenance(
         if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
             _maintenanceSettings.MaintenanceStatus = statusText;
 
-        await FollowupAsync($"Successfully enabled the maintenance status with the optional message of '{(string.IsNullOrEmpty(statusText) ? "No Message" : statusText)}'!");
+        await this.ReplyWithReferenceAsync($"Successfully enabled the maintenance status with the optional message of '{(string.IsNullOrEmpty(statusText) ? "No Message" : statusText)}'!");
     }
 
     /// <summary>
     /// Disables maintenance mode.
     /// </summary>
-    [SlashCommand("disable", "Disables maintenance mode.")]
+    [Command("disable"), Summary("Disables maintenance mode.")]
     public async Task DisableMaintenanceAsync()
     {
-        var slashCommand = (SocketSlashCommand)Context.Interaction;
-
         if (!_maintenanceSettings.MaintenanceEnabled)
         {
-            await FollowupAsync("The maintenance status is not enabled! " +
-                                 "if you want to enable it, please re-run the command like: " +
-                                 $"'/{slashCommand.CommandName} enable status_text:optionalMessage?'");
+            await this.ReplyWithReferenceAsync("The maintenance status is not enabled!");
 
             return;
         }
@@ -104,26 +98,22 @@ public class Maintenance(
         if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
             _discordShardedClient.SetGameAsync(_discordSettings.BotStatusMessage);
 
-        await FollowupAsync("Successfully disabled the maintenance status!");
+        await this.ReplyWithReferenceAsync("Successfully disabled the maintenance status!");
     }
 
     /// <summary>
     /// Updates the maintenance status text.
     /// </summary>
     /// <param name="statusText">The status text to set.</param>
-    [SlashCommand("update", "Updates the maintenance status text.")]
+    [Command("update"), Summary("Updates the maintenance status text.")]
     public async Task UpdateMaintenanceStatusTextAsync(
-        [Summary("status_text", "The status text to set.")]
+        [Summary("The status text to set."), Remainder]
         string statusText = null
     )
     {
-        var slashCommand = (SocketSlashCommand)Context.Interaction;
-
         if (!_maintenanceSettings.MaintenanceEnabled)
         {
-            await FollowupAsync("The maintenance status is not enabled! " +
-                                 "if you want to enable it, please re-run the command like: " +
-                                 $"'/{slashCommand.CommandName} enable status_text:optionalMessage?'");
+            await this.ReplyWithReferenceAsync("The maintenance status is not enabled!");
 
             return;
         }
@@ -134,7 +124,7 @@ public class Maintenance(
 
         if (oldMessage.Equals(statusText, StringComparison.InvariantCulture))
         {
-            await FollowupAsync("No changes were made to the maintenance status text, therefore no update was made.");
+            await this.ReplyWithReferenceAsync("No changes were made to the maintenance status text, therefore no update was made.");
 
             return;
         }
@@ -143,13 +133,14 @@ public class Maintenance(
 
         _discordShardedClient.SetGameAsync(GetStatusText(statusText));
 
-        await FollowupAsync($"Successfully updated the maintenance status text to '{statusText}'!");
+        await this.ReplyWithReferenceAsync($"Successfully updated the maintenance status text to '{statusText}'!");
     }
 
     /// <summary>
     /// Gets the maintenance status.
     /// </summary>
-    [SlashCommand("status", "Gets the maintenance status.")]
+    [Command("status"), Summary("Gets the maintenance status.")]
+    [Alias("get")]
     public async Task GetMaintenanceStatusAsync()
     {
         var embed = new EmbedBuilder()
@@ -161,6 +152,6 @@ public class Maintenance(
             .AddField("Maintenance Status Text", string.IsNullOrEmpty(_maintenanceSettings.MaintenanceStatus) ? "No Message" : _maintenanceSettings.MaintenanceStatus)
             .Build();
 
-        await FollowupAsync(embed: embed);
+        await this.ReplyWithReferenceAsync(embed: embed);
     }
 }

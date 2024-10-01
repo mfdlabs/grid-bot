@@ -1,12 +1,14 @@
-namespace Grid.Bot.Interactions.Private;
+namespace Grid.Bot.Commands.Private;
 
 using System;
 using System.Threading.Tasks;
 
 using Discord;
-using Discord.Interactions;
+
+using Discord.Commands;
 
 using Utility;
+using Extensions;
 
 /// <summary>
 /// Interaction handler for updating user bot roles.
@@ -20,14 +22,13 @@ using Utility;
 /// - <paramref name="discordRolesSettings"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// </exception>
+[LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
-[CommandContextType(InteractionContextType.Guild)]
-[IntegrationType(ApplicationIntegrationType.GuildInstall)]
-[Group("role", "Commands used for updating user bot roles.")]
+[Group("role"), Summary("Commands used for updating user bot roles."), Alias("roles")]
 public class Roles(
     DiscordRolesSettings discordRolesSettings,
     IAdminUtility adminUtility
-) : InteractionModuleBase<ShardedInteractionContext>
+) : ModuleBase
 {
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
@@ -38,31 +39,31 @@ public class Roles(
     /// </summary>
     /// <param name="user">The user to update.</param>
     /// <param name="role">The role to update to.</param>
-    [SlashCommand("update", "Updates the user's bot role.")]
+    [Command("update"), Summary("Updates the user's bot role.")]
     public async Task UpdateRoleAsync(
-        [Summary("user", "The user to update.")]
+        [Summary("The user to update.")]
         IUser user,
-        [Summary("role", "The role to update to.")]
+        [Summary("The role to update to.")]
         BotRole role = BotRole.Default
     )
     {
         if (user.IsBot)
         {
-            await FollowupAsync("Cannot update a bot's role.");
+            await this.ReplyWithReferenceAsync("Cannot update a bot's role.");
 
             return;
         }
 
         if (_adminUtility.UserIsOwner(user))
         {
-            await FollowupAsync("Cannot update the owner's role.");
+            await this.ReplyWithReferenceAsync("Cannot update the owner's role.");
 
             return;
         }
 
         if (role == BotRole.Owner)
         {
-            await FollowupAsync("Cannot update a user to the owner role.");
+            await this.ReplyWithReferenceAsync("Cannot update a user to the owner role.");
 
             return;
         }
@@ -85,78 +86,78 @@ public class Roles(
                 throw new ArgumentOutOfRangeException(nameof(role), role, null);
         }
 
-        await FollowupAsync($"Updated {user.Username}'s role to {role}.");
+        await this.ReplyWithReferenceAsync($"Updated {user.Username}'s role to {role}.");
     }
 
     /// <summary>
     /// Blacklists the user.
     /// </summary>
     /// <param name="user">The user to blacklist.</param>
-    [SlashCommand("blacklist", "Blacklists the user.")]
+    [Command("blacklist"), Summary("Blacklists the user.")]
     public async Task BlacklistUserAsync(
-        [Summary("user", "The user to blacklist.")]
+        [Summary("The user to blacklist.")]
         IUser user
     )
     {
         if (user.IsBot)
         {
-            await FollowupAsync("Cannot blacklist a bot.");
+            await this.ReplyWithReferenceAsync("Cannot blacklist a bot.");
 
             return;
         }
 
         if (_adminUtility.UserIsOwner(user))
         {
-            await FollowupAsync("Cannot blacklist the owner.");
+            await this.ReplyWithReferenceAsync("Cannot blacklist the owner.");
 
             return;
         }
 
         if (_adminUtility.UserIsBlacklisted(user))
         {
-            await FollowupAsync("User is already blacklisted.");
+            await this.ReplyWithReferenceAsync("User is already blacklisted.");
 
             return;
         }
 
         _adminUtility.BlacklistUser(user);
 
-        await FollowupAsync($"Blacklisted {user.Username}.");
+        await this.ReplyWithReferenceAsync($"Blacklisted {user.Username}.");
     }
 
     /// <summary>
     /// Unblacklists the user.
     /// </summary>
     /// <param name="user">The user to unblacklist.</param>
-    [SlashCommand("unblacklist", "Unblacklists the user.")]
+    [Command("unblacklist"), Summary("Unblacklists the user.")]
     public async Task UnblacklistUserAsync(
-        [Summary("user", "The user to unblacklist.")]
+        [Summary("The user to unblacklist.")]
         IUser user
     )
     {
         if (user.IsBot)
         {
-            await FollowupAsync("Cannot unblacklist a bot.");
+            await this.ReplyWithReferenceAsync("Cannot unblacklist a bot.");
 
             return;
         }
 
         if (_adminUtility.UserIsOwner(user))
         {
-            await FollowupAsync("Cannot unblacklist the owner.");
+            await this.ReplyWithReferenceAsync("Cannot unblacklist the owner.");
 
             return;
         }
 
         if (!_adminUtility.UserIsBlacklisted(user))
         {
-            await FollowupAsync("User is not blacklisted.");
+            await this.ReplyWithReferenceAsync("User is not blacklisted.");
 
             return;
         }
 
         _adminUtility.UnblacklistUser(user);
 
-        await FollowupAsync($"Unblacklisted {user.Username}.");
+        await this.ReplyWithReferenceAsync($"Unblacklisted {user.Username}.");
     }
 }
