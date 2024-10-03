@@ -88,18 +88,8 @@ public class OnCommandExecuted(
 
             var ex = executeResult.Exception;
 
-            if (ex is not CommandException commandException)
-            {
-                _backtraceUtility.UploadException(ex);
-
-                await message.ReplyAsync(
-                    $"An unexpected Exception has occurred. Exception ID: {Guid.NewGuid()}, send this ID to <@!{_discordRolesSettings.BotOwnerId}>"
-                );
-
-                return;
-            }
-
-            ex = commandException.InnerException;
+            if (ex is CommandException commandException)
+                ex = commandException.InnerException;
 
             // Check if it is a Missing Permissions exception from Discord.
             if (ex is Discord.Net.HttpException httpException)
