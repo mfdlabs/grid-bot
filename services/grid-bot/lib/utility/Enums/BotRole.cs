@@ -1,4 +1,4 @@
-namespace Grid.Bot;
+namespace Grid.Bot.Utility;
 
 /// <summary>
 /// Bot role.
