@@ -14,6 +14,15 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.GridPath;
 
+#if DEBUG
+
+    /// <summary>
+    /// Determines if the grid should resort to NOOP system for debugging on systems not on the infra.
+    /// </summary>
+    public bool DebugUseNoopJobManager => GetOrDefault(nameof(DebugUseNoopJobManager), false);
+
+#endif
+
     /// <summary>
     /// Gets the name of the job manager logger.
     /// </summary>

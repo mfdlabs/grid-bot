@@ -258,6 +258,15 @@ internal static class Runner
 
     private static void SetupJobManager(ServiceCollection services, GridSettings gridSettings)
     {
+#if DEBUG
+        if (gridSettings.DebugUseNoopJobManager)
+        {
+            services.AddSingleton<IJobManager, NoopJobManager>();
+
+            return;
+        }
+        #endif
+
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
             logLevel: gridSettings.JobManagerLogLevel,
