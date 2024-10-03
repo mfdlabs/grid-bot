@@ -15,10 +15,13 @@ using Utility;
 /// <remarks>
 /// Construct a new instance of <see cref="RequireBotRoleAttribute"/>.
 /// </remarks>
-/// <param name="botRole">The <see cref="BotRole"/>.</param>
+/// <param name="botRole">The <see cref="Utility.BotRole"/>.</param>
 public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : PreconditionAttribute
 {
-    private readonly BotRole _botRole = botRole;
+    /// <summary>
+    /// The role.
+    /// </summary>
+    public BotRole BotRole { get; } = botRole;
     
     private const string _permissionDeniedText = "You lack permission to execute this command.";
 
@@ -28,7 +31,7 @@ public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : Pre
     {
         var adminUtility = services.GetRequiredService<IAdminUtility>();
 
-        return _botRole switch
+        return BotRole switch
         {
             BotRole.Privileged => Task.FromResult(!adminUtility.UserIsPrivilaged(context.User)
                                 ? PreconditionResult.FromError(_permissionDeniedText)
@@ -39,7 +42,7 @@ public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : Pre
             BotRole.Owner => Task.FromResult(!adminUtility.UserIsOwner(context.User)
                                 ? PreconditionResult.FromError(_permissionDeniedText)
                                 : PreconditionResult.FromSuccess()),
-            _ => throw new ArgumentOutOfRangeException(nameof(_botRole), _botRole, null),
+            _ => throw new ArgumentOutOfRangeException(nameof(BotRole), BotRole, null),
         };
 
     }
