@@ -266,10 +266,13 @@ public partial class OnMessage(
             return;
         }
 
-        using var _ = _commandProcessingTime.NewTimer();
+        Task.Run(async () =>
+        {
+            using var _ = _commandProcessingTime.NewTimer();
 
-        var context = new ShardedCommandContext(_discordClient, message);
+            var context = new ShardedCommandContext(_discordClient, message);
 
-        await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+            await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+        });
     }
 }

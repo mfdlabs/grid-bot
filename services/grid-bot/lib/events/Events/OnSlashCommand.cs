@@ -183,20 +183,23 @@ public class OnInteraction(
 
         logger.Debug("Executing command '{0}'.", commandName);
 
-        using var _ = _interactionProcessingTime
-            .WithLabels(
-                interaction.Type.ToString()
-            )
-            .NewTimer();
+        Task.Run(async () =>
+        {
+            using var _ = _interactionProcessingTime
+                .WithLabels(
+                    interaction.Type.ToString()
+                )
+                .NewTimer();
 
-        var context = new ShardedInteractionContext(
-            _client,
-            interaction
-        );
+            var context = new ShardedInteractionContext(
+                _client,
+                interaction
+            );
 
-        await _interactionService.ExecuteCommandAsync(
-            context,
-            _services
-        ).ConfigureAwait(false);
+            await _interactionService.ExecuteCommandAsync(
+                context,
+                _services
+            ).ConfigureAwait(false);
+        });
     }
 }
