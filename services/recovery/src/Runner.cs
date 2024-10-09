@@ -47,7 +47,7 @@ internal static class Runner
 
         var logger = new Logger(
             name: settings.DefaultLoggerName,
-            logLevel: settings.DefaultLoggerLevel,
+            logLevelGetter: () => settings.DefaultLoggerLevel,
             logToConsole: true
         );
 
