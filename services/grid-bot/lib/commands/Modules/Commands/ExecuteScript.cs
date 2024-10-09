@@ -31,7 +31,7 @@ using Grid.Commands;
 using ClientJob = Client.Job;
 
 /// <summary>
-/// Interaction handler for executing Luau code.
+/// Command handler for executing Luau code.
 /// </summary>
 /// <remarks>
 /// Construct a new instance of <see cref="ExecuteScript"/>.
@@ -301,10 +301,7 @@ public partial class ExecuteScript(
     /// </summary>
     /// <param name="script">The script to execute.</param>
     [Command("execute"), Summary("Execute a script via raw text."), Alias("ex", "exc", "x")]
-    public async Task ExecuteScriptFromTextAsync(
-        [Summary("The script to execute."), Remainder]
-        string script = ""
-    )
+    public async Task ExecuteScriptFromTextAsync([Remainder] string script = "")
     {
         using var _ = Context.Channel.EnterTypingState();
 

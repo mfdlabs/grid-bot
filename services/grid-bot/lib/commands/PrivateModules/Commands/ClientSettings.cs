@@ -20,7 +20,7 @@ using Utility;
 using Extensions;
 
 /// <summary>
-/// Represents the interaction for ClientSettings.
+/// Represents the command for ClientSettings.
 /// </summary>
 /// <remarks>
 /// Construct a new instance of <see cref="ClientSettingsModule"/>.
@@ -67,13 +67,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// <param name="useApiKey">Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.</param>
     [Command("get_all"), Summary("Gets all client settings for the specified application.")]
     [Alias("getall", "all")]
-    public async Task GetAllAsync(
-        [Summary("The name of the application to get the client settings for.")]
-        string applicationName,
-
-        [Summary("Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.")]
-        bool useApiKey = false
-    )
+    public async Task GetAllAsync(string applicationName, bool useApiKey = false)
     {
         using var _ = Context.Channel.EnterTypingState();
 
@@ -111,19 +105,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// <param name="reference">The reference for the application.</param>
     /// <param name="isAllowedFromApi">Is the application allowed to be written to from the API?</param>
     [Command("import"), Summary("Imports the client settings for the specified application.")]
-    public async Task ImportAsync(
-        [Summary("The name of the application to import the client settings for.")]
-        string applicationName,
-
-        [Summary("The dependencies for the application.")]
-        string dependencies = null,
-
-        [Summary("The reference for the application.")]
-        string reference = null,
-
-        [Summary("Is the application allowed to be written to from the API?")]
-        bool isAllowedFromApi = false
-    )
+    public async Task ImportAsync(string applicationName, string dependencies = null, string reference = null, bool isAllowedFromApi = false)
     {
         var applicationSettings = Context.Message.Attachments.FirstOrDefault();
         if (applicationSettings is null)
@@ -170,16 +152,10 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// <param name="applicationName">The name of the application.</param>
     /// <param name="settingName">The name of the setting.</param>
     [Command("get"), Summary("Gets a client setting for the specified application.")]
-    public async Task GetAsync(
-        [Summary("The name of the application to get the client setting for.")]
-        string applicationName,
-
-        [Summary("The name of the setting to get.")]
-        string settingName
-    )
+    public async Task GetAsync(string applicationName, string settingName)
     {
         if (string.IsNullOrWhiteSpace(applicationName))
-        {
+        { 
             await this.ReplyWithReferenceAsync(
                 text: "Please specify an application name."
             );
@@ -233,19 +209,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// <param name="settingType">The type of the setting.</param>
     /// <param name="settingValue">The value of the setting.</param>
     [Command("set"), Summary("Sets a client setting for the specified application.")]
-    public async Task SetAsync(
-        [Summary("The name of the application to set the client setting for.")]
-        string applicationName,
-
-        [Summary("The name of the setting to set.")]
-        string settingName,
-
-        [Summary("The type of the setting to set.")]
-        ClientSettingType settingType = ClientSettingType.String,
-
-        [Summary("The value of the setting to set.")]
-        string settingValue = ""
-    )
+    public async Task SetAsync(string applicationName, string settingName, ClientSettingType settingType = ClientSettingType.String, string settingValue = "")
     {
         if (string.IsNullOrWhiteSpace(applicationName))
         {

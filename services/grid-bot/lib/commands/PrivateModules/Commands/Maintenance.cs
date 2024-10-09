@@ -12,7 +12,7 @@ using Utility;
 using Extensions;
 
 /// <summary>
-/// Interaction handler for the maintenance commands.
+/// Command handler for the maintenance commands.
 /// </summary>
 /// <remarks>
 /// Construct a new instance of <see cref="Maintenance"/>.
@@ -46,10 +46,7 @@ public class Maintenance(
     /// </summary>
     /// <param name="statusText">The status text to set.</param>
     [Command("enable"), Summary("Enables maintenance mode.")]
-    public async Task EnableMaintenanceAsync(
-        [Summary("The status text to set."), Remainder]
-        string statusText = null
-    )
+    public async Task EnableMaintenanceAsync([Remainder] string statusText = null)
     {
         if (_maintenanceSettings.MaintenanceEnabled)
         {
@@ -107,10 +104,7 @@ public class Maintenance(
     /// </summary>
     /// <param name="statusText">The status text to set.</param>
     [Command("update"), Summary("Updates the maintenance status text.")]
-    public async Task UpdateMaintenanceStatusTextAsync(
-        [Summary("The status text to set."), Remainder]
-        string statusText = null
-    )
+    public async Task UpdateMaintenanceStatusTextAsync([Remainder] string statusText = null)
     {
         if (!_maintenanceSettings.MaintenanceEnabled)
         {

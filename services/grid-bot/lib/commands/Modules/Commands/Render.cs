@@ -12,7 +12,7 @@ using Utility;
 using Extensions;
 
 /// <summary>
-/// Interaction handler for rendering a Roblox character.
+/// Command handler for rendering a Roblox character.
 /// </summary>
 /// <remarks>
 /// Construct a new instance of <see cref="Render"/>.
@@ -74,10 +74,7 @@ public class Render(
     /// </summary>
     /// <param name="userNameOrId">The ID of the Roblox user.</param>
     [Command("render"), Summary("Renders a Roblox character by Roblox user ID."), Alias("r")]
-    public async Task DoRenderAsync(
-        [Summary("The ID or the user name of the Roblox user.")]
-        string userNameOrId
-    )
+    public async Task DoRenderAsync(string userNameOrId)
     {
         using var _ = Context.Channel.EnterTypingState();
 

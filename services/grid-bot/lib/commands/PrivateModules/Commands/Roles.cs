@@ -11,26 +11,18 @@ using Utility;
 using Extensions;
 
 /// <summary>
-/// Interaction handler for updating user bot roles.
+/// Command handler for updating user bot roles.
 /// </summary>
 /// <remarks>
 /// Construct a new instance of <see cref="Roles"/>.
 /// </remarks>
-/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-/// <exception cref="ArgumentNullException">
-/// - <paramref name="discordRolesSettings"/> cannot be null.
-/// - <paramref name="adminUtility"/> cannot be null.
-/// </exception>
+/// <exception cref="ArgumentNullException"><paramref name="adminUtility"/> cannot be null.</exception>
 [LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
 [Group("role"), Summary("Commands used for updating user bot roles."), Alias("roles")]
-public class Roles(
-    DiscordRolesSettings discordRolesSettings,
-    IAdminUtility adminUtility
-) : ModuleBase
+public class Roles(IAdminUtility adminUtility) : ModuleBase
 {
-    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
 
 
@@ -40,12 +32,7 @@ public class Roles(
     /// <param name="user">The user to update.</param>
     /// <param name="role">The role to update to.</param>
     [Command("update"), Summary("Updates the user's bot role.")]
-    public async Task UpdateRoleAsync(
-        [Summary("The user to update.")]
-        IUser user,
-        [Summary("The role to update to.")]
-        BotRole role = BotRole.Default
-    )
+    public async Task UpdateRoleAsync(IUser user, BotRole role = BotRole.Default)
     {
         if (user.IsBot)
         {
@@ -94,10 +81,7 @@ public class Roles(
     /// </summary>
     /// <param name="user">The user to blacklist.</param>
     [Command("blacklist"), Summary("Blacklists the user.")]
-    public async Task BlacklistUserAsync(
-        [Summary("The user to blacklist.")]
-        IUser user
-    )
+    public async Task BlacklistUserAsync(IUser user)
     {
         if (user.IsBot)
         {
@@ -130,10 +114,7 @@ public class Roles(
     /// </summary>
     /// <param name="user">The user to unblacklist.</param>
     [Command("unblacklist"), Summary("Unblacklists the user.")]
-    public async Task UnblacklistUserAsync(
-        [Summary("The user to unblacklist.")]
-        IUser user
-    )
+    public async Task UnblacklistUserAsync(IUser user)
     {
         if (user.IsBot)
         {
