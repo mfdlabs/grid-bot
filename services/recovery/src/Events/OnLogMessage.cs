@@ -19,7 +19,7 @@ public class OnLogMessage
 {
     private readonly Logger _logger = new(
         name: "discord",
-        logLevel: LogLevel.Debug,
+        logLevelGetter: () => LogLevel.Debug,
         logToConsole: true,
         logToFileSystem: false
     );
