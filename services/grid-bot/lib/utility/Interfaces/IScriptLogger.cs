@@ -2,7 +2,9 @@ namespace Grid.Bot.Utility;
 
 using System.Threading.Tasks;
 
-using Discord.Interactions;
+using Discord;
+
+using Discord.Commands;
 
 /// <summary>
 /// Handles logging the contents of scripts to a Discord webhook.
@@ -23,7 +25,15 @@ public interface IScriptLogger
     /// Logs the contents of a script to a Discord webhook.
     /// </summary>
     /// <param name="script">The script to log.</param>
-    /// <param name="context">The <see cref="ShardedInteractionContext"/> to use.</param>
+    /// <param name="context">The <see cref="IInteractionContext"/> to use.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task LogScriptAsync(string script, ShardedInteractionContext context);
+    Task LogScriptAsync(string script, IInteractionContext context);
+
+    /// <summary>
+    /// Logs the contents of a script to a Discord webhook.
+    /// </summary>
+    /// <param name="script">The script to log.</param>
+    /// <param name="context">The <see cref="ICommandContext"/> to use.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task LogScriptAsync(string script, ICommandContext context);
 }

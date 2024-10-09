@@ -7,7 +7,15 @@ using Discord;
 /// </summary>
 public interface IAdminUtility
 {
-     /// <summary>
+    /// <summary>
+    /// Is the specified <see cref="IUser"/> in the specifed role?
+    /// </summary>
+    /// <param name="user">The <see cref="IUser"/></param>
+    /// <param name="role">The <see cref="BotRole"/></param>
+    /// <returns>Returns true if the user's id matches one of any entry for the specified bot role.</returns>
+    bool IsInRole(IUser user, BotRole role = BotRole.Default);
+
+    /// <summary>
     /// Is the <see cref="IUser"/> the owner?.
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>

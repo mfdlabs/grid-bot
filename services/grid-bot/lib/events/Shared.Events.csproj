@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Logging" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">

@@ -13,20 +13,20 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.Grid.Commands" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Grid.Client" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.Threading" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Users.Client" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Docker" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Core" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.0.6" />
-    <PackageReference Include="mfdlabs.Thumbnails.Client" Version="1.0.4" />
+    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Grid.Commands" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Grid.Client" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Threading" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Users.Client" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Docker" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Core" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Thumbnails.Client" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
@@ -51,6 +51,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.15.3" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.15.3" />
   </ItemGroup>
 
   <!-- Protobuf -->

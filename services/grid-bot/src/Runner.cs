@@ -17,6 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
 using Discord.WebSocket;
+
+using Discord.Commands;
 using Discord.Interactions;
 
 using Redis;
@@ -108,7 +110,7 @@ internal static class Runner
 
         var logger = new Logger(
             name: globalSettings.DefaultLoggerName,
-            logLevel: globalSettings.DefaultLoggerLevel,
+            logLevelGetter: () => globalSettings.DefaultLoggerLevel,
             logToConsole: globalSettings.DefaultLoggerLogToConsole
         );
 
@@ -142,6 +144,15 @@ internal static class Runner
         var interactionServiceConfig = new InteractionServiceConfig()
         {
             LogLevel = LogSeverity.Debug,
+            ThrowOnError = false
+        };
+
+        var commandServiceConfig = new CommandServiceConfig()
+        {
+            LogLevel = LogSeverity.Debug,
+            CaseSensitiveCommands = false,
+            IgnoreExtraArgs = true,
+            ThrowOnError = false
         };
 
         var gridSettings = providers.FirstOrDefault(s => s.GetType() == typeof(GridSettings)) as GridSettings;
@@ -184,14 +195,16 @@ internal static class Runner
             .AddSingleton(interactionServiceConfig)
             .AddSingleton<IRestClientProvider>(x => x.GetRequiredService<DiscordShardedClient>())
             .AddSingleton<DiscordShardedClient>()
-            .AddSingleton<InteractionService>();
+            .AddSingleton<InteractionService>()
+            .AddSingleton<CommandService>();
 
         // Event Handlers
         services.AddSingleton<OnLogMessage>()
             .AddSingleton<OnMessage>()
             .AddSingleton<OnInteraction>()
             .AddSingleton<OnInteractionExecuted>()
-            .AddSingleton<OnShardReady>();
+            .AddSingleton<OnShardReady>()
+            .AddSingleton<OnCommandExecuted>();
 
         // Http Client Factory
         services.AddHttpClient();
@@ -245,9 +258,18 @@ internal static class Runner
 
     private static void SetupJobManager(ServiceCollection services, GridSettings gridSettings)
     {
+#if DEBUG
+        if (gridSettings.DebugUseNoopJobManager)
+        {
+            services.AddSingleton<IJobManager, NoopJobManager>();
+
+            return;
+        }
+#endif
+
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
-            logLevel: gridSettings.JobManagerLogLevel,
+            logLevelGetter: () => gridSettings.JobManagerLogLevel,
             logToConsole: gridSettings.JobManagerLogToConsole
         );
 
@@ -334,7 +356,7 @@ internal static class Runner
             switch (logLevel)
             {
                 case MELLogLevel.Trace:
-                    _logger.Trace(message);
+                    _logger.Verbose(message);
                     break;
                 case MELLogLevel.Debug:
                     _logger.Debug(message);
@@ -371,7 +393,7 @@ internal static class Runner
         var globalSettings = services.GetRequiredService<GlobalSettings>();
         var logger = new Logger(
             name: globalSettings.GrpcServerLoggerName,
-            logLevel: globalSettings.GrpcServerLoggerLevel,
+            logLevelGetter: () => globalSettings.GrpcServerLoggerLevel,
             logToConsole: true,
             logToFileSystem: false
         );
@@ -401,7 +423,8 @@ internal static class Runner
                         {
                             httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
                         });
-                    } catch (Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         logger.Warning("Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!", ex.Message);
                     }
@@ -409,7 +432,8 @@ internal static class Runner
             });
 
             // set urls
-        } else
+        }
+        else
         {
             builder.Services.Configure<KestrelServerOptions>(options =>
             {
@@ -435,7 +459,7 @@ internal static class Runner
         {
             var providers = GetSettingsProviders();
 
-            Logger.Singleton.LogLevel = LogLevel.Trace;
+            Logger.Singleton.LogLevel = LogLevel.Verbose;
             Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
 
             foreach (var provider in providers.Cast<IVaultProvider>())
@@ -448,7 +472,7 @@ internal static class Runner
             Console.ReadKey();
             return;
         }
-        
+
         var services = InitializeServices();
 
         _services = services;
@@ -480,12 +504,14 @@ internal static class Runner
 
         var client = services.GetRequiredService<DiscordShardedClient>();
         var interactions = services.GetRequiredService<InteractionService>();
+        var commands = services.GetRequiredService<CommandService>();
 
         var onLogMessage = services.GetRequiredService<OnLogMessage>();
         var onShardReady = services.GetRequiredService<OnShardReady>();
 
         client.Log += onLogMessage.Invoke;
         interactions.Log += onLogMessage.Invoke;
+        commands.Log += onLogMessage.Invoke;
 
         client.ShardReady += onShardReady.Invoke;
 

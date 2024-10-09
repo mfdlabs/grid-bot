@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Random" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.0.5" />
+    <PackageReference Include="mfdlabs.Random" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">

@@ -25,7 +25,7 @@ public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
         var name = interaction.User.Username;
         var logger = new Logger(
             name: interaction.User.Id.ToString(),
-            logLevel: LogLevel.Debug,
+            logLevelGetter: () => LogLevel.Debug,
             logToFileSystem: false
         );
 
@@ -47,7 +47,7 @@ public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
         var name = message.Author.Username;
         var logger = new Logger(
             name: message.Author.Id.ToString(),
-            logLevel: LogLevel.Debug,
+            logLevelGetter: () => LogLevel.Debug,
             logToFileSystem: false
         );
 

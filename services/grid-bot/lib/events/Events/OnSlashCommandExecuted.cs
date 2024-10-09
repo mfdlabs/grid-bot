@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
+
 using Discord.Interactions;
 
 using Prometheus;
@@ -15,7 +16,6 @@ using Logging;
 
 using Utility;
 using Extensions;
-
 
 /// <summary>
 /// Invoked when slash commands are executed.
@@ -26,18 +26,15 @@ using Extensions;
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="backtraceUtility">The <see cref="BacktraceUtility"/>.</param>
 /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
-/// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="backtraceUtility"/> cannot be null.
 /// - <paramref name="discordRolesSettings"/> cannot be null.
-/// - <paramref name="discordClient"/> cannot be null.
 /// </exception>
 public class OnInteractionExecuted(
     ILogger logger,
     IBacktraceUtility backtraceUtility,
-    DiscordRolesSettings discordRolesSettings,
-    DiscordShardedClient discordClient
+    DiscordRolesSettings discordRolesSettings
 )
 {
     private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command:";
@@ -46,7 +43,6 @@ public class OnInteractionExecuted(
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
-    private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
 
     private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
         "grid_interactions_failed_total",
@@ -58,9 +54,9 @@ public class OnInteractionExecuted(
         "interaction_guild_id"
     );
 
-    private string GetGuildId(SocketInteraction interaction)
+    private string GetGuildId(SocketInteraction interaction, IInteractionContext context)
     {
-        return interaction.GetGuild(_discordClient)?.Id.ToString() ?? "DM";
+        return interaction.GetGuild(context.Client)?.Id.ToString() ?? "DM";
     }
 
     /// <summary>
@@ -82,9 +78,8 @@ public class OnInteractionExecuted(
                 interaction.Type.ToString(),
                 interaction.Id.ToString(),
                 interaction.User.Id.ToString(),
-                /* Temporary until mfdlabs/grid-bot#335 is resolved */
-                interaction.GetChannelAsString(),
-                GetGuildId(interaction)
+                interaction.GetChannel().Id.ToString(),
+                GetGuildId(interaction, context)
             ).Inc();
 
             if (result is not ExecuteResult executeResult)
@@ -96,23 +91,13 @@ public class OnInteractionExecuted(
 
             var ex = executeResult.Exception;
 
-            if (ex is not InteractionException interactionException)
-            {
-                _backtraceUtility.UploadException(ex);
-
-                await interaction.FollowupAsync(
-                    $"An unexpected Exception has occurred. Exception ID: {Guid.NewGuid()}, send this ID to <@!{_discordRolesSettings.BotOwnerId}>"
-                );
-
-                return;
-            }
-
-            ex = interactionException.InnerException;
+            if (ex is InteractionException interactionException)
+                ex = interactionException.InnerException;
 
             // Check if it is a Missing Permissions exception from Discord.
-            if (ex is Discord.Net.HttpException httpException && httpException.DiscordCode == DiscordErrorCode.MissingPermissions)
+            if (ex is Discord.Net.HttpException httpException)
             {
-                _logger.Warning("Missing permissions for command {0} in guild {1}", command.Name, context.Guild.Id);
+                _logger.Warning("Got a discord HTTP exception ({0}), when executing command '{1}'", httpException.Message, command.ToString());
 
                 return;
             }

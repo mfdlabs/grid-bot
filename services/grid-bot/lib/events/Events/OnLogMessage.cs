@@ -10,6 +10,9 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 
+using Discord.Commands;
+using Discord.Interactions;
+
 using Prometheus;
 
 using Logging;
@@ -77,7 +80,7 @@ public class OnLogMessage
 
         _logger = new Logger(
             name: _settings.DiscordLoggerName,
-            logLevel: _settings.DiscordLoggerLogLevel,
+            logLevelGetter: () => _settings.DiscordLoggerLogLevel,
             logToConsole: _settings.DiscordLoggerLogToConsole
         );
     }
@@ -108,6 +111,9 @@ public class OnLogMessage
                 !_settings.DebugAllowTaskCanceledExceptions)
                 return Task.CompletedTask;
 #endif
+
+            if (message.Exception is InteractionException or CommandException)
+                return Task.CompletedTask;
 
             _logger.Error(
                 "Source = {0}, Message = {1}, Exception = {2}",

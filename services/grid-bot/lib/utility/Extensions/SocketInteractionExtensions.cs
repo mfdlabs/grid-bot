@@ -11,16 +11,20 @@ using Threading.Extensions;
 public static class SocketInteractionExtensions
 {
     /// <summary>
+    /// Gets the <see cref="ISocketMessageChannel" /> from the <see cref="SocketInteraction" />, taking private threads into consideration.
+    /// </summary>
+    /// <param name="interaction">The current <see cref="SocketInteraction" /></param>
+    /// <returns>An <see cref="ISocketMessageChannel" /></returns>
+    public static IMessageChannel GetChannel(this SocketInteraction interaction) 
+        => interaction.Channel ?? interaction.InteractionChannel;
+
+    /// <summary>
     /// Gets the channel from the <see cref="SocketInteraction" />, taking private threads into consideration.
     /// </summary>
     /// <param name="interaction">The current <see cref="SocketInteraction"/></param>
     /// <returns>A string version of either <see cref="ISocketMessageChannel"/> or <see cref="IMessageChannel"/></returns>
-    public static string GetChannelAsString(this SocketInteraction interaction)
-    {
-        if (interaction.Channel is not null) return interaction.Channel.ToString();
-
-        return interaction.InteractionChannel.ToString();
-    }
+    public static string GetChannelAsString(this SocketInteraction interaction) 
+        => interaction.GetChannel().ToString();
 
     /// <summary>
     /// Gets an <see cref="IGuild"/> for a specific <see cref="SocketInteraction"/>, taking private threads into consideration.

@@ -1,5 +1,7 @@
 ﻿namespace Grid.Bot;
 
+using System.Collections.Generic;
+
 using Configuration;
 
 /// <summary>
@@ -17,4 +19,10 @@ public abstract class BaseSettingsProvider : VaultProvider
         : base(Logging.Logger.Singleton)
     {
     }
+
+    /// <summary>
+    /// Gets the raw values associated with this settings provider.
+    /// </summary>
+    /// <returns>Te raw values.</returns>
+    public IDictionary<string, object> GetRawValues() => _CachedValues;
 }

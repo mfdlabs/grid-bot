@@ -17,6 +17,19 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 {
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
+    /// <inheritdoc cref="IAdminUtility.IsInRole(IUser, BotRole)"/>
+    public bool IsInRole(IUser user, BotRole botRole = BotRole.Default)
+    {
+        return botRole switch
+        {
+            BotRole.Default => true,
+            BotRole.Privileged => UserIsPrivilaged(user),
+            BotRole.Administrator => UserIsAdmin(user),
+            BotRole.Owner => UserIsOwner(user),
+            _ => true,
+        };
+    }
+
     /// <inheritdoc cref="IAdminUtility.UserIsOwner(IUser)"/>
     public bool UserIsOwner(IUser user) 
         => user.Id == _discordRolesSettings.BotOwnerId;
