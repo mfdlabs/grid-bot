@@ -154,24 +154,6 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     [Command("get"), Summary("Gets a client setting for the specified application.")]
     public async Task GetAsync(string applicationName, string settingName)
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
-        { 
-            await this.ReplyWithReferenceAsync(
-                text: "Please specify an application name."
-            );
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(settingName))
-        {
-            await this.ReplyWithReferenceAsync(
-                text: "Please specify a setting name."
-            );
-
-            return;
-        }
-
         using var _ = Context.Channel.EnterTypingState();
 
         try
@@ -211,24 +193,6 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     [Command("set"), Summary("Sets a client setting for the specified application.")]
     public async Task SetAsync(string applicationName, string settingName, ClientSettingType settingType = ClientSettingType.String, string settingValue = "")
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
-        {
-            await this.ReplyWithReferenceAsync(
-                text: "Please specify an application name."
-            );
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(settingName))
-        {
-            await this.ReplyWithReferenceAsync(
-                text: "Please specify a setting name."
-            );
-
-            return;
-        }
-
         if (settingValue is null)
         {
             await this.ReplyWithReferenceAsync(
