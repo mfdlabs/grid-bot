@@ -139,7 +139,7 @@ public class OnCommandExecuted(
             return;
 #else
 
-            await interaction.ReplyAsync(
+            await message.ReplyAsync(
                 $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
                 $"<@!{_discordRolesSettings.BotOwnerId}>"
             );
