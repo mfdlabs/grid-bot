@@ -19,6 +19,8 @@ using Configuration;
 
 using Utility;
 using Extensions;
+using System.Text.Json;
+
 
 /// <summary>
 /// Represents the interaction for settings.
@@ -137,7 +139,15 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         if (refresh) instance.Refresh();
 
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(instance.GetRawValues(), Formatting.Indented)));
+        /* FIXME: This is stupid, update 1.1.0 on Configuration should convert these on each refresh instead of placing a JE dict in cache. */
+
+        var values = new Dictionary<string, string>();
+
+        foreach (var kvp in instance.GetRawValues())
+            if (kvp.Value is JsonElement element)
+                values.Add(kvp.Key, element.GetString());
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(values, Formatting.Indented)));
 
         await this.ReplyWithFileAsync(stream, $"{provider}.json", "Here are the settings for the specified provider.");
     }
