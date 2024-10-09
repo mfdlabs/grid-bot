@@ -11,14 +11,14 @@ using System.Collections.Concurrent;
 using Discord;
 using Discord.WebSocket;
 
+using Discord.Commands;
+
 using Newtonsoft.Json;
 
 using Random;
 using Networking;
 
 using Extensions;
-using Discord.Commands;
-
 
 /// <summary>
 /// Handles sending alerts to a Discord webhook.
