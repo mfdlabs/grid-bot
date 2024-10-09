@@ -111,6 +111,7 @@ public class OnLogMessage
                 !_settings.DebugAllowTaskCanceledExceptions)
                 return Task.CompletedTask;
 #endif
+
             if (message.Exception is InteractionException or CommandException)
                 return Task.CompletedTask;
 
