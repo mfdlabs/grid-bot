@@ -265,7 +265,7 @@ internal static class Runner
 
             return;
         }
-        #endif
+#endif
 
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
@@ -423,7 +423,8 @@ internal static class Runner
                         {
                             httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
                         });
-                    } catch (Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         logger.Warning("Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!", ex.Message);
                     }
@@ -431,7 +432,8 @@ internal static class Runner
             });
 
             // set urls
-        } else
+        }
+        else
         {
             builder.Services.Configure<KestrelServerOptions>(options =>
             {
@@ -470,7 +472,7 @@ internal static class Runner
             Console.ReadKey();
             return;
         }
-        
+
         var services = InitializeServices();
 
         _services = services;

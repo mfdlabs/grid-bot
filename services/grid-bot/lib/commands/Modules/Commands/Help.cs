@@ -72,7 +72,7 @@ public class Help : ModuleBase
                 aliases.UnionWith(module.Commands[0].Aliases);
             }
 
-            var botRoleAttribute = module.Attributes.FirstOrDefault(attrib => attrib.GetType() == typeof(RequireBotRoleAttribute)) as RequireBotRoleAttribute;
+            var botRoleAttribute = module.Preconditions.FirstOrDefault(attrib => attrib.GetType() == typeof(RequireBotRoleAttribute)) as RequireBotRoleAttribute;
             var requiredPermission = botRoleAttribute?.BotRole ?? BotRole.Default;
 
             var builder = new EmbedBuilder().WithColor(Color.Green).WithTimestamp(DateTimeOffset.Now);
