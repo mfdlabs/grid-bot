@@ -79,7 +79,7 @@ public class OnLogMessage
 
         _logger = new Logger(
             name: _settings.DiscordLoggerName,
-            logLevel: _settings.DiscordLoggerLogLevel,
+            logLevelGetter: () => _settings.DiscordLoggerLogLevel,
             logToConsole: _settings.DiscordLoggerLogToConsole
         );
     }

@@ -110,7 +110,7 @@ internal static class Runner
 
         var logger = new Logger(
             name: globalSettings.DefaultLoggerName,
-            logLevel: globalSettings.DefaultLoggerLevel,
+            logLevelGetter: () => globalSettings.DefaultLoggerLevel,
             logToConsole: globalSettings.DefaultLoggerLogToConsole
         );
 
@@ -269,7 +269,7 @@ internal static class Runner
 
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
-            logLevel: gridSettings.JobManagerLogLevel,
+            logLevelGetter: () => gridSettings.JobManagerLogLevel,
             logToConsole: gridSettings.JobManagerLogToConsole
         );
 
@@ -356,7 +356,7 @@ internal static class Runner
             switch (logLevel)
             {
                 case MELLogLevel.Trace:
-                    _logger.Trace(message);
+                    _logger.Verbose(message);
                     break;
                 case MELLogLevel.Debug:
                     _logger.Debug(message);
@@ -393,7 +393,7 @@ internal static class Runner
         var globalSettings = services.GetRequiredService<GlobalSettings>();
         var logger = new Logger(
             name: globalSettings.GrpcServerLoggerName,
-            logLevel: globalSettings.GrpcServerLoggerLevel,
+            logLevelGetter: () => globalSettings.GrpcServerLoggerLevel,
             logToConsole: true,
             logToFileSystem: false
         );
@@ -457,7 +457,7 @@ internal static class Runner
         {
             var providers = GetSettingsProviders();
 
-            Logger.Singleton.LogLevel = LogLevel.Trace;
+            Logger.Singleton.LogLevel = LogLevel.Verbose;
             Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
 
             foreach (var provider in providers.Cast<IVaultProvider>())
