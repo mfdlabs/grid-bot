@@ -15,9 +15,9 @@
   </PropertyGroup> 
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Configuration" Version="1.0.8" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.0.6" />
+    <PackageReference Include="mfdlabs.Configuration" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">

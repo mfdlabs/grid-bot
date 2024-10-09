@@ -14,12 +14,13 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.ClientSettings.Client" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.5" />
-    <PackageReference Include="mfdlabs.Text" Version="1.0.4" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.0.6" />
+    <PackageReference Include="mfdlabs.ClientSettings.Client" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Text" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Configuration" Version="1.0.9" /> 
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
