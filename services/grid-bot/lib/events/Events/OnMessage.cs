@@ -69,23 +69,23 @@ public partial class OnMessage(
     private readonly HashSet<string> _commandAliases = []; // Used to filter out commands that are not meant for the bot.
 
     private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
-        "grid_messages_processed_total",
+        "bot_messages_processed_total",
         "The total number of messages processed."
     );
 
     private readonly Counter _totalUsersUsingTextCommands = Metrics.CreateCounter(
-        "grid_users_using_text_commands_total",
+        "bot_users_using_text_commands_total",
         "The total number of users using text commands.",
         "command_name"
     );
 
     private readonly Counter _totalMessagesFailedDueToMaintenance = Metrics.CreateCounter(
-        "grid_messages_failed_due_to_maintenance_total",
+        "bot_messages_failed_due_to_maintenance_total",
         "The total number of messages failed due to maintenance."
     );
 
     private readonly Counter _totalBlacklistedUserAttemptedMessages = Metrics.CreateCounter(
-        "grid_blacklisted_user_attempted_messages_total",
+        "bot_blacklisted_user_attempted_messages_total",
         "The total number of messages attempted by blacklisted users.",
         "message_user_id",
         "message_channel_id",
@@ -93,7 +93,7 @@ public partial class OnMessage(
     );
 
     private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
-        "grid_users_bypassed_maintenance_total",
+        "bot_users_bypassed_maintenance_total",
         "The total number of users that bypassed maintenance.",
         "message_user_id",
         "message_channel_id",
@@ -101,7 +101,7 @@ public partial class OnMessage(
     );
 
     private readonly Histogram _commandProcessingTime = Metrics.CreateHistogram(
-        "grid_command_processing_time_seconds",
+        "bot_command_processing_time_seconds",
         "The time it takes to process an command.",
         new HistogramConfiguration
         {

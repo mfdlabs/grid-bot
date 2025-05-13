@@ -40,7 +40,7 @@ public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
         var (controller, action) = GetControllerAndAction(context);
         var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
             string.Format("{0}.{1}", controller, action)
-            : _UnknownRouteLabelValue;
+            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
 
         _HttpRequestCounter.WithLabels(context.Request.Method, endpoint).Inc();
 

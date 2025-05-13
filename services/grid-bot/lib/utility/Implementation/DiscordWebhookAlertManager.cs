@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Prometheus;
+
 using Discord;
 
 using Newtonsoft.Json;
@@ -43,6 +45,15 @@ public class DiscordWebhookAlertManager(
     private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
+    private static readonly Counter _discordWebhookAlertCounter = Metrics.CreateCounter(
+        "discord_webhook_alert_total",
+        "Total number of alerts sent to Discord"
+    );
+    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = Metrics.CreateCounter(
+        "discord_webhook_alerts_with_attachments_total",
+        "Total number of alerts sent to Discord with attachments"
+    );
+
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>
     public async Task SendAlertAsync(string topic, string message, Color? color, IEnumerable<FileAttachment> attachments = null)
     {
@@ -50,6 +61,8 @@ public class DiscordWebhookAlertManager(
         if (string.IsNullOrWhiteSpace(message)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(message));
 
         if (!_globalSettings.DiscordWebhookAlertingEnabled) return;
+
+        _discordWebhookAlertCounter.Inc();
 
         color ??= Color.Red;
 
@@ -85,8 +98,12 @@ public class DiscordWebhookAlertManager(
         multipartContent.Add(new StringContent(json, Encoding.UTF8, "application/json"), "payload_json");
 
         if (attachments?.Any() ?? false)
+        {
+            _discordWebhookAlertsWithAttachmentsCounter.Inc();
+
             foreach (var attachment in attachments)
                 multipartContent.Add(new StreamContent(attachment.Stream), attachment.FileName, attachment.FileName);
+        }
 
         await client.PostAsync(url, multipartContent);
     }

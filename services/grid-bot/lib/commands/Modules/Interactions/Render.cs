@@ -58,13 +58,21 @@ public class Render(
         if (!_adminUtility.UserIsAdmin(Context.User))
         {
             if (_floodCheckerRegistry.RenderFloodChecker.IsFlooded())
+            {
+                RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
+
                 throw new ApplicationException("Too many people are using this command at once, please wait a few moments and try again.");
+            }
 
             _floodCheckerRegistry.RenderFloodChecker.UpdateCount();
 
             var perUserFloodChecker = _floodCheckerRegistry.GetPerUserRenderFloodChecker(Context.User.Id);
             if (perUserFloodChecker.IsFlooded())
+            {
+                RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(Context.User.Id.ToString()).Inc();
+
                 throw new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again.");
+            }
 
             perUserFloodChecker.UpdateCount();
         }
@@ -82,8 +90,12 @@ public class Render(
         long id
     )
     {
+        RenderPerformanceCounters.TotalRenders.WithLabels(id.ToString()).Inc();
+
         if (id < 1)
         {
+            RenderPerformanceCounters.TotalRendersWithInvalidIds.Inc();
+
             await FollowupAsync("The ID must be greater than 0.");
 
             return;
@@ -91,6 +103,8 @@ public class Render(
 
         if (await _rbxUsersUtility.GetIsUserBannedAsync(id).ConfigureAwait(false))
         {
+            RenderPerformanceCounters.TotalRendersAgainstBannedUsers.Inc();
+
             _logger.Warning("The input user ID of {0} was linked to a banned user account.", id);
             await FollowupAsync($"The user '{id}' is banned or does not exist.");
 
@@ -132,6 +146,8 @@ public class Render(
         }
         catch (ThumbnailResponseException e)
         {
+            RenderPerformanceCounters.TotalRendersWithRbxThumbnailsErrors.WithLabels(e.State.ToString()).Inc();
+
             _logger.Warning("The thumbnail service responded with the following state: {0}, message: {1}", e.State, e.Message);
 
             if (e.State == ThumbnailResponseState.InReview)
@@ -147,6 +163,8 @@ public class Render(
         }
         catch (Exception e)
         {
+            RenderPerformanceCounters.TotalRendersWithErrors.Inc();
+
             _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", id, e);
 
             await FollowupAsync("An error occurred while rendering the character.");
@@ -163,6 +181,8 @@ public class Render(
         string username
     )
     {
+        RenderPerformanceCounters.TotalRendersViaUsername.Inc();
+
         if (string.IsNullOrWhiteSpace(username))
         {
             await FollowupAsync("The username cannot be empty.");

@@ -277,7 +277,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
                 data: serializedData).Wait();
 
             _client.V1.Secrets.KeyValue.V2.WriteSecretMetadataAsync(
-                mountPoint: _mount, path: $"{_path}/${applicationName}",
+                mountPoint: _mount, path: $"{_path}/{applicationName}",
                 customMetadataRequest: new() { CustomMetadata = metadata.ToDictionary() }).Wait();
 
             return;
@@ -388,6 +388,9 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
                         continue;
                     }
+
+                    _logger?.Debug("Dependency '{0}' for application '{1}' found!", dependency, application);
+                    _settingsReadCounter.WithLabels(dependency).Inc();
 
                     dependenciesToMerge.Add(dependencySettings);
                 }
@@ -525,6 +528,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         _settingsCacheLock.EnterWriteLock();
 
+        _settingsCacheRefreshAhead.LazyValue.Value.TryAdd(application, settings);
+
         try
         {
             DoCommit(application, settings, metadata);
@@ -558,6 +563,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         var data = GetSettingsForApplication(application, false) ?? new Dictionary<string, object>();
         data[setting] = value;
+
+        _logger?.Debug("Setting '{0}' for application '{1}' to '{2}'", setting, application, value);
 
         WriteSettingsForApplication(application, data);
     }
