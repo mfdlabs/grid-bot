@@ -21,7 +21,7 @@ public class WebSettings : BaseSettingsProvider
     /// <summary>
     /// Gets the bind address for the web server.
     /// </summary>
-    public string WebServerBindAddress => GetOrDefault(nameof(WebServerBindAddress), "http://+:8080");
+    public string WebServerBindAddress => GetOrDefault(nameof(WebServerBindAddress), "http://+:8888");
 
     /// <summary>
     /// Determines if the web server is behind a reverse proxy.

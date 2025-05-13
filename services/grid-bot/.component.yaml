@@ -42,7 +42,7 @@ deployment:
           grpc:
             static: 5000
           http:
-            static: 8080
+            static: 8888
       services:
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: metrics
@@ -51,12 +51,6 @@ deployment:
           checks:
             - type: http
               path: /metrics
-        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-recovery
-          port: grpc
-          tags:
-            - ${{ env.NOMAD_ENVIRONMENT }}
-          checks:
-            - type: grpc
 
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web
           port: http
