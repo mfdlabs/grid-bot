@@ -39,15 +39,22 @@ public class OnLogMessage
         "log_severity"
     );
 
+    private readonly Counter _totalSerializerErrors = Metrics.CreateCounter(
+        "grid_discord_serializer_errors_total",
+        "The total number of serializer errors."
+    );
+
+    private const string _serializerErrorMessage = "Serializer Error";
+
     // These are specific strings that fill the log files up drastically.
-    private static readonly HashSet<string> _messagesToBeConsideredDebug = new()
-    {
+    private static readonly HashSet<string> _messagesToBeConsideredDebug =
+    [
         "Disconnecting",
         "Disconnected",
         "Connecting",
         "Connected",
         "Resumed previous session"
-    };
+    ];
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
     /// <summary>
@@ -112,7 +119,23 @@ public class OnLogMessage
                 return Task.CompletedTask;
 #endif
 
-            if (message.Exception is InteractionException or CommandException)
+            // Temporary fix for discord-net/Discord.Net#3128
+            // Just keep it out of Backtrace and increment a counter.
+            if (message.Message == _serializerErrorMessage)
+            {
+                _totalSerializerErrors.Inc();
+
+                // Debug log the serializer error, in case we need to see it.
+                _logger.Debug(
+                    "Serializer Error, Source = {0}, Exception = {1}",
+                    message.Source,
+                    message.Exception.ToString()
+                );
+
+                return Task.CompletedTask;
+            }
+
+            if (message.Exception is InteractionException or CommandException) // Handled by the command handler.
                 return Task.CompletedTask;
 
             _logger.Error(
