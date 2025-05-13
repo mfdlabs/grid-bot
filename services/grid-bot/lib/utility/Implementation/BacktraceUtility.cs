@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Prometheus;
+
 using Backtrace;
 using Backtrace.Model;
 using Backtrace.Interfaces;
@@ -19,6 +21,11 @@ public class BacktraceUtility : IBacktraceUtility
 {
     private readonly ILogger _logger;
     private readonly BacktraceClient _client;
+
+    private static readonly Counter _uploadExceptionCounter = Metrics.CreateCounter(
+        "backtrace_exception_upload_total",
+        "Total number of exceptions uploaded to Backtrace"
+    );
 
     /// <summary>
     /// Construct a new instance of <see cref="BacktraceUtility"/>.
@@ -55,6 +62,8 @@ public class BacktraceUtility : IBacktraceUtility
     {
         if (ex == null)
             return;
+
+        _uploadExceptionCounter.Inc();
 
         Task.Factory.StartNew(() =>
         {

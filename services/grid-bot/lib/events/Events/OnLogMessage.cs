@@ -34,13 +34,13 @@ public class OnLogMessage
     private readonly Logger _logger;
 
     private readonly Counter _totalLogMessages = Metrics.CreateCounter(
-        "grid_discord_log_messages_total",
+        "bot_discord_log_messages_total",
         "The total number of log messages.",
         "log_severity"
     );
 
     private readonly Counter _totalSerializerErrors = Metrics.CreateCounter(
-        "grid_discord_serializer_errors_total",
+        "bot_discord_serializer_errors_total",
         "The total number of serializer errors."
     );
 

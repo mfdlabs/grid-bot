@@ -46,7 +46,7 @@ public class OnCommandExecuted(
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
 
     private readonly Counter _totalCommandsFailed = Metrics.CreateCounter(
-        "grid_commands_failed_total",
+        "bot_commands_failed_total",
         "The total number of commands failed.",
         "message_type",
         "message_id",

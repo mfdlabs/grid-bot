@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Prometheus;
+
 using Discord;
 using Discord.WebSocket;
 
@@ -23,9 +25,16 @@ public class GridBotGrpcServer(DiscordShardedClient client) : GridBotAPI.GridBot
 {
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
 
+    private static readonly Counter _grpcServerRequestCounter = Metrics.CreateCounter(
+        "grpc_health_check_requests_total",
+        "Total number of gRPC health check requests"
+    );
+
     /// <inheritdoc cref="GridBotAPI.GridBotAPIBase.CheckHealth(CheckHealthRequest, ServerCallContext)"/>
     public override Task<CheckHealthResponse> CheckHealth(CheckHealthRequest request, ServerCallContext context)
     {
+        _grpcServerRequestCounter.Inc();
+
         var response = new CheckHealthResponse();
 
         if (_client.LoginState == LoginState.LoggedOut || _client.LoginState == LoginState.LoggingOut || _client.LoginState == LoginState.LoggingIn)

@@ -45,7 +45,7 @@ public class OnInteractionExecuted(
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
 
     private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
-        "grid_interactions_failed_total",
+        "bot_interactions_failed_total",
         "The total number of interactions failed.",
         "interaction_type",
         "interaction_id",
@@ -54,7 +54,7 @@ public class OnInteractionExecuted(
         "interaction_guild_id"
     );
 
-    private string GetGuildId(SocketInteraction interaction, IInteractionContext context)
+    private static string GetGuildId(SocketInteraction interaction, IInteractionContext context)
     {
         return interaction.GetGuild(context.Client)?.Id.ToString() ?? "DM";
     }

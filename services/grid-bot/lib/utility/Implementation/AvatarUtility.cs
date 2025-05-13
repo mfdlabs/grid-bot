@@ -6,6 +6,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+
+using Prometheus;
 
 using Random;
 using Logging;
@@ -16,7 +19,6 @@ using Threading.Extensions;
 using Grid.Commands;
 
 using GridJob = Grid.Client.Job;
-using System.Collections.Concurrent;
 
 /// <summary>
 /// Exception thrown when rbx-thumbnails returns a state that is not pending or completed.
@@ -53,9 +55,72 @@ public class AvatarUtility : IAvatarUtility
     private readonly IJobManager _jobManager;
     private readonly IThumbnailsClient _thumbnailsClient;
     private readonly IPercentageInvoker _percentageInvoker;
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    private static readonly Gauge _avatarThumbnailsRbxThumbnailsRolloutPercent = Metrics.CreateGauge(
+        "avatar_thumbnails_rbx_thumbnails_rollout_percent",
+        "The percentage of users that are using the rbx-thumbnails rollout."
+    );
+    private static readonly Gauge _avatarThumbnailsIdsNotToUseTotal = Metrics.CreateGauge(
+        "avatar_thumbnails_ids_not_to_use_total",
+        "The total number of IDs that are not to be used."
+    );
+    private static readonly Gauge _avatarThumbnailsLocalCacheSize = Metrics.CreateGauge(
+        "avatar_thumbnails_local_cache_size",
+        "The size of the local cache."
+    );
+
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsStatusTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_rbx_thumbnails_status_total",
+        "The total number of statuses returned from rbx-thumbnails.",
+        "status"
+    );
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_rbx_thumbnails_fetch_total",
+        "The total number of fetches from rbx-thumbnails.",
+        "user_id",
+        "command_type"
+    );
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_rbx_thumbnails_fetch_blacklisted_id_used_total",
+        "The total number of times a blacklisted ID was used.",
+        "user_id"
+    );
+    private static readonly Counter _avatarThumbnailsRenderedTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_rendered_total",
+        "The total number of rendered thumbnails.",
+        "user_id",
+        "place_id",
+        "command_type"
+    );
+    private static readonly Counter _avatarThumbnailsOptedInToRbxThumbnailsTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_via_rbx_thumbnails_total",
+        "The total number of users that were rendered via rbx-thumbnails.",
+        "user_id"
+    );
+    private static readonly Counter _avatarThumbnailsOptedOutOfRbxThumbnailsTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_via_grid_server_total",
+        "The total number of users that were rendered via the old method.",
+        "user_id",
+        "place_id",
+        "command_type",
+        "dimension_x",
+        "dimension_y"
+    );
+    private static readonly Counter _avatarThumbnailsLegacyRejectedTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_legacy_rejected_total",
+        "The total number of legacy rejections.",
+        "user_id",
+        "rejection_reason"
+    );
+    private static readonly Counter _avatarThumbnailsLegacyErrorTotal = Metrics.CreateCounter(
+        "avatar_thumbnails_legacy_error_total",
+        "The total number of legacy errors.",
+        "user_id"
+    );
 
     private readonly ExpirableDictionary<(long, ThumbnailCommandType), string> _localCachedPaths;
-    private readonly ConcurrentBag<long> _idsNotToUse = new(); // These IDs error out when trying to render (they are blocked? or they are moderated?)
+    private readonly ConcurrentBag<long> _idsNotToUse = []; // These IDs error out when trying to render (they are blocked? or they are moderated?)
 
     /// <summary>
     /// Construct a new instance of <see cref="AvatarUtility"/>.
@@ -88,6 +153,9 @@ public class AvatarUtility : IAvatarUtility
         foreach (var id in avatarSettings.BlacklistUserIds)
             _idsNotToUse.Add(id);
 
+        _avatarThumbnailsRbxThumbnailsRolloutPercent.Set(_avatarSettings.RbxThumbnailsRolloutPercent);
+        _avatarThumbnailsIdsNotToUseTotal.Set(_idsNotToUse.Count);
+
         if (!_idsNotToUse.IsEmpty)
             _logger.Warning("Blacklisted user IDs: {0}", string.Join(", ", avatarSettings.BlacklistUserIds));
 
@@ -114,11 +182,15 @@ public class AvatarUtility : IAvatarUtility
             );
 
             _avatarSettings.BlacklistUserIds = [.. _idsNotToUse];
+
+            _avatarThumbnailsIdsNotToUseTotal.Inc();
         }
     }
 
     private void OnLocalCacheEntryRemoved(string path, RemovalReason reason)
     {
+        _avatarThumbnailsLocalCacheSize.Dec();
+
         if (reason == RemovalReason.Expired)
         {
             _logger.Warning("The local cache entry '{0}' expired.", path);
@@ -154,13 +226,19 @@ public class AvatarUtility : IAvatarUtility
     {
         var response = func() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response was null.");
 
+        _avatarThumbnailsRbxThumbnailsStatusTotal.WithLabels(response.State.ToString()).Inc();
+
         if (response.State == ThumbnailResponseState.Completed)
             return response.ImageUrl;
 
         if (response.State != ThumbnailResponseState.Pending)
         {
             if (response.State != ThumbnailResponseState.InReview)
+            {
                 _idsNotToUse.Add(userId);
+
+                _avatarThumbnailsIdsNotToUseTotal.Inc();
+            }
 
             throw new ThumbnailResponseException(response.State.GetValueOrDefault(), "The thumbnail response was not pending.");
         }
@@ -175,7 +253,11 @@ public class AvatarUtility : IAvatarUtility
         if (response.State != ThumbnailResponseState.Completed)
         {
             if (response.State != ThumbnailResponseState.InReview)
+            {
                 _idsNotToUse.Add(userId);
+
+                _avatarThumbnailsIdsNotToUseTotal.Inc();
+            }
 
             throw new ThumbnailResponseException(response.State.GetValueOrDefault(), "The thumbnail response was not completed.");
         }
@@ -183,12 +265,12 @@ public class AvatarUtility : IAvatarUtility
         return response.ImageUrl;
     }
 
-    private static string DownloadFile(string url)
+    private string DownloadFile(string url)
     {
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
         var file = File.OpenWrite(path);
 
-        using var client = new HttpClient();
+        using var client = _httpClientFactory.CreateClient("rbx-thumbnails");
         using var stream = client.GetStreamAsync(url).SyncOrDefault() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response stream was null");
         stream.CopyTo(file);
 
@@ -200,11 +282,17 @@ public class AvatarUtility : IAvatarUtility
 
     private (Stream, string) GetThumbnail(long userId, ThumbnailCommandType thumbnailCommandType)
     {
+        _avatarThumbnailsRbxThumbnailsFetchTotal.WithLabels(userId.ToString(), thumbnailCommandType.ToString()).Inc();
+
         if (userId == 0)
             throw new ArgumentException("The user ID cannot be 0.", nameof(userId));
 
         if (_idsNotToUse.Contains(userId))
+        {
+            _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal.WithLabels(userId.ToString()).Inc();
+
             throw new ThumbnailResponseException(ThumbnailResponseState.Blocked, "The user ID is blacklisted.");
+        }
 
         if (thumbnailCommandType != ThumbnailCommandType.Closeup && thumbnailCommandType != ThumbnailCommandType.Avatar_R15_Action)
             throw new ArgumentException("The thumbnail command type must be either closeup or avatar_r15_action.", nameof(thumbnailCommandType));
@@ -215,6 +303,8 @@ public class AvatarUtility : IAvatarUtility
             (userId, thumbnailCommandType),
             (key) =>
             {
+                _avatarThumbnailsLocalCacheSize.Inc();
+
                 _logger.Warning(
                     "Entry for user '{0}' with the thumbnail command type of '{1}' was not found in the local cache, " +
                     "fetching from rbx-thumbnails and caching locally.",
@@ -269,6 +359,8 @@ public class AvatarUtility : IAvatarUtility
     {
         if (_percentageInvoker.CanInvoke(_avatarSettings.RbxThumbnailsRolloutPercent))
         {
+            _avatarThumbnailsOptedInToRbxThumbnailsTotal.WithLabels(userId.ToString()).Inc();
+
             _logger.Warning(
                 "Trying to fetch the thumbnail for user '{0}' via rbx-thumbnails with the dimensions of {1}",
                 userId,
@@ -281,6 +373,7 @@ public class AvatarUtility : IAvatarUtility
 
             return GetThumbnail(userId, commandType);
         }
+
 
         var url = GetAvatarFetchUrl(userId, placeId);
 
@@ -297,6 +390,7 @@ public class AvatarUtility : IAvatarUtility
             ? ThumbnailCommandType.Avatar_R15_Action
             : ThumbnailCommandType.Closeup;
 
+        _avatarThumbnailsOptedOutOfRbxThumbnailsTotal.WithLabels(userId.ToString(), placeId.ToString(), thumbType.ToString(), sizeX.ToString(), sizeY.ToString()).Inc();
 
         var settings = new ThumbnailSettings(thumbType, GetThumbnailArgs(url, sizeX, sizeY).ToArray());
 
@@ -318,6 +412,8 @@ public class AvatarUtility : IAvatarUtility
 
             if (rejectionReason != null)
             {
+                _avatarThumbnailsLegacyRejectedTotal.WithLabels(userId.ToString(), rejectionReason.ToString()).Inc();
+
                 _logger.Error("The job was rejected: {0}", rejectionReason);
 
                 return (null, null);
@@ -341,6 +437,8 @@ public class AvatarUtility : IAvatarUtility
                 if (first != null)
                     return (new MemoryStream(Convert.FromBase64String(first.value)), GetFileName(userId, placeId, settings));
 
+                _avatarThumbnailsLegacyErrorTotal.WithLabels(userId.ToString()).Inc();
+
                 _logger.Error("The first return argument for the render was null, this may be an issue with the grid server.");
 
                 return (null, null);
@@ -350,6 +448,7 @@ public class AvatarUtility : IAvatarUtility
         {
             Task.Run(() => _jobManager.CloseJob(job, false));
             _logger.Error(ex);
+            _avatarThumbnailsLegacyErrorTotal.WithLabels(userId.ToString()).Inc();
 
             return (null, null);
         }

@@ -58,7 +58,7 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
         var (controller, action) = GetControllerAndAction(context);
         var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
             string.Format("{0}.{1}", controller, action)
-            : _UnknownRouteLabelValue;
+            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
 
         try
         {

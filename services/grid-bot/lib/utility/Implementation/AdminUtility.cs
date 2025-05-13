@@ -3,6 +3,8 @@
 using System;
 using System.Linq;
 
+using Prometheus;
+
 using Discord;
 
 /// <summary>
@@ -16,6 +18,13 @@ using Discord;
 public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUtility
 {
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+
+    private static readonly Counter _usersBlacklistedCounter = Metrics.CreateCounter("admin_users_blacklisted_total", "Total number of users blacklisted.");
+    private static readonly Counter _usersUnblacklistedCounter = Metrics.CreateCounter("admin_users_unblacklisted_total", "Total number of users unblacklisted.");
+    private static readonly Counter _usersPrivilagedCounter = Metrics.CreateCounter("admin_users_privilaged_total", "Total number of users with privilaged access.");
+    private static readonly Counter _adminUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_total", "Total number of users demoted from admin.");
+    private static readonly Counter _privilegedUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_privilaged_total", "Total number of users demoted from privilaged.");
+    private static readonly Counter _usersPromotedCounter = Metrics.CreateCounter("admin_users_promoted_total", "Total number of users promoted to admin.");
 
     /// <inheritdoc cref="IAdminUtility.IsInRole(IUser, BotRole)"/>
     public bool IsInRole(IUser user, BotRole botRole = BotRole.Default)
@@ -51,6 +60,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     {
         if (UserIsAdmin(user))
         {
+            _adminUsersDemotedCounter.Inc();
+
             // Remove from admin
             var adminUserIds = _discordRolesSettings.AdminUserIds.ToList();
 
@@ -61,6 +72,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
         if (!UserIsPrivilaged(user))
         {
+            _usersPrivilagedCounter.Inc();
+
             // Add to privilaged
             var higherPrivilagedUserIds = _discordRolesSettings.HigherPrivilagedUserIds.ToList();
 
@@ -75,6 +88,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     {
         if (UserIsAdmin(user))
         {
+            _adminUsersDemotedCounter.Inc();
+
             // Remove from admin
             var adminUserIds = _discordRolesSettings.AdminUserIds.ToList();
 
@@ -85,6 +100,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
         if (UserIsPrivilaged(user))
         {
+            _privilegedUsersDemotedCounter.Inc();
+
             // Remove from privilaged
             var higherPrivilagedUserIds = _discordRolesSettings.HigherPrivilagedUserIds.ToList();
 
@@ -99,6 +116,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     {
         if (!UserIsBlacklisted(user))
         {
+            _usersBlacklistedCounter.Inc();
+
             // Add to blacklist
             var blacklistedUserIds = _discordRolesSettings.BlacklistedUserIds.ToList();
 
@@ -113,6 +132,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     {
         if (UserIsBlacklisted(user))
         {
+            _usersUnblacklistedCounter.Inc();
+
             // Remove from blacklist
             var blacklistedUserIds = _discordRolesSettings.BlacklistedUserIds.ToList();
 
@@ -127,6 +148,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     {
         if (!UserIsAdmin(user) && UserIsPrivilaged(user))
         {
+            _privilegedUsersDemotedCounter.Inc();
+
             // Remove from privilaged
             var higherPrivilagedUserIds = _discordRolesSettings.HigherPrivilagedUserIds.ToList();
 
@@ -137,6 +160,8 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
         if (!UserIsAdmin(user))
         {
+            _usersPromotedCounter.Inc();
+
             // Add to admin
             var adminUserIds = _discordRolesSettings.AdminUserIds.ToList();
 

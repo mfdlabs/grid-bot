@@ -110,33 +110,26 @@ public partial class ExecuteScript(
         if (!_adminUtility.UserIsAdmin(Context.User))
         {
             if (_floodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded())
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+
                 throw new ApplicationException("Too many people are using this command at once, please wait a few moments and try again.");
+            }
 
             _floodCheckerRegistry.RenderFloodChecker.UpdateCount();
 
             var perUserFloodChecker = _floodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(Context.User.Id);
             if (perUserFloodChecker.IsFlooded())
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(Context.User.Id.ToString()).Inc();
+
                 throw new ApplicationException("You are sending execute script commands too quickly, please wait a few moments and try again.");
+            }
 
             perUserFloodChecker.UpdateCount();
         }
 
         await base.BeforeExecuteAsync(command);
-    }
-
-    private static string GetCodeBlockContents(string s)
-    {
-        var match = CodeBlockRegex().Match(s);
-
-        if (match != null && match.Groups.Count == 3)
-        {
-            if (!s.Contains($"```{match.Groups[1].Value}\n"))
-                return $"{match.Groups[1].Value} {match.Groups[2].Value}";
-
-            return match.Groups[2].Value;
-        }
-
-        return s.Replace("`", ""); // Return the value here again?
     }
 
     private static string EscapeQuotes(string s) => QuotesRegex().Replace(s, "\"");
@@ -150,6 +143,8 @@ public partial class ExecuteScript(
         // Check if the input matches grid syntax error
         if (GridSyntaxErrorRegex().IsMatch(input))
         {
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("grid-server-syntax-error:metadata").Inc();
+
             var match = GridSyntaxErrorRegex().Match(input);
             var line = match.Groups[1].Value;
             var error = match.Groups[2].Value;
@@ -165,7 +160,13 @@ public partial class ExecuteScript(
             var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
 
             if (input.Length / 1000 > maxSize)
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
+
                 return ($"The output cannot be larger than {maxSize} KiB", null);
+            }
+
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -185,7 +186,13 @@ public partial class ExecuteScript(
             var maxSize = _scriptsSettings.ScriptExecutionMaxResultSizeKb;
 
             if (input.Length / 1000 > maxSize)
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
+
                 return ($"The result cannot be larger than {maxSize} KiB", null);
+            }
+
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -208,9 +215,17 @@ public partial class ExecuteScript(
             .WithCurrentTimestamp();
 
         if (metadata.Success)
+        {
+            ScriptExecutionPerformanceCounters.TotalSuccessfulScriptExecutions.Inc();
+
             builder.WithColor(Color.Green);
+        }
         else
+        {
+            ScriptExecutionPerformanceCounters.TotalFailedScriptExecutionsDueToLuaError.Inc();
+
             builder.WithColor(Color.Red);
+        }
 
         var (fileNameOrOutput, outputFile) = DetermineDescription(
             metadata.Logs,
@@ -231,6 +246,8 @@ public partial class ExecuteScript(
             builder.AddField("Result", $"```\n{fileNameOrResult}\n```");
 
         builder.AddField("Execution Time", $"{metadata.ExecutionTime:f5}s");
+
+        ScriptExecutionPerformanceCounters.ScriptExecutionAverageExecutionTime.Observe(metadata.ExecutionTime);
 
         var attachments = new List<FileAttachment>();
         if (outputFile != null)
@@ -268,6 +285,8 @@ public partial class ExecuteScript(
 
         if (errors.Any())
         {
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("pre-parser-syntax-error").Inc();
+
             var errorString = string.Join("\n", errors.Select(err => err.ToString()));
 
             if (errorString.Length > _maxErrorLength)
@@ -304,8 +323,12 @@ public partial class ExecuteScript(
         string script
     )
     {
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsByUser.WithLabels(Context.User.Id.ToString()).Inc();
+
         if (string.IsNullOrWhiteSpace(script))
         {
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNoContent.Inc();
+
             await LuaErrorAsync("The script cannot be empty!");
 
             return;
@@ -319,6 +342,8 @@ public partial class ExecuteScript(
 
         if (ContainsUnicode(script))
         {
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnicode.Inc();
+
             await LuaErrorAsync("Scripts can only contain ASCII characters!");
 
             return;
@@ -338,7 +363,11 @@ public partial class ExecuteScript(
             );
 
         if (_scriptsSettings.LuaVMEnabled) // Disable if pre-luau, or wait for the file to be updated to support pre-luau
+        {
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsUsingLuaVM.Inc();
+
             script = string.Format(_luaUtility.LuaVMTemplate, script);
+        }
 
 #if !PRE_JSON_EXECUTION
         // isAdmin allows a bypass of disabled methods and virtualized globals
@@ -398,6 +427,8 @@ public partial class ExecuteScript(
                 var message = ex.Message;
                 if (GridSyntaxErrorRegex().IsMatch(message))
                 {
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("grid-server-syntax-error:fault").Inc();
+
                     var match = GridSyntaxErrorRegex().Match(message);
                     var line = match.Groups[1].Value;
                     var error = match.Groups[2].Value;
@@ -423,6 +454,8 @@ public partial class ExecuteScript(
 
                 if (message.Contains(_ErrorConvertingToJson))
                 {
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonJsonSerializableResults.Inc();
+
                     await LuaErrorAsync("The script returned a value that could not be converted to JSON.");
 
                     return;
@@ -433,6 +466,8 @@ public partial class ExecuteScript(
             // Catch this and alert the user (only in the case of ex is CommunicationException, ex.InnerException is InvalidOperationException and ex.InnerException.InnerException is XmlException)
             if (ex is CommunicationException && ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException)
             {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonAsciiResults.Inc();
+                
                 await LuaErrorAsync("The script returned invalid ASCII characters.");
 
                 return;
@@ -440,10 +475,14 @@ public partial class ExecuteScript(
 
             if (ex is TimeoutException)
             {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
+
                 await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
             }
+
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();
 
             if (ex is not Discord.Net.HttpException)
                 await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
@@ -543,6 +582,8 @@ public partial class ExecuteScript(
 
             return;
         }
+
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsFromFiles.WithLabels(file.Filename, file.Size.ToString()).Inc();
 
         var contents = await file.GetAttachmentContentsAscii();
 

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 
+using Prometheus;
+
 using Discord;
 using Discord.WebSocket;
 
@@ -31,7 +33,25 @@ public class ScriptLogger : IScriptLogger
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ScriptsSettings _scriptsSettings;
 
-    private readonly ConcurrentBag<string> _scriptHashes = new();
+    private readonly ConcurrentBag<string> _scriptHashes = [];
+
+    private static readonly Gauge _scriptLoggingTotalScriptHashes = Metrics.CreateGauge(
+        "script_logging_script_hashes_total",
+        "Total number of script hashes logged ever"
+    );
+    private static readonly Counter _scriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
+        "script_logging_scripts_logged_total",
+        "Total number of scripts logged",
+        "source", // from command or interaction
+        "guild", // guild id
+        "channel", // channel id
+        "user" // user id
+    );
+    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
+        "script_logging_existing_scripts_logged_total",
+        "Total number of existing scripts logged",
+        "script_hash"
+    );
 
     /// <summary>
     /// Creates a new instance of the <see cref="ScriptLogger"/> class.
@@ -60,6 +80,8 @@ public class ScriptLogger : IScriptLogger
 
         foreach (var hash in _scriptsSettings.LoggedScriptHashes)
             _scriptHashes.Add(hash);
+
+        _scriptLoggingTotalScriptHashes.Set(_scriptHashes.Count);
 
         Task.Factory.StartNew(PersistLoggedScriptHashes, TaskCreationOptions.LongRunning);
     }
@@ -90,6 +112,8 @@ public class ScriptLogger : IScriptLogger
         var guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
         var channelInfo = interaction.GetChannelAsString();
 
+        _scriptLoggingTotalScriptsLogged.WithLabels("interaction", guildInfo, channelInfo, userInfo).Inc();
+
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
 
@@ -106,6 +130,8 @@ public class ScriptLogger : IScriptLogger
         var userInfo = context.User.ToString();
         var guildInfo = context.Guild?.Id.ToString() ?? "DMs";
         var channelInfo = message.Channel?.ToString();
+
+        _scriptLoggingTotalScriptsLogged.WithLabels("command", guildInfo, channelInfo, userInfo).Inc();
         
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
@@ -130,6 +156,8 @@ public class ScriptLogger : IScriptLogger
 
         if (_scriptHashes.Contains(scriptHash))
         {
+            _scriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
+            
             // Just log the hash
             content += "\n\n**Script already logged**";
 
@@ -173,6 +201,7 @@ public class ScriptLogger : IScriptLogger
 
         // Add the hash to the list of logged hashes
         _scriptHashes.Add(scriptHash);
+        _scriptLoggingTotalScriptHashes.Inc();
     }
 
 }
