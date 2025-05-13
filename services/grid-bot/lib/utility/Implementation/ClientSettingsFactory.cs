@@ -44,17 +44,17 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private readonly Counter _settingsRefreshCounter = Metrics.CreateCounter(
         "rbx_client_settings_refresh",
         "Number of times the client settings have been refreshed.",
-        "mount", "path"
+        "application"
     );
     private readonly Counter _settingsWriteCounter = Metrics.CreateCounter(
         "rbx_client_settings_write",
         "Number of times the client settings have been written.",
-        "mount", "path"
+        "application"
     );
     private readonly Counter _settingsReadCounter = Metrics.CreateCounter(
         "rbx_client_settings_read",
         "Number of times the client settings have been read.",
-        "mount", "path"
+        "application"
     );
 
 
@@ -264,7 +264,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private void DoCommit(string applicationName, Secrets data, MetaData metadata)
     {
         var serializedData = data.ToDictionary(k => k.Key, v => v.Value.ToString());
-        _settingsWriteCounter.WithLabels(_mount, _path).Inc();
+        _settingsWriteCounter.WithLabels(applicationName).Inc();
 
         if (_settings.ClientSettingsViaVault)
         {
@@ -299,7 +299,6 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private IDictionary<string, Secrets> DoRefresh(IDictionary<string, Secrets> oldSettings)
     {
         _logger?.Debug("Refreshing settings, FromVault = {0}", _settings.ClientSettingsViaVault);
-        _settingsRefreshCounter.WithLabels(_mount, _path).Inc();
 
         var settings = new Dictionary<string, Secrets>();
 
@@ -311,6 +310,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
             // For each key, read the secret
             foreach (var (applicationName, applicationData, applicationMetaData) in data)
             {
+                _settingsRefreshCounter.WithLabels(applicationName).Inc();
+
                 var parsedSecrets = ParseSecrets(applicationData, applicationMetaData);
                 settings.Add(applicationName, parsedSecrets);
             }
@@ -348,16 +349,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
     /// <inheritdoc cref="IClientSettingsFactory.Refresh"/>
     public void Refresh()
     {
-        _settingsCacheLock.EnterWriteLock();
-
-        try
-        {
-            _settingsCacheRefreshAhead.LazyValue.Refresh();
-        }
-        finally
-        {
-            _settingsCacheLock.ExitWriteLock();
-        }
+        _settingsCacheRefreshAhead.LazyValue.Refresh();
     }
 
     /// <inheritdoc cref="IClientSettingsFactory.GetSettingsForApplication(string, bool)"/>
@@ -368,7 +360,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         _settingsCacheLock.EnterReadLock();
 
-        _settingsReadCounter.WithLabels(_mount, _path).Inc();
+        _settingsReadCounter.WithLabels(application).Inc();
 
         try
         {
@@ -438,13 +430,11 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         try
         {
-            var str = ((JsonElement)value).GetString();
-
             return typeof(T) switch
             {
-                Type t when t == typeof(string) => (T)(object)str.ToString(),
-                Type t when t == typeof(bool) => (T)(object)bool.Parse(str),
-                Type t when t == typeof(int) => (T)(object)long.Parse(str),
+                Type t when t == typeof(string) => (T)(object)value.ToString(),
+                Type t when t == typeof(bool) => (T)value,
+                Type t when t == typeof(int) => (T)value,
                 _ => throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name)),
             };
         }
