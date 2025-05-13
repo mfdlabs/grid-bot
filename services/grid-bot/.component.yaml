@@ -41,14 +41,46 @@ deployment:
             static: 8101
           grpc:
             static: 5000
+          http:
+            static: 8080
       services:
-        - name: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: metrics
           tags:
             - ${{ env.NOMAD_ENVIRONMENT }}
           checks:
             - type: http
               path: /metrics
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-recovery
+          port: grpc
+          tags:
+            - ${{ env.NOMAD_ENVIRONMENT }}
+          checks:
+            - type: grpc
+
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web
+          port: http
+          tags:
+            - ${{ env.NOMAD_ENVIRONMENT }}
+            - "traefik.enable=true"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-http.rule=(HostRegexp(`{host:[a-zA-Z]+}.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`))"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-http.entrypoints=http"
+          checks:
+            - type: http
+              path: /health
+ 
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https
+          port: http
+          tags:
+            - ${{ env.NOMAD_ENVIRONMENT }}
+            - "traefik.enable=true"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.rule=(HostRegexp(`{host:[a-zA-Z]+}.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`))"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.entrypoints=https"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.tls=true"
+          checks:
+            - type: http
+              path: /health
+
       volumes:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
