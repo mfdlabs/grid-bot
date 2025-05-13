@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Library containing implementation for Web based code in grid-bot. Port of @mfdlabs/grid-service-websrv to C#</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
+
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
+    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Threading" Version="1.0.9" />
+  </ItemGroup>
+
+  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
+    <ProjectReference Include="$(RootDirectory)lib/src/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/logging/logging/Logging.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/redis/redis/Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/src/threading/threading/Threading.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+  </ItemGroup>
+</Project>
