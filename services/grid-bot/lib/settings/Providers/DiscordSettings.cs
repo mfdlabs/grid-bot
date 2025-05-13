@@ -19,7 +19,11 @@ public class DiscordSettings : BaseSettingsProvider
     /// <exception cref="InvalidOperationException">The setting is required!</exception>
     public string BotToken => GetOrDefault<string>(
         nameof(BotToken),
+#if DEBUG
+        string.Empty
+#else
         () => throw new InvalidOperationException($"Environment Variable {nameof(BotToken)} is required!")
+#endif
     );
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
@@ -44,6 +48,18 @@ public class DiscordSettings : BaseSettingsProvider
     public ulong DebugGuildId => GetOrDefault(
         nameof(DebugGuildId),
         0UL
+    );
+
+    /// <summary>
+    /// Determines if the bot should not be enabled.
+    /// </summary>
+    /// <remarks>
+    /// This is only valid for debug builds.
+    /// If this is true, then the bot will not be enabled.
+    /// </remarks>
+    public bool DebugBotDisabled => GetOrDefault(
+        nameof(DebugBotDisabled),
+        false
     );
 
 #endif
