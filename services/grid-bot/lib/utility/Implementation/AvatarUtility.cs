@@ -131,13 +131,15 @@ public class AvatarUtility : IAvatarUtility
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="thumbnailsClient">The <see cref="IThumbnailsClient"/>.</param>
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/>.</param>
+    /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
     public AvatarUtility(
         ILogger logger,
         AvatarSettings avatarSettings,
         IRandom random,
         IJobManager jobManager,
         IThumbnailsClient thumbnailsClient,
-        IPercentageInvoker percentageInvoker
+        IPercentageInvoker percentageInvoker,
+        IHttpClientFactory httpClientFactory
     )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -146,6 +148,7 @@ public class AvatarUtility : IAvatarUtility
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _thumbnailsClient = thumbnailsClient ?? throw new ArgumentNullException(nameof(thumbnailsClient));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
         _localCachedPaths = new(avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
