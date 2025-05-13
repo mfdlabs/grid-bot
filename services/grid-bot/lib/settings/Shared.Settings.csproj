@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="3.15.3" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="3.15.3" />
+    <PackageReference Include="Discord.Net.Core" Version="3.17.4" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">

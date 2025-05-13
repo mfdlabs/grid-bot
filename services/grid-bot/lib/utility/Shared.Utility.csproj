@@ -50,22 +50,8 @@
     <PackageReference Include="Backtrace" Version="2.1.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="3.15.3" />
-    <PackageReference Include="Discord.Net.Commands" Version="3.15.3" />
-  </ItemGroup>
-
-  <!-- Protobuf -->
-  <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.23.4" />
-    <PackageReference Include="Grpc.Core" Version="2.46.6" />
-    <PackageReference Include="Grpc.Tools" Version="2.56.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Server" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
+    <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,6 @@ namespace Grid.Bot.Commands.Private;
 
 using System;
 using System.IO;
-using System.Net;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,8 +13,6 @@ using Discord.Commands;
 
 using Newtonsoft.Json;
 
-using ClientSettings.Client;
-
 using Utility;
 using Extensions;
 
@@ -25,76 +22,44 @@ using Extensions;
 /// <remarks>
 /// Construct a new instance of <see cref="ClientSettingsModule"/>.
 /// </remarks>
-/// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/>.</param>
-/// <param name="clientSettingsClientSettings">The <see cref="ClientSettingsClientSettings"/>.</param>
+/// <param name="clientSettingsFactory">The <see cref="IClientSettingsFactory"/>.</param>
+/// <param name="clientSettingsSettings">The <see cref="ClientSettingsSettings"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="clientSettingsClient"/> cannot be null.
-/// - <paramref name="clientSettingsClientSettings"/> cannot be null.
+/// - <paramref name="clientSettingsFactory"/> cannot be null.
+/// - <paramref name="clientSettingsSettings"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
 [Group("clientsettings"), Summary("Commands used for managing client settings."), Alias("cs", "client_settings")]
-public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, ClientSettingsClientSettings clientSettingsClientSettings) : ModuleBase
+public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, ClientSettingsSettings clientSettingsSettings) : ModuleBase
 {
-    private readonly IClientSettingsClient _clientSettingsClient = clientSettingsClient ?? throw new ArgumentNullException(nameof(clientSettingsClient));
-    private readonly ClientSettingsClientSettings _clientSettingsClientSettings = clientSettingsClientSettings ?? throw new ArgumentNullException(nameof(clientSettingsClientSettings));
-
-    /// <summary>
-    /// Represents the type of client setting.
-    /// </summary>
-    public enum ClientSettingType
-    {
-        /// <summary>
-        /// Represents a string client setting.
-        /// </summary>
-        String,
-
-        /// <summary>
-        /// Represents an integer client setting.
-        /// </summary>
-        Int,
-
-        /// <summary>
-        /// Represents a boolean client setting.
-        /// </summary>
-        Bool,
-    }
+    private readonly IClientSettingsFactory _clientSettingsFactory = clientSettingsFactory ?? throw new ArgumentNullException(nameof(clientSettingsFactory));
+    private readonly ClientSettingsSettings _clientSettingsSettings = clientSettingsSettings ?? throw new ArgumentNullException(nameof(clientSettingsSettings));
 
     /// <summary>
     /// Gets the client settings for the specified application.
     /// </summary>
     /// <param name="applicationName">The name of the application.</param>
-    /// <param name="useApiKey">Should the API key be used? This will allow the application to be returned from the client settings API even if $allowed on the backend is false.</param>
     [Command("get_all"), Summary("Gets all client settings for the specified application.")]
     [Alias("getall", "all")]
-    public async Task GetAllAsync(string applicationName, bool useApiKey = false)
+    public async Task GetAllAsync(string applicationName)
     {
         using var _ = Context.Channel.EnterTypingState();
 
-        try
+        var clientSettings = _clientSettingsFactory.GetSettingsForApplication(applicationName);
+        if (clientSettings is null)
         {
-            var clientSettings = await _clientSettingsClient.GetApplicationSettingsAsync(
-                applicationName,
-                useApiKey ? _clientSettingsClientSettings.ClientSettingsApiKey : null
-            ).ConfigureAwait(false);
+            await this.ReplyWithReferenceAsync(
+                text: "The specified application does not exist."
+            );
 
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(clientSettings, Formatting.Indented)));
+            return;
+        }
 
-            await this.ReplyWithFileAsync(stream, $"{applicationName}.json", "Here are the client settings for the specified application.");
-        }
-        catch (ApiException ex)
-        {
-            if (ex.StatusCode == (int)HttpStatusCode.BadRequest)
-                await this.ReplyWithReferenceAsync(
-                    "The specified application does not exist."
-                );
-            else if (ex.StatusCode == (int)HttpStatusCode.Unauthorized)
-                await this.ReplyWithReferenceAsync(
-                    "The specified application cannot be returned from the client settings API without an API key. Please set the use_api_key parameter to true."
-                );
-            else
-                throw;
-        }
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(clientSettings, Formatting.Indented)));
+
+        await this.ReplyWithFileAsync(stream, $"{applicationName}.json", "Here are the client settings for the specified application.");
+        
     }
 
     /// <summary>
@@ -102,10 +67,9 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// </summary>
     /// <param name="applicationName">The name of the application.</param>
     /// <param name="dependencies">The dependencies for the application.</param>
-    /// <param name="reference">The reference for the application.</param>
     /// <param name="isAllowedFromApi">Is the application allowed to be written to from the API?</param>
     [Command("import"), Summary("Imports the client settings for the specified application.")]
-    public async Task ImportAsync(string applicationName, string dependencies = null, string reference = null, bool isAllowedFromApi = false)
+    public async Task ImportAsync(string applicationName, string dependencies = null, bool isAllowedFromApi = false)
     {
         var applicationSettings = Context.Message.Attachments.FirstOrDefault();
         if (applicationSettings is null)
@@ -120,26 +84,37 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
         using var _ = Context.Channel.EnterTypingState();
 
         var contents = await applicationSettings.GetAttachmentContentsAscii();
-
-        var request = new ImportClientApplicationSettingsRequest
+        var contentsParsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents);
+        if (contentsParsed is null)
         {
-            ApplicationName = applicationName,
-            ApplicationSettings = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents),
-        };
+            await this.ReplyWithReferenceAsync(
+                text: "Failed to parse the client settings file."
+            );
 
-        var parsedDependencies = dependencies?.Split(',', StringSplitOptions.RemoveEmptyEntries);
-        if (parsedDependencies is not null && parsedDependencies.Length > 0)
-            request.Dependencies = parsedDependencies;
+            return;
+        }
 
-        if (!string.IsNullOrWhiteSpace(reference))
-            request.Reference = reference;
 
-        request.IsAllowedFromClientSettingsService = isAllowedFromApi;
+        _clientSettingsFactory.WriteSettingsForApplication(applicationName, contentsParsed);
 
-        await _clientSettingsClient.ImportApplicationSettingAsync(
-            _clientSettingsClientSettings.ClientSettingsApiKey,
-            request
-        ).ConfigureAwait(false);
+        var parsedDependencies = string.Join(",", dependencies?.Split(',', StringSplitOptions.RemoveEmptyEntries));
+
+        if (!string.IsNullOrWhiteSpace(parsedDependencies))
+        {
+            _clientSettingsSettings.ClientSettingsApplicationDependencies[applicationName] = parsedDependencies;
+            _clientSettingsSettings.ApplyCurrent();
+        }
+
+        if (isAllowedFromApi)
+        {
+            var currentPermissibleReadApplications = _clientSettingsSettings.PermissibleReadApplications.ToList();
+
+            if (!currentPermissibleReadApplications.Contains(applicationName))
+            {
+                currentPermissibleReadApplications.Add(applicationName);
+                _clientSettingsSettings.PermissibleReadApplications = [.. currentPermissibleReadApplications];
+            }
+        }
 
         await this.ReplyWithReferenceAsync(
             text: "Successfully imported the client settings for the specified application."
@@ -158,25 +133,38 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
 
         try
         {
-            var applicationSetting = await _clientSettingsClient.GetClientApplicationSettingAsync(applicationName, settingName).ConfigureAwait(false);
+            if (ClientSettingsNameHelper.IsFilteredSetting(settingName))
+            {
+                var (filterName, filterType) = ClientSettingsNameHelper.ExtractFilteredSettingName(settingName);
+                var filteredSetting = _clientSettingsFactory.GetFilteredSettingForApplication<string>(applicationName, filterName, filterType);
+
+                await this.ReplyWithReferenceAsync(
+                    embed: new EmbedBuilder()
+                        .WithTitle($"{filterName} ({filterType} Filter)")
+                        .AddField("Value", $"```\n{filteredSetting.Value}\n```")
+                        .AddField("Filtered Ids", string.Join(", ", filteredSetting.FilteredIds))
+                        .WithColor(0x00, 0xff, 0x00)
+                        .Build()
+                );
+
+                return;
+            }
+
+            var applicationSetting = _clientSettingsFactory.GetSettingForApplication<string>(applicationName, settingName);
 
             await this.ReplyWithReferenceAsync(
                 embed: new EmbedBuilder()
                     .WithTitle(settingName)
-                    .WithDescription($"```\n{applicationSetting.Value}\n```")
+                    .WithDescription($"```\n{applicationSetting}\n```")
                     .WithColor(0x00, 0xff, 0x00)
                     .Build()
             );
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
-            if (ex.StatusCode == (int)HttpStatusCode.BadRequest)
+            if (ex is InvalidOperationException)
                 await this.ReplyWithReferenceAsync(
                     text: "The specified application does not exist."
-                );
-            else if (ex.StatusCode == (int)HttpStatusCode.NotFound)
-                await this.ReplyWithReferenceAsync(
-                    text: "The specified application setting does not exist."
                 );
             else
                 throw;
@@ -191,7 +179,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     /// <param name="settingType">The type of the setting.</param>
     /// <param name="settingValue">The value of the setting.</param>
     [Command("set"), Summary("Sets a client setting for the specified application.")]
-    public async Task SetAsync(string applicationName, string settingName, ClientSettingType settingType = ClientSettingType.String, string settingValue = "")
+    public async Task SetAsync(string applicationName, string settingName, SettingType settingType = SettingType.String, string settingValue = "")
     {
         if (settingValue is null)
         {
@@ -208,9 +196,9 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
         {
             value = settingType switch
             {
-                ClientSettingType.String => settingValue,
-                ClientSettingType.Int => int.Parse(settingValue),
-                ClientSettingType.Bool => bool.Parse(settingValue),
+                SettingType.String => settingValue,
+                SettingType.Int => long.Parse(settingValue),
+                SettingType.Bool => bool.Parse(settingValue),
                 _ => throw new InvalidOperationException($"Unknown setting type: {settingType}"),
             };
         }
@@ -225,37 +213,9 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
 
         using var _ = Context.Channel.EnterTypingState();
 
-        try
-        {
-            var diff = await _clientSettingsClient.SetClientApplicationSettingAsync(
-                _clientSettingsClientSettings.ClientSettingsApiKey,
-                new SetClientApplicationSettingRequest
-                {
-                    ApplicationName = applicationName,
-                    SettingName = settingName,
-                    Value = value,
-                }
-            ).ConfigureAwait(false);
+        _clientSettingsFactory.SetSettingForApplication(applicationName, settingName, value, settingType);
 
-            await this.ReplyWithReferenceAsync(
-                embed: new EmbedBuilder()
-                    .WithTitle(settingName)
-                    .AddField("Previous Value", diff.OldValue?.Value ?? "null")
-                    .AddField("New Value", value)
-                    .AddField("Did Update", diff.DidUpdate)
-                    .WithColor(0x00, 0xff, 0x00)
-                    .Build()
-            );
-        }
-        catch (ApiException ex)
-        {
-            if (ex.StatusCode == (int)HttpStatusCode.BadRequest)
-                await this.ReplyWithReferenceAsync(
-                    text: "The specified application does not exist."
-                );
-            else
-                throw;
-        }
+        await this.ReplyWithReferenceAsync(text: $"Successfully set the setting `{settingName}` to `{value}` for the application `{applicationName}`.");
     }
 
     /// <summary>
@@ -266,7 +226,7 @@ public class ClientSettingsModule(IClientSettingsClient clientSettingsClient, Cl
     {
         using var _ = Context.Channel.EnterTypingState();
 
-        await _clientSettingsClient.RefreshAllClientApplicationSettingsAsync(_clientSettingsClientSettings.ClientSettingsApiKey).ConfigureAwait(false);
+        _clientSettingsFactory.Refresh();
 
         await this.ReplyWithReferenceAsync(
             text: "Successfully refreshed all applications."

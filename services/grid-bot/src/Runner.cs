@@ -6,23 +6,21 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Security.Authentication;
 using System.Runtime.InteropServices;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 
 using Discord.Commands;
 using Discord.Interactions;
 
+using Vault;
 using Redis;
 using Random;
+using Logging;
 using Networking;
 using Configuration;
 using Text.Extensions;
@@ -30,8 +28,9 @@ using ServiceDiscovery;
 
 using Users.Client;
 using Thumbnails.Client;
-using ClientSettings.Client;
 
+using Web;
+using Grpc;
 using Events;
 using Utility;
 using Prometheus;
@@ -41,10 +40,6 @@ using ILogger = Logging.ILogger;
 
 using LoggerFactory = Utility.LoggerFactory;
 using ILoggerFactory = Utility.ILoggerFactory;
-
-using LogLevel = Logging.LogLevel;
-using MELLogLevel = Microsoft.Extensions.Logging.LogLevel;
-using Discord.Rest;
 
 internal static class Runner
 {
@@ -166,13 +161,17 @@ internal static class Runner
         var usersClient = new UsersClient(usersClientSettings.UsersApiBaseUrl);
         services.AddSingleton<IUsersClient>(usersClient);
 
-        var clientSettingsClientSettings = providers.FirstOrDefault(s => s.GetType() == typeof(ClientSettingsClientSettings)) as ClientSettingsClientSettings;
-        var clientSettingsClient = new ClientSettingsClient(
-            clientSettingsClientSettings.ClientSettingsApiBaseUrl,
-            clientSettingsClientSettings.ClientSettingsCertificateValidationEnabled
+        var webSettings = providers.FirstOrDefault(s => s.GetType() == typeof(WebSettings)) as WebSettings;
+        var clientSettingsSettings = providers.FirstOrDefault(s => s.GetType() == typeof(ClientSettingsSettings)) as ClientSettingsSettings;
+        var vaultClient = clientSettingsSettings.ClientSettingsViaVault
+            ? VaultClientFactory.Singleton.GetClient(clientSettingsSettings.ClientSettingsVaultAddress, clientSettingsSettings.ClientSettingsVaultToken)
+            : null;
+        var clientSettingsFactory = new ClientSettingsFactory(
+            vaultClient,
+            logger,
+            clientSettingsSettings
         );
-
-        services.AddSingleton<IClientSettingsClient>(clientSettingsClient);
+        services.AddSingleton<IClientSettingsFactory>(clientSettingsFactory);
 
         var avatarSettings = providers.FirstOrDefault(s => s.GetType() == typeof(AvatarSettings)) as AvatarSettings;
         var thumbnailsClient = new ThumbnailsClient(avatarSettings.RbxThumbnailsUrl);
@@ -217,11 +216,11 @@ internal static class Runner
     private static IEnumerable<IConfigurationProvider> GetSettingsProviders()
     {
         var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
-        var ns = typeof(BaseSettingsProvider).Namespace;
+        var @namespace = typeof(BaseSettingsProvider).Namespace;
 
         var types = assembly
             .GetTypes()
-            .Where(t => string.Equals(t.Namespace, ns, StringComparison.Ordinal) &&
+            .Where(t => string.Equals(t.Namespace, @namespace, StringComparison.Ordinal) &&
                         t.BaseType.Name == typeof(BaseSettingsProvider).Name)
             .ToList(); // finicky
 
@@ -241,7 +240,7 @@ internal static class Runner
             }
 
             var singleton = constructor.Invoke(null);
-            if (singleton == null || singleton is not IConfigurationProvider provider)
+            if (singleton is not IConfigurationProvider provider)
             {
                 Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
 
@@ -336,122 +335,6 @@ internal static class Runner
         services.AddSingleton<IFloodCheckerRegistry>(floodCheckerRegistry);
     }
 
-    private class MicrosoftLogger(ILogger logger) : Microsoft.Extensions.Logging.ILogger
-    {
-        private class NoopDisposable : IDisposable
-        {
-            public void Dispose() { }
-        }
-
-        private readonly ILogger _logger = logger;
-
-        public IDisposable BeginScope<TState>(TState state) => new NoopDisposable();
-
-        public bool IsEnabled(MELLogLevel logLevel) => true;
-
-        public void Log<TState>(MELLogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-        {
-            var message = formatter(state, exception);
-
-            switch (logLevel)
-            {
-                case MELLogLevel.Trace:
-                    _logger.Verbose(message);
-                    break;
-                case MELLogLevel.Debug:
-                    _logger.Debug(message);
-                    break;
-                case MELLogLevel.Information:
-                    _logger.Information(message);
-                    break;
-                case MELLogLevel.Warning:
-                    _logger.Warning(message);
-                    break;
-                case MELLogLevel.Error:
-                case MELLogLevel.Critical:
-                    _logger.Error(message);
-                    break;
-                default:
-                    _logger.Warning(message);
-                    break;
-            }
-        }
-    }
-
-    private class MicrosoftLoggerProvider(ILogger logger) : ILoggerProvider
-    {
-        private readonly ILogger _logger = logger;
-
-        public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName) => new MicrosoftLogger(_logger);
-
-        public void Dispose() { }
-    }
-
-    private static void StartGrpcServer(IEnumerable<string> args, IServiceProvider services)
-    {
-        var client = services.GetRequiredService<DiscordShardedClient>();
-        var globalSettings = services.GetRequiredService<GlobalSettings>();
-        var logger = new Logger(
-            name: globalSettings.GrpcServerLoggerName,
-            logLevelGetter: () => globalSettings.GrpcServerLoggerLevel,
-            logToConsole: true,
-            logToFileSystem: false
-        );
-
-        logger.Information("Starting gRPC server on {0}", globalSettings.GridBotGrpcServerEndpoint);
-
-        var builder = WebApplication.CreateBuilder(args.ToArray());
-
-        builder.Logging.ClearProviders();
-        builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
-
-        builder.Services.AddSingleton(client);
-
-        builder.Services.AddGrpc();
-
-        if (globalSettings.GrpcServerUseTls)
-        {
-            builder.Services.Configure<KestrelServerOptions>(options =>
-            {
-                options.ConfigureEndpointDefaults(listenOptions =>
-                {
-                    listenOptions.Protocols = HttpProtocols.Http2;
-
-                    try
-                    {
-                        listenOptions.UseHttps(globalSettings.GrpcServerCertificatePath, globalSettings.GrpcServerCertificatePassword, httpsOptions =>
-                        {
-                            httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Warning("Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!", ex.Message);
-                    }
-                });
-            });
-
-            // set urls
-        }
-        else
-        {
-            builder.Services.Configure<KestrelServerOptions>(options =>
-            {
-                options.ConfigureEndpointDefaults(listenOptions =>
-                {
-                    listenOptions.Protocols = HttpProtocols.Http2;
-                });
-            });
-        }
-
-        var app = builder.Build();
-
-        app.MapGrpcService<GridBotGrpcServer>();
-
-
-        app.Run(globalSettings.GridBotGrpcServerEndpoint);
-    }
-
     private static async Task InvokeAsync(IEnumerable<string> args)
     {
 
@@ -491,7 +374,11 @@ internal static class Runner
 
         var discordSettings = services.GetRequiredService<DiscordSettings>();
 
+#if DEBUG
+        if (discordSettings.BotToken.IsNullOrEmpty() && !discordSettings.DebugBotDisabled)
+#else
         if (discordSettings.BotToken.IsNullOrEmpty())
+#endif
         {
             logger.Error(_noBotToken);
 
@@ -500,7 +387,8 @@ internal static class Runner
             throw new InvalidOperationException(_noBotToken);
         }
 
-        Task.Factory.StartNew(() => StartGrpcServer(args, services), TaskCreationOptions.LongRunning);
+        services.UseGrpcServer(args);
+        services.UseWebServer(args);
 
         var client = services.GetRequiredService<DiscordShardedClient>();
         var interactions = services.GetRequiredService<InteractionService>();
@@ -521,8 +409,13 @@ internal static class Runner
             port: globalSettings.MetricsPort
         ).Start();
 
-        await client.LoginAsync(TokenType.Bot, discordSettings.BotToken).ConfigureAwait(false);
-        await client.StartAsync().ConfigureAwait(false);
+#if DEBUG
+        if (!discordSettings.DebugBotDisabled)
+#endif
+        {
+            await client.LoginAsync(TokenType.Bot, discordSettings.BotToken).ConfigureAwait(false);
+            await client.StartAsync().ConfigureAwait(false);
+        }
 
         await Task.Delay(Timeout.Infinite).ConfigureAwait(false);
     }

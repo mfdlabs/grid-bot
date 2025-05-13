@@ -17,8 +17,10 @@ internal static class SettingsProvidersDefaults
     public static string ConsulPath => $"{EnvironmentProvider.EnvironmentName}/consul";
     public static string UsersClientPath => $"{EnvironmentProvider.EnvironmentName}/users-client";
     public static string ScriptsPath => $"{EnvironmentProvider.EnvironmentName}/scripts";
-    public static string ClientSettingsClientPath => $"{EnvironmentProvider.EnvironmentName}/client-settings-client";
+    public static string ClientSettingsPath => $"{EnvironmentProvider.EnvironmentName}/client-settings";
     public static string GlobalPath => $"{EnvironmentProvider.EnvironmentName}/global";
+    public static string WebPath => $"{EnvironmentProvider.EnvironmentName}/web";
+    public static string GrpcPath => $"{EnvironmentProvider.EnvironmentName}/grpc";
 
     public const string DefaultMountPath = "grid-bot-settings";
     public static string MountPath = Environment.GetEnvironmentVariable(_vaultMountEnvVar) ?? DefaultMountPath;

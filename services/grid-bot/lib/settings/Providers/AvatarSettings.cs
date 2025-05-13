@@ -10,6 +10,27 @@ public class AvatarSettings : BaseSettingsProvider
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.AvatarPath;
 
+    
+    /// <summary>
+    /// Gets the URL for the Avatar API.
+    /// </summary>
+    public string AvatarApiUrl => GetOrDefault(nameof(AvatarApiUrl), "https://avatar.roblox.com");
+
+    /// <summary>
+    /// Gets the interval on which to traverse the avatar fetch cache to search for stale entries.
+    /// </summary>
+    public TimeSpan AvatarFetchCacheTraversalInterval => GetOrDefault(nameof(AvatarFetchCacheTraversalInterval), TimeSpan.FromMinutes(5));
+
+    /// <summary>
+    /// Gets the TTL for each avatar-fetch cache entry.
+    /// </summary>
+    public TimeSpan AvatarFetchCacheEntryTtl => GetOrDefault(nameof(AvatarFetchCacheEntryTtl), TimeSpan.FromMinutes(5));
+
+    /// <summary>
+    /// Determines whether or not body colors are downgraded to pre v2 (v1.1).
+    /// </summary>
+    public bool AvatarFetchShouldDowngradeBodyColorsFormat => GetOrDefault(nameof(AvatarFetchShouldDowngradeBodyColorsFormat), true);
+
     /// <summary>
     /// Gets the url to be used for asset fetch.
     /// </summary>

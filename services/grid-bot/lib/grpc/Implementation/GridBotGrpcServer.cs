@@ -1,4 +1,6 @@
-namespace Grid.Bot.Utility;
+using Grpc.Core;
+
+namespace Grid.Bot.Grpc;
 
 using System;
 using System.Linq;
@@ -6,8 +8,6 @@ using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
-
-using Grpc.Core;
 
 using V1;
 
