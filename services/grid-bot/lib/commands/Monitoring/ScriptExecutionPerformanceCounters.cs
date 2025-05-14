@@ -15,7 +15,8 @@ internal class ScriptExecutionPerformanceCounters
     );
     public static readonly Counter TotalScriptExecutionsWithSyntaxErrors = Metrics.CreateCounter(
         "script_executions_with_syntax_errors_total",
-        "The total number of script executions with syntax errors."
+        "The total number of script executions with syntax errors.",
+        "context"
     );
     public static readonly Counter TotalScriptExecutionsFromFiles = Metrics.CreateCounter(
         "script_executions_from_files_total",
