@@ -21,10 +21,7 @@ deployment:
   namespace: grid-bot
 
   job: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
-
-  vault_policies:
-    - vault_secret_grid_settings_read_write
-
+  
   # Passed to the meta section in Nomad
   meta:
     ENVIRONMENT: ${{ env.NOMAD_ENVIRONMENT }}
