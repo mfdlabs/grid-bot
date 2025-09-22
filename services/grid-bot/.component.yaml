@@ -21,13 +21,11 @@ deployment:
   namespace: grid-bot
 
   job: grid-bot-${{ env.NOMAD_SHORT_ENVIRONMENT }}
-
-  vault_policies:
-    - vault_secret_grid_settings_read_write
-
+  
   # Passed to the meta section in Nomad
   meta:
     ENVIRONMENT: ${{ env.NOMAD_ENVIRONMENT }}
+    VERSION: ${{ env.NOMAD_VERSION }}
 
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
@@ -78,8 +76,10 @@ deployment:
       volumes:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
-        - '/opt/grid/scripts:/opt/grid/scripts'
-        - '/_/_logs/grid-bot/${{ env.NOMAD_ENVIRONMENT }}:/tmp/mfdlabs/logs'
+
+        - '/_/_data/grid-bot/scripts:/_/_data/grid-bot/scripts'
+        - '/_/_data/grid-bot/logs:/tmp/mfdlabs/logs'
+        - '/_/_data/grid-bot/rcc-logs:/_/_data/grid-bot/rcc-logs'
       config_maps:
         - destination: secrets/file.env
           env: true
@@ -87,5 +87,5 @@ deployment:
           data: |
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
-            VAULT_ADDR="http://vault.service.consul:8200"
-            VAULT_TOKEN="{{ with secret "grid-bot-settings/grid-bot-vault" }}{{ .Data.data.vault_token }}{{ end }}"
+            VAULT_ADDR="${{ env.VAULT_ADDR }}"
+            VAULT_TOKEN="${{ env.VAULT_TOKEN }}"

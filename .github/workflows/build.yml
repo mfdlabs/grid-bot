@@ -145,6 +145,10 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
           NOMAD_VERSION: ${{ steps.version.outputs.version }}
+          
+          VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+          
         with:
           script: |
             const fs = require('fs');

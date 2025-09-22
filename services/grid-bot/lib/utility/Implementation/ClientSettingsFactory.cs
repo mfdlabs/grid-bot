@@ -36,7 +36,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private readonly ILogger _logger;
     private readonly LazyWithRetry<CachedValues> _settingsCacheRefreshAhead;
 
-    private static readonly Type[] _supportedTypes = [typeof(string), typeof(bool), typeof(int)];
+    private static readonly Type[] _supportedTypes = [typeof(string), typeof(bool), typeof(int), typeof(long)];
 
     private readonly string _mount;
     private readonly string _path;
