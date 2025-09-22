@@ -54,7 +54,7 @@ jobs:
           NOMAD_SHORT_ENVIRONMENT: ${{ github.event.inputs.nomad_environment == 'production' && 'prod' || 'stage' }}
 
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
-          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+          VAULT_TOKEN: ${{ vars.VAULT_TOKEN }}
         with:
           components: ${{ steps.find-component-directories.outputs.components }}
           resources: ${{ github.event.inputs.nomad_resources }}
