@@ -4,7 +4,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Configurations>debug;release</Configurations>
     <OutputType>Exe</OutputType>
 
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
@@ -25,9 +24,9 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Random" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Random" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">

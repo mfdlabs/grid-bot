@@ -7,8 +7,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <RootNamespace>Grid.Bot</RootNamespace>
-
-    <Configurations>debug;release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

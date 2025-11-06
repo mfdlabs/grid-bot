@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.FileSystem" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Threading" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.FileSystem" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Redis" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Threading" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
