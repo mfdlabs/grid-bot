@@ -15,7 +15,6 @@ using Logging;
 using Threading;
 using Text.Extensions;
 
-
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
 /// </summary>
@@ -62,7 +61,7 @@ public class OnShardReady(
 {
     private static readonly Assembly _commandsAssembly = Assembly.Load("Shared.Commands");
 
-    private Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+    private OnceFlag _initializeClientOnceFlag = new();
 
     private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
@@ -85,10 +84,8 @@ public class OnShardReady(
     /// Invoe the event handler.
     /// </summary>
     /// <param name="shard">The client for the shard.</param>
-    public async Task Invoke(DiscordSocketClient shard)
+    public Task Invoke(DiscordSocketClient shard)
     {
-        _shardCount++;
-
         _logger.Debug(
             "Shard '{0}' ready as '{0}#{1}'",
             shard.ShardId,
@@ -96,10 +93,8 @@ public class OnShardReady(
             _client.CurrentUser.Discriminator
         );
 
-        if (_shardCount == _client.Shards.Count)
+        Call.Once(ref _initializeClientOnceFlag, async () =>
         {
-            _logger.Debug("Final shard ready!");
-
             await _interactionService.AddModulesAsync(_commandsAssembly, _services);
             await _commandService.AddModulesAsync(_commandsAssembly, _services);
 
@@ -136,6 +131,8 @@ public class OnShardReady(
                 _client.SetGameAsync(
                     _discordSettings.BotStatusMessage
                 );
-        }
+        });
+
+        return Task.CompletedTask;
     }
 }
