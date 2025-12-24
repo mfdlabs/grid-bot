@@ -125,7 +125,6 @@ public static class IServiceProviderExtensions
 
         app.UseRouting();
         
-        app.UseMetricServer();
         app.UseHealthChecks("/health");
 
         app.UseTelemetry();

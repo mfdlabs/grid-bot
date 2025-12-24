@@ -16,8 +16,8 @@ public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
     private readonly Counter _HttpRequestCounter = Metrics.CreateCounter(
         "http_server_requests_total", 
         "Total number of http requests", 
-        "Method", 
-        "Endpoint"
+        "method", 
+        "endpoint"
     );
 
     /// <summary>

@@ -31,11 +31,11 @@ public class GlobalSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Gets the port for the metrics server.
+    /// Gets the address for the metrics server.
     /// </summary>
-    public int MetricsPort => GetOrDefault(
-        nameof(MetricsPort),
-        8081
+    public string MetricsBindAddress => GetOrDefault(
+        nameof(MetricsBindAddress),
+        "http://+:8081/"
     );
 
     /// <summary>

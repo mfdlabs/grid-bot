@@ -21,15 +21,15 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
     private readonly Counter _HttpResponseCounter = Metrics.CreateCounter(
         "http_server_response_total",
         "Total number of http responses",
-        "Method",
-        "Endpoint",
-        "StatusCode"
+        "method",
+        "endpoint",
+        "status_code"
     );
     private readonly Histogram _RequestDurationHistogram= Metrics.CreateHistogram(
         "http_server_request_duration_seconds",
         "Duration in seconds each request takes",
-        "Method",
-        "Endpoint"
+        "method",
+        "endpoint"
     );
 
     /// <summary>

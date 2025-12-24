@@ -49,10 +49,7 @@ public class OnCommandExecuted(
         "bot_commands_failed_total",
         "The total number of commands failed.",
         "message_type",
-        "message_id",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
+        "command"
     );
 
     /// <summary>
@@ -72,10 +69,7 @@ public class OnCommandExecuted(
 
             _totalCommandsFailed.WithLabels(
                 message.Type.ToString(),
-                message.Id.ToString(),
-                message.Author.Id.ToString(),
-                message.Channel.Id.ToString(),
-                message.Channel is IGuildChannel guildChannel ? guildChannel.GuildId.ToString() : "DM"
+                command.IsSpecified ? command.Value.ToString() : "Unknown"
             ).Inc();
 
             if (result is not ExecuteResult executeResult)
