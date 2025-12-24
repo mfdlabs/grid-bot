@@ -23,6 +23,11 @@ deployment:
     ENVIRONMENT: ${{ env.NOMAD_ENVIRONMENT }}
     VERSION: ${{ env.NOMAD_VERSION }}
 
+  constraints:
+    - attribute: "${meta.deployment.capabilities}"
+      operator: "set_contains"
+      value: "grid-bot"
+
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
       resources:
