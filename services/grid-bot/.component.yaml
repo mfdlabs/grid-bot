@@ -36,9 +36,9 @@ deployment:
       network:
         mode: host
         ports:
-          metrics:
-          grpc:
-          http:
+          metrics: {}
+          grpc: {}
+          http: {}
       services:
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: metrics
