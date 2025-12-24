@@ -86,6 +86,8 @@ public class OnShardReady(
     /// <param name="shard">The client for the shard.</param>
     public async Task Invoke(DiscordSocketClient shard)
     {
+        _shardCount++;
+    
         _logger.Debug(
             "Shard '{0}' ready as '{0}#{1}'",
             shard.ShardId,
