@@ -57,11 +57,7 @@ deployment:
             - ${{ env.NOMAD_ENVIRONMENT }}
             - "traefik.enable=true"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http"
-
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-secure.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-secure.entrypoints=https"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-secure.tls=true"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
 
       volumes:
         - '/var/run/docker.sock:/var/run/docker.sock'
