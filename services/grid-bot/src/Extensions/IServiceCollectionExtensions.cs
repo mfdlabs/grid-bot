@@ -291,7 +291,8 @@ public static class IServiceCollectionExtensions
         var vaultClientFactory = serviceProvider.GetRequiredService<IVaultClientFactory>();
 
         var vaultClient = clientSettingsSettings.ClientSettingsViaVault
-            ? vaultClientFactory.GetClient()
+            ? vaultClientFactory.GetClient(clientSettingsSettings.ClientSettingsVaultAddress,
+                                         clientSettingsSettings.ClientSettingsVaultToken)
             : null;
 
         var clientSettingsFactory = new ClientSettingsFactory(

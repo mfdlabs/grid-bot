@@ -92,7 +92,7 @@ public static class IServiceProviderExtensions
         // Extract host and port from bind address
         var bindAddress = globalSettings.MetricsBindAddress;
         var host = bindAddress.Split(':')[1].TrimStart('/');
-        var port = int.Parse(bindAddress.Split(':')[2]);
+        var port = int.Parse(bindAddress.Split(':')[2].TrimEnd('/'));
 
         new KestrelMetricServer(
             hostname: host,

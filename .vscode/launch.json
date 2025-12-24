@@ -6,7 +6,22 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/services/grid-bot/src/bin/debug/net8.0/Grid.Bot.dll",
+            "program": "${workspaceFolder}/services/grid-bot/src/bin/Debug/net8.0/Grid.Bot.dll",
+            "cwd": "${workspaceFolder}/services/grid-bot/src/",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Grid.Bot (No build)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/grid-bot/src/bin/Debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/services/grid-bot/src/",
             "console": "internalConsole",
             "stopAtEntry": false,
