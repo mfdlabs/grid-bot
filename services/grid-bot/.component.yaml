@@ -37,11 +37,8 @@ deployment:
         mode: host
         ports:
           metrics:
-            static: 8101
           grpc:
-            static: 5000
           http:
-            static: 8882
       services:
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: metrics
@@ -71,6 +68,10 @@ deployment:
           env: true
           on_change: restart
           data: |
+            MetricsBindAddress="http://{{ env "NOMAD_IP_metrics" }}:{{ env "NOMAD_PORT_metrics" }}"
+            WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
+            GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
+
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
             VAULT_ADDR="${{ env.VAULT_ADDR }}"
