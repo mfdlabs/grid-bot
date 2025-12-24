@@ -56,11 +56,7 @@ internal class ScriptExecutionPerformanceCounters
     );
     public static readonly Histogram ScriptExecutionAverageExecutionTime = Metrics.CreateHistogram(
         "script_execution_average_execution_time_seconds",
-        "The average execution time of script executions in seconds.",
-        new HistogramConfiguration
-        {
-            Buckets = Histogram.LinearBuckets(0, 0.1, 100)
-        }
+        "The average execution time of script executions in seconds."
     );
     public static readonly Counter TotalScriptExecutionsUsingLuaVM = Metrics.CreateCounter(
         "script_executions_using_lua_vm_total",

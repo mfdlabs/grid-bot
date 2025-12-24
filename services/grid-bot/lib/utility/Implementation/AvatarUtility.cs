@@ -360,6 +360,12 @@ public class AvatarUtility : IAvatarUtility
     /// <inheritdoc cref="IAvatarUtility.RenderUser(long,long,int,int)"/>
     public (Stream, string) RenderUser(long userId, long placeId, int sizeX, int sizeY)
     {
+        var commandType = _random.Next(0, 10) < 6
+            ? ThumbnailCommandType.Avatar_R15_Action
+            : ThumbnailCommandType.Closeup;
+
+        _avatarThumbnailsRenderedTotal.WithLabels(userId.ToString(), placeId.ToString(), commandType.ToString()).Inc();
+
         if (_percentageInvoker.CanInvoke(_avatarSettings.RbxThumbnailsRolloutPercent))
         {
             _avatarThumbnailsOptedInToRbxThumbnailsTotal.WithLabels(userId.ToString()).Inc();
@@ -369,10 +375,6 @@ public class AvatarUtility : IAvatarUtility
                 userId,
                 _avatarSettings.RenderDimensions
             );
-
-            var commandType = _random.Next(0, 10) < 6
-                ? ThumbnailCommandType.Avatar_R15_Action
-                : ThumbnailCommandType.Closeup;
 
             return GetThumbnail(userId, commandType);
         }
@@ -389,20 +391,16 @@ public class AvatarUtility : IAvatarUtility
             url
         );
 
-        var thumbType = _random.Next(0, 10) < 6
-            ? ThumbnailCommandType.Avatar_R15_Action
-            : ThumbnailCommandType.Closeup;
+        _avatarThumbnailsOptedOutOfRbxThumbnailsTotal.WithLabels(userId.ToString(), placeId.ToString(), commandType.ToString(), sizeX.ToString(), sizeY.ToString()).Inc();
 
-        _avatarThumbnailsOptedOutOfRbxThumbnailsTotal.WithLabels(userId.ToString(), placeId.ToString(), thumbType.ToString(), sizeX.ToString(), sizeY.ToString()).Inc();
-
-        var settings = new ThumbnailSettings(thumbType, GetThumbnailArgs(url, sizeX, sizeY).ToArray());
+        var settings = new ThumbnailSettings(commandType, [.. GetThumbnailArgs(url, sizeX, sizeY)]);
 
 #if !PRE_JSON_EXECUTION
         var renderScript = new ThumbnailCommand(settings);
 #else
         var renderScript = Lua.NewScript(
-            thumbType.ToString(),
-            ScriptProvider.GetScript(thumbType),
+            commandType.ToString(),
+            ScriptProvider.GetScript(commandType),
             GetThumbnailArgs(url, sizeX, sizeY).ToArray()
         );
 #endif

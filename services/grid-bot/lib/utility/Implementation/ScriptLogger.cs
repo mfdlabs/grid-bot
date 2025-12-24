@@ -42,10 +42,7 @@ public class ScriptLogger : IScriptLogger
     private static readonly Counter _scriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
         "script_logging_scripts_logged_total",
         "Total number of scripts logged",
-        "source", // from command or interaction
-        "guild", // guild id
-        "channel", // channel id
-        "user" // user id
+        "source" // from command or interaction
     );
     private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
         "script_logging_existing_scripts_logged_total",
@@ -112,7 +109,7 @@ public class ScriptLogger : IScriptLogger
         var guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
         var channelInfo = interaction.GetChannelAsString();
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("interaction", guildInfo, channelInfo, userInfo).Inc();
+        _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
 
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
@@ -131,7 +128,7 @@ public class ScriptLogger : IScriptLogger
         var guildInfo = context.Guild?.Id.ToString() ?? "DMs";
         var channelInfo = message.Channel?.ToString();
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("command", guildInfo, channelInfo, userInfo).Inc();
+        _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
         
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }

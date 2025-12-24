@@ -42,21 +42,20 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private readonly string _path;
 
     private readonly Counter _settingsRefreshCounter = Metrics.CreateCounter(
-        "rbx_client_settings_refresh",
+        "rbx_client_settings_refresh_total",
         "Number of times the client settings have been refreshed.",
         "application"
     );
     private readonly Counter _settingsWriteCounter = Metrics.CreateCounter(
-        "rbx_client_settings_write",
+        "rbx_client_settings_write_total",
         "Number of times the client settings have been written.",
         "application"
     );
     private readonly Counter _settingsReadCounter = Metrics.CreateCounter(
-        "rbx_client_settings_read",
+        "rbx_client_settings_read_total",
         "Number of times the client settings have been read.",
         "application"
     );
-
 
     private readonly ReaderWriterLockSlim _settingsCacheLock = new();
 

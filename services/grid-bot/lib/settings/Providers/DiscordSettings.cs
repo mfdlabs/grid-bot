@@ -28,10 +28,18 @@ public class DiscordSettings : BaseSettingsProvider
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
     /// <summary>
-    /// Can task cancelled exceptions be loggeD?
+    /// Can task cancelled exceptions be logged?
     /// </summary>
     public bool DebugAllowTaskCanceledExceptions => GetOrDefault(
         nameof(DebugAllowTaskCanceledExceptions),
+        false
+    );
+
+    /// <summary>
+    /// Can websocket or gateway exceptions be logged?
+    /// </summary>
+    public bool DebugAllowGatewayWebsocketExceptions => GetOrDefault(
+        nameof(DebugAllowGatewayWebsocketExceptions),
         false
     );
 #endif

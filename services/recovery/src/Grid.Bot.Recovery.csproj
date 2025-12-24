@@ -4,7 +4,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Configurations>debug;release</Configurations>
     <OutputType>Exe</OutputType>
 
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
@@ -15,9 +14,9 @@
   </PropertyGroup> 
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Configuration" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.0.9" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.0.9" />
+    <PackageReference Include="mfdlabs.Configuration" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Logging" Version="1.1.1" />
+    <PackageReference Include="mfdlabs.Networking" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">

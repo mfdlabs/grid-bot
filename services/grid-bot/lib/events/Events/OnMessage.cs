@@ -73,9 +73,9 @@ public partial class OnMessage(
         "The total number of messages processed."
     );
 
-    private readonly Counter _totalUsersUsingTextCommands = Metrics.CreateCounter(
-        "bot_users_using_text_commands_total",
-        "The total number of users using text commands.",
+    private readonly Counter _totalCommandsProcessed = Metrics.CreateCounter(
+        "bot_commands_processed_total",
+        "The total number of commands processed.",
         "command_name"
     );
 
@@ -103,12 +103,8 @@ public partial class OnMessage(
     private readonly Histogram _commandProcessingTime = Metrics.CreateHistogram(
         "bot_command_processing_time_seconds",
         "The time it takes to process an command.",
-        new HistogramConfiguration
-        {
-            Buckets = Histogram.ExponentialBuckets(0.001, 2, 10)
-        }
+        "command_name"
     );
-
 
     /// <summary>
     /// Initialize the event handler.
@@ -172,7 +168,7 @@ public partial class OnMessage(
         var userIsPrivilaged = _adminUtility.UserIsPrivilaged(message.Author);
         var userIsBlacklisted = _adminUtility.UserIsBlacklisted(message.Author);
 
-        _totalUsersUsingTextCommands.WithLabels(
+        _totalCommandsProcessed.WithLabels(
             commandName
         ).Inc();
 
@@ -268,7 +264,7 @@ public partial class OnMessage(
 
         Task.Run(async () =>
         {
-            using var _ = _commandProcessingTime.NewTimer();
+            using var _ = _commandProcessingTime.WithLabels(commandName).NewTimer();
 
             var context = new ShardedCommandContext(_discordClient, message);
 

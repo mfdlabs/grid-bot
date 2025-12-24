@@ -115,7 +115,7 @@ public class BacktraceUtility : IBacktraceUtility
 
         _logger.Information("Uploading the following log files to Backtrace: {0}", string.Join(", ", from log in attachments select Path.GetFileName(log)));
 
-        var result = _client?.Send("Log files upload", attachmentPaths: attachments.ToList());
+        var result = _client?.Send("Log files upload", attachmentPaths: [.. attachments]);
 
         if (delete)
             foreach (var log in attachments)

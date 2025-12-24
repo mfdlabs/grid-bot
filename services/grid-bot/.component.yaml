@@ -1,9 +1,5 @@
 component: grid-bot
 
-# This is only used by the build worklow,
-# it determines how the component is built
-# Docker only relevant when the argument
-# 
 build:
   project_file: src/Grid.Bot.csproj
   component_directory: ./.deploy
@@ -27,6 +23,11 @@ deployment:
     ENVIRONMENT: ${{ env.NOMAD_ENVIRONMENT }}
     VERSION: ${{ env.NOMAD_VERSION }}
 
+  constraints:
+    - attribute: "${meta.deployment.capabilities}"
+      operator: "set_contains"
+      value: "grid-bot"
+
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
       resources:
@@ -36,36 +37,24 @@ deployment:
         mode: host
         ports:
           metrics:
-            static: 8101
           grpc:
-            static: 5000
           http:
-            static: 8888
       services:
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: metrics
           tags:
             - ${{ env.NOMAD_ENVIRONMENT }}
+            - prometheus # For prometheus collector
           checks:
-            - type: http
-              path: /metrics
+            - type: tcp
 
-        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: http
           tags:
             - ${{ env.NOMAD_ENVIRONMENT }}
             - "traefik.enable=true"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-http.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`))"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-http.entrypoints=http"
- 
-        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https
-          port: http
-          tags:
-            - ${{ env.NOMAD_ENVIRONMENT }}
-            - "traefik.enable=true"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`))"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.entrypoints=https"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web-https.tls=true"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
 
       volumes:
         - '/var/run/docker.sock:/var/run/docker.sock'
@@ -79,6 +68,10 @@ deployment:
           env: true
           on_change: restart
           data: |
+            MetricsBindAddress="http://{{ env "NOMAD_IP_metrics" }}:{{ env "NOMAD_PORT_metrics" }}"
+            WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
+            GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
+
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
             VAULT_ADDR="${{ env.VAULT_ADDR }}"

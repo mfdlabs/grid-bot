@@ -53,39 +53,32 @@ public class OnInteraction(
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
         "bot_interactions_processed_total",
         "The total number of interactions processed.",
-        "interaction_type"
+        "interaction_type",
+        "command_name"
     );
 
     private readonly Counter _totalInteractionsFailedDueToMaintenance = Metrics.CreateCounter(
         "bot_interactions_failed_due_to_maintenance_total",
-        "The total number of interactions failed due to maintenance.",
-        "interaction_type"
+        "The total number of interactions failed due to maintenance."
     );
 
     private readonly Counter _totalBlacklistedUserAttemptedInteractions = Metrics.CreateCounter(
         "bot_blacklisted_user_attempted_interactions_total",
         "The total number of interactions attempted by blacklisted users.",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
+        "interaction_user_id"
     );
 
     private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
         "bot_users_bypassed_maintenance_total",
         "The total number of users that bypassed maintenance.",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
+        "interaction_user_id"
     );
 
     private readonly Histogram _interactionProcessingTime = Metrics.CreateHistogram(
         "bot_interaction_processing_time_seconds",
         "The time it takes to process an interaction.",
-        new HistogramConfiguration
-        {
-            Buckets = Histogram.ExponentialBuckets(0.001, 2, 10),
-            LabelNames = ["interaction_type"]
-        }
+        "interaction_type",
+        "command_name"
     );
 
     private string GetGuildId(SocketInteraction interaction)
@@ -99,8 +92,24 @@ public class OnInteraction(
     {
         if (interaction.User.IsBot) return;
 
+        var commandName = interaction.Id.ToString();
+
+        switch (interaction)
+        {
+            case SocketSlashCommand slashCommand:
+                commandName = slashCommand.CommandName;
+                break;
+            case SocketUserCommand userCommand:
+                commandName = userCommand.CommandName;
+                break;
+            case SocketMessageCommand messageCommand:
+                commandName = messageCommand.CommandName;
+                break;
+        }
+
         _totalInteractionsProcessed.WithLabels(
-            interaction.Type.ToString()
+            interaction.Type.ToString(),
+            commandName
         ).Inc();
 
         await interaction.DeferAsync();
@@ -115,9 +124,7 @@ public class OnInteraction(
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalInteractionsFailedDueToMaintenance.WithLabels(
-                    interaction.Type.ToString()
-                ).Inc();
+                _totalInteractionsFailedDueToMaintenance.Inc();
 
                 logger.Warning("Maintenance enabled user tried to use the bot.");
 
@@ -143,18 +150,14 @@ public class OnInteraction(
             }
 
             _totalUsersBypassedMaintenance.WithLabels(
-                interaction.User.Id.ToString(),
-                interaction.GetChannelAsString(),
-                GetGuildId(interaction)
+                interaction.User.Id.ToString()
             ).Inc();
         }
 
         if (userIsBlacklisted)
         {
             _totalBlacklistedUserAttemptedInteractions.WithLabels(
-                interaction.User.Id.ToString(),
-                interaction.GetChannelAsString(),
-                GetGuildId(interaction)
+                interaction.User.Id.ToString()
             ).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
@@ -166,28 +169,14 @@ public class OnInteraction(
             return;
         }
 
-        var commandName = interaction.Id.ToString();
-
-        switch (interaction)
-        {
-            case SocketSlashCommand slashCommand:
-                commandName = slashCommand.CommandName;
-                break;
-            case SocketUserCommand userCommand:
-                commandName = userCommand.CommandName;
-                break;
-            case SocketMessageCommand messageCommand:
-                commandName = messageCommand.CommandName;
-                break;
-        }
-
         logger.Debug("Executing command '{0}'.", commandName);
 
         Task.Run(async () =>
         {
             using var _ = _interactionProcessingTime
                 .WithLabels(
-                    interaction.Type.ToString()
+                    interaction.Type.ToString(),
+                    commandName
                 )
                 .NewTimer();
 

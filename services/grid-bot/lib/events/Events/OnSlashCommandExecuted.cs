@@ -48,10 +48,7 @@ public class OnInteractionExecuted(
         "bot_interactions_failed_total",
         "The total number of interactions failed.",
         "interaction_type",
-        "interaction_id",
-        "interaction_user_id",
-        "interaction_channel_id",
-        "interaction_guild_id"
+        "command_name"
     );
 
     private static string GetGuildId(SocketInteraction interaction, IInteractionContext context)
@@ -76,10 +73,7 @@ public class OnInteractionExecuted(
 
             _totalInteractionsFailed.WithLabels(
                 interaction.Type.ToString(),
-                interaction.Id.ToString(),
-                interaction.User.Id.ToString(),
-                interaction.GetChannel().Id.ToString(),
-                GetGuildId(interaction, context)
+                command.Name
             ).Inc();
 
             if (result is not ExecuteResult executeResult)

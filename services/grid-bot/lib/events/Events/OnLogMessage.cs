@@ -103,21 +103,21 @@ public class OnLogMessage
         if (message.Exception != null)
         {
 #if DEBUG || DEBUG_LOGGING_IN_PROD
-#if !DEBUG // Don't log these exceptions outside of debug mode.
-            if (message.Exception is GatewayReconnectException)
-                return Task.CompletedTask;
+            if (!_settings.DebugAllowGatewayWebsocketExceptions) {
+                if (message.Exception is GatewayReconnectException)
+                    return Task.CompletedTask;
 
-            // Closed web socket exceptions are expected when the bot is shutting down.
-            if (message.Exception.InnerException is WebSocketException)
-                return Task.CompletedTask;
+                // Closed web socket exceptions are expected when the bot is shutting down.
+                if (message.Exception.InnerException is WebSocketException)
+                    return Task.CompletedTask;
 
-            if (message.Exception is WebSocketClosedException || message.Exception.InnerException is WebSocketClosedException)
-                return Task.CompletedTask;
+                if (message.Exception is WebSocketClosedException || message.Exception.InnerException is WebSocketClosedException)
+                    return Task.CompletedTask;
+            }
 
             if (message.Exception is TaskCanceledException &&
                 !_settings.DebugAllowTaskCanceledExceptions)
                 return Task.CompletedTask;
-#endif
 
             // Temporary fix for discord-net/Discord.Net#3128
             // Just keep it out of Backtrace and increment a counter.
