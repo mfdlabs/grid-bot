@@ -49,7 +49,7 @@ public class Support(
     public async Task GetGeneralInformationAsync()
     {
         var entryAssembly = Assembly.GetEntryAssembly();
-        var informationalVersion = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        var informationalVersion = entryAssembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
         var gridServerVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? FileVersionInfo.GetVersionInfo(_gridServerFileHelper.GetFullyQualifiedGridServerPath()).FileVersion

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 /// </summary>
 public struct FilteredValue<T>
 {
-    private const char _filterDelimiter = ';';
+    private const char FilterDelimiter = ';';
 
     /// <summary>
     /// Suffix for place filters.
@@ -36,7 +36,7 @@ public struct FilteredValue<T>
      /// <summary>
     /// Gets or sets the name.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; init; }
 
     /// <summary>
     /// Gets the type of the setting.
@@ -62,7 +62,7 @@ public struct FilteredValue<T>
     /// <summary>
     /// Gets the filtered place IDs or datacenter IDs.
     /// </summary>
-    public HashSet<long> FilteredIds { get; private set; } = [];
+    public HashSet<long> FilteredIds { get; private init; } = [];
 
     /// <summary>
     /// Implicit conversion of <see cref="FilteredValue{T}"/> to <typeparamref name="T"/>
@@ -89,7 +89,7 @@ public struct FilteredValue<T>
             : name[..^DataCenterFilterSuffix.Length];
         var settingType = ClientSettingsNameHelper.GetSettingTypeFromName(name);
 
-        var entries = value.Split(_filterDelimiter).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+        var entries = value.Split(FilterDelimiter).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
         if (entries.Count == 0) throw new ArgumentException("Value had no entries!", nameof(value));
 
         var settingValueRaw = entries.First();
@@ -119,6 +119,6 @@ public struct FilteredValue<T>
         var name = $"{Name}_{FilterType}Filter";
         ICollection<string> values = [Value.ToString(), ..FilteredIds.Select(x => x.ToString())];
 
-        return (name, string.Join(_filterDelimiter, values));
+        return (name, string.Join(FilterDelimiter, values));
     }
 }

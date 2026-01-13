@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 /// </summary>
 public static class HttpContextExtensions
 {
-    private const string _apiKeyHeaderName = "x-api-key";
+    private const string ApiKeyHeaderName = "x-api-key";
 
     /// <summary>
     /// Writes an error to the response.
@@ -25,33 +25,35 @@ public static class HttpContextExtensions
         await response.WriteAsJsonAsync(new { errors });
     }
 
-    /// <summary>
-    /// Determines if the request has a valid API key in it.
-    /// </summary>
     /// <param name="request">The <see cref="HttpRequest" /></param>
-    /// <param name="settings">The <see cref="ClientSettingsSettings" /></param>
-    /// <returns>[true] if the request has a valid API key, otherwise false.</returns>
-    public static bool HasValidApiKey(this HttpRequest request, ClientSettingsSettings settings)
+    extension(HttpRequest request)
     {
-        if (settings.ClientSettingsApiKeys.Length == 0) return true;
-        if (!request.Headers.TryGetValue(_apiKeyHeaderName, out var apiKeyHeaderValues)) return false;
+        /// <summary>
+        /// Determines if the request has a valid API key in it.
+        /// </summary>
+        /// <param name="settings">The <see cref="ClientSettingsSettings" /></param>
+        /// <returns>[true] if the request has a valid API key, otherwise false.</returns>
+        public bool HasValidApiKey(ClientSettingsSettings settings)
+        {
+            if (settings.ClientSettingsApiKeys.Length == 0) return true;
+            if (!request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues)) return false;
 
-        var apiKeyHeader = apiKeyHeaderValues.First();
-        return settings.ClientSettingsApiKeys.Contains(apiKeyHeader);
-    }
+            var apiKeyHeader = apiKeyHeaderValues.First();
+            return settings.ClientSettingsApiKeys.Contains(apiKeyHeader);
+        }
 
-    /// <summary>
-    /// Tries to get an int64 from the request query string.
-    /// </summary>
-    /// <remarks>This is case-insensitive.</remarks>
-    /// <param name="request">The <see cref="HttpRequest" /></param>
-    /// <param name="key">The key to look for</param>
-    /// <param name="value">The value of the key</param>
-    /// <returns>[true] if the key was found and the value is an integer, otherwise false.</returns>
-    public static bool TryParseInt64FromQuery(this HttpRequest request, string key, out long value)
-    {
-        value = 0;
+        /// <summary>
+        /// Tries to get an int64 from the request query string.
+        /// </summary>
+        /// <remarks>This is case-insensitive.</remarks>
+        /// <param name="key">The key to look for</param>
+        /// <param name="value">The value of the key</param>
+        /// <returns>[true] if the key was found and the value is an integer, otherwise false.</returns>
+        public bool TryParseInt64FromQuery(string key, out long value)
+        {
+            value = 0;
 
-        return request.Query.TryGetValue(key, out var valueString) && long.TryParse(valueString, out value);
+            return request.Query.TryGetValue(key, out var valueString) && long.TryParse(valueString, out value);
+        }
     }
 }

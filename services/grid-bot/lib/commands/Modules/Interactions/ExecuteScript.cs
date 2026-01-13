@@ -76,9 +76,8 @@ public partial class ExecuteScript(
     IGridServerFileHelper gridServerFileHelper
 ) : InteractionModuleBase
 {
-    private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
-    private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
-
+    private const int MaxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
+    private const int MaxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -94,15 +93,12 @@ public partial class ExecuteScript(
     private readonly IScriptLogger _scriptLogger = scriptLogger ?? throw new ArgumentNullException(nameof(scriptLogger));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
-
-    [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
-    private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex QuotesRegex();
     [GeneratedRegex(@"Execute Script:(\d+): (.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex GridSyntaxErrorRegex();
 
-    private const string _ErrorConvertingToJson = "Can't convert to JSON";
+    private const string ErrorConvertingToJson = "Can't convert to JSON";
 
     /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
     public override async Task BeforeExecuteAsync(ICommandInfo command)
@@ -155,23 +151,20 @@ public partial class ExecuteScript(
         // Replace backticks with escaped backticks
         input = input.Replace("`", "\\`");
 
-        if (input.Length > _maxErrorLength)
+        if (input.Length <= MaxErrorLength) return (input, null);
+        var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
+
+        if (input.Length / 1000 > maxSize)
         {
-            var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
 
-            if (input.Length / 1000 > maxSize)
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
-
-                return ($"The output cannot be larger than {maxSize} KiB", null);
-            }
-
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
-
-            return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+            return ($"The output cannot be larger than {maxSize} KiB", null);
         }
 
-        return (input, null);
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
+
+        return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+
     }
 
     private (string, MemoryStream) DetermineResult(string input, string fileName)
@@ -181,23 +174,20 @@ public partial class ExecuteScript(
         // Replace backticks with escaped backticks
         input = input.Replace("`", "\\`");
 
-        if (input.Length > _maxResultLength)
+        if (input.Length <= MaxResultLength) return (input, null);
+        var maxSize = _scriptsSettings.ScriptExecutionMaxResultSizeKb;
+
+        if (input.Length / 1000 > maxSize)
         {
-            var maxSize = _scriptsSettings.ScriptExecutionMaxResultSizeKb;
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
 
-            if (input.Length / 1000 > maxSize)
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
-
-                return ($"The result cannot be larger than {maxSize} KiB", null);
-            }
-
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
-
-            return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+            return ($"The result cannot be larger than {maxSize} KiB", null);
         }
 
-        return (input, null);
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
+
+        return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
+
     }
 
     private async Task LuaErrorAsync(string error)
@@ -281,36 +271,34 @@ public partial class ExecuteScript(
         var syntaxTree = LuaSyntaxTree.ParseText(input, options);
 
         var diagnostics = syntaxTree.GetDiagnostics();
-        var errors = diagnostics.Where(diag => diag.Severity == DiagnosticSeverity.Error);
+        var errors = diagnostics.Where(diag => diag.Severity == DiagnosticSeverity.Error).ToArray();
 
-        if (errors.Any())
+        if (errors.Length == 0) return true;
+        
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("pre-parser-syntax-error").Inc();
+
+        var errorString = string.Join("\n", errors.Select(err => err.ToString()));
+
+        if (errorString.Length > MaxErrorLength)
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("pre-parser-syntax-error").Inc();
+            var remaining = errorString.Length - MaxErrorLength;
+            var remainingString = $"\n({remaining} characters remaining...)";
 
-            var errorString = string.Join("\n", errors.Select(err => err.ToString()));
-
-            if (errorString.Length > _maxErrorLength)
-            {
-                var remaining = errorString.Length - _maxErrorLength;
-                var remainingString = $"\n({remaining} characters remaining...)";
-
-                errorString = string.Concat(errorString.AsSpan(0, _maxErrorLength - remainingString.Length), remainingString);
-            }
-
-            var embed = new EmbedBuilder()
-                .WithTitle("Lua Error")
-                .WithAuthor(Context.User)
-                .WithCurrentTimestamp()
-                .WithColor(Color.Red)
-                .WithDescription($"```\n{errorString}\n```")
-                .Build();
-
-            await FollowupAsync("There was a Luau syntax error in your script:", embed: embed);
-
-            return false;
+            errorString = string.Concat(errorString.AsSpan(0, MaxErrorLength - remainingString.Length), remainingString);
         }
 
-        return true;
+        var embed = new EmbedBuilder()
+            .WithTitle("Lua Error")
+            .WithAuthor(Context.User)
+            .WithCurrentTimestamp()
+            .WithColor(Color.Red)
+            .WithDescription($"```\n{errorString}\n```")
+            .Build();
+
+        await FollowupAsync("There was a Luau syntax error in your script:", embed: embed);
+
+        return false;
+
     }
 
     /// <summary>
@@ -362,11 +350,11 @@ public partial class ExecuteScript(
                 filesafeScriptId + ".lua"
             );
 
-        if (_scriptsSettings.LuaVMEnabled) // Disable if pre-luau, or wait for the file to be updated to support pre-luau
+        if (_scriptsSettings.LuaVmEnabled) // Disable if pre-luau, or wait for the file to be updated to support pre-luau
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsUsingLuaVM.Inc();
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsUsingLuaVm.Inc();
 
-            script = string.Format(_luaUtility.LuaVMTemplate, script);
+            script = string.Format(_luaUtility.LuaVmTemplate, script);
         }
 
 #if !PRE_JSON_EXECUTION
@@ -404,10 +392,10 @@ public partial class ExecuteScript(
             {
 
 #if !PRE_JSON_EXECUTION
-                File.WriteAllText(scriptName, script, Encoding.ASCII);
+                await File.WriteAllTextAsync(scriptName, script, Encoding.ASCII);
 #endif
 
-                var serverResult = soap.BatchJobEx(gridJob, gserverCommand);
+                var serverResult = await soap.BatchJobExAsync(gridJob, gserverCommand);
 
                 Task.Run(() => _jobManager.CloseJob(job, true));
 
@@ -433,15 +421,15 @@ public partial class ExecuteScript(
                     var line = match.Groups[1].Value;
                     var error = match.Groups[2].Value;
 
-                    // We need to subtract the lines that the template adds (otherwise for one liners it will appear to be on line like 500 and something)
-                    if (_scriptsSettings.LuaVMEnabled)
+                    // We need to subtract the lines that the template adds (otherwise for one-liners it will appear to be on line like 500 and something)
+                    if (_scriptsSettings.LuaVmEnabled)
                     {
-                        const string _marker = "{0}";
+                        const string marker = "{0}";
 
-                        var template = _luaUtility.LuaVMTemplate;
+                        var template = _luaUtility.LuaVmTemplate;
                         var templateLines = template.Split('\n');
 
-                        var lineIndex = Array.FindIndex(templateLines, line => line.StartsWith(_marker));
+                        var lineIndex = Array.FindIndex(templateLines, s => s.StartsWith(marker));
 
                         if (lineIndex != -1)
                             line = (int.Parse(line) - lineIndex).ToString();
@@ -452,7 +440,7 @@ public partial class ExecuteScript(
                     return;
                 }
 
-                if (message.Contains(_ErrorConvertingToJson))
+                if (message.Contains(ErrorConvertingToJson))
                 {
                     ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonJsonSerializableResults.Inc();
 
@@ -462,24 +450,22 @@ public partial class ExecuteScript(
                 }
             }
 
-            // If ex.InnerException.InnerException is a XmlException, it's likely that the script returned invalid ASCII characters.
-            // Catch this and alert the user (only in the case of ex is CommunicationException, ex.InnerException is InvalidOperationException and ex.InnerException.InnerException is XmlException)
-            if (ex is CommunicationException && ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException)
+            switch (ex)
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonAsciiResults.Inc();
+                // If ex.InnerException.InnerException is a XmlException, it's likely that the script returned invalid ASCII characters.
+                // Catch this and alert the user (only in the case of ex is CommunicationException, ex.InnerException is InvalidOperationException and ex.InnerException.InnerException is XmlException)
+                case CommunicationException when ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException:
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonAsciiResults.Inc();
                 
-                await LuaErrorAsync("The script returned invalid ASCII characters.");
+                    await LuaErrorAsync("The script returned invalid ASCII characters.");
 
-                return;
-            }
+                    return;
+                case TimeoutException:
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
 
-            if (ex is TimeoutException)
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
+                    await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
-                await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
-
-                return;
+                    return;
             }
 
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();

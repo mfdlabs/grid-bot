@@ -22,21 +22,20 @@ public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
     /// <inheritdoc cref="ILoggerFactory.CreateLogger(SocketInteraction)"/>
     public ILogger CreateLogger(SocketInteraction interaction)
     {
-        var name = interaction.User.Username;
         var logger = new Logger(
             name: interaction.User.Id.ToString(),
             logLevelGetter: () => LogLevel.Debug,
             logToFileSystem: false
         );
 
-        logger.CustomLogPrefixes.Add(() => interaction.GetChannelAsString());
-        logger.CustomLogPrefixes.Add(() => interaction.User.ToString());
+        logger.CustomLogPrefixes.Add(interaction.GetChannelAsString);
+        logger.CustomLogPrefixes.Add(interaction.User.ToString);
 
         var guild = interaction.GetGuild(_discordClient);
 
         // Add guild id if the interaction is from a guild.
         if (guild is not null)
-            logger.CustomLogPrefixes.Add(() => guild.ToString());
+            logger.CustomLogPrefixes.Add(guild.ToString);
 
         return logger;
     }
@@ -44,19 +43,18 @@ public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
     /// <inheritdoc cref="ILoggerFactory.CreateLogger(SocketMessage)"/>
     public ILogger CreateLogger(SocketMessage message)
     {
-        var name = message.Author.Username;
         var logger = new Logger(
             name: message.Author.Id.ToString(),
             logLevelGetter: () => LogLevel.Debug,
             logToFileSystem: false
         );
 
-        logger.CustomLogPrefixes.Add(() => message.Channel.ToString());
-        logger.CustomLogPrefixes.Add(() => message.Author.ToString());
+        logger.CustomLogPrefixes.Add(message.Channel.ToString);
+        logger.CustomLogPrefixes.Add(message.Author.ToString);
 
         // Add guild id if the message is from a guild.
         if (message.Channel is SocketGuildChannel guildChannel)
-            logger.CustomLogPrefixes.Add(() => guildChannel.Guild.ToString());
+            logger.CustomLogPrefixes.Add(guildChannel.Guild.ToString);
 
         return logger;
     }

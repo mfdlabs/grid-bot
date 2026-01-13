@@ -1,7 +1,5 @@
 ﻿namespace Grid.Bot;
 
-using System;
-
 /// <summary>
 /// Settings provider for all commands related stuff.
 /// </summary>
@@ -11,7 +9,7 @@ public class CommandsSettings : BaseSettingsProvider
     public override string Path => SettingsProvidersDefaults.CommandsPath;
 
     /// <summary>
-    /// Determines whether or not lockdown commands are enabled.
+    /// Determines whether lockdown commands are enabled.
     /// </summary>
     public bool EnableLockdownCommands => GetOrDefault(
         nameof(EnableLockdownCommands),
@@ -43,7 +41,7 @@ public class CommandsSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Determines whether or not text based commands should be enabled.
+    /// Determines whether text based commands should be enabled.
     /// </summary>
     /// <remarks>
     /// If this is disabled, the commands module will not be loaded, therefore this cannot
@@ -63,7 +61,7 @@ public class CommandsSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Determines whether or not the bot should warn the user when commands are disabled.
+    /// Determines whether the bot should warn the user when commands are disabled.
     /// </summary>
     /// <remarks>
     /// This is only applicable when <see cref="EnableTextCommands"/> is false.

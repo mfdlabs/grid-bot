@@ -15,7 +15,6 @@ using Prometheus;
 using Logging;
 
 using Utility;
-using Extensions;
 
 /// <summary>
 /// Invoked when slash commands are executed.
@@ -50,11 +49,6 @@ public class OnInteractionExecuted(
         "interaction_type",
         "command_name"
     );
-
-    private static string GetGuildId(SocketInteraction interaction, IInteractionContext context)
-    {
-        return interaction.GetGuild(context.Client)?.Id.ToString() ?? "DM";
-    }
 
     /// <summary>
     /// Invoke the handler.
@@ -113,11 +107,11 @@ public class OnInteractionExecuted(
                     return;
             }
 
-            _logger.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
+            _logger.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex?.ToString());
 
 #if DEBUG
-            var detail = ex.ToString();
-            if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+            var detail = ex?.ToString();
+            if (detail is { Length: > EmbedBuilder.MaxDescriptionLength })
             {
                 await interaction.FollowupWithFileAsync(
                     fileStream: new MemoryStream(Encoding.UTF8.GetBytes(detail)),
@@ -132,10 +126,7 @@ public class OnInteractionExecuted(
                 UnhandledExceptionOccurredFromCommand,
                 embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
             );
-
-            return;
 #else
-
             await interaction.FollowupAsync(
                 $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
                 $"<@!{_discordRolesSettings.BotOwnerId}>"

@@ -1,10 +1,7 @@
 namespace Grid.Bot;
 
-using System;
-
-using Configuration;
-
 using Logging;
+using Configuration;
 
 /// <summary>
 /// Settings provider for global entrypoint stuff.

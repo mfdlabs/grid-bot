@@ -2,7 +2,7 @@ namespace Grid.Bot;
 
 using Prometheus;
 
-internal class ScriptExecutionPerformanceCounters
+internal static class ScriptExecutionPerformanceCounters
 {
     public static readonly Counter TotalScriptExecutionsBlockedByGlobalFloodChecker = Metrics.CreateCounter(
         "script_executions_blocked_by_global_flood_checker_total",
@@ -58,7 +58,7 @@ internal class ScriptExecutionPerformanceCounters
         "script_execution_average_execution_time_seconds",
         "The average execution time of script executions in seconds."
     );
-    public static readonly Counter TotalScriptExecutionsUsingLuaVM = Metrics.CreateCounter(
+    public static readonly Counter TotalScriptExecutionsUsingLuaVm = Metrics.CreateCounter(
         "script_executions_using_lua_vm_total",
         "The total number of script executions using Lua VM."
     );

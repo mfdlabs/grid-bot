@@ -44,10 +44,10 @@ public class OnLogMessage
         "The total number of serializer errors."
     );
 
-    private const string _serializerErrorMessage = "Serializer Error";
+    private const string SerializerErrorMessage = "Serializer Error";
 
     // These are specific strings that fill the log files up drastically.
-    private static readonly HashSet<string> _messagesToBeConsideredDebug =
+    private static readonly HashSet<string> MessagesToBeConsideredDebug =
     [
         "Disconnecting",
         "Disconnected",
@@ -121,7 +121,7 @@ public class OnLogMessage
 
             // Temporary fix for discord-net/Discord.Net#3128
             // Just keep it out of Backtrace and increment a counter.
-            if (message.Message == _serializerErrorMessage)
+            if (message.Message == SerializerErrorMessage)
             {
                 _totalSerializerErrors.Inc();
 
@@ -177,7 +177,7 @@ public class OnLogMessage
                 _logger.Debug("{0}: {1}", message.Source, message.Message);
                 break;
             case { Severity: LogSeverity.Info }:
-                if (_messagesToBeConsideredDebug.Any(m => m.Equals(message.Message, StringComparison.Ordinal)))
+                if (MessagesToBeConsideredDebug.Any(m => m.Equals(message.Message, StringComparison.Ordinal)))
                     _logger.Debug("{0}: {1}", message.Source, message.Message);
                 else
                     _logger.Information("{0}: {1}", message.Source, message.Message);
@@ -185,7 +185,7 @@ public class OnLogMessage
             case { Severity: LogSeverity.Verbose }:
                 _logger.Debug("{0}: {1}", message.Source, message.Message);
                 break;
-            case { Severity: LogSeverity.Error | LogSeverity.Critical }:
+            case { Severity: LogSeverity.Error or LogSeverity.Critical }:
                 _logger.Error("{0}: {1}", message.Source, message.Message);
                 break;
             default:

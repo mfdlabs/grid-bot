@@ -12,30 +12,29 @@ using Client;
 /// </summary>
 public class NoopJobManager : IJobManager
 {
-    private static readonly NoopJobManager _singleton = new();
-
     /// <summary>
     /// Gets the singleton instance.
     /// </summary>
-    public static NoopJobManager Singleton => _singleton;
+    public static NoopJobManager Singleton { get; } = new();
 
     /// <inheritdoc cref="IJobManager.GetInstanceCount"/>
-    public int GetInstanceCount() => default;
+    public int GetInstanceCount() => 0;
 
     /// <inheritdoc cref="IJobManager.GetReadyInstanceCount"/>
-    public int GetReadyInstanceCount() => default;
+    public int GetReadyInstanceCount() => 0;
 
     /// <inheritdoc cref="IJobManager.GetActiveJobsCount"/>
-    public int GetActiveJobsCount() => default;
+    public int GetActiveJobsCount() => 0;
 
     /// <inheritdoc cref="IJobManager.GetAllRunningJobIds"/>
-    public IReadOnlyCollection<string> GetAllRunningJobIds() => default;
+    public IReadOnlyCollection<string> GetAllRunningJobIds() => [];
 
     /// <inheritdoc cref="IJobManager.AddOrUpdateActiveJob"/>
     public void AddOrUpdateActiveJob(IJob job, IGridServerInstance instance) {}
 
     /// <inheritdoc cref="IJobManager.IsResourceAvailable"/>
-    public (bool isAvailable, JobRejectionReason? rejectionReason) IsResourceAvailable(GridServerResource resourceNeeded) => (false, JobRejectionReason.NoReadyInstance);
+    public (bool isAvailable, JobRejectionReason? rejectionReason) IsResourceAvailable(GridServerResource resourceNeeded) 
+        => (false, JobRejectionReason.NoReadyInstance);
 
     /// <inheritdoc cref="IJobManager.GetAllocatedResource"/>
     public GridServerResource GetAllocatedResource() => null;

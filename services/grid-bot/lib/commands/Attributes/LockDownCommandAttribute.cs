@@ -19,8 +19,6 @@ using Utility;
 /// <param name="botRole">The <see cref="BotRole"/>.</param>
 public class LockDownCommandAttribute(BotRole botRole = BotRole.Administrator) : PreconditionAttribute
 {
-    private readonly BotRole _botRole = botRole;
-
     /// <summary>
     /// The marker to indicate that the command should not respond.
     /// </summary>
@@ -40,12 +38,12 @@ public class LockDownCommandAttribute(BotRole botRole = BotRole.Administrator) :
 
         var adminUtility = services.GetRequiredService<IAdminUtility>();
 
-        var isInRole = _botRole switch
+        var isInRole = botRole switch
         {
             BotRole.Privileged => adminUtility.UserIsPrivilaged(context.User),
-            BotRole.Administrator => adminUtility.UserIsPrivilaged(context.User),
+            BotRole.Administrator => adminUtility.UserIsAdmin(context.User),
             BotRole.Owner => adminUtility.UserIsOwner(context.User),
-            _ => throw new ArgumentOutOfRangeException(nameof(_botRole), _botRole, null),
+            BotRole.Default or _ => throw new ArgumentOutOfRangeException(nameof(botRole), botRole, null),
         };
 
         return isInRole

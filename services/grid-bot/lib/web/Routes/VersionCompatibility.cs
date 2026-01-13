@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Http;
 public class VersionCompatibility
 {
     /// <summary>
-    /// Get allowed MD5 hashes, for now this responds with an empty response.
+    /// Get allowed MD5 hashes, for now this response with an empty response.
     /// </summary>
     /// <param name="context">The <see cref="HttpContext" /></param>
-    public async Task GetAllowedMd5Hashes(HttpContext context)
+    public static async Task GetAllowedMd5Hashes(HttpContext context)
         => await context.Response.WriteAsJsonAsync(new { data = Array.Empty<object>() });
 }

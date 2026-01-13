@@ -14,8 +14,8 @@ using FloodCheckers.Redis;
 /// </summary>
 public class FloodCheckerRegistry : IFloodCheckerRegistry
 {
-    private const string _scriptExecutionFloodCheckerCategory = "Grid.ExecuteScript.FloodChecking";
-    private const string _renderFloodCheckerCategory = "Grid.Render.FloodChecking";
+    private const string ScriptExecutionFloodCheckerCategory = "Grid.ExecuteScript.FloodChecking";
+    private const string RenderFloodCheckerCategory = "Grid.Render.FloodChecking";
 
     private readonly ILogger _logger;
     private readonly IRedisClient _redisClient;
@@ -46,7 +46,7 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
         _floodCheckerSettings = floodCheckerSettings ?? throw new ArgumentNullException(nameof(floodCheckerSettings));
 
         ScriptExecutionFloodChecker = new RedisRollingWindowFloodChecker(
-            _scriptExecutionFloodCheckerCategory,
+            ScriptExecutionFloodCheckerCategory,
             "ExecuteScript",
             () => _floodCheckerSettings.ScriptExecutionFloodCheckerLimit,
             () => _floodCheckerSettings.ScriptExecutionFloodCheckerWindow,
@@ -57,7 +57,7 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
         );
 
         RenderFloodChecker = new RedisRollingWindowFloodChecker(
-            _renderFloodCheckerCategory,
+            RenderFloodCheckerCategory,
             "Render",
             () => _floodCheckerSettings.RenderFloodCheckerLimit,
             () => _floodCheckerSettings.RenderFloodCheckerWindow,
@@ -85,7 +85,7 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
     private IFloodChecker CreatePerUserScriptExecutionFloodChecker(ulong userId)
     {
         return new RedisRollingWindowFloodChecker(
-            _scriptExecutionFloodCheckerCategory,
+            ScriptExecutionFloodCheckerCategory,
             $"ExecuteScript:{userId}",
             () => _floodCheckerSettings.ScriptExecutionPerUserFloodCheckerLimit,
             () => _floodCheckerSettings.ScriptExecutionPerUserFloodCheckerWindow,
@@ -99,7 +99,7 @@ public class FloodCheckerRegistry : IFloodCheckerRegistry
     private IFloodChecker CreatePerUserRenderFloodChecker(ulong userId)
     {
         return new RedisRollingWindowFloodChecker(
-            _renderFloodCheckerCategory,
+            RenderFloodCheckerCategory,
             $"Render:{userId}",
             () => _floodCheckerSettings.RenderPerUserFloodCheckerLimit,
             () => _floodCheckerSettings.RenderPerUserFloodCheckerWindow,

@@ -29,8 +29,8 @@ public class ScriptsSettings : BaseSettingsProvider
     /// <summary>
     /// Determines if the LuaVM is enabled.
     /// </summary>
-    public bool LuaVMEnabled => GetOrDefault(
-        nameof(LuaVMEnabled),
+    public bool LuaVmEnabled => GetOrDefault(
+        nameof(LuaVmEnabled),
         true
     );
 

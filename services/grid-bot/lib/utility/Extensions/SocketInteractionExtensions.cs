@@ -10,35 +10,36 @@ using Threading.Extensions;
 /// </summary>
 public static class SocketInteractionExtensions
 {
-    /// <summary>
-    /// Gets the <see cref="ISocketMessageChannel" /> from the <see cref="SocketInteraction" />, taking private threads into consideration.
-    /// </summary>
     /// <param name="interaction">The current <see cref="SocketInteraction" /></param>
-    /// <returns>An <see cref="ISocketMessageChannel" /></returns>
-    public static IMessageChannel GetChannel(this SocketInteraction interaction) 
-        => interaction.Channel ?? interaction.InteractionChannel;
-
-    /// <summary>
-    /// Gets the channel from the <see cref="SocketInteraction" />, taking private threads into consideration.
-    /// </summary>
-    /// <param name="interaction">The current <see cref="SocketInteraction"/></param>
-    /// <returns>A string version of either <see cref="ISocketMessageChannel"/> or <see cref="IMessageChannel"/></returns>
-    public static string GetChannelAsString(this SocketInteraction interaction) 
-        => interaction.GetChannel().ToString();
-
-    /// <summary>
-    /// Gets an <see cref="IGuild"/> for a specific <see cref="SocketInteraction"/>, taking private threads into consideration.
-    /// </summary>
-    /// <param name="interaction"></param>
-    /// <param name="client"></param>
-    /// <returns></returns>
-    public static IGuild GetGuild(this SocketInteraction interaction, IDiscordClient client)
+    extension(SocketInteraction interaction)
     {
-        if (interaction.GuildId == null) return null;
+        /// <summary>
+        /// Gets the <see cref="ISocketMessageChannel" /> from the <see cref="SocketInteraction" />, taking private threads into consideration.
+        /// </summary>
+        /// <returns>An <see cref="ISocketMessageChannel" /></returns>
+        private IMessageChannel GetChannel() 
+            => interaction.Channel ?? interaction.InteractionChannel;
 
-        if (interaction.Channel is SocketGuildChannel guildChannel)
-            return guildChannel.Guild;
+        /// <summary>
+        /// Gets the channel from the <see cref="SocketInteraction" />, taking private threads into consideration.
+        /// </summary>
+        /// <returns>A string version of either <see cref="ISocketMessageChannel"/> or <see cref="IMessageChannel"/></returns>
+        public string GetChannelAsString() 
+            => interaction.GetChannel().ToString();
 
-        return client.GetGuildAsync(interaction.GuildId.Value).SyncOrDefault();
+        /// <summary>
+        /// Gets an <see cref="IGuild"/> for a specific <see cref="SocketInteraction"/>, taking private threads into consideration.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public IGuild GetGuild(IDiscordClient client)
+        {
+            if (interaction.GuildId == null) return null;
+
+            if (interaction.Channel is SocketGuildChannel guildChannel)
+                return guildChannel.Guild;
+
+            return client.GetGuildAsync(interaction.GuildId.Value).SyncOrDefault();
+        }
     }
 }

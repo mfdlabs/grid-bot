@@ -13,8 +13,8 @@ using Logging;
 /// </summary>
 public class UnhandledExceptionMiddleware
 {
-    private readonly RequestDelegate _NextHandler;
-    private readonly ILogger _Logger;
+    private readonly RequestDelegate _nextHandler;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new <see cref="UnhandledExceptionMiddleware"/>.
@@ -27,8 +27,8 @@ public class UnhandledExceptionMiddleware
     /// </exception>
     public UnhandledExceptionMiddleware(RequestDelegate nextHandler, ILogger logger)
     {
-        _NextHandler = nextHandler ?? throw new ArgumentNullException(nameof(nextHandler));
-        _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _nextHandler = nextHandler ?? throw new ArgumentNullException(nameof(nextHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -39,11 +39,11 @@ public class UnhandledExceptionMiddleware
     {
         try
         {
-            await _NextHandler(context);
+            await _nextHandler(context);
         }
         catch (Exception ex)
         {
-            _Logger.Error(ex);
+            _logger.Error(ex);
 
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 

@@ -10,6 +10,8 @@ using Logging;
 /// </summary>
 public class WebSettings : BaseSettingsProvider
 {
+    private static readonly string[] WebServerAllowedProxyRangesDefaultValue = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"];
+    
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.WebPath;
 
@@ -34,7 +36,7 @@ public class WebSettings : BaseSettingsProvider
     /// <summary>
     /// Gets the list of allowed proxy networks.
     /// </summary>
-    public string[] WebServerAllowedProxyRanges => GetOrDefault(nameof(WebServerAllowedProxyRanges), new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16" });
+    public string[] WebServerAllowedProxyRanges => GetOrDefault(nameof(WebServerAllowedProxyRanges), WebServerAllowedProxyRangesDefaultValue);
 
     /// <summary>
     /// Determines if the web server should use TLS.

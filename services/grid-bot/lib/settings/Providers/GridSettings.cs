@@ -128,7 +128,7 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     );
 
     /// <inheritdoc cref="IGridServerDockerSettings.ReservedCoresPerGridServerInstance"/>
-    public int? ReservedCoresPerGridServerInstance => GetOrDefault<int?>(
+    public int? ReservedCoresPerGridServerInstance => GetOrDefault(
         nameof(ReservedCoresPerGridServerInstance),
         null as int?
     );

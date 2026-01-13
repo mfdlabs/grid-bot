@@ -9,7 +9,6 @@ public class AvatarSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.AvatarPath;
-
     
     /// <summary>
     /// Gets the URL for the Avatar API.
@@ -27,7 +26,7 @@ public class AvatarSettings : BaseSettingsProvider
     public TimeSpan AvatarFetchCacheEntryTtl => GetOrDefault(nameof(AvatarFetchCacheEntryTtl), TimeSpan.FromMinutes(5));
 
     /// <summary>
-    /// Determines whether or not body colors are downgraded to pre v2 (v1.1).
+    /// Determines whether body colors are downgraded to pre v2 (v1.1).
     /// </summary>
     public bool AvatarFetchShouldDowngradeBodyColorsFormat => GetOrDefault(nameof(AvatarFetchShouldDowngradeBodyColorsFormat), true);
 

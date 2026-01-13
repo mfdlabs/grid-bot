@@ -1,6 +1,5 @@
 namespace Grid.Bot.Utility;
 
-using System;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -61,10 +60,7 @@ public static partial class ClientSettingsNameHelper
         //   ^
 
         var prefix = name[0];
-        if (prefix != 'F')
-            prefix = name[1..][1];
-        else
-            prefix = name[1];
+        prefix = prefix != 'F' ? name[1..][1] : name[1];
 
         return prefix switch
         {

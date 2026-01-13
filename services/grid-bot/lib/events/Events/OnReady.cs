@@ -59,7 +59,7 @@ public class OnShardReady(
     OnCommandExecuted onCommandExecutedEvent
 )
 {
-    private static readonly Assembly _commandsAssembly = Assembly.Load("Shared.Commands");
+    private static readonly Assembly CommandsAssembly = Assembly.Load("Shared.Commands");
 
     private Atomic<int> _shardCount = 0;
 
@@ -81,7 +81,7 @@ public class OnShardReady(
         => updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
 
     /// <summary>
-    /// Invoe the event handler.
+    /// Invoke the event handler.
     /// </summary>
     /// <param name="shard">The client for the shard.</param>
     public async Task Invoke(DiscordSocketClient shard)
@@ -97,8 +97,8 @@ public class OnShardReady(
 
         if (_shardCount == _client.Shards.Count)
         {
-            await _interactionService.AddModulesAsync(_commandsAssembly, _services);
-            await _commandService.AddModulesAsync(_commandsAssembly, _services);
+            await _interactionService.AddModulesAsync(CommandsAssembly, _services);
+            await _commandService.AddModulesAsync(CommandsAssembly, _services);
 
 #if DEBUG
             if (_discordSettings.DebugGuildId != 0)

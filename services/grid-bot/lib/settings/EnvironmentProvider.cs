@@ -7,17 +7,15 @@ using System;
 /// </summary>
 public static class EnvironmentProvider
 {
-    private const string _providerEnvironmentNameEnvVar = "ENVIRONMENT";
-    private const string _nomadEnvironmentMetadataEnvVar = $"NOMAD_META_{_providerEnvironmentNameEnvVar}";
+    private const string ProviderEnvironmentNameEnvVar = "ENVIRONMENT";
+    private const string NomadEnvironmentMetadataEnvVar = $"NOMAD_META_{ProviderEnvironmentNameEnvVar}";
 
-    private const string _defaultEnvironmentName = "development";
-    private static readonly string _providerEnvironmentName = 
-           Environment.GetEnvironmentVariable(_providerEnvironmentNameEnvVar) 
-        ?? Environment.GetEnvironmentVariable(_nomadEnvironmentMetadataEnvVar) 
-        ?? _defaultEnvironmentName;
+    private const string DefaultEnvironmentName = "development";
 
     /// <summary>
     /// Gets the environment name for the settings provider.
     /// </summary>
-    public static string EnvironmentName => _providerEnvironmentName;
+    public static string EnvironmentName { get; } = Environment.GetEnvironmentVariable(ProviderEnvironmentNameEnvVar) 
+                                                    ?? Environment.GetEnvironmentVariable(NomadEnvironmentMetadataEnvVar) 
+                                                    ?? DefaultEnvironmentName;
 }

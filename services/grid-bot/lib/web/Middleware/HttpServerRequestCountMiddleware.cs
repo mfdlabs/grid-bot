@@ -13,7 +13,7 @@ using Prometheus;
 public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
 {
     private readonly RequestDelegate _next;
-    private readonly Counter _HttpRequestCounter = Metrics.CreateCounter(
+    private static readonly Counter HttpRequestCounter = Metrics.CreateCounter(
         "http_server_requests_total", 
         "Total number of http requests", 
         "method", 
@@ -38,11 +38,11 @@ public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
     public async Task Invoke(HttpContext context)
     {
         var (controller, action) = GetControllerAndAction(context);
-        var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
-            string.Format("{0}.{1}", controller, action)
-            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
+        var endpoint = controller != UnknownRouteLabelValue && action != UnknownRouteLabelValue ? 
+            $"{controller}.{action}"
+            : context.Request.Path.Value ?? UnknownRouteLabelValue;
 
-        _HttpRequestCounter.WithLabels(context.Request.Method, endpoint).Inc();
+        HttpRequestCounter.WithLabels(context.Request.Method, endpoint).Inc();
 
         await _next(context);
     }

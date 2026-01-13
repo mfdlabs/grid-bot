@@ -29,14 +29,14 @@ using CachedValues = RefreshAhead<System.Collections.Generic.IDictionary<string,
 /// <seealso cref="IClientSettingsFactory" />
 public class ClientSettingsFactory : IClientSettingsFactory
 {
-    private const string _metadataJsonKeyPrefix = "$$";
+    private const string MetadataJsonKeyPrefix = "$$";
 
     private readonly ClientSettingsSettings _settings;
     private readonly IVaultClient _client;
     private readonly ILogger _logger;
     private readonly LazyWithRetry<CachedValues> _settingsCacheRefreshAhead;
 
-    private static readonly Type[] _supportedTypes = [typeof(string), typeof(bool), typeof(int), typeof(long)];
+    private static readonly Type[] SupportedTypes = [typeof(string), typeof(bool), typeof(int), typeof(long)];
 
     private readonly string _mount;
     private readonly string _path;
@@ -222,13 +222,13 @@ public class ClientSettingsFactory : IClientSettingsFactory
             }
 
             // For each key, read the secret
-            foreach (var applicationName in keys.Data.Keys)
-            {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(mountPoint: _mount, path: applicationName).Sync();
-                var metadata = _client.V1.Secrets.KeyValue.V2.ReadSecretMetadataAsync(mountPoint: _mount, path: applicationName).Sync();
-
-                data.Add((applicationName, secret.Data.Data, metadata.Data.CustomMetadata));
-            }
+            data.AddRange((
+                from applicationName in 
+                    keys.Data.Keys 
+                let secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(mountPoint: _mount, path: applicationName).Sync() 
+                let metadata = _client.V1.Secrets.KeyValue.V2.ReadSecretMetadataAsync(mountPoint: _mount, path: applicationName).Sync() 
+                select (applicationName, secret.Data.Data, metadata.Data.CustomMetadata))
+                    .Select(dummy => ((string name, Secrets data, MetaData metadata))dummy));
 
             return data;
         }
@@ -243,13 +243,13 @@ public class ClientSettingsFactory : IClientSettingsFactory
         using var jsonStream = File.OpenRead(_settings.ClientSettingsFilePath);
         var document = JsonDocument.Parse(jsonStream);
 
-        foreach (JsonProperty prop in document.RootElement.EnumerateObject())
+        foreach (var prop in document.RootElement.EnumerateObject())
         {
             var applicationName = prop.Name;
-            var applicationMetatdataName = $"{_metadataJsonKeyPrefix}{applicationName}";
+            var applicationMetadataName = $"{MetadataJsonKeyPrefix}{applicationName}";
 
             MetaData metadata = new Dictionary<string, string>();
-            if (document.RootElement.TryGetProperty(applicationMetatdataName, out var metadataProp))
+            if (document.RootElement.TryGetProperty(applicationMetadataName, out var metadataProp))
                 metadata = metadataProp.Deserialize<MetaData>();
 
             var applicationData = prop.Value.Deserialize<Secrets>();
@@ -267,7 +267,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         if (_settings.ClientSettingsViaVault)
         {
-            _logger?.Debug("Writiting settings to vault at path '{0}/{1}/{2}'",
+            _logger?.Debug("Writing settings to vault at path '{0}/{1}/{2}'",
                            _mount, _path, applicationName);
 
             _client.V1.Secrets.KeyValue.V2 .WriteSecretAsync(
@@ -285,11 +285,14 @@ public class ClientSettingsFactory : IClientSettingsFactory
         using var jsonStream = File.Open(_settings.ClientSettingsFilePath, FileMode.OpenOrCreate);
         var document = JsonNode.Parse(jsonStream);
 
-        document[applicationName] = JsonSerializer.Serialize(serializedData);
-        document[$"{_metadataJsonKeyPrefix}{applicationName}"] = JsonSerializer.Serialize(metadata);
+        if (document != null)
+        {
+            document[applicationName] = JsonSerializer.Serialize(serializedData);
+            document[$"{MetadataJsonKeyPrefix}{applicationName}"] = JsonSerializer.Serialize(metadata);
 
-        using var writer = new Utf8JsonWriter(jsonStream);
-        document.WriteTo(writer);
+            using var writer = new Utf8JsonWriter(jsonStream);
+            document.WriteTo(writer);
+        }
 
         // Can be made more efficient? can we skip past remote here
         _settingsCacheRefreshAhead.LazyValue.Value[applicationName] = data;
@@ -355,7 +358,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
     public Secrets GetSettingsForApplication(string application, bool withDependencies = true)
     {
         if (string.IsNullOrWhiteSpace(application))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+            throw new ArgumentException($"'{nameof(application)}' cannot be null or whitespace!", nameof(application));
 
         _settingsCacheLock.EnterReadLock();
 
@@ -374,35 +377,33 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
             settings ??= new Dictionary<string, object>();
 
-            if (withDependencies && hasDependencies)
+            if (!withDependencies || !hasDependencies) return settings;
+            
+            var dependenciesToMerge = new List<Secrets>();
+            var dependencyNames = dependencies.Split(',');
+
+            foreach (var dependency in dependencyNames)
             {
-                var dependenciesToMerge = new List<Secrets>();
-                var dependencyNames = dependencies.Split(',');
-
-                foreach (var dependency in dependencyNames)
+                if (!_settingsCacheRefreshAhead.LazyValue.Value.TryGetValue(dependency, out var dependencySettings))
                 {
-                    if (!_settingsCacheRefreshAhead.LazyValue.Value.TryGetValue(dependency, out var dependencySettings))
-                    {
-                        _logger?.Debug("Dependency '{0}' for application '{1}' not found!", dependency, application);
+                    _logger?.Debug("Dependency '{0}' for application '{1}' not found!", dependency, application);
 
-                        continue;
-                    }
-
-                    _logger?.Debug("Dependency '{0}' for application '{1}' found!", dependency, application);
-                    _settingsReadCounter.WithLabels(dependency).Inc();
-
-                    dependenciesToMerge.Add(dependencySettings);
+                    continue;
                 }
 
-                if (dependenciesToMerge.Count > 0)
-                {
-                    _logger?.Debug("Merging settings for application '{0}' with dependencies: {1}", application, string.Join(", ", dependencyNames));
+                _logger?.Debug("Dependency '{0}' for application '{1}' found!", dependency, application);
+                _settingsReadCounter.WithLabels(dependency).Inc();
 
-                    var mergedSettings = new Dictionary<string, object>(settings);
-
-                    settings = mergedSettings.MergeLeft(dependenciesToMerge.ToArray());
-                }
+                dependenciesToMerge.Add(dependencySettings);
             }
+
+            if (dependenciesToMerge.Count <= 0) return settings;
+            
+            _logger?.Debug("Merging settings for application '{0}' with dependencies: {1}", application, string.Join(", ", dependencyNames));
+
+            var mergedSettings = new Dictionary<string, object>(settings);
+
+            settings = mergedSettings.MergeLeft(dependenciesToMerge.ToArray());
 
             return settings;
         }
@@ -416,39 +417,36 @@ public class ClientSettingsFactory : IClientSettingsFactory
     public T GetSettingForApplication<T>(string application, string setting, bool withDependencies = true)
     {
         if (string.IsNullOrWhiteSpace(application))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+            throw new ArgumentException($"'{nameof(application)}' cannot be null or whitespace!", nameof(application));
 
         if (string.IsNullOrWhiteSpace(setting))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(setting)), nameof(setting));
+            throw new ArgumentException($"'{nameof(setting)}' cannot be null or whitespace!", nameof(setting));
 
-        if (!_supportedTypes.Contains(typeof(T)) || typeof(T) == typeof(FilteredValue<>))
-            throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name), nameof(T));
+        if (!SupportedTypes.Contains(typeof(T)) || typeof(T) == typeof(FilteredValue<>))
+            throw new ArgumentException($"'{typeof(T).Name}' is not a supported type!", nameof(T));
 
         var settings = GetSettingsForApplication(application, withDependencies) 
-                    ?? throw new InvalidOperationException(string.Format("Application '{0}' not found!", application));
+                    ?? throw new InvalidOperationException($"Application '{application}' not found!");
 
         if (!settings.TryGetValue(setting, out var value))
-            throw new InvalidOperationException(string.Format("Setting '{0}' for application '{1}' not found!", setting, application));
+            throw new InvalidOperationException($"Setting '{setting}' for application '{application}' not found!");
 
         try
         {
             return typeof(T) switch
             {
-                Type t when t == typeof(string) => (T)(object)value.ToString(),
-                Type t when t == typeof(bool) => (T)value,
-                Type t when t == typeof(int) => (T)value,
-                _ => throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name)),
+                { } t when t == typeof(string) => (T)(object)value.ToString(),
+                { } t when t == typeof(bool) => (T)value,
+                { } t when t == typeof(int) => (T)value,
+                _ => throw new ArgumentException($"'{typeof(T).Name}' is not a supported type!"),
             };
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
         {
             _logger?.Error(ex);
 
-            throw new InvalidCastException(string.Format(
-                "Failed to cast setting '{0}' for application '{1}' to type '{2}'!", 
-                setting, 
-                application, 
-                typeof(T).Name),
+            throw new InvalidCastException(
+                $"Failed to cast setting '{setting}' for application '{application}' to type '{typeof(T).Name}'!",
                 ex
             );
         }
@@ -463,21 +461,21 @@ public class ClientSettingsFactory : IClientSettingsFactory
     ) 
     {
         if (string.IsNullOrWhiteSpace(application))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+            throw new ArgumentException($"'{nameof(application)}' cannot be null or whitespace!", nameof(application));
 
         if (string.IsNullOrWhiteSpace(setting))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(setting)), nameof(setting));
+            throw new ArgumentException($"'{nameof(setting)}' cannot be null or whitespace!", nameof(setting));
 
-        if (!_supportedTypes.Contains(typeof(T)))
-            throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name), nameof(T));
+        if (!SupportedTypes.Contains(typeof(T)))
+            throw new ArgumentException($"'{typeof(T).Name}' is not a supported type!", nameof(T));
 
         var settings = GetSettingsForApplication(application, withDependencies) 
-                    ?? throw new InvalidOperationException(string.Format("Application '{0}' not found!", application));
+                    ?? throw new InvalidOperationException($"Application '{application}' not found!");
 
         var settingName = $"{setting}_{filterType}Filter";
 
         if (!settings.TryGetValue(settingName, out var value))
-            throw new InvalidOperationException(string.Format("Setting '{0}' for application '{1}' not found!", setting, application));
+            throw new InvalidOperationException($"Setting '{setting}' for application '{application}' not found!");
 
         try
         {
@@ -487,11 +485,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
         {
             _logger?.Error(ex);
 
-            throw new InvalidCastException(string.Format(
-                "Failed to cast setting '{0}' for application '{1}' to type '{2}'!", 
-                setting, 
-                application,
-                typeof(T).Name),
+            throw new InvalidCastException(
+                $"Failed to cast setting '{setting}' for application '{application}' to type '{typeof(T).Name}'!",
                 ex
             );
         }
@@ -501,15 +496,15 @@ public class ClientSettingsFactory : IClientSettingsFactory
     public void WriteSettingsForApplication(string application, Secrets settings)
     {
         if (string.IsNullOrWhiteSpace(application))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+            throw new ArgumentException($"'{nameof(application)}' cannot be null or whitespace!", nameof(application));
 
-        ArgumentNullException.ThrowIfNull(settings, nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         var metadata = new Dictionary<string, string>();
 
         foreach (var kvp in settings)
         {
-            if (!_supportedTypes.Contains(kvp.Value.GetType()))
+            if (!SupportedTypes.Contains(kvp.Value.GetType()))
             {
                 _logger.Warning("{0}.{1} is not a valid type, skipping!", application, kvp.Key);
 
@@ -549,13 +544,13 @@ public class ClientSettingsFactory : IClientSettingsFactory
     public void SetSettingForApplication<T>(string application, string setting, T value)
     {
         if (string.IsNullOrWhiteSpace(application))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+            throw new ArgumentException($"'{nameof(application)}' cannot be null or whitespace!", nameof(application));
 
         if (string.IsNullOrWhiteSpace(setting))
-            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(setting)), nameof(setting));
+            throw new ArgumentException($"'{nameof(setting)}' cannot be null or whitespace!", nameof(setting));
 
-        if (!_supportedTypes.Contains(typeof(T)))
-            throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name), nameof(T));
+        if (!SupportedTypes.Contains(typeof(T)))
+            throw new ArgumentException($"'{typeof(T).Name}' is not a supported type!", nameof(T));
 
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -583,7 +578,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
                 SetSettingForApplication(application, setting, Convert.ToBoolean(value));
                 break;
             default:
-                throw new ArgumentException(string.Format("'{0}' is not a supported type!", settingType), nameof(settingType));
+                throw new ArgumentException($"'{settingType}' is not a supported type!", nameof(settingType));
         }
     }
 }

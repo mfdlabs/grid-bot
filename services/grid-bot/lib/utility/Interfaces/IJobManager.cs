@@ -38,7 +38,7 @@ public interface IJobManager
     /// Adds or updates an active job.
     /// </summary>
     /// <param name="job">The job.</param>
-    /// <param name="instance">The instancee.</param>
+    /// <param name="instance">The instance.</param>
     void AddOrUpdateActiveJob(IJob job, IGridServerInstance instance);
 
     /// <summary>
@@ -70,6 +70,7 @@ public interface IJobManager
     /// <param name="addToActiveJobs">Add this job to the active jobs list?</param>
     /// <returns>The SOAP interface, the instance and a job rejection reason.</returns>
     /// <exception cref="Exception">Cannot create a new job, since job already exists</exception>
+    // ReSharper disable once UnusedTupleComponentInReturnValue
     (GridServerServiceSoap soapInterface, IGridServerInstance instance, JobRejectionReason? rejectionReason) NewJob(
         IJob job,
         double expirationInSeconds,
@@ -114,14 +115,14 @@ public interface IJobManager
     void DispatchRequestToAllActiveJobs(Action<GridServerServiceSoap> action);
 
     /// <summary>
-    /// Get the instance id for an Grid Server by it's job id.
+    /// Get the instance id for a Grid Server by its job id.
     /// </summary>
     /// <param name="jobId">The job id.</param>
     /// <returns>The Grid Server instance id.</returns>
     string GetGridServerInstanceId(string jobId);
 
     /// <summary>
-    /// Update an Grid Server instance's resources.
+    /// Update a Grid Server instance's resources.
     /// </summary>
     /// <param name="job">The resources job.</param>
     /// <returns>If the update was successful or not.</returns>

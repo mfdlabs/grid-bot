@@ -1,7 +1,7 @@
 namespace Grid.Bot.Utility;
 
 /// <summary>
-/// The type of a setting.
+/// The type of setting.
 /// </summary>
 public enum SettingType
 {

@@ -149,7 +149,7 @@ public class Render(
                 return;
             }
 
-            using (stream)
+            await using (stream)
                 await this.ReplyWithFileAsync(
                     stream,
                     fileName

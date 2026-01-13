@@ -25,7 +25,7 @@ public class GridBotGrpcServer(DiscordShardedClient client) : GridBotAPI.GridBot
 {
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
 
-    private static readonly Counter _grpcServerRequestCounter = Metrics.CreateCounter(
+    private static readonly Counter GrpcServerRequestCounter = Metrics.CreateCounter(
         "grpc_health_check_requests_total",
         "Total number of gRPC health check requests"
     );
@@ -33,11 +33,11 @@ public class GridBotGrpcServer(DiscordShardedClient client) : GridBotAPI.GridBot
     /// <inheritdoc cref="GridBotAPI.GridBotAPIBase.CheckHealth(CheckHealthRequest, ServerCallContext)"/>
     public override Task<CheckHealthResponse> CheckHealth(CheckHealthRequest request, ServerCallContext context)
     {
-        _grpcServerRequestCounter.Inc();
+        GrpcServerRequestCounter.Inc();
 
         var response = new CheckHealthResponse();
 
-        if (_client.LoginState == LoginState.LoggedOut || _client.LoginState == LoginState.LoggingOut || _client.LoginState == LoginState.LoggingIn)
+        if (_client.LoginState is LoginState.LoggedOut or LoginState.LoggingOut or LoginState.LoggingIn)
             return Task.FromResult(response);
 
         try

@@ -25,7 +25,7 @@ using Extensions;
 /// - <paramref name="discordSettings"/> cannot be null.
 /// - <paramref name="discordShardedClient"/> cannot be null.
 /// </exception>
-[LockDownCommand(BotRole.Administrator)]
+[LockDownCommand]
 [RequireBotRole(BotRole.Administrator)]
 [Group("maintenance"), Summary("Commands used for enabling and disabling maintenance mode."), Alias("maint", "m")]
 public class Maintenance(

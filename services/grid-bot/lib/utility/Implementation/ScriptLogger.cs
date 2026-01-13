@@ -35,16 +35,16 @@ public class ScriptLogger : IScriptLogger
 
     private readonly ConcurrentBag<string> _scriptHashes = [];
 
-    private static readonly Gauge _scriptLoggingTotalScriptHashes = Metrics.CreateGauge(
+    private static readonly Gauge ScriptLoggingTotalScriptHashes = Metrics.CreateGauge(
         "script_logging_script_hashes_total",
         "Total number of script hashes logged ever"
     );
-    private static readonly Counter _scriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
+    private static readonly Counter ScriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
         "script_logging_scripts_logged_total",
         "Total number of scripts logged",
         "source" // from command or interaction
     );
-    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
+    private static readonly Counter ScriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
         "script_logging_existing_scripts_logged_total",
         "Total number of existing scripts logged",
         "script_hash"
@@ -78,7 +78,7 @@ public class ScriptLogger : IScriptLogger
         foreach (var hash in _scriptsSettings.LoggedScriptHashes)
             _scriptHashes.Add(hash);
 
-        _scriptLoggingTotalScriptHashes.Set(_scriptHashes.Count);
+        ScriptLoggingTotalScriptHashes.Set(_scriptHashes.Count);
 
         Task.Factory.StartNew(PersistLoggedScriptHashes, TaskCreationOptions.LongRunning);
     }
@@ -93,13 +93,14 @@ public class ScriptLogger : IScriptLogger
 
             _scriptsSettings.LoggedScriptHashes = [.. _scriptHashes];
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, IInteractionContext)"/>
     public async Task LogScriptAsync(string script, IInteractionContext context)
     {
         if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
-        ArgumentNullException.ThrowIfNull(context, nameof(context));
+        ArgumentNullException.ThrowIfNull(context);
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
         if (context.Interaction is not SocketInteraction interaction) return;
@@ -109,7 +110,7 @@ public class ScriptLogger : IScriptLogger
         var guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
         var channelInfo = interaction.GetChannelAsString();
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
+        ScriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
 
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
@@ -118,7 +119,7 @@ public class ScriptLogger : IScriptLogger
     public async Task LogScriptAsync(string script, ICommandContext context)
     {
         if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
-        ArgumentNullException.ThrowIfNull(context, nameof(context));
+        ArgumentNullException.ThrowIfNull(context);
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
         if (context.Message is not SocketUserMessage message) return;
@@ -128,7 +129,7 @@ public class ScriptLogger : IScriptLogger
         var guildInfo = context.Guild?.Id.ToString() ?? "DMs";
         var channelInfo = message.Channel?.ToString();
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
+        ScriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
         
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
@@ -153,7 +154,7 @@ public class ScriptLogger : IScriptLogger
 
         if (_scriptHashes.Contains(scriptHash))
         {
-            _scriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
+            ScriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
             
             // Just log the hash
             content += "\n\n**Script already logged**";
@@ -198,7 +199,7 @@ public class ScriptLogger : IScriptLogger
 
         // Add the hash to the list of logged hashes
         _scriptHashes.Add(scriptHash);
-        _scriptLoggingTotalScriptHashes.Inc();
+        ScriptLoggingTotalScriptHashes.Inc();
     }
 
 }

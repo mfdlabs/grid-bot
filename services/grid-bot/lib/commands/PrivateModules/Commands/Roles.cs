@@ -18,7 +18,7 @@ using Extensions;
 /// </remarks>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <exception cref="ArgumentNullException"><paramref name="adminUtility"/> cannot be null.</exception>
-[LockDownCommand(BotRole.Administrator)]
+[LockDownCommand]
 [RequireBotRole(BotRole.Administrator)]
 [Group("role"), Summary("Commands used for updating user bot roles."), Alias("roles")]
 public class Roles(IAdminUtility adminUtility) : ModuleBase
@@ -69,6 +69,7 @@ public class Roles(IAdminUtility adminUtility) : ModuleBase
                 _adminUtility.SetUserAsAdmin(user);
 
                 break;
+            case BotRole.Owner:
             default:
                 throw new ArgumentOutOfRangeException(nameof(role), role, null);
         }

@@ -20,82 +20,90 @@ using Utility;
 /// <summary>
 /// gRPC extensions for the <see cref="IServiceProvider"/>
 /// </summary>
-public static class IServiceProviderExtensions
+public static class ServiceProviderExtensions
 {
-    /// <summary>
-    /// Implement the grid-bot gRPC server into the current service provider.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceProvider"/></param>
-    /// <param name="args">The application arguments.</param>
-    public static void UseGrpcServer(this IServiceProvider services, IEnumerable<string> args)
+    /// <param name="services">The <see cref="IServiceProvider"/>.</param>
+    extension(IServiceProvider services)
     {
-        var grpcSettings = services.GetRequiredService<GrpcSettings>();
-        var logger = new Logger(
-            name: grpcSettings.GrpcServerLoggerName,
-            logLevelGetter: () => grpcSettings.GrpcServerLoggerLevel,
-            logToConsole: true,
-            logToFileSystem: false
-        );
-
-        if (!grpcSettings.GridBotGrpcServerEnabled)
+        /// <summary>
+        /// Implement the grid-bot gRPC server into the current service provider.
+        /// </summary>
+        /// <param name="args">The application arguments.</param>
+        public void UseGrpcServer(IEnumerable<string> args)
         {
-            logger.Warning("The grid-bot gRPC server is disabled in settings, not starting gRPC server!");
+            var grpcSettings = services.GetRequiredService<GrpcSettings>();
+            var logger = new Logger(
+                name: grpcSettings.GrpcServerLoggerName,
+                logLevelGetter: () => grpcSettings.GrpcServerLoggerLevel,
+                logToConsole: true,
+                logToFileSystem: false
+            );
 
-            return;
-        }
-
-        var client = services.GetRequiredService<DiscordShardedClient>();
-        
-        logger.Information("Starting gRPC server on {0}", grpcSettings.GridBotGrpcServerEndpoint);
-
-        var builder = WebApplication.CreateBuilder([.. args]);
-
-        builder.Logging.ClearProviders();
-        builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
-
-        builder.Services.AddSingleton(client);
-
-        builder.Services.AddGrpc();
-
-        if (grpcSettings.GrpcServerUseTls)
-        {
-            builder.Services.Configure<KestrelServerOptions>(options =>
+            if (!grpcSettings.GridBotGrpcServerEnabled)
             {
-                options.ConfigureEndpointDefaults(listenOptions =>
-                {
-                    listenOptions.Protocols = HttpProtocols.Http2;
+                logger.Warning("The grid-bot gRPC server is disabled in settings, not starting gRPC server!");
 
-                    try
+                return;
+            }
+
+            var client = services.GetRequiredService<DiscordShardedClient>();
+
+            logger.Information("Starting gRPC server on {0}", grpcSettings.GridBotGrpcServerEndpoint);
+
+            var builder = WebApplication.CreateBuilder([.. args]);
+
+            builder.Logging.ClearProviders();
+            builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
+
+            builder.Services.AddSingleton(client);
+
+            builder.Services.AddGrpc();
+
+            if (grpcSettings.GrpcServerUseTls)
+            {
+                builder.Services.Configure<KestrelServerOptions>(options =>
+                {
+                    options.ConfigureEndpointDefaults(listenOptions =>
                     {
-                        listenOptions.UseHttps(grpcSettings.GrpcServerCertificatePath, grpcSettings.GrpcServerCertificatePassword, httpsOptions =>
+                        listenOptions.Protocols = HttpProtocols.Http2;
+
+                        try
                         {
-                            httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Warning("Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!", ex.Message);
-                    }
+                            listenOptions.UseHttps(grpcSettings.GrpcServerCertificatePath,
+                                grpcSettings.GrpcServerCertificatePassword,
+                                httpsOptions =>
+                                {
+                                    httpsOptions.SslProtocols = SslProtocols.Tls13 | SslProtocols.Tls12;
+                                });
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warning(
+                                "Failed to configure gRPC with HTTPS because: {0}. Will resort to insecure host instead!",
+                                ex.Message);
+                        }
+                    });
                 });
-            });
 
-            // set urls
-        }
-        else
-        {
-            builder.Services.Configure<KestrelServerOptions>(options =>
+                // set urls
+            }
+            else
             {
-                options.ConfigureEndpointDefaults(listenOptions =>
+                builder.Services.Configure<KestrelServerOptions>(options =>
                 {
-                    listenOptions.Protocols = HttpProtocols.Http2;
+                    options.ConfigureEndpointDefaults(listenOptions =>
+                    {
+                        listenOptions.Protocols = HttpProtocols.Http2;
+                    });
                 });
-            });
+            }
+
+            var app = builder.Build();
+
+            app.MapGrpcService<GridBotGrpcServer>();
+
+            Task.Factory.StartNew(() => app.Run(grpcSettings.GridBotGrpcServerEndpoint),
+                TaskCreationOptions.LongRunning);
         }
-
-        var app = builder.Build();
-
-        app.MapGrpcService<GridBotGrpcServer>();
-
-        Task.Factory.StartNew(() => app.Run(grpcSettings.GridBotGrpcServerEndpoint), TaskCreationOptions.LongRunning);
     }
 }

@@ -7,18 +7,18 @@ using System;
 /// </summary>
 public class LazyWithRetry<T>
 {
-    private readonly TimeSpan _TimeoutBetweenRetries = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _timeoutBetweenRetries = TimeSpan.FromSeconds(30);
 
-    private Lazy<T> _Lazy;
+    private Lazy<T> _lazy;
 
-    private readonly object _Sync = new();
-    private readonly Func<T> _ValueFactory;
-    private readonly Func<DateTime> _NowGetter;
+    private readonly object _sync = new();
+    private readonly Func<T> _valueFactory;
+    private readonly Func<DateTime> _nowGetter;
 
-    private DateTime? _LastExceptionTimeStamp;
+    private DateTime? _lastExceptionTimeStamp;
 
     /// <inheritdoc cref="Lazy{T}.IsValueCreated" />
-    public bool IsValueCreated => _Lazy.IsValueCreated;
+    public bool IsValueCreated => _lazy.IsValueCreated;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LazyWithRetry{T}"/> class.
@@ -28,10 +28,10 @@ public class LazyWithRetry<T>
     /// <exception cref="ArgumentNullException"><paramref name="valueFactory"/> is <see langword="null" />.</exception>
     public LazyWithRetry(Func<T> valueFactory, Func<DateTime> nowGetter = null)
     {
-        _ValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
+        _valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
 
-        _Lazy = new Lazy<T>(_ValueFactory);
-        _NowGetter = nowGetter ?? (() => DateTime.UtcNow);
+        _lazy = new Lazy<T>(_valueFactory);
+        _nowGetter = nowGetter ?? (() => DateTime.UtcNow);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public class LazyWithRetry<T>
     public LazyWithRetry(Func<T> valueFactory, TimeSpan timeoutBetweenRetries, Func<DateTime> nowGetter = null) 
         : this(valueFactory, nowGetter)
     {
-        _TimeoutBetweenRetries = timeoutBetweenRetries;
+        _timeoutBetweenRetries = timeoutBetweenRetries;
     }
 
     /// <inheritdoc cref="Lazy{T}.Value" />
@@ -53,19 +53,19 @@ public class LazyWithRetry<T>
         {
             try
             {
-                return _Lazy.Value;
+                return _lazy.Value;
             }
             catch (Exception)
             {
-                bool isTimeForReset = false;
-                lock (_Sync)
+                var isTimeForReset = false;
+                lock (_sync)
                 {
-                    if (_LastExceptionTimeStamp == null)
-                        _LastExceptionTimeStamp = _NowGetter();
+                    if (_lastExceptionTimeStamp == null)
+                        _lastExceptionTimeStamp = _nowGetter();
                     else
                     {
-                        DateTime t = _NowGetter();
-                        if (t > _LastExceptionTimeStamp + _TimeoutBetweenRetries)
+                        var t = _nowGetter();
+                        if (t > _lastExceptionTimeStamp + _timeoutBetweenRetries)
                         {
                             Reset();
                             isTimeForReset = true;
@@ -75,7 +75,7 @@ public class LazyWithRetry<T>
                 if (!isTimeForReset)
                     throw;
 
-                return _Lazy.Value;
+                return _lazy.Value;
             }
         }
     }
@@ -85,7 +85,7 @@ public class LazyWithRetry<T>
     /// </summary>
     public void Reset()
     {
-        _Lazy = new Lazy<T>(_ValueFactory);
-        _LastExceptionTimeStamp = null;
+        _lazy = new Lazy<T>(_valueFactory);
+        _lastExceptionTimeStamp = null;
     }
 }

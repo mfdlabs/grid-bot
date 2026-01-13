@@ -2,7 +2,7 @@ namespace Grid.Bot;
 
 using Prometheus;
 
-internal class RenderPerformanceCounters
+internal static class RenderPerformanceCounters
 {
     public static readonly Counter TotalRendersBlockedByGlobalFloodChecker = Metrics.CreateCounter(
         "renders_blocked_by_global_flood_checker_total",

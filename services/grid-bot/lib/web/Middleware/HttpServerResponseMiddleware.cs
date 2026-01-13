@@ -18,14 +18,14 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
 {
     private readonly RequestDelegate _next;
 
-    private readonly Counter _HttpResponseCounter = Metrics.CreateCounter(
+    private static readonly Counter HttpResponseCounter = Metrics.CreateCounter(
         "http_server_response_total",
         "Total number of http responses",
         "method",
         "endpoint",
         "status_code"
     );
-    private readonly Histogram _RequestDurationHistogram= Metrics.CreateHistogram(
+    private static readonly Histogram RequestDurationHistogram= Metrics.CreateHistogram(
         "http_server_request_duration_seconds",
         "Duration in seconds each request takes",
         "method",
@@ -56,9 +56,9 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
 
         var latencyStopwatch = Stopwatch.StartNew();
         var (controller, action) = GetControllerAndAction(context);
-        var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
-            string.Format("{0}.{1}", controller, action)
-            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
+        var endpoint = controller != UnknownRouteLabelValue && action != UnknownRouteLabelValue
+            ? $"{controller}.{action}"
+            : context.Request.Path.Value ?? UnknownRouteLabelValue;
 
         try
         {
@@ -68,19 +68,17 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
             {
                 latencyStopwatch.Stop();
 
-                var statusCode = context.Response.StatusCode;
+                if (context.Response.StatusCode is >= 200 and < 300)
+                    RequestDurationHistogram.WithLabels(context.Request.Method, endpoint).Observe(latencyStopwatch.Elapsed.TotalSeconds);
 
-                if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)
-                    _RequestDurationHistogram.WithLabels(context.Request.Method, endpoint).Observe(latencyStopwatch.Elapsed.TotalSeconds);
-
-                _HttpResponseCounter.WithLabels(context.Request.Method, endpoint, context.Response.StatusCode.ToString()).Inc();
+                HttpResponseCounter.WithLabels(context.Request.Method, endpoint, context.Response.StatusCode.ToString()).Inc();
 
                 return Task.CompletedTask;
             });
         }
         catch (Exception)
         {
-            _HttpResponseCounter.WithLabels(context.Request.Method, endpoint, context.Response.StatusCode.ToString()).Inc();
+            HttpResponseCounter.WithLabels(context.Request.Method, endpoint, context.Response.StatusCode.ToString()).Inc();
 
             latencyStopwatch.Stop();
 

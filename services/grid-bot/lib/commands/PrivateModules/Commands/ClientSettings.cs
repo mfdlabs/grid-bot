@@ -28,7 +28,7 @@ using Extensions;
 /// - <paramref name="clientSettingsFactory"/> cannot be null.
 /// - <paramref name="clientSettingsSettings"/> cannot be null.
 /// </exception>
-[LockDownCommand(BotRole.Administrator)]
+[LockDownCommand]
 [RequireBotRole(BotRole.Administrator)]
 [Group("clientsettings"), Summary("Commands used for managing client settings."), Alias("cs", "client_settings")]
 public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, ClientSettingsSettings clientSettingsSettings) : ModuleBase
@@ -97,7 +97,7 @@ public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, 
 
         _clientSettingsFactory.WriteSettingsForApplication(applicationName, contentsParsed);
 
-        var parsedDependencies = string.Join(",", dependencies?.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        var parsedDependencies = string.Join(",", dependencies?.Split(',', StringSplitOptions.RemoveEmptyEntries)!);
 
         if (!string.IsNullOrWhiteSpace(parsedDependencies))
         {

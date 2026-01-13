@@ -22,7 +22,7 @@ public class BacktraceUtility : IBacktraceUtility
     private readonly ILogger _logger;
     private readonly BacktraceClient _client;
 
-    private static readonly Counter _uploadExceptionCounter = Metrics.CreateCounter(
+    private static readonly Counter UploadExceptionCounter = Metrics.CreateCounter(
         "backtrace_exception_upload_total",
         "Total number of exceptions uploaded to Backtrace"
     );
@@ -38,20 +38,17 @@ public class BacktraceUtility : IBacktraceUtility
     /// </exception>
     public BacktraceUtility(ILogger logger, BacktraceSettings backtraceSettings)
     {
-        if (backtraceSettings == null)
-            throw new ArgumentNullException(nameof(backtraceSettings));
-            
+        ArgumentNullException.ThrowIfNull(backtraceSettings);
+
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        if (!string.IsNullOrEmpty(backtraceSettings.BacktraceUrl))
-        {
-            var bckTraceCreds = new BacktraceCredentials(
-                backtraceSettings.BacktraceUrl,
-                backtraceSettings.BacktraceToken
-            );
+        if (string.IsNullOrEmpty(backtraceSettings.BacktraceUrl)) return;
+        var bckTraceCreds = new BacktraceCredentials(
+            backtraceSettings.BacktraceUrl,
+            backtraceSettings.BacktraceToken
+        );
 
-            _client = new BacktraceClient(bckTraceCreds);
-        }
+        _client = new BacktraceClient(bckTraceCreds);
     }
 
     /// <inheritdoc cref="IBacktraceUtility.Client"/>
@@ -63,7 +60,7 @@ public class BacktraceUtility : IBacktraceUtility
         if (ex == null)
             return;
 
-        _uploadExceptionCounter.Inc();
+        UploadExceptionCounter.Inc();
 
         Task.Factory.StartNew(() =>
         {
@@ -101,12 +98,12 @@ public class BacktraceUtility : IBacktraceUtility
     /// <inheritdoc cref="IBacktraceUtility.UploadAllLogFiles(bool)"/>
     public BacktraceResult UploadAllLogFiles(bool delete = true)
     {
-        var attachments = from file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory)
-                          // Do not include files that are in use.
-                          where File.Exists(file) && !IsFileLocked(file)
-                          select file;
+        var attachments = (from file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory)
+            // Do not include files that are in use.
+            where File.Exists(file) && !IsFileLocked(file)
+            select file).ToArray();
 
-        if (!attachments.Any())
+        if (attachments.Length == 0)
         {
             _logger.Warning("No log files found to upload!");
         
@@ -117,15 +114,16 @@ public class BacktraceUtility : IBacktraceUtility
 
         var result = _client?.Send("Log files upload", attachmentPaths: [.. attachments]);
 
-        if (delete)
-            foreach (var log in attachments)
-            {
-                if (log == _logger.FullyQualifiedFileName) continue;
+        if (!delete) return result;
+        
+        foreach (var log in attachments)
+        {
+            if (log == _logger.FullyQualifiedFileName) continue;
                 
-                _logger.Warning("Deleting old log file: {0}", log);
+            _logger.Warning("Deleting old log file: {0}", log);
 
-                log.PollDeletion();
-            }
+            log.PollDeletion();
+        }
 
         return result;
     }

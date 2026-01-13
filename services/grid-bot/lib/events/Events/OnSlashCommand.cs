@@ -11,7 +11,6 @@ using Discord.Interactions;
 using Prometheus;
 
 using Utility;
-using Extensions;
 
 /// <summary>
 /// Event handler for interactions.
@@ -81,9 +80,6 @@ public class OnInteraction(
         "command_name"
     );
 
-    private string GetGuildId(SocketInteraction interaction)
-        => interaction.GetGuild(_client).ToString() ?? "DM";
-
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
@@ -92,20 +88,13 @@ public class OnInteraction(
     {
         if (interaction.User.IsBot) return;
 
-        var commandName = interaction.Id.ToString();
-
-        switch (interaction)
+        var commandName = interaction switch
         {
-            case SocketSlashCommand slashCommand:
-                commandName = slashCommand.CommandName;
-                break;
-            case SocketUserCommand userCommand:
-                commandName = userCommand.CommandName;
-                break;
-            case SocketMessageCommand messageCommand:
-                commandName = messageCommand.CommandName;
-                break;
-        }
+            SocketSlashCommand slashCommand => slashCommand.CommandName,
+            SocketUserCommand userCommand => userCommand.CommandName,
+            SocketMessageCommand messageCommand => messageCommand.CommandName,
+            _ => interaction.Id.ToString()
+        };
 
         _totalInteractionsProcessed.WithLabels(
             interaction.Type.ToString(),

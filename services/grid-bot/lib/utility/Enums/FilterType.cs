@@ -1,7 +1,7 @@
 namespace Grid.Bot.Utility;
 
 /// <summary>
-/// Type of a client setting filter.
+/// Type of client setting filter.
 /// </summary>
 public enum FilterType
 {

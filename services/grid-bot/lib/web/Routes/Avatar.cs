@@ -20,19 +20,19 @@ using Threading.Extensions;
 /// </summary>
 public class Avatar
 {
-    private const string _avatarFetchCacheKeyFormat = "avatar_fetch:{0}:{1}";
+    private const string AvatarFetchCacheKeyFormat = "avatar_fetch:{0}:{1}";
 
-    private const string _avatarFetchBodyColorsMapKey = "bodyColors";
-    private const string _avatarFetchBodyColorsMapHeadColorKey = "headColorId";
-    private const string _avatarFetchBodyColorsMapTorsoColorKey = "torsoColorId";
-    private const string _avatarFetchBodyColorsMapRightArmColorKey = "rightArmColorId";
-    private const string _avatarFetchBodyColorsMapLeftArmColorKey = "leftArmColorId";
-    private const string _avatarFetchBodyColorsMapRightLegColorKey = "rightLegColorId";
-    private const string _avatarFetchBodyColorsMapLeftLegColorKey = "leftLegColorId";
+    private const string AvatarFetchBodyColorsMapKey = "bodyColors";
+    private const string AvatarFetchBodyColorsMapHeadColorKey = "headColorId";
+    private const string AvatarFetchBodyColorsMapTorsoColorKey = "torsoColorId";
+    private const string AvatarFetchBodyColorsMapRightArmColorKey = "rightArmColorId";
+    private const string AvatarFetchBodyColorsMapLeftArmColorKey = "leftArmColorId";
+    private const string AvatarFetchBodyColorsMapRightLegColorKey = "rightLegColorId";
+    private const string AvatarFetchBodyColorsMapLeftLegColorKey = "leftLegColorId";
 
-    private const string _getAvatarFetchUserIdKey = "userId";
-    private const string _getAvatarFetchPlaceIdKey = "placeId";
-    private const string _getAvatarFetchUrlFormat = $"{{0}}/v1/avatar-fetch?{_getAvatarFetchUserIdKey}={{1}}&{_getAvatarFetchPlaceIdKey}={{2}}";
+    private const string GetAvatarFetchUserIdKey = "userId";
+    private const string GetAvatarFetchPlaceIdKey = "placeId";
+    private const string GetAvatarFetchUrlFormat = $"{{0}}/v1/avatar-fetch?{GetAvatarFetchUserIdKey}={{1}}&{GetAvatarFetchPlaceIdKey}={{2}}";
 
     private readonly ILogger _logger;
     private readonly AvatarSettings _settings;
@@ -56,23 +56,23 @@ public class Avatar
     }
 
     private static string ConstructAvatarCacheKey(long userId, long placeId)
-        => string.Format(_avatarFetchCacheKeyFormat, userId, placeId);
+        => string.Format(AvatarFetchCacheKeyFormat, userId, placeId);
 
     private static dynamic DowngradeBodyColorsFormat(dynamic data)
     {
-        var bodyColors = data[_avatarFetchBodyColorsMapKey];
+        var bodyColors = data[AvatarFetchBodyColorsMapKey];
 
         var newBodyColors = new 
         {
-            HeadColor = bodyColors[_avatarFetchBodyColorsMapHeadColorKey],
-            TorsoColor = bodyColors[_avatarFetchBodyColorsMapTorsoColorKey],
-            RightArmColor = bodyColors[_avatarFetchBodyColorsMapRightArmColorKey],
-            LeftArmColor = bodyColors[_avatarFetchBodyColorsMapLeftArmColorKey],
-            RightLegColor = bodyColors[_avatarFetchBodyColorsMapRightLegColorKey],
-            LeftLegColor = bodyColors[_avatarFetchBodyColorsMapLeftLegColorKey]
+            HeadColor = bodyColors[AvatarFetchBodyColorsMapHeadColorKey],
+            TorsoColor = bodyColors[AvatarFetchBodyColorsMapTorsoColorKey],
+            RightArmColor = bodyColors[AvatarFetchBodyColorsMapRightArmColorKey],
+            LeftArmColor = bodyColors[AvatarFetchBodyColorsMapLeftArmColorKey],
+            RightLegColor = bodyColors[AvatarFetchBodyColorsMapRightLegColorKey],
+            LeftLegColor = bodyColors[AvatarFetchBodyColorsMapLeftLegColorKey]
         };
 
-        data[_avatarFetchBodyColorsMapKey] = JObject.FromObject(newBodyColors);
+        data[AvatarFetchBodyColorsMapKey] = JObject.FromObject(newBodyColors);
 
         return data;
     }
@@ -82,12 +82,12 @@ public class Avatar
     {
         return _avatarFetchCache.GetOrAdd(
             ConstructAvatarCacheKey(userId, placeId),
-            (key) => 
+            _ => 
             {    
                 _logger.Information("Cache miss for user {0} in place {1}", userId, placeId);
 
                 using var httpClient = _httpClientFactory.CreateClient();
-                var url = string.Format(_getAvatarFetchUrlFormat, _settings.AvatarApiUrl, userId, placeId);
+                var url = string.Format(GetAvatarFetchUrlFormat, _settings.AvatarApiUrl, userId, placeId);
 
                 var response = httpClient.GetAsync(url).Sync();
                 var data = response.Content.ReadAsStringAsync().Sync();
@@ -107,8 +107,8 @@ public class Avatar
     /// <param name="context">The <see cref="HttpContext" /></param>
     public async Task GetAvatarFetch(HttpContext context)
     {
-        if (!context.Request.TryParseInt64FromQuery(_getAvatarFetchUserIdKey, out var userId) ||
-            !context.Request.TryParseInt64FromQuery(_getAvatarFetchPlaceIdKey, out var placeId))
+        if (!context.Request.TryParseInt64FromQuery(GetAvatarFetchUserIdKey, out var userId) ||
+            !context.Request.TryParseInt64FromQuery(GetAvatarFetchPlaceIdKey, out var placeId))
         {
             context.Response.StatusCode = 400;
             await context.Response.WriteRbxError("Invalid user or place ID.");

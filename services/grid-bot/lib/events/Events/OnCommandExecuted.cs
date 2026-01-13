@@ -69,7 +69,7 @@ public class OnCommandExecuted(
 
             _totalCommandsFailed.WithLabels(
                 message.Type.ToString(),
-                command.IsSpecified ? command.Value.ToString() : "Unknown"
+                (command.IsSpecified ? command.Value.ToString() : "Unknown")!
             ).Inc();
 
             if (result is not ExecuteResult executeResult)
@@ -110,11 +110,11 @@ public class OnCommandExecuted(
                     return;
             }
 
-            _logger.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex.ToString());
+            _logger.Error("[EID-{0}] An unexpected error occurred: {1}", exceptionId.ToString(), ex?.ToString());
 
 #if DEBUG
-            var detail = ex.ToString();
-            if (detail.Length > EmbedBuilder.MaxDescriptionLength)
+            var detail = ex?.ToString();
+            if (detail is { Length: > EmbedBuilder.MaxDescriptionLength })
             {
                 await message.ReplyWithFileAsync(
                     fileStream: new MemoryStream(Encoding.UTF8.GetBytes(detail)),
@@ -129,10 +129,7 @@ public class OnCommandExecuted(
                 UnhandledExceptionOccurredFromCommand,
                 embed: new EmbedBuilder().WithDescription($"```\n{ex}\n```").Build()
             );
-
-            return;
 #else
-
             await message.ReplyAsync(
                 $"An unexpected Exception has occurred. Exception ID: {exceptionId}, send this ID to " +
                 $"<@!{_discordRolesSettings.BotOwnerId}>"

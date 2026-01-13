@@ -45,11 +45,11 @@ public class DiscordWebhookAlertManager(
     private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
 
-    private static readonly Counter _discordWebhookAlertCounter = Metrics.CreateCounter(
+    private static readonly Counter DiscordWebhookAlertCounter = Metrics.CreateCounter(
         "discord_webhook_alert_total",
         "Total number of alerts sent to Discord"
     );
-    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = Metrics.CreateCounter(
+    private static readonly Counter DiscordWebhookAlertsWithAttachmentsCounter = Metrics.CreateCounter(
         "discord_webhook_alerts_with_attachments_total",
         "Total number of alerts sent to Discord with attachments"
     );
@@ -62,7 +62,7 @@ public class DiscordWebhookAlertManager(
 
         if (!_globalSettings.DiscordWebhookAlertingEnabled) return;
 
-        _discordWebhookAlertCounter.Inc();
+        DiscordWebhookAlertCounter.Inc();
 
         color ??= Color.Red;
 
@@ -70,7 +70,7 @@ public class DiscordWebhookAlertManager(
         var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
 
         var content = string.Empty;
-        if (_discordRolesSettings.AlertRoleId != default(ulong))
+        if (_discordRolesSettings.AlertRoleId != 0)
             content = $"<@&{_discordRolesSettings.AlertRoleId}>";
 
         using var client = _httpClientFactory.CreateClient();
@@ -97,11 +97,12 @@ public class DiscordWebhookAlertManager(
 
         multipartContent.Add(new StringContent(json, Encoding.UTF8, "application/json"), "payload_json");
 
-        if (attachments?.Any() ?? false)
+        var fileAttachments = attachments as FileAttachment[] ?? attachments!.ToArray();
+        if (fileAttachments.Length != 0)
         {
-            _discordWebhookAlertsWithAttachmentsCounter.Inc();
+            DiscordWebhookAlertsWithAttachmentsCounter.Inc();
 
-            foreach (var attachment in attachments)
+            foreach (var attachment in fileAttachments)
                 multipartContent.Add(new StreamContent(attachment.Stream), attachment.FileName, attachment.FileName);
         }
 

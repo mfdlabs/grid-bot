@@ -1,4 +1,6 @@
-﻿namespace Grid.Bot.Utility;
+﻿using System;
+
+namespace Grid.Bot.Utility;
 
 using System.IO;
 using System.Linq;
@@ -15,21 +17,21 @@ using Client;
 /// </summary>
 public partial class LuaUtility : ILuaUtility
 {
-    private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
-    private const string _luaVmResource = "Grid.Bot.Lua.LuaVMTemplate.lua";
+    private static readonly Assembly Assembly = Assembly.GetExecutingAssembly();
+    private const string LuaVmResource = "Grid.Bot.Lua.LuaVMTemplate.lua";
 
     [GeneratedRegex(@"{{(\d{1,2})}}", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex FormatPartRegex();
 
 
-    private static readonly string _LuaVM;
+    private static readonly string LuaVm;
 
     static LuaUtility()
     {
-        using var stream = _assembly.GetManifestResourceStream(_luaVmResource);
-        using var reader = new StreamReader(stream);
+        using var stream = Assembly.GetManifestResourceStream(LuaVmResource);
+        using var reader = new StreamReader(stream ?? throw new InvalidOperationException());
 
-        _LuaVM = FixFormatString(reader.ReadToEnd());
+        LuaVm = FixFormatString(reader.ReadToEnd());
     }
 
     private static string FixFormatString(string input)
@@ -37,30 +39,32 @@ public partial class LuaUtility : ILuaUtility
         input = input.Replace("{", "{{");
         input = input.Replace("}", "}}");
 
-        input = FormatPartRegex().Replace(input, (m) => { return $"{{{m.Groups[1]}}}"; });
+        input = FormatPartRegex().Replace(input, (m) => $"{{{m.Groups[1]}}}");
 
         return input;
     }
 
-    /// <inheritdoc cref="ILuaUtility.LuaVMTemplate"/>
-    public string LuaVMTemplate => _LuaVM;
+    /// <inheritdoc cref="ILuaUtility.LuaVmTemplate"/>
+    public string LuaVmTemplate => LuaVm;
 
     /// <inheritdoc cref="ILuaUtility.ParseResult(IEnumerable{LuaValue})"/>
     public (string result, ReturnMetadata metadata) ParseResult(IEnumerable<LuaValue> result)
     {
-        if (result.Count() == 1)
+        var luaValues = result as LuaValue[] ?? result.ToArray();
+        
+        if (luaValues.Length != 1)
+            return (
+                (string)Lua.ConvertLua(luaValues.FirstOrDefault()),
+                JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(luaValues.ElementAtOrDefault(1)))
+            );
+        
+        // Legacy case, where LuaVM is not enabled.
+
+        var mockMetadata = new ReturnMetadata
         {
-            // Legacy case, where LuaVM is not enabled.
+            Success = true
+        };
 
-            var mockMetadata = new ReturnMetadata();
-            mockMetadata.Success = true;
-
-            return ((string)Lua.ConvertLua(result.First()), mockMetadata);
-        }
-
-        return (
-            (string)Lua.ConvertLua(result.FirstOrDefault()),
-            JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(result.ElementAtOrDefault(1)))
-        );
+        return ((string)Lua.ConvertLua(luaValues.First()), mockMetadata);
     }
 }

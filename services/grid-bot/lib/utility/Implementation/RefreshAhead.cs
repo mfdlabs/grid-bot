@@ -9,17 +9,17 @@ using System.Threading;
 /// </summary>
 public class RefreshAhead<T> : IDisposable
 {
-    private DateTime _LastRefresh = DateTime.MinValue;
-    private bool _RunningRefresh;
-    private TimeSpan _RefreshInterval;
+    private DateTime _lastRefresh;
+    private bool _runningRefresh;
+    private TimeSpan _refreshInterval;
 
-    private readonly Timer _RefreshTimer;
-    private readonly Func<T, T> _RefreshDelegate;
+    private readonly Timer _refreshTimer;
+    private readonly Func<T, T> _refreshDelegate;
 
     /// <summary>
     /// Gets the interval since refresh.
     /// </summary>
-    public TimeSpan IntervalSinceRefresh => DateTime.Now.Subtract(_LastRefresh);
+    public TimeSpan IntervalSinceRefresh => DateTime.Now.Subtract(_lastRefresh);
 
     /// <summary>
     /// Gets the currently cached value.
@@ -56,14 +56,14 @@ public class RefreshAhead<T> : IDisposable
     /// <exception cref="ArgumentNullException"><paramref name="refreshDelegate"/> is <see langword="null"/>.</exception>
     public RefreshAhead(T initialValue, TimeSpan refreshInterval, Func<T, T> refreshDelegate)
     {
-        _RefreshInterval = refreshInterval;
-        _RefreshDelegate = refreshDelegate ?? throw new ArgumentNullException(nameof(refreshDelegate));
+        _refreshInterval = refreshInterval;
+        _refreshDelegate = refreshDelegate ?? throw new ArgumentNullException(nameof(refreshDelegate));
 
         Value = initialValue;
-        _LastRefresh = DateTime.UtcNow;
+        _lastRefresh = DateTime.UtcNow;
 
         var refreshIntervalInMilliseconds = (int)refreshInterval.TotalMilliseconds;
-        _RefreshTimer = new Timer(_ => Refresh(), null, refreshIntervalInMilliseconds, refreshIntervalInMilliseconds);
+        _refreshTimer = new Timer(_ => Refresh(), null, refreshIntervalInMilliseconds, refreshIntervalInMilliseconds);
     }
 
     /// <summary>
@@ -72,12 +72,12 @@ public class RefreshAhead<T> : IDisposable
     /// <param name="newRefreshInterval">The new refresh interval.</param>
     public void SetRefreshInterval(TimeSpan newRefreshInterval)
     {
-        var timeSinceLastRefresh = DateTime.UtcNow - _LastRefresh;
+        var timeSinceLastRefresh = DateTime.UtcNow - _lastRefresh;
         var nextRunTime = newRefreshInterval - timeSinceLastRefresh;
         if (nextRunTime.TotalMilliseconds < 0.0) nextRunTime = TimeSpan.Zero;
 
-        _RefreshTimer.Change(nextRunTime, newRefreshInterval);
-        _RefreshInterval = newRefreshInterval;
+        _refreshTimer.Change(nextRunTime, newRefreshInterval);
+        _refreshInterval = newRefreshInterval;
     }
 
     /// <summary>
@@ -85,16 +85,16 @@ public class RefreshAhead<T> : IDisposable
     /// </summary>
     public void Refresh()
     {
-        if (_RunningRefresh) return;
+        if (_runningRefresh) return;
 
-        _RunningRefresh = true;
+        _runningRefresh = true;
 
-        bool refreshTimer = true;
+        var refreshTimer = true;
         try
         {
-            Value = _RefreshDelegate.Invoke(Value);
+            Value = _refreshDelegate.Invoke(Value);
 
-            _LastRefresh = DateTime.UtcNow;
+            _lastRefresh = DateTime.UtcNow;
         }
         catch (ThreadAbortException)
         {
@@ -108,15 +108,15 @@ public class RefreshAhead<T> : IDisposable
         }
         finally
         {
-            _RunningRefresh = false;
+            _runningRefresh = false;
 
             if (refreshTimer)
-                _RefreshTimer.Change(_RefreshInterval, _RefreshInterval);
+                _refreshTimer.Change(_refreshInterval, _refreshInterval);
         }
     }
 
     /// <summary>
-    /// Constructs the and populates a new instance of <see cref="RefreshAhead{T}"/>.
+    /// Constructs and populates a new instance of <see cref="RefreshAhead{T}"/>.
     /// </summary>
     /// <param name="refreshInterval">The refresh interval.</param>
     /// <param name="refreshDelegate">The refresh delegate.</param>
@@ -125,7 +125,7 @@ public class RefreshAhead<T> : IDisposable
         => ConstructAndPopulate(refreshInterval, _ => refreshDelegate());
 
     /// <summary>
-    /// Constructs the and populates a new instance of <see cref="RefreshAhead{T}"/>.
+    /// Constructs and populates a new instance of <see cref="RefreshAhead{T}"/>.
     /// </summary>
     /// <param name="refreshInterval">The refresh interval.</param>
     /// <param name="refreshDelegate">The refresh delegate.</param>
@@ -140,7 +140,7 @@ public class RefreshAhead<T> : IDisposable
     {
         GC.SuppressFinalize(this);
 
-        _RefreshTimer?.Dispose();
+        _refreshTimer?.Dispose();
     }
 
     #endregion IDisposable Members

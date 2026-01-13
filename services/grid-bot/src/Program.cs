@@ -1,4 +1,5 @@
-﻿namespace Grid.Bot;
+﻿// ReSharper disable ConditionIsAlwaysTrueOrFalse
+namespace Grid.Bot;
 
 using System;
 using System.IO;
@@ -49,15 +50,12 @@ public static class Program
             if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
                 Runner.ReportError(e.ExceptionObject as Exception);
 
-            if (e.ExceptionObject is AggregateException aggregate)
-            {
-                if (aggregate.InnerExceptions.Any(x => x is InvalidOperationException))
-                {
-                    Console.WriteLine("Press any key to exit...");
-                    Console.ReadKey(true);
-                    Environment.Exit(1);
-                }
-            }
+            if (e.ExceptionObject is not AggregateException aggregate) return;
+            if (!aggregate.InnerExceptions.Any(x => x is InvalidOperationException)) return;
+            
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey(true);
+            Environment.Exit(1);
         };
 
         Runner.Invoke(args);

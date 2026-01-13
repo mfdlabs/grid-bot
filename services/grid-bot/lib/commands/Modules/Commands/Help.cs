@@ -2,8 +2,6 @@ namespace Grid.Bot.Commands.Public;
 
 using System;
 using System.Linq;
-using System.Reflection;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -43,7 +41,7 @@ public class Help : ModuleBase
         CommandsSettings commandsSettings
     )
     {
-        ArgumentNullException.ThrowIfNull(commandService, nameof(commandService));
+        ArgumentNullException.ThrowIfNull(commandService);
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
         _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
 
@@ -55,7 +53,7 @@ public class Help : ModuleBase
     {
         foreach (var module in commandService.Modules)
         {
-            bool isGrouped = !string.IsNullOrEmpty(module.Group);
+            var isGrouped = !string.IsNullOrEmpty(module.Group);
             var aliases = new HashSet<string>();
 
             if (isGrouped)
@@ -79,7 +77,7 @@ public class Help : ModuleBase
                 var title = module.Group;
 
                 if (module.Aliases.Skip(1).Count() > 1)
-                    title += string.Format(" - {0}", module.Aliases.Skip(1).Join(", "));
+                    title += $" - {module.Aliases.Skip(1).Join(", ")}";
 
                 builder.WithTitle(title);
 
@@ -91,34 +89,35 @@ public class Help : ModuleBase
                     {
                         var fieldName = command.Name;
 
-                        var commandAliases = command.Aliases.Select(alias => alias.Split(' ').ElementAt(1)).Skip(1).Distinct();
-                        if (commandAliases.Count() > 1)
-                            fieldName += string.Format(" - {0}", commandAliases.Join(", "));
+                        var commandAliases = command.Aliases
+                            .Select(alias => alias.Split(' ').ElementAt(1))
+                            .Skip(1)
+                            .Distinct()
+                            .ToArray();
+                        
+                        if (commandAliases.Length > 1)
+                            fieldName += $" - {commandAliases.Join(", ")}";
 
                         field.WithName(fieldName);
 
                         var fieldValue = "";
 
                         if (command.Parameters.Count > 0)
-                            fieldValue += string.Format(
-                                "Command Arguments:\n{0}{1} {2} ",
-                                commandsSettings.Prefix,
-                                module.Group,
-                                command.Name
-                            );
+                            fieldValue +=
+                                $"Command Arguments:\n{commandsSettings.Prefix}{module.Group} {command.Name} ";
 
                         foreach (var parameter in command.Parameters)
                         {
                             if (parameter.IsOptional)
-                                fieldValue += string.Format("<*{0}*>", parameter.Name);
+                                fieldValue += $"<*{parameter.Name}*>";
                             else
-                                fieldValue += string.Format("<***{0}***>", parameter.Name);
+                                fieldValue += $"<***{parameter.Name}***>";
 
                             if (parameter.IsOptional)
                                 if (parameter.DefaultValue is null || (parameter.DefaultValue is string str && string.IsNullOrEmpty(str)))
                                     fieldValue += "?";
                                 else
-                                    fieldValue += string.Format("[=*{0}*]", parameter.DefaultValue);
+                                    fieldValue += $"[=*{parameter.DefaultValue}*]";
 
                             if (parameter.IsRemainder)
                                 fieldValue += "... ";
@@ -127,7 +126,7 @@ public class Help : ModuleBase
                         }
 
                         if (!string.IsNullOrEmpty(command.Summary))
-                            fieldValue += string.Format("\n\n{0}", command.Summary);
+                            fieldValue += $"\n\n{command.Summary}";
 
                         field.WithValue(fieldValue);
                     });
@@ -139,31 +138,27 @@ public class Help : ModuleBase
                 var title = command.Name;
 
                 if (command.Aliases.Skip(1).Count() > 1)
-                    title += string.Format(" - {0}", command.Aliases.Skip(1).Join(", "));
+                    title += $" - {command.Aliases.Skip(1).Join(", ")}";
 
                 builder.WithTitle(title);
 
                 var description = "";
 
                 if (command.Parameters.Count > 0)
-                    description += string.Format(
-                        "Command Arguments:\n{0}{1} ",
-                        commandsSettings.Prefix,
-                        command.Name
-                    );
+                    description += $"Command Arguments:\n{commandsSettings.Prefix}{command.Name} ";
 
                 foreach (var parameter in command.Parameters)
                 {
                     if (parameter.IsOptional)
-                        description += string.Format("<*{0}*>", parameter.Name);
+                        description += $"<*{parameter.Name}*>";
                     else
-                        description += string.Format("<***{0}***>", parameter.Name);
+                        description += $"<***{parameter.Name}***>";
 
                     if (parameter.IsOptional)
                         if (parameter.DefaultValue is null || (parameter.DefaultValue is string str && string.IsNullOrEmpty(str)))
                             description += "?";
                         else
-                            description += string.Format("[=*{0}*]", parameter.DefaultValue);
+                            description += $"[=*{parameter.DefaultValue}*]";
 
                     if (parameter.IsRemainder)
                         description += "... ";
@@ -172,7 +167,7 @@ public class Help : ModuleBase
                 }
 
                 if (!string.IsNullOrEmpty(command.Summary))
-                    description += string.Format("\n\n{0}", command.Summary);
+                    description += $"\n\n{command.Summary}";
 
                 builder.WithDescription(description);
             }
@@ -223,7 +218,7 @@ public class Help : ModuleBase
 
         var embeds = new List<EmbedBuilder>();
 
-        for (int i = 1; i <= _aliasesToEmbeds.Count; i++)
+        for (var i = 1; i <= _aliasesToEmbeds.Count; i++)
         {
             var (aliases, embed, role) = _aliasesToEmbeds.ElementAt(i - 1);
             if (!_adminUtility.IsInRole(Context.User, role)) continue;
@@ -235,13 +230,12 @@ public class Help : ModuleBase
             currentEmbed.AddField(fieldName, embed.Description);
 
             // For every 24 fields, add to the list and reset current embed.
-            if (i % EmbedBuilder.MaxFieldCount == 0)
-            {
-                embeds.Add(currentEmbed);
-                currentEmbed = new EmbedBuilder()
-                    .WithColor(Color.Green)
-                    .WithTimestamp(DateTimeOffset.Now);
-            }
+            if (i % EmbedBuilder.MaxFieldCount != 0) continue;
+            
+            embeds.Add(currentEmbed);
+            currentEmbed = new EmbedBuilder()
+                .WithColor(Color.Green)
+                .WithTimestamp(DateTimeOffset.Now);
         }
 
         if (embeds.Count == 0) embeds.Add(currentEmbed);

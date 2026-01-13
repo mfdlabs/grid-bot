@@ -8,7 +8,7 @@ using Discord;
 public interface IAdminUtility
 {
     /// <summary>
-    /// Is the specified <see cref="IUser"/> in the specifed role?
+    /// Is the specified <see cref="IUser"/> in the specified role?
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>
     /// <param name="role">The <see cref="BotRole"/></param>

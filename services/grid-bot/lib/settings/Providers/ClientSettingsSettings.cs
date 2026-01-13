@@ -69,7 +69,7 @@ public class ClientSettingsSettings : BaseSettingsProvider
     }
 
     /// <summary>
-    /// Gets a command seperated list of API keys that can be used for reading non-permissable applications,
+    /// Gets a command separated list of API keys that can be used for reading non-permissible applications,
     /// as well as executing privalaged commands.
     /// </summary>
     /// <remarks>If this is empty, it will leave endpoints open!!!</remarks>

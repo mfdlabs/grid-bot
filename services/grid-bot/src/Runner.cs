@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,7 +24,7 @@ using ILogger = Logging.ILogger;
 internal static class Runner
 {
 #if DEBUG
-    private const string _debugMode = "WARNING: RUNNING IN DEBUG MODE, THIS CAN POTENTIALLY LEAK MORE INFORMATION " +
+    private const string DebugMode = "WARNING: RUNNING IN DEBUG MODE, THIS CAN POTENTIALLY LEAK MORE INFORMATION " +
                                      "THAN NEEDED, PLEASE RUN THIS ON RELEASE FOR PRODUCTION SCENARIOS.";
 #endif
 
@@ -68,12 +67,13 @@ internal static class Runner
 
     private static void LogStartupInfo(ILogger logger)
     {
-        var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        var informationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         var metadataAttributes = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>();
-
-        var buildTimeStamp = DateTime.Parse(metadataAttributes.FirstOrDefault(a => a.Key == "BuildTimestamp")?.Value ?? "1/1/1970");
-        var gitHash = metadataAttributes.FirstOrDefault(a => a.Key == "GitHash")?.Value ?? "Unknown";
-        var gitBranch = metadataAttributes.FirstOrDefault(a => a.Key == "GitBranch")?.Value ?? "Unknown";
+        var assemblyMetadataAttributes = metadataAttributes as AssemblyMetadataAttribute[] ?? metadataAttributes.ToArray();
+        
+        var buildTimeStamp = DateTime.Parse(assemblyMetadataAttributes.FirstOrDefault(a => a.Key == "BuildTimestamp")?.Value ?? "1/1/1970");
+        var gitHash = assemblyMetadataAttributes.FirstOrDefault(a => a.Key == "GitHash")?.Value ?? "Unknown";
+        var gitBranch = assemblyMetadataAttributes.FirstOrDefault(a => a.Key == "GitBranch")?.Value ?? "Unknown";
 
         logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
     
@@ -81,15 +81,14 @@ internal static class Runner
             "grid_bot_build_info",
             "Grid.Bot build information",
             "version", "git_hash", "git_branch", "build_timestamp"
-        ).WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o")).Set(1);
+        ).WithLabels(informationalVersion ?? "unk", gitHash, gitBranch, buildTimeStamp.ToString("o")).Set(1);
     }
 
-    private static async Task InvokeAsync(IEnumerable<string> args)
+    private static async Task InvokeAsync(string[] args)
     {
-
         if (args.Contains("--write-local-config"))
         {
-            var providers = IServiceCollectionExtensions.GetSettingsProviders();
+            var providers = ServiceCollectionExtensions.GetSettingsProviders();
 
             Logger.Singleton.LogLevel = LogLevel.Verbose;
             Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
@@ -113,7 +112,7 @@ internal static class Runner
         LogStartupInfo(logger);
 
 #if DEBUG
-        logger.Warning(_debugMode);
+        logger.Warning(DebugMode);
 #endif
 
         services.UploadAllLogFilesToBacktrace();

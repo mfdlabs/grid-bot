@@ -11,21 +11,21 @@ public abstract class HttpServerMiddlewareBase
     /// <summary>
     /// Unknown route value.
     /// </summary>
-    protected const string _UnknownRouteLabelValue = "Unknown";
+    protected const string UnknownRouteLabelValue = "Unknown";
 
     /// <summary>
     /// Get endpoint label value for metrics.
     /// </summary>
     /// <param name="context">The <see cref="HttpContext"/></param>
-    /// <returns>The endpoint label value or <see cref="_UnknownRouteLabelValue"/></returns>
+    /// <returns>The endpoint label value or <see cref="UnknownRouteLabelValue"/></returns>
     protected static (string controller, string action) GetControllerAndAction(HttpContext context)
     {
         var routeData = context.GetRouteData();
-        var action = routeData?.Values["action"] as string ?? string.Empty;
-        var controller = routeData?.Values["controller"] as string ?? string.Empty;
+        var action = routeData.Values["action"] as string ?? string.Empty;
+        var controller = routeData.Values["controller"] as string ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(action) || string.IsNullOrWhiteSpace(controller))
-            return (_UnknownRouteLabelValue, _UnknownRouteLabelValue);
+            return (UnknownRouteLabelValue, UnknownRouteLabelValue);
 
         return (controller, action);
     }

@@ -4,7 +4,8 @@ using System;
 
 internal static class SettingsProvidersDefaults
 {
-    private const string _vaultMountEnvVar = "VAULT_MOUNT";
+    private const string VaultMountEnvVar = "VAULT_MOUNT";
+    private const string DefaultMountPath = "grid-bot-settings";
     
     public static string DiscordPath => $"{EnvironmentProvider.EnvironmentName}/discord";
     public static string DiscordRolesPath => $"{EnvironmentProvider.EnvironmentName}/discord-roles";
@@ -22,6 +23,5 @@ internal static class SettingsProvidersDefaults
     public static string WebPath => $"{EnvironmentProvider.EnvironmentName}/web";
     public static string GrpcPath => $"{EnvironmentProvider.EnvironmentName}/grpc";
 
-    public const string DefaultMountPath = "grid-bot-settings";
-    public static string MountPath = Environment.GetEnvironmentVariable(_vaultMountEnvVar) ?? DefaultMountPath;
+    public static readonly string MountPath = Environment.GetEnvironmentVariable(VaultMountEnvVar) ?? DefaultMountPath;
 }

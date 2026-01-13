@@ -88,7 +88,7 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     );
 
     /// <summary>
-    /// Limit for the per user script execution flood checker
+    /// Limit for the per-user script execution flood checker
     /// </summary>
     public int ScriptExecutionPerUserFloodCheckerLimit => GetOrDefault(
         nameof(ScriptExecutionPerUserFloodCheckerLimit),
@@ -96,7 +96,7 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     );
 
     /// <summary>
-    /// Gets the window to check for the per user script execution flood checker.
+    /// Gets the window to check for the per-user script execution flood checker.
     /// </summary>
     public TimeSpan ScriptExecutionPerUserFloodCheckerWindow => GetOrDefault(
         nameof(ScriptExecutionPerUserFloodCheckerWindow),
@@ -104,7 +104,7 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     );
 
     /// <summary>
-    /// Is the per user script execution flood checker enabled?
+    /// Is the per-user script execution flood checker enabled?
     /// </summary>
     public bool ScriptExecutionPerUserFloodCheckingEnabled => GetOrDefault(
         nameof(ScriptExecutionPerUserFloodCheckingEnabled),
@@ -120,7 +120,7 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     );
 
     /// <summary>
-    /// Gets the window to check for the per user render flood checker.
+    /// Gets the window to check for the per-user render flood checker.
     /// </summary>
     public TimeSpan RenderPerUserFloodCheckerWindow => GetOrDefault(
         nameof(RenderPerUserFloodCheckerWindow),

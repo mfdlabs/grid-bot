@@ -50,10 +50,7 @@ public partial class OnMessage(
     IServiceProvider services
 )
 {
-    // language=regex
-    private const string _allowedCommandRegex = @"^[a-zA-Z-_]*$";
-
-    [GeneratedRegex(_allowedCommandRegex, RegexOptions.Singleline)]
+    [GeneratedRegex(@"^[a-zA-Z-_]*$", RegexOptions.Singleline)]
     private static partial Regex GetAllowedCommandRegex();
 
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
@@ -111,7 +108,7 @@ public partial class OnMessage(
     /// </summary>
     public void Initialize()
     {
-        var modules = _commandService.Modules;
+        var modules = _commandService.Modules.ToArray();
 
         _commandAliases.Clear();
 
@@ -149,7 +146,7 @@ public partial class OnMessage(
 
         _totalMessagesProcessed.Inc();
 
-        int argPos = 0;
+        var argPos = 0;
 
         if (!message.HasStringPrefix(_commandsSettings.Prefix, ref argPos, StringComparison.OrdinalIgnoreCase)) return;
 
@@ -213,7 +210,7 @@ public partial class OnMessage(
 
             _totalUsersBypassedMaintenance.WithLabels(
                 message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
+                (message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString()) ?? string.Empty,
                 GetGuildId(message)
             ).Inc();
         }
@@ -222,7 +219,7 @@ public partial class OnMessage(
         {
             _totalBlacklistedUserAttemptedMessages.WithLabels(
                 message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
+                (message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString()) ?? string.Empty,
                 GetGuildId(message)
             ).Inc();
 
@@ -234,7 +231,7 @@ public partial class OnMessage(
 
                 await dmChannel?.SendMessageAsync(
                     "You are blacklisted from using the bot, please contact the bot owner for more information."
-                );
+                )!;
             }
             catch (Exception ex)
             {

@@ -13,7 +13,8 @@ using Prometheus;
 public sealed class HttpServerConcurrentRequestsMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IGauge _ConcurentRequestsGauge = Metrics.CreateGauge("http_server_concurrent_requests_total", "The number of concurrent requests being processed by the server.");
+    
+    private static readonly Gauge ConcurrentRequestsGauge = Metrics.CreateGauge("http_server_concurrent_requests_total", "The number of concurrent requests being processed by the server.");
 
     /// <summary>
     /// Construct a new instance of <see cref="HttpServerConcurrentRequestsMiddleware"/>
@@ -32,7 +33,7 @@ public sealed class HttpServerConcurrentRequestsMiddleware
     /// <returns>An awaitable <see cref="Task"/></returns>
     public async Task Invoke(HttpContext context)
     {
-        using (_ConcurentRequestsGauge.TrackInProgress()) 
+        using (ConcurrentRequestsGauge.TrackInProgress()) 
             await _next(context);
     }
 }

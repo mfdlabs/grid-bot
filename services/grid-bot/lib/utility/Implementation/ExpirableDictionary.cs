@@ -42,13 +42,13 @@ public enum RemovalReason
 /// </summary>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-public class ExpirableDictionary<TKey, TValue> : IDisposable
+public sealed class ExpirableDictionary<TKey, TValue> : IDisposable
     where TValue : class
 {
     private class ExpirableValue
     {
-        private DateTime _Expiration;
-        private DateTime _Updated;
+        private DateTime _expiration;
+        private DateTime _updated;
 
         public TValue Value { get; }
 
@@ -59,22 +59,22 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
             ExtendExpiration(timeToLive);
         }
 
-        public bool IsExpired(DateTime now) => now >= _Expiration;
+        public bool IsExpired(DateTime now) => now >= _expiration;
 
         public void ExtendExpiration(TimeSpan timeToLive)
         {
-            _Updated = DateTime.UtcNow;
-            _Expiration = _Updated + timeToLive;
+            _updated = DateTime.UtcNow;
+            _expiration = _updated + timeToLive;
         }
     }
 
-    private readonly TimeSpan _TraversalInterval;
-    private readonly ExpirationPolicy _ExpirationPolicy;
-    private readonly Func<TimeSpan> _TimeToLiveGetter;
+    private readonly TimeSpan _traversalInterval;
+    private readonly ExpirationPolicy _expirationPolicy;
+    private readonly Func<TimeSpan> _timeToLiveGetter;
 
-    private ConcurrentDictionary<TKey, ExpirableValue> _Entries = new();
-    private Timer _Timer;
-    private bool _Disposed;
+    private ConcurrentDictionary<TKey, ExpirableValue> _entries = new();
+    private Timer _timer;
+    private bool _disposed;
 
     /// <summary>
     /// The event invoked pre traversal of the dictionary.
@@ -97,7 +97,7 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     public event Action<TValue, DateTime> EntryTraversed;
 
     /// <summary>
-    /// Event invoked when a exception occurs.
+    /// Event invoked when an exception occurs.
     /// </summary>
     public event Action<Exception> ExceptionOccurred;
 
@@ -139,17 +139,17 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// <exception cref="ArgumentNullException"><paramref name="entryTimeToLiveGetter"/> cannot be null.</exception>
     public ExpirableDictionary(Func<TimeSpan> entryTimeToLiveGetter, TimeSpan traversalInterval, ExpirationPolicy expirationPolicy)
     {
-        _TraversalInterval = traversalInterval;
-        _ExpirationPolicy = expirationPolicy;
-        _TimeToLiveGetter = entryTimeToLiveGetter ?? throw new ArgumentNullException(nameof(entryTimeToLiveGetter));
+        _traversalInterval = traversalInterval;
+        _expirationPolicy = expirationPolicy;
+        _timeToLiveGetter = entryTimeToLiveGetter ?? throw new ArgumentNullException(nameof(entryTimeToLiveGetter));
 
-        _Timer = new Timer(TraverseAndPurge, null, traversalInterval, traversalInterval);
+        _timer = new Timer(TraverseAndPurge, null, traversalInterval, traversalInterval);
     }
 
     /// <summary>
     /// Clear the dictionary.
     /// </summary>
-    public void Clear() => _Entries = new();
+    public void Clear() => _entries = new();
 
     /// <summary>
     /// Gets or adds to the dictionary.
@@ -159,10 +159,10 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// <returns>The value.</returns>
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
-        var expirableValue = _Entries.GetOrAdd(key, s => new(valueFactory(key), _TimeToLiveGetter()));
+        var expirableValue = _entries.GetOrAdd(key, new ExpirableValue(valueFactory(key), _timeToLiveGetter()));
 
-        if (_ExpirationPolicy == ExpirationPolicy.RenewOnRead)
-            expirableValue.ExtendExpiration(_TimeToLiveGetter());
+        if (_expirationPolicy == ExpirationPolicy.RenewOnRead)
+            expirableValue.ExtendExpiration(_timeToLiveGetter());
 
         return expirableValue.Value;
     }
@@ -172,7 +172,7 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// </summary>
     /// <param name="key">The key.</param>
     /// <param name="value">The value.</param>
-    public void Set(TKey key, TValue value) => _Entries[key] = new(value, _TimeToLiveGetter());
+    public void Set(TKey key, TValue value) => _entries[key] = new(value, _timeToLiveGetter());
 
     /// <summary>
     /// Remove the specified value from the dictionary.
@@ -181,16 +181,14 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// <returns>The removed value.</returns>
     public TValue Remove(TKey key)
     {
-        _Entries.TryRemove(key, out var removed);
+        _entries.TryRemove(key, out var removed);
 
-        if (removed != null)
-        {
-            EntryRemoved?.Invoke(removed.Value, RemovalReason.ExplicitlyRemoved);
+        if (removed == null) return null;
+        
+        EntryRemoved?.Invoke(removed.Value, RemovalReason.ExplicitlyRemoved);
 
-            return removed.Value;
-        }
+        return removed.Value;
 
-        return default(TValue);
     }
 
     /// <summary>
@@ -200,7 +198,7 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     public IEnumerable<TValue> GetValues()
     {
         var now = DateTime.UtcNow;
-        foreach (var kvp in _Entries)
+        foreach (var kvp in _entries)
             if (!kvp.Value.IsExpired(now))
                 yield return kvp.Value.Value;
     }
@@ -212,7 +210,7 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     public IEnumerable<TKey> GetKeys()
     {
         var now = DateTime.UtcNow;
-        foreach (var kvp in _Entries)
+        foreach (var kvp in _entries)
             if (!kvp.Value.IsExpired(now))
                 yield return kvp.Key;
     }
@@ -224,15 +222,12 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// <returns>The value.</returns>
     public TValue Get(TKey key)
     {
-        if (_Entries.TryGetValue(key, out var value))
-        {
-            if (_ExpirationPolicy == ExpirationPolicy.RenewOnRead)
-                value.ExtendExpiration(_TimeToLiveGetter());
+        if (!_entries.TryGetValue(key, out var value)) return null;
+        if (_expirationPolicy == ExpirationPolicy.RenewOnRead)
+            value.ExtendExpiration(_timeToLiveGetter());
 
-            return value.Value;
-        }
+        return value.Value;
 
-        return default(TValue);
     }
 
     /// <summary>
@@ -240,7 +235,7 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// </summary>
     /// <param name="key"></param>
     /// <returns>True if the key exists</returns>
-    public bool ContainsKey(TKey key) => _Entries.ContainsKey(key);
+    public bool ContainsKey(TKey key) => _entries.ContainsKey(key);
 
     /// <inheritdoc cref="IDisposable.Dispose"/>
     public void Dispose()
@@ -253,38 +248,34 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
     /// Dispose of the counter.
     /// </summary>
     /// <param name="disposing">Is disposing?</param>
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
-        if (_Disposed) return;
+        if (_disposed) return;
 
         if (disposing)
-            _Timer?.Dispose();
+            _timer?.Dispose();
 
-        _Timer = null;
-        _Disposed = true;
+        _timer = null;
+        _disposed = true;
     }
 
     private void TraverseAndPurge(object timer)
     {
-        _Timer.Change(-1, -1);
+        _timer.Change(-1, -1);
 
         try
         {
             PreTraversal?.Invoke();
 
             var now = DateTime.UtcNow;
-            foreach (var kvp in _Entries)
+            foreach (var (key, value) in _entries)
             {
-                var value = kvp.Value;
-
                 EntryTraversed?.Invoke(value.Value, now);
 
-                if (value.IsExpired(now))
-                {
-                    _Entries.TryRemove(kvp.Key, out var _);
+                if (!value.IsExpired(now)) continue;
+                _entries.TryRemove(key, out var _);
 
-                    EntryRemoved?.Invoke(value.Value, RemovalReason.Expired);
-                }
+                EntryRemoved?.Invoke(value.Value, RemovalReason.Expired);
             }
 
             TraversalComplete?.Invoke();
@@ -299,10 +290,11 @@ public class ExpirableDictionary<TKey, TValue> : IDisposable
                 }
                 catch
                 {
+                    // ignored
                 }
             }
         }
 
-        _Timer.Change(_TraversalInterval, _TraversalInterval);
+        _timer.Change(_traversalInterval, _traversalInterval);
     }
 }

@@ -16,8 +16,8 @@ using Extensions;
 /// </summary>
 public class ClientSettings
 {
-    private const string _applicationNameQueryParameter = "applicationName";
-    private const string _invalidAppNameError = "The application name is invalid."; // also used for denied access.
+    private const string ApplicationNameQueryParameter = "applicationName";
+    private const string InvalidAppNameError = "The application name is invalid."; // also used for denied access.
 
     private readonly ClientSettingsSettings _settings;
     private readonly ILogger _logger;
@@ -47,10 +47,10 @@ public class ClientSettings
     /// <param name="context">The <see cref="HttpContext" /></param>
     public async Task GetApplicationSettings(HttpContext context)
     {
-        if (!context.Request.Query.TryGetValue(_applicationNameQueryParameter, out var applicationNameValues))
+        if (!context.Request.Query.TryGetValue(ApplicationNameQueryParameter, out var applicationNameValues))
         {
             context.Response.StatusCode = 400;
-            await context.Response.WriteRbxError(_invalidAppNameError);
+            await context.Response.WriteRbxError(InvalidAppNameError);
 
             return;
         }
@@ -62,7 +62,7 @@ public class ClientSettings
             _logger.Warning("User {0} read attempt on non permissible read application ({1})", context.Connection.RemoteIpAddress, applicationName);
 
             context.Response.StatusCode = 403;
-            await context.Response.WriteRbxError(_invalidAppNameError);
+            await context.Response.WriteRbxError(InvalidAppNameError);
 
             return;
         }
@@ -71,7 +71,7 @@ public class ClientSettings
         if (applicationSettings is null)
         {
             context.Response.StatusCode = 400;
-            await context.Response.WriteRbxError(_invalidAppNameError);
+            await context.Response.WriteRbxError(InvalidAppNameError);
 
             return;
         }

@@ -137,7 +137,7 @@ public class Render(
                 return;
             }
 
-            using (stream)
+            await using (stream)
                 await FollowupWithFileAsync(
                     stream,
                     fileName

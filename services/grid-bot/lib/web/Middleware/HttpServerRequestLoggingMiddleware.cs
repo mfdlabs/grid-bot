@@ -32,7 +32,7 @@ public sealed class HttpServerRequestLoggingMiddleware : HttpServerMiddlewareBas
     }
 
     private static string GetEndPointLogEntry(HttpContext context)
-        => string.Format("\"{0} {1}\"", context.Request.Method, context.Request.Path);
+        => $"\"{context.Request.Method} {context.Request.Path}\"";
 
     /// <summary>
     /// Invoke the middleware.

@@ -23,8 +23,7 @@ public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : Pre
     /// </summary>
     public BotRole BotRole { get; } = botRole;
     
-    private const string _permissionDeniedText = "You lack permission to execute this command.";
-
+    private const string PermissionDeniedText = "You lack permission to execute this command.";
 
     /// <inheritdoc cref="PreconditionAttribute.CheckPermissionsAsync(ICommandContext, CommandInfo, IServiceProvider)"/>
     public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo commandInfo, IServiceProvider services)
@@ -34,16 +33,15 @@ public class RequireBotRoleAttribute(BotRole botRole = BotRole.Privileged) : Pre
         return BotRole switch
         {
             BotRole.Privileged => Task.FromResult(!adminUtility.UserIsPrivilaged(context.User)
-                                ? PreconditionResult.FromError(_permissionDeniedText)
+                                ? PreconditionResult.FromError(PermissionDeniedText)
                                 : PreconditionResult.FromSuccess()),
-            BotRole.Administrator => Task.FromResult(!adminUtility.UserIsPrivilaged(context.User)
-                                ? PreconditionResult.FromError(_permissionDeniedText)
+            BotRole.Administrator => Task.FromResult(!adminUtility.UserIsAdmin(context.User)
+                                ? PreconditionResult.FromError(PermissionDeniedText)
                                 : PreconditionResult.FromSuccess()),
             BotRole.Owner => Task.FromResult(!adminUtility.UserIsOwner(context.User)
-                                ? PreconditionResult.FromError(_permissionDeniedText)
+                                ? PreconditionResult.FromError(PermissionDeniedText)
                                 : PreconditionResult.FromSuccess()),
             _ => throw new ArgumentOutOfRangeException(nameof(BotRole), BotRole, null),
         };
-
     }
 }

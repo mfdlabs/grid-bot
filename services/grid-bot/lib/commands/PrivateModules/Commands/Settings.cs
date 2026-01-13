@@ -30,12 +30,16 @@ using System.Text.Json;
 [Group("settings"), Summary("Commands used for managing app settings.")]
 public partial class Settings(IServiceProvider services) : ModuleBase
 {
+    /// <summary>
+    /// Hacky method to perform Configuration conversions
+    /// Removed in the future when Configuration exposes this
+    /// itself.
+    /// </summary>
     private class ProviderStringConverter : BaseProvider
     {
-        public static ProviderStringConverter Singleton = new();
+        public static readonly ProviderStringConverter Singleton = new();
 
         public object ConvertToPub(string value, Type type) => ConvertTo(value, type);
-        public string ConvertFromPub(object value, Type type) => ConvertFrom(value, type);
 
         protected override bool GetRawValue(string key, out string value)
         {
@@ -49,9 +53,9 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
-    private const string _namespace = "Grid.Bot";
-    private static readonly Assembly _settingsAssembly = Assembly.Load("Shared.Settings");
-    private static readonly Assembly _configAssembly = Assembly.Load("Configuration");
+    private const string Namespace = "Grid.Bot";
+    private static readonly Assembly SettingsAssembly = Assembly.Load("Shared.Settings");
+    private static readonly Assembly ConfigAssembly = Assembly.Load("Configuration");
 
     [GeneratedRegex(@"^([a-zA-Z]+)Settings$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private partial Regex GetProviderNameRegex();
@@ -69,8 +73,8 @@ public partial class Settings(IServiceProvider services) : ModuleBase
             .WithColor(Color.Green);            
 
         var isUsingVault = VaultClientFactory.Singleton.GetClient() != null ? "yes" : "no";
-        var settingsAssemblyVersion = _settingsAssembly.GetName().Version;
-        var configurationAssemblyVersion = _configAssembly.GetName().Version;
+        var settingsAssemblyVersion = SettingsAssembly.GetName().Version;
+        var configurationAssemblyVersion = ConfigAssembly.GetName().Version;
 
         var environment = Grid.Bot.EnvironmentProvider.EnvironmentName;
 
@@ -88,7 +92,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     [Command("providers"), Summary("Lists the names of all available providers.")]
     public async Task ListProvidersAsync()
     {
-        var providerTypes = _settingsAssembly.GetTypes().Where(type => type.BaseType == typeof(BaseSettingsProvider));
+        var providerTypes = SettingsAssembly.GetTypes().Where(type => type.BaseType == typeof(BaseSettingsProvider));
         
         var builder = new EmbedBuilder()
             .WithTitle("Providers list")
@@ -96,10 +100,10 @@ public partial class Settings(IServiceProvider services) : ModuleBase
             .WithCurrentTimestamp()
             .WithColor(Color.Green);            
 
-        var desc = "```\n";
-
-        foreach (var provider in providerTypes)
-            desc += $"{GetProviderNameRegex().Match(provider.Name).Groups[1]}\n";
+        var desc = providerTypes.Aggregate(
+            "```\n", 
+            (current, provider) => current + $"{GetProviderNameRegex().Match(provider.Name).Groups[1]}\n"
+        );
 
         desc += "```";
 
@@ -113,7 +117,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     /// Gets the settings for the specified provider.
     /// </summary>
     /// <param name="provider">The name of the provider.</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
+    /// <param name="refresh">Should the provider be refreshed beforehand?</param>
     [Command("all"), Summary("Gets all settings for the specified provider."), Alias("list")]
     public async Task GetAllAsync(string provider, bool refresh = true)
     {
@@ -121,19 +125,11 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         var fullName = $"{provider}settings";
 
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        var type = SettingsAssembly.GetType($"{Namespace}.{fullName}", false, true);
+        if (type == null || _services.GetService(type) is not BaseSettingsProvider instance)
         {
             await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
         
-            return;
-        }
-
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
             return;
         }
 
@@ -157,7 +153,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     /// </summary>
     /// <param name="provider">The name of the provider</param>
     /// <param name="settingName">The name of the setting</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
+    /// <param name="refresh">Should the provider be refreshed beforehand?</param>
     [Command("get"), Summary("Get the value of the specified setting.")]
     public async Task GetSettingAsync(string provider, string settingName, bool refresh = true)
     {
@@ -165,19 +161,11 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         var fullName = $"{provider}settings";
 
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        var type = SettingsAssembly.GetType($"{Namespace}.{fullName}", false, true);
+        if (type == null || _services.GetService(type) is not BaseSettingsProvider instance)
         {
             await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
         
-            return;
-        }
-
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
             return;
         }
 
@@ -191,7 +179,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         if (refresh) instance.Refresh();
 
-        var value = property.GetMethod.Invoke(instance, []);
+        var value = property.GetMethod?.Invoke(instance, []);
         if (value is not string) value = JsonConvert.SerializeObject(value);
         if (string.IsNullOrEmpty(value as string)) value = "(empty)";
 
@@ -212,7 +200,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     /// <param name="provider">The name of the provider</param>
     /// <param name="settingName">The name of the setting</param>
     /// <param name="newValue">The new value of the setting</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
+    /// <param name="refresh">Should the provider be refreshed beforehand?</param>
     [Command("set"), Summary("Sets the specified setting to the specified value.")]
     public async Task SetSettingAsync(string provider, string settingName, string newValue = "", bool refresh = true)
     {
@@ -220,19 +208,11 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         var fullName = $"{provider}settings";
 
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        var type = SettingsAssembly.GetType($"{Namespace}.{fullName}", false, true);
+        if (type == null || _services.GetService(type) is not BaseSettingsProvider instance)
         {
             await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
         
-            return;
-        }
-
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
             return;
         }
 
@@ -246,10 +226,10 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         if (refresh) instance.Refresh();
 
-        var value = property.GetMethod.Invoke(instance, []);
+        var value = property.GetMethod?.Invoke(instance, []);
         var converted = ProviderStringConverter.Singleton.ConvertToPub(newValue, property.PropertyType);
 
-        if (value.Equals(converted))
+        if (value != null && value.Equals(converted))
         {
             await this.ReplyWithReferenceAsync("The value is identical to the current value, not changing!");
 
@@ -259,9 +239,10 @@ public partial class Settings(IServiceProvider services) : ModuleBase
         var attribute = property.GetCustomAttribute<SettingNameAttribute>();
         var name = attribute?.Name ?? property.Name;
 
-        var genericSet = type.GetMethod("Set", BindingFlags.Instance | BindingFlags.Public).MakeGenericMethod([ property.PropertyType ]);
+        var genericSet = type.GetMethod("Set", BindingFlags.Instance | BindingFlags.Public)
+                                    ?.MakeGenericMethod([ property.PropertyType ]);
 
-        genericSet.Invoke(instance, [name, converted]);
+        genericSet?.Invoke(instance, [name, converted]);
 
         if (value is not string) value = JsonConvert.SerializeObject(value);
         if (string.IsNullOrEmpty(value as string)) value = "(empty)";
@@ -298,19 +279,11 @@ public partial class Settings(IServiceProvider services) : ModuleBase
 
         var fullName = $"{provider}settings";
 
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        var type = SettingsAssembly.GetType($"{Namespace}.{fullName}", false, true);
+        if (type == null || _services.GetService(type) is not BaseSettingsProvider instance)
         {
             await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
         
-            return;
-        }
-
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
             return;
         }
 

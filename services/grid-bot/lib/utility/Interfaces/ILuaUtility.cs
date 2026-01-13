@@ -44,7 +44,7 @@ public interface ILuaUtility
     /// <summary>
     /// The template file for the lua-vm.
     /// </summary>
-    string LuaVMTemplate { get; }
+    string LuaVmTemplate { get; }
 
     /// <summary>
     /// Parse the return metadata from the grid-server.
