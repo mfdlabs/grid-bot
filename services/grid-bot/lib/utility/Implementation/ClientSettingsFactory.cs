@@ -270,9 +270,9 @@ public class ClientSettingsFactory : IClientSettingsFactory
             _logger?.Debug("Writiting settings to vault at path '{0}/{1}/{2}'",
                            _mount, _path, applicationName);
 
-            _client.V1.Secrets.KeyValue.V2 .WriteSecretAsync(
+            _client.V1.Secrets.KeyValue.V2.WriteSecretAsync(
                 mountPoint: _mount,
-                path: $"{_path}/${applicationName}",
+                path: $"{_path}/{applicationName}",
                 data: serializedData).Wait();
 
             _client.V1.Secrets.KeyValue.V2.WriteSecretMetadataAsync(
