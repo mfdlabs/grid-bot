@@ -80,6 +80,11 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     /// </summary>
     string GridServerSharedDirectoryAppData { get; set; }
 
+    /// <summary>
+    /// Additonal volume mappings for Grid Server containers.
+    /// </summary>
+    string[] GridServerAdditionalVolumeMappings { get; set; }
+
 #if !GRID_SERVER_FOR_WINE
     /// <summary>
     /// The directory where shared Grid Server cache is stored.

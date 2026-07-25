@@ -203,7 +203,11 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
     private List<Mount> GetContainerMounts()
     {
-        return new List<Mount>()
+        var additionalMounts = new List<Mount>();
+        foreach (var mount in _GridServerSettings.GridServerAdditionalVolumeMappings)
+            additionalMounts.Add(BuildMountFromString(mount));
+
+        var mounts = new List<Mount>()
         {
             new()
             {
@@ -242,17 +246,38 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
             }
         };
 
+        mounts.AddRange(additionalMounts);
+
+        return mounts;
+
         string GetSource(string settingsValue) => string.IsNullOrEmpty(_GridServerSettings.MountPathOverride)
             ? settingsValue
             : _GridServerSettings.MountPathOverride;
+
+        Mount BuildMountFromString(string mountString)
+        {
+            var parts = mountString.Split(':');
+            if (parts.Length != 2)
+                throw new Exception($"Invalid mount string: {mountString}. Expected format: source:target");
+
+            var isReadOnly = parts.Length >= 3 && parts[2].Equals("ro", StringComparison.OrdinalIgnoreCase);
+            
+            return new Mount
+            {
+                Type = "bind",
+                Source = parts[0],
+                Target = parts[1],
+                ReadOnly = isReadOnly
+            };
+        }
     }
 
     private List<string> GetEnvironmentVariables()
     {
         var environmentVariables = new List<string>
         {
-            $"Grid Server_PORT={Port}",
-            $"Grid Server_HTTP_ACCESS_KEY={_GridServerSettings.HttpAccessKey}"
+            $"RCC_PORT={Port}",
+            $"RCC_HTTP_ACCESS_KEY={_GridServerSettings.HttpAccessKey}"
         };
 
         if (_GridServerSettings.GridServerMaxThreads > 0)
@@ -263,7 +288,7 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
             environmentVariables.Add($"MAXIMUM_MEMORY={maxMemory}");
 
         if (!string.IsNullOrWhiteSpace(_GridServerSettings.GridServerSettingsKey))
-            environmentVariables.Add($"Grid Server_SETTINGS_KEY={_GridServerSettings.GridServerSettingsKey}");
+            environmentVariables.Add($"RCC_SETTINGS_KEY={_GridServerSettings.GridServerSettingsKey}");
 
         if (_GridServerSettings.IsPassUdpPortRangeToGridServerEnabled && _GridServerSettings.GridServerContainerStartingPort != null)
             environmentVariables.Add($"UDP_PORT_LOW={_GridServerSettings.GridServerContainerStartingPort.Value}");
