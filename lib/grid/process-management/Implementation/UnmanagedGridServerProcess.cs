@@ -1,7 +1,8 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System.Diagnostics;
 
+using Core;
 using Logging;
 
 /// <summary>
@@ -17,14 +18,14 @@ public sealed class UnmanagedGridServerProcess : IUnmanagedGridServerInstance
     /// <summary>
     /// The container.
     /// </summary>
-    public IGridServerProcess Process { get; }
+    public IRawGridServerProcess Process { get; }
 
     /// <summary>
     /// Contruct a new instance of <see cref="UnmanagedGridServerProcess"/>
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/></param>
-    /// <param name="process">The <see cref="IGridServerProcess"/></param>
-    public UnmanagedGridServerProcess(ILogger logger, IGridServerProcess process)
+    /// <param name="process">The <see cref="IRawGridServerProcess"/></param>
+    public UnmanagedGridServerProcess(ILogger logger, IRawGridServerProcess process)
     {
         _Logger = logger;
 

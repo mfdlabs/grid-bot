@@ -1,7 +1,9 @@
-﻿using System;
+﻿namespace Grid.ProcessManagement.Docker;
+
+using System;
 using System.Collections.Generic;
 
-namespace Grid;
+using Core;
 
 /// <summary>
 /// Represents the Grid Server settings.
@@ -9,9 +11,24 @@ namespace Grid;
 public interface IGridServerDockerSettings : IJobManagerSettings
 {
     /// <summary>
+    /// Gets the base url for Grid Server
+    /// </summary>
+    string BaseUrl { get; set; }
+
+    /// <summary>
+    /// The name of the application.
+    /// </summary>
+    string GridServerApplicationName { get; set; }
+
+    /// <summary>
     /// The name of the container.
     /// </summary>
     string GridServerImageName { get; }
+
+    /// <summary>
+    /// The Grid Server container tag.
+    /// </summary>
+    string GridServerImageTag { get; }
 
     /// <summary>
     /// Docker registry username.
@@ -49,14 +66,51 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     TimeSpan MaxDelayBeforeFetchingNewGridServerContainer { get; }
 
     /// <summary>
-    /// The directory where shared Grid Server logs are stored.
+    /// The directory where shared Grid Server Service logs are stored.
     /// </summary>
     string GridServerSharedDirectoryLogs { get; }
 
     /// <summary>
-    /// The directory where shared Grid Server internal scripts are stored.
+    /// The name of the file to cache app settings in.
     /// </summary>
-    string GridServerSharedDirectoryInternalScripts { get; }
+    string GridServerApplicationSettingsFileName { get; set; }
+
+    /// <summary>
+    /// The directory where shared app data is stored.
+    /// </summary>
+    string GridServerSharedDirectoryAppData { get; set; }
+
+#if !GRID_SERVER_FOR_WINE
+    /// <summary>
+    /// The directory where shared Grid Server cache is stored.
+    /// </summary>
+    string GridServerSharedDirectoryCache { get; set; }
+
+    /// <summary>
+    /// The directory where shared temp files are stored.
+    /// </summary>
+    string GridServerSharedDirectoryTemp { get; set; }
+
+    /// <summary>
+    /// Is Grid Server's UDP port range enabled?
+    /// </summary>
+    bool IsGridServerUdpLimitedPortRangeEnabled { get; set; }
+
+    /// <summary>
+    /// Starting port for Grid Server containers.
+    /// </summary>
+    int? GridServerContainerStartingPort { get; set; }
+
+    /// <summary>
+    /// Ending port for Grid Server containers.
+    /// </summary>
+    int? GridServerContainerEndingPort { get; set; }
+
+    /// <summary>
+    /// Is pass UDP port range to Grid Server enabled?
+    /// </summary>
+    bool IsPassUdpPortRangeToGridServerEnabled { get; set; }
+#endif
 
     /// <summary>
     /// The amount of cores to reserve per Grid Server instance.
@@ -69,11 +123,6 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     long GridServerMaxMemoryInBytes { get; }
 
     /// <summary>
-    /// The maximum amount of Grid Server threads.
-    /// </summary>
-    int GridServerMaxThreads { get; }
-
-    /// <summary>
     /// Envrionment variables to be passed into containers.
     /// </summary>
     IDictionary<string, string> GridServerEnvironmentVariables { get; }
@@ -82,11 +131,6 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     /// The Grid Server access key.
     /// </summary>
     string HttpAccessKey { get; }
-
-    /// <summary>
-    /// The Grid Server container tag.
-    /// </summary>
-    string GridServerImageTag { get; }
 
     /// <summary>
     /// Primary DNS server for Grid Server containers.

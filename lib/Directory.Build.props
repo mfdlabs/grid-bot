@@ -39,8 +39,6 @@
     <DebugType>portable</DebugType>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
-    <PackageId>mfdlabs.$(MSBuildProjectName)</PackageId>
   </PropertyGroup>
 
   <ItemGroup Label="TestReferences" Condition="'$(IsTestProject)' == 'true'">
@@ -59,14 +57,5 @@
 
   <ItemGroup>
     <None Include="$(RootDirectory)LICENSE" Pack="true" PackagePath="" />
-  </ItemGroup>
-
-  <!-- Readme -->
-  <PropertyGroup>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

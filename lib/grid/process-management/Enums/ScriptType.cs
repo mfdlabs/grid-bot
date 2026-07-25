@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 /// <summary>
 /// Represents the type of script.

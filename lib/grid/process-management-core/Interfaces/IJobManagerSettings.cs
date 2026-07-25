@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 using System;
 
@@ -27,6 +27,7 @@ public interface IJobManagerSettings
     /// </summary>
     int ReadyInstancesToKeepInReserve { get; }
 
+
     /// <summary>
     /// The maximum amount of start attempts for an Grid Server instance.
     /// </summary>
@@ -36,4 +37,59 @@ public interface IJobManagerSettings
     /// The maximum amount of time to wait for the Grid Server SOAP port to become available.
     /// </summary>
     TimeSpan GridServerWaitForTcpSleepInterval { get; }
+
+    /// <summary>
+    /// The Grid Server application settings name.
+    /// </summary>
+    string GridServerSettingsApplicationName { get; set; }
+
+    /// <summary>
+    /// The Grid Server applicatiom bucket name.
+    /// </summary>
+    string GridServerSettingsBucketName { get; set; }
+
+    /// <summary>
+    /// The Grid Server application settings file path.
+    /// </summary>
+    string GridServerApplicationSettingsFilePath { get; set; }
+
+    /// <summary>
+    /// The valid window in which to update application settings.
+    /// </summary>
+    TimeSpan GridServerApplicationSettingsValidWindow { get; set; }
+
+    /// <summary>
+    /// Grid Server max threads.
+    /// </summary>
+    public int GridServerMaxThreads { get; set; }
+
+    /// <summary>
+    /// Is Grid Server CPU allocation check enabled.
+    /// </summary>
+    public bool IsGridServerCpuAllocationCheckEnabled { get; set; }
+
+    /// <summary>
+    /// Is Grid Server threads allocation check enabled?
+    /// </summary>
+    public bool IsGridServerThreadsAllocationCheckEnabled { get; set; }
+
+    /// <summary>
+    /// Is Grid Server memory allocation check enabled?
+    /// </summary>
+    public bool IsGridServerMemoryAllocationCheckEnabled { get; set; }
+
+    /// <summary>
+    /// Grid Server CPU over-allocation ratio.
+    /// </summary>
+    public double GridServerCpuOverAllocationRatio { get; set; }
+
+    /// <summary>
+    /// Grid Server threads over-allocation ratio.
+    /// </summary>
+    public double GridServerThreadsOverAllocationRatio { get; set; }
+
+    /// <summary>
+    /// Grid Server memory over-allocation ratio.
+    /// </summary>
+    public double GridServerMemoryOverAllocationRatio { get; set; }
 }

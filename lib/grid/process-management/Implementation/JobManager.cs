@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.IO;
@@ -7,6 +7,10 @@ using System.Diagnostics;
 using System.Collections.Generic;
 
 using Logging;
+using ClientSettings.Client;
+
+using Core;
+using PortManagement;
 
 /// <summary>
 /// Represents the Process implementation for <see cref="JobManagerBase"/>
@@ -22,6 +26,7 @@ public class ProcessJobManager : JobManagerBase
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/></param>
     /// <param name="gridServerSettings">The <see cref="IGridServerProcessSettings"/></param>
+    /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/></param>
     /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/></param>
     /// <param name="resourceAllocationTracker">The <see cref="ResourceAllocationTracker"/></param>
     /// <exception cref="ArgumentNullException">
@@ -31,10 +36,11 @@ public class ProcessJobManager : JobManagerBase
         ILogger logger,
         IPortAllocator portAllocator,
         IGridServerProcessSettings gridServerSettings,
+        IClientSettingsClient clientSettingsClient,
         ResourceAllocationTracker resourceAllocationTracker = null,
         IGridServerFileHelper gridServerFileHelper = null
     )
-        : base(logger, gridServerSettings, portAllocator, resourceAllocationTracker)
+        : base(logger, gridServerSettings, portAllocator, clientSettingsClient, new WindowsSettingsFileWriter(logger, gridServerFileHelper ?? new GridServerFileHelper(gridServerSettings)), resourceAllocationTracker)
     {
         _GridServerSettings = gridServerSettings ?? throw new ArgumentNullException(nameof(gridServerSettings));
 
@@ -81,9 +87,9 @@ public class ProcessJobManager : JobManagerBase
            );
 
     /// <inheritdoc cref="JobManagerBase.GetLatestGridServerVersion"/>
-    protected override string GetLatestGridServerVersion() => ReadRccVersion();
+    protected override string GetLatestGridServerVersion() => ReadGridServerVersion();
 
-    private string ReadRccVersion()
+    private string ReadGridServerVersion()
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(_FileHelper.GetFullyQualifiedGridServerPath());
 
@@ -96,7 +102,7 @@ public class ProcessJobManager : JobManagerBase
 
     /// <inheritdoc cref="JobManagerBase.CreateNewGridServerInstance(int)"/>
     protected override IGridServerInstance CreateNewGridServerInstance(int port)
-        => new GridServerProcess(Logger, port, GridServerVersion, _GridServerSettings, new RawGridServerProcess(), _FileHelper);
+        => new GridServerProcess(Logger, port, GridServerVersion, _GridServerSettings, ApplicationName, BucketName, new RawGridServerProcess(), _FileHelper);
 
     /// <inheritdoc cref="JobManagerBase.FindUnexpectedExitGameJobs"/>
     protected override IReadOnlyCollection<GameJob> FindUnexpectedExitGameJobs()
@@ -130,6 +136,9 @@ public class ProcessJobManager : JobManagerBase
 
         if (unmanagedGridServerProcess.Process.HasExited) return null;
 
+        // This has no detection for application name or bucket name
+        // as there is no way to tag processes
+
         var name = unmanagedGridServerProcess.Process.RawProcess.Id.ToString();
         var port = unmanagedGridServerProcess.Process.EndPoint.Port;
 
@@ -144,6 +153,8 @@ public class ProcessJobManager : JobManagerBase
             port,
             GetVersion(),
             _GridServerSettings,
+            ApplicationName,
+            BucketName,
             unmanagedGridServerProcess.Process,
             _FileHelper
         )
@@ -157,24 +168,27 @@ public class ProcessJobManager : JobManagerBase
     {
     }
 
-    private IReadOnlyCollection<IGridServerProcess> ListRunningProcesses()
+    private IReadOnlyCollection<IRawGridServerProcess> ListRunningProcesses()
     {
         try
         {
             var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(_GridServerSettings.GridServerExecutableName));
+            var newProcesses = new List<IRawGridServerProcess>();
 
-            return processes.Where(p => p.GetProcessEndPoint(out _)).Select(p =>
+            foreach (var process in processes)
             {
-                p.GetProcessEndPoint(out var endpoint);
+                if (!process.GetProcessEndPoint(out var endPoint)) continue;
 
-                return new RawGridServerProcess(p, endpoint);
-            }).ToArray();
+                newProcesses.Add(new RawGridServerProcess(process, endPoint));
+            }
+
+            return newProcesses;
         }
         catch (Exception ex)
         {
             Logger.Error("ListRunningProcesses: {0}", ex);
 
-            return Array.Empty<IGridServerProcess>();
+            return Array.Empty<IRawGridServerProcess>();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.IO;

@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Shared library for interaction with Docker based grid server processes!</Description>
-    <RootNamespace>Grid</RootNamespace>
+
+    <RootNamespace>Grid.ProcessManagement.Docker</RootNamespace>
+    <DefineConstants>$(DefineConstants);GRID_SERVER_FOR_WINE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
+
+    <ProjectReference Include="..\diagnostics\Grid.Diagnostics.csproj" />
     <ProjectReference Include="..\process-management-core\Grid.ProcessManagement.Core.csproj" />
   </ItemGroup>
 </Project>

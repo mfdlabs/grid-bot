@@ -1,4 +1,4 @@
-﻿namespace Grid;
+namespace Grid.Diagnostics;
 
 /// <summary>
 /// Represents physical server info.

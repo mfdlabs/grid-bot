@@ -28,7 +28,16 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetApplicationSettingsAsync(string applicationName, string x_Api_Key);
+        ClientApplicationSettingsResponse GetApplicationSettings(string applicationName, string x_Api_Key = null);
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetApplicationSettingsAsync(string applicationName, string x_Api_Key = null);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
@@ -39,6 +48,43 @@ namespace ClientSettings.Client
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetApplicationSettingsAsync(string applicationName, string x_Api_Key, System.Threading.CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        ClientApplicationSettingsResponse GetRccOnlyClientApplicationSettings(string applicationName, string bucketName);
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetRccOnlyClientApplicationSettingsAsync(string applicationName, string bucketName);
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetRccOnlyClientApplicationSettingsAsync(string applicationName, string bucketName, System.Threading.CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Imports the complete settings dictionary for a Roblox client application.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        void ImportApplicationSetting(string x_Api_Key, ImportClientApplicationSettingsRequest request);
+
         /// <summary>
         /// Imports the complete settings dictionary for a Roblox client application.
         /// </summary>
@@ -55,6 +101,14 @@ namespace ClientSettings.Client
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task ImportApplicationSettingAsync(string x_Api_Key, ImportClientApplicationSettingsRequest request, System.Threading.CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Refreshes the complete settings dictionary for all Roblox client applications.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        void RefreshAllClientApplicationSettings(string x_Api_Key);
 
         /// <summary>
         /// Refreshes the complete settings dictionary for all Roblox client applications.
@@ -80,6 +134,15 @@ namespace ClientSettings.Client
         /// <param name="settingName">The name of the client application setting.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
+        ClientApplicationSettingResponse GetClientApplicationSetting(string applicationName, string settingName);
+
+        /// <summary>
+        /// Returns the setting for a Roblox client application.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="settingName">The name of the client application setting.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<ClientApplicationSettingResponse> GetClientApplicationSettingAsync(string applicationName, string settingName);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -91,6 +154,14 @@ namespace ClientSettings.Client
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<ClientApplicationSettingResponse> GetClientApplicationSettingAsync(string applicationName, string settingName, System.Threading.CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sets the setting for a Roblox client application.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        SetClientApplicationSettingResponse SetClientApplicationSetting(string x_Api_Key, SetClientApplicationSettingRequest request);
 
         /// <summary>
         /// Sets the setting for a Roblox client application.
@@ -141,7 +212,19 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetApplicationSettingsAsync(string applicationName, string x_Api_Key)
+        public virtual ClientApplicationSettingsResponse GetApplicationSettings(string applicationName, string x_Api_Key = null)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await GetApplicationSettingsAsync(applicationName, x_Api_Key, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetApplicationSettingsAsync(string applicationName, string x_Api_Key = null)
         {
             return GetApplicationSettingsAsync(applicationName, x_Api_Key, System.Threading.CancellationToken.None);
         }
@@ -230,6 +313,124 @@ namespace ClientSettings.Client
                 if (disposeClient_)
                     client_.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual ClientApplicationSettingsResponse GetRccOnlyClientApplicationSettings(string applicationName, string bucketName)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await GetRccOnlyClientApplicationSettingsAsync(applicationName, bucketName, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetRccOnlyClientApplicationSettingsAsync(string applicationName, string bucketName)
+        {
+            return GetRccOnlyClientApplicationSettingsAsync(applicationName, bucketName, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the complete settings dictionary for a Roblox client application, restricted to RCC only.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="bucketName">The name of the settings bucket.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ClientApplicationSettingsResponse> GetRccOnlyClientApplicationSettingsAsync(string applicationName, string bucketName, System.Threading.CancellationToken cancellationToken)
+        {
+            if (applicationName == null)
+                throw new System.ArgumentNullException("applicationName");
+
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(_baseUrl != null ? _baseUrl.TrimEnd('/') : "").Append("/v2/settings/secured-settings/").Append(System.Uri.EscapeDataString(ConvertToString(applicationName, System.Globalization.CultureInfo.InvariantCulture)));
+            if (!string.IsNullOrWhiteSpace(bucketName))
+                urlBuilder_.Append("/bucket/").Append(System.Uri.EscapeDataString(ConvertToString(bucketName, System.Globalization.CultureInfo.InvariantCulture)));
+
+            var client_ = new System.Net.Http.HttpClient();
+            var disposeClient_ = true;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ClientApplicationSettingsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("1: The application name is invalid.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 401)
+                        {
+                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("1: The application name is invalid.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Imports the complete settings dictionary for a Roblox client application.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual void ImportApplicationSetting(string x_Api_Key, ImportClientApplicationSettingsRequest request)
+        {
+            System.Threading.Tasks.Task.Run(async () => await ImportApplicationSettingAsync(x_Api_Key, request, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -326,6 +527,17 @@ namespace ClientSettings.Client
         /// <param name="x_Api_Key">API Key for request</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual void RefreshAllClientApplicationSettings(string x_Api_Key)
+        {
+            System.Threading.Tasks.Task.Run(async () => await RefreshAllClientApplicationSettingsAsync(x_Api_Key, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Refreshes the complete settings dictionary for all Roblox client applications.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task RefreshAllClientApplicationSettingsAsync(string x_Api_Key)
         {
             return RefreshAllClientApplicationSettingsAsync(x_Api_Key, System.Threading.CancellationToken.None);
@@ -394,6 +606,18 @@ namespace ClientSettings.Client
                 if (disposeClient_)
                     client_.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Returns the setting for a Roblox client application.
+        /// </summary>
+        /// <param name="applicationName">The name of the client application.</param>
+        /// <param name="settingName">The name of the client application setting.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual ClientApplicationSettingResponse GetClientApplicationSetting(string applicationName, string settingName)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await GetClientApplicationSettingAsync(applicationName, settingName, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -493,6 +717,17 @@ namespace ClientSettings.Client
                 if (disposeClient_)
                     client_.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Sets the setting for a Roblox client application.
+        /// </summary>
+        /// <param name="x_Api_Key">API Key for request</param>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual SetClientApplicationSettingResponse SetClientApplicationSetting(string x_Api_Key, SetClientApplicationSettingRequest request)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await SetClientApplicationSettingAsync(x_Api_Key, request, System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
         }
 
         /// <summary>

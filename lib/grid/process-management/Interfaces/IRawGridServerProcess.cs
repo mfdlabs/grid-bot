@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.Net;
@@ -9,7 +9,7 @@ using Logging;
 /// <summary>
 /// Wrapper for a process owned by the arbiters.
 /// </summary>
-public interface IGridServerProcess : IDisposable
+public interface IRawGridServerProcess : IDisposable
 {
     /// <summary>
     /// The raw process.
@@ -46,8 +46,10 @@ public interface IGridServerProcess : IDisposable
     /// </summary>
     /// <param name="executableName">Name of the executable.</param>
     /// <param name="workingDirectory">The working directory of the executable.</param>
-    /// <param name="port">The port of the grid server.</param>
+    /// <param name="port">The port of the rcc.</param>
+    /// <param name="maxThreads">The max threads</param>
+    /// <param name="maxMemory">The max memory</param>
     /// <param name="args">The optional arguments</param>
     /// <returns>The process</returns>
-    bool Start(string executableName, string workingDirectory = null, int port = 53640, string args = null);
+    bool Start(string executableName, string workingDirectory = null, int port = 53640, int maxThreads = 0, long maxMemory = 0, string args = null);
 }

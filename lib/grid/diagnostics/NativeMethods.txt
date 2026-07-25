@@ -1,0 +1,5 @@
+WIN32_ERROR
+
+GetSystemTimes
+GlobalMemoryStatusEx
+GetLogicalProcessorInformationEx

@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 /// <summary>
 /// Represents a Grid Server Job.

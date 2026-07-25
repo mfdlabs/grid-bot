@@ -1,14 +1,15 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.Net;
 using System.Collections;
-using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
-using PInvoke;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Networking.WinSock;
+using Windows.Win32.NetworkManagement.IpHelper;
 
 #region Managed IP Helper API
 
@@ -54,19 +55,30 @@ internal class TcpRow
 
     private readonly IPEndPoint _localEndPoint;
     private readonly IPEndPoint _remoteEndPoint;
-    private readonly TcpState _state;
+    private readonly MIB_TCP_STATE _state;
     private readonly uint _processId;
 
     #endregion
 
     #region Constructors
 
-    public TcpRow(IPHlpApi.MIB_TCPROW_OWNER_PID tcpRow)
+    public TcpRow(MIB_TCPROW_OWNER_PID tcpRow)
     {
         _state = tcpRow.dwState;
         _processId = tcpRow.dwOwningPid;
-        _localEndPoint = new IPEndPoint(tcpRow.LocalAddr, tcpRow.LocalPort);
-        _remoteEndPoint = new IPEndPoint(tcpRow.RemoteAddr, tcpRow.RemotePort);
+
+        var localPort = PInvoke.ntohs((ushort)tcpRow.dwLocalPort);
+        var remotePort = PInvoke.ntohs((ushort)tcpRow.dwRemotePort);
+
+        if (tcpRow.dwLocalPort <= 0)
+            _localEndPoint = new IPEndPoint(tcpRow.dwLocalAddr, 0);
+        else
+            _localEndPoint = new IPEndPoint(tcpRow.dwLocalAddr, localPort);
+
+        if (tcpRow.dwRemotePort <= 0)
+            _remoteEndPoint = new IPEndPoint(tcpRow.dwRemoteAddr, 0);
+        else
+            _remoteEndPoint = new IPEndPoint(tcpRow.dwRemoteAddr, remotePort);
     }
 
     #endregion
@@ -77,7 +89,7 @@ internal class TcpRow
 
     public IPEndPoint RemoteEndPoint => _remoteEndPoint;
 
-    public TcpState State => _state;
+    public MIB_TCP_STATE State => _state;
 
     public uint ProcessId => _processId;
 
@@ -91,54 +103,51 @@ internal static class ManagedIpHelper
 {
     #region Public Methods
 
-    public static TcpTable GetExtendedTcpTable(bool sorted)
+    public unsafe static TcpTable GetExtendedTcpTable(bool sorted)
     {
         var tcpRows = new List<TcpRow>();
-        
-        var tcpTable = IntPtr.Zero;
-        int tcpTableLength = 0;
 
-        if (
-            IPHlpApi.GetExtendedTcpTable(
-                tcpTable, 
-                ref tcpTableLength, 
-                sorted, 
-                AddressFamily.InterNetwork, 
-                IPHlpApi.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL, 
-                0
-            ) != Win32ErrorCode.ERROR_SUCCESS
-        )
+        void* pTcpTable = null;
+        uint pdwSize = 0;
+
+        try
         {
-            try
+
+            if (
+                PInvoke.GetExtendedTcpTable(
+                    null,
+                    ref pdwSize,
+                    sorted,
+                    (uint)ADDRESS_FAMILY.AF_INET,
+                    TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_LISTENER,
+                    0
+                ) != (uint)WIN32_ERROR.NO_ERROR
+            )
             {
-                tcpTable = Marshal.AllocHGlobal(tcpTableLength);
-                
+                pTcpTable = (void*)Marshal.AllocHGlobal((int)pdwSize);
+
                 if (
-                    IPHlpApi.GetExtendedTcpTable(
-                        tcpTable, 
-                        ref tcpTableLength, 
-                        true, 
-                        AddressFamily.InterNetwork, 
-                        IPHlpApi.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL, 
+                    PInvoke.GetExtendedTcpTable(
+                        pTcpTable,
+                        ref pdwSize,
+                        sorted,
+                        (uint)ADDRESS_FAMILY.AF_INET,
+                        TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_LISTENER,
                         0
-                    ) == Win32ErrorCode.ERROR_SUCCESS
+                    ) == (uint)WIN32_ERROR.NO_ERROR
                 )
                 {
-                    var table = (IPHlpApi.MIB_TCPTABLE_OWNER_PID)Marshal.PtrToStructure(tcpTable, typeof(IPHlpApi.MIB_TCPTABLE_OWNER_PID));
+                    var table = (MIB_TCPTABLE_OWNER_PID*)pTcpTable;
 
-                    var rowPtr = (IntPtr)((long)tcpTable + Marshal.SizeOf(table.dwNumEntries));
-                    for (int i = 0; i < table.dwNumEntries; ++i)
-                    {
-                        tcpRows.Add(new TcpRow((IPHlpApi.MIB_TCPROW_OWNER_PID)Marshal.PtrToStructure(rowPtr, typeof(IPHlpApi.MIB_TCPROW_OWNER_PID))));
-                        rowPtr = (IntPtr)((long)rowPtr + Marshal.SizeOf(typeof(IPHlpApi.MIB_TCPROW_OWNER_PID)));
-                    }
+                    for (int i = 0; i < table->dwNumEntries; ++i)
+                        tcpRows.Add(new TcpRow(table->table[i]));
                 }
             }
-            finally
-            {
-                if (tcpTable != IntPtr.Zero)
-                    Marshal.FreeHGlobal(tcpTable);
-            }
+        }
+        finally
+        {
+            if (pTcpTable != null)
+                Marshal.FreeHGlobal((IntPtr)pTcpTable);
         }
 
         return new TcpTable(tcpRows);

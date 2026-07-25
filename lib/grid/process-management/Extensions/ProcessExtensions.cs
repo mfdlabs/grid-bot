@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.Net;
@@ -6,10 +6,13 @@ using System.Linq;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using PInvoke;
+using Microsoft.Win32.SafeHandles;
+
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.System.Threading;
 
 using Win32Exception = System.ComponentModel.Win32Exception;
-
 
 internal static class ProcessExtensions
 {
@@ -34,41 +37,37 @@ internal static class ProcessExtensions
     {
         if (process == null) return true;
 
-        var hProcess = Kernel32.SafeObjectHandle.Null;
+        SafeFileHandle hProcess = null;
 
         try
         {
-            var processHandle = Kernel32.OpenProcess(Kernel32.ProcessAccess.PROCESS_QUERY_LIMITED_INFORMATION, false, process.Id);
-            if (processHandle == Kernel32.SafeObjectHandle.Null || processHandle.IsInvalid)
+            hProcess = PInvoke.OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION, false, (uint)process.Id);
+            if (hProcess.IsInvalid)
                 return true;
 
-            return Kernel32.GetExitCodeProcess(processHandle.DangerousGetHandle(), out var lpExitCode) && lpExitCode != 259;
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception or COMException)
-        {
-            return false; // Handle either exists and we don't have access, or it doesn't exist. Assume exists.
+            return PInvoke.GetExitCodeProcess(hProcess, out var lpExitCode) && lpExitCode != 259;
         }
         finally
         {
-            if (hProcess != Kernel32.SafeObjectHandle.Null)
+            if (!hProcess.IsInvalid && !hProcess.IsClosed)
                 hProcess.Close();
         }
     }
 
-    public static (bool, Win32ErrorCode) ForceKill(this Process proc)
+    public static (bool, WIN32_ERROR) ForceKill(this Process proc)
     {
         if (proc == null || proc.SafeGetHasExited())
-            return (false, Win32ErrorCode.ERROR_PROCESS_ABORTED);
+            return (false, WIN32_ERROR.ERROR_PROCESS_ABORTED);
 
-        var objHandle = Kernel32.OpenProcess(Kernel32.ProcessAccess.PROCESS_TERMINATE, false, proc.Id);
-        if (objHandle == Kernel32.SafeObjectHandle.Null) 
-            return (false, Kernel32.GetLastError());
+        var hProcess = PInvoke.OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_TERMINATE, false, (uint)proc.Id);
+        if (hProcess.IsInvalid) 
+            return (false, (WIN32_ERROR)Marshal.GetLastWin32Error());
 
-        if (!Kernel32.TerminateProcess(objHandle.DangerousGetHandle(), 0)) 
-            return (false, Kernel32.GetLastError());
+        if (!PInvoke.TerminateProcess(hProcess, 0)) 
+            return (false, (WIN32_ERROR)Marshal.GetLastWin32Error());
 
-        objHandle.Close();
+        hProcess.Close();
 
-        return (true, Win32ErrorCode.NERR_Success);
+        return (true, WIN32_ERROR.NO_ERROR);
     }
 }

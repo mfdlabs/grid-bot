@@ -1,0 +1,12 @@
+WIN32_ERROR
+
+ADDRESS_FAMILY
+GetExtendedTcpTable
+MIB_TCPTABLE_OWNER_PID
+
+PROCESS_ACCESS_RIGHTS
+GetExitCodeProcess
+OpenProcess
+TerminateProcess
+
+ntohs

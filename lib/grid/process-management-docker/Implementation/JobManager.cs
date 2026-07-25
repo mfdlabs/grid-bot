@@ -1,15 +1,20 @@
-﻿namespace Grid;
+﻿using Docker.DotNet;
+using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 
-using Docker.DotNet;
-using Docker.DotNet.Models;
-
 using Random;
 using Logging;
+
+using Core;
+using Diagnostics;
+using PortManagement;
+using ClientSettings.Client;
 
 /// <summary>
 /// Represents the Docker implementation for <see cref="JobManagerBase"/>
@@ -29,25 +34,27 @@ public class DockerJobManager : JobManagerBase
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/></param>
-    /// <param name="rccSettings">The <see cref="IGridServerDockerSettings"/></param>
+    /// <param name="gridServerSettings">The <see cref="IGridServerDockerSettings"/></param>
     /// <param name="random">The <see cref="IRandom"/></param>
+    /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/></param>
     /// <param name="serverInfo">The <see cref="IServerInfo"/></param>
     /// <param name="resourceAllocationTracker">The <see cref="ResourceAllocationTracker"/></param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="rccSettings"/> cannot be null.
+    /// - <paramref name="gridServerSettings"/> cannot be null.
     /// - <paramref name="random"/> cannot be null.
     /// </exception>
     public DockerJobManager(
         ILogger logger,
         IPortAllocator portAllocator,
-        IGridServerDockerSettings rccSettings,
+        IGridServerDockerSettings gridServerSettings,
         IRandom random,
+        IClientSettingsClient clientSettingsClient,
         IServerInfo serverInfo = null,
         ResourceAllocationTracker resourceAllocationTracker = null
     )
-        : base(logger, rccSettings, portAllocator, resourceAllocationTracker)
+        : base(logger, gridServerSettings, portAllocator, clientSettingsClient, resourceAllocationTracker)
     {
-        _GridServerSettings = rccSettings ?? throw new ArgumentNullException(nameof(rccSettings));
+        _GridServerSettings = gridServerSettings ?? throw new ArgumentNullException(nameof(gridServerSettings));
 
         _ActiveContainerFilter = new ContainersListParameters
         {
@@ -61,11 +68,11 @@ public class DockerJobManager : JobManagerBase
 
         _Random = random ?? throw new ArgumentNullException(nameof(random));
         _DockerClient = CreateDockerClient();
-        _DockerAuthority = new GridServerDockerAuthority(Logger, _DockerClient, _GridServerSettings, serverInfo);
+        _DockerAuthority = new GridServerDockerAuthority(Logger, _DockerClient, _GridServerSettings, serverInfo ?? ServerInfo.GetInstance());
     }
 
     /// <inheritdoc cref="JobManagerBase.GetInstanceCount"/>
-    public override int GetInstanceCount() => _DockerClient.Containers.ListContainersAsync(_ActiveContainerFilter, default).Result.Count;
+    public override int GetInstanceCount() => _DockerClient.Containers.ListContainersAsync(_ActiveContainerFilter).Result.Count;
 
     /// <inheritdoc cref="JobManagerBase.GetGridServerInstanceId(string)"/>
     public override string GetGridServerInstanceId(string jobId)
@@ -124,7 +131,7 @@ public class DockerJobManager : JobManagerBase
 
     /// <inheritdoc cref="JobManagerBase.CreateNewGridServerInstance(int)"/>
     protected override IGridServerInstance CreateNewGridServerInstance(int port)
-        => new GridServerDockerContainer(Logger, port, GridServerVersion, _GridServerSettings, _DockerAuthority, _GridServerSettings.GridServerImageName);
+        => new GridServerDockerContainer(Logger, port, GridServerVersion, _GridServerSettings, ApplicationName, BucketName, _DockerAuthority, _GridServerSettings.GridServerImageName);
 
     /// <inheritdoc cref="JobManagerBase.FindUnexpectedExitGameJobs"/>
     protected override IReadOnlyCollection<GameJob> FindUnexpectedExitGameJobs()
@@ -153,7 +160,7 @@ public class DockerJobManager : JobManagerBase
     /// <inheritdoc cref="JobManagerBase.RecoverGridServerInstance(IUnmanagedGridServerInstance)"/>
     protected override IGridServerInstance RecoverGridServerInstance(IUnmanagedGridServerInstance instance)
     {
-        if (!(instance is UnmanagedGridServerDockerContainer dockerContainer))
+        if (instance is not UnmanagedGridServerDockerContainer dockerContainer)
             return null;
 
         if (!dockerContainer.Container.Labels.ContainsKey(GridServerDockerContainer.PortLabel) ||
@@ -164,19 +171,23 @@ public class DockerJobManager : JobManagerBase
         var containerName = dockerContainer.Container.Names[0].Trim('/');
         var version = dockerContainer.Container.Labels[GridServerDockerContainer.GridServerVersionLabel];
         var tcpPort = Convert.ToInt32(dockerContainer.Container.Labels[GridServerDockerContainer.PortLabel]);
+        dockerContainer.Container.Labels.TryGetValue(GridServerDockerContainer.GridServerApplicationNameLabel, out string applicationName);
+        dockerContainer.Container.Labels.TryGetValue(GridServerDockerContainer.GridServerBucketNameLabel, out string bucketName);
 
-        var config = _DockerClient.Containers.InspectContainerAsync(instance.Id, default).Result.HostConfig;
+        var config = _DockerClient.Containers.InspectContainerAsync(instance.Id).Result.HostConfig;
         long maximumMemoryInMegabytes = config.Memory / 1024 / 1024;
         long cpuperiod = config.CPUPeriod;
         long cpuquota = config.CPUQuota;
         double maximumCores = _DockerAuthority.CalculatePhysicalCores(cpuperiod, cpuquota);
 
         Logger.Information(
-            "Found a running GridServer container. Container ID = {0} with name {1} on TCP port: {2} with Grid Server Version: {3}, maximumCores: {4}, maximumMemoryInMegabytes: {5}",
+            "Found a running GridServer container. Container ID = {0} with name {1} on TCP port: {2} with Grid Server Version: {3}, applicationName: {4}, bucketName: {5}, maximumCores: {6}, maximumMemoryInMegabytes: {7}",
             dockerContainer.Container.ID,
             containerName,
             tcpPort,
             version,
+            applicationName,
+            bucketName,
             maximumCores,
             maximumMemoryInMegabytes
         );
@@ -186,6 +197,8 @@ public class DockerJobManager : JobManagerBase
             tcpPort,
             version,
             _GridServerSettings,
+            applicationName,
+            bucketName,
             _DockerAuthority,
             containerName
         )
@@ -206,7 +219,7 @@ public class DockerJobManager : JobManagerBase
     {
         try
         {
-            return _DockerClient.Containers.ListContainersAsync(_ActiveContainerFilter, default)
+            return _DockerClient.Containers.ListContainersAsync(_ActiveContainerFilter)
                 .Result
                 .ToList()
                 .AsReadOnly();

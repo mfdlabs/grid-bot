@@ -1,15 +1,21 @@
-﻿namespace Grid;
+﻿#if !GRID_SERVER_FOR_WINE
+
+using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
+using System.Net;
+using System.Runtime;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Docker.DotNet.Models;
-
 using Logging;
 
-using Commands;
+using Grid;
+using Core;
+using Grid.Commands;
 
 /// <summary>
 /// Represents the Docker implementation of <see cref="GridServerInstanceBase"/>
@@ -22,22 +28,42 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     public const string PortLabel = "port";
 
     /// <summary>
+    /// The Grid Server version label.
+    /// </summary>
+    public const string GridServerVersionLabel = "rcc_version";
+
+    /// <summary>
+    /// The Grid Server application name label.
+    /// </summary>
+    public const string GridServerApplicationNameLabel = "rcc_application_name";
+
+    /// <summary>
+    /// The Grid Server bucket name label.
+    /// </summary>
+    public const string GridServerBucketNameLabel = "rcc_bucket_name";
+
+    /// <summary>
     /// The image name label.
     /// </summary>
     public const string ImageNameLabel = "image_name";
 
     /// <summary>
-    /// The Grid Server version label.
+    /// The Grid Server appdata directory.
     /// </summary>
-    public const string GridServerVersionLabel = "grid_server_version";
+    public const string GridServerAppDataPath = "/opt/roblox/appdata/RCCService";
 
-    private const string _GridServerLogPath = "/opt/grid/.wine/dosdevices/c:/users/root/AppData/Local/Roblox";
-    private const string _GridServerInternalScriptsPath = "/opt/grid/internalscripts";
-    private const string _X11SocketPath = "/tmp/.X11-unix";
+    private const string _GridServerLogPath = "/var/log/RCCService";
+    private const string _GridServerCachePath = "/opt/roblox/cache/RCCService";
+    private const string _GridServerTempPath = "/opt/roblox/tmp/RCCService";
+    private const string _GridServerCoreDumpPath = "/var/tmp";
+    private const string _DefaultGridServerContainerPortRange = "49152 65535";
+
+    private const int _MillisecondToSecond = 1000;
 
     private readonly GridServerDockerAuthority _DockerAuthority;
     private readonly IGridServerDockerSettings _GridServerSettings;
     private readonly string _GridServerImageName;
+    private readonly string _ApplicationSettingsPath;
 
     private bool _Disposed;
 
@@ -67,18 +93,22 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     /// <param name="port">The port</param>
     /// <param name="version">The version.</param>
     /// <param name="gridServerSettings">The <see cref="IGridServerDockerSettings"/></param>
+    /// <param name="applicationName">The Grid Server application name.</param>
+    /// <param name="bucketName">The Grid Server bucket name.</param>
     /// <param name="dockerAuthority">The <see cref="GridServerDockerAuthority"/></param>
-    /// <param name="gridServerImageName">The Grid Server image name.</param>
+    /// <param name="gridServerImageName">The Grid Server Service image name.</param>
     /// <exception cref="ArgumentException"><paramref name="port"/> must be > 0</exception>
     internal GridServerDockerContainer(
         ILogger logger,
         int port,
         string version,
         IGridServerDockerSettings gridServerSettings,
+        string applicationName,
+        string bucketName,
         GridServerDockerAuthority dockerAuthority,
         string gridServerImageName
     )
-        : base(logger, version, port, gridServerSettings)
+        : base(logger, version, port, gridServerSettings, applicationName, bucketName)
     {
         if (port < 1) throw new ArgumentException("Port must be > 0", PortLabel);
 
@@ -86,9 +116,17 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         _DockerAuthority = dockerAuthority;
         _GridServerImageName = gridServerImageName;
 
-        ContainerName = string.Format("grid-server-{0}-gr", Guid.NewGuid());
+        if (!string.IsNullOrEmpty(gridServerSettings.GridServerApplicationSettingsFileName))
+            _ApplicationSettingsPath = $"{GridServerAppDataPath}/{gridServerSettings.GridServerApplicationSettingsFileName}";
 
-        Logger.Information("Constructing GridServerDockerContainer, ContainerName: {0}, Port: {1}, Version: {2}", ContainerName, Port, Version);
+        ContainerName = string.Format("grid-Server-{0}-gr", Guid.NewGuid());
+
+        Logger.Information(
+            "Constructing GridServerDockerContainer, ContainerName = {0}, Port = {1}, Version = {2}",
+            ContainerName,
+            Port,
+            Version
+        );
     }
 
     /// <inheritdoc cref="GridServerInstanceBase.Start"/>
@@ -110,12 +148,9 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         if (string.IsNullOrEmpty(ContainerID))
         {
             Logger.Error(
-                "Failed to Create Container",
-                new
-                {
-                    ContainerName,
-                    Version
-                }
+                "Failed to Create Container, ContainerName = {0}, Version = {1}",
+                ContainerName,
+                Version
             );
 
             return false;
@@ -127,17 +162,18 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     private bool WaitForContainerStart()
     {
         var sw = Stopwatch.StartNew();
+
         try
         {
             WaitForServiceToBecomeAvailable(false, sw);
-            InitializeHA();
+            InitializeHighAvailability();
 
             return true;
         }
         catch (Exception ex)
         {
             var format = string.Format(
-                "Error waiting for Grid Server Service to become available. Container Name: {0}, Version: {1}. Exception: {2}",
+                "Error waiting for Grid Server Service Service to become available. Container Name: {0}, Version: {1}. Exception: {2}",
                 ContainerName,
                 Version,
                 ex
@@ -149,11 +185,10 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         }
     }
 
-    private void InitializeHA()
+    private void InitializeHighAvailability()
     {
-        using var soap = GetSoapInterface(10000);
+        using var soap = GetSoapInterface(60 * _MillisecondToSecond);
 
-#if !PRE_JSON_EXECUTION
         var command = new ExecuteScriptCommand(
             new("highavailability", new Dictionary<string, object>())
         );
@@ -164,18 +199,6 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         };
 
         soap.BatchJobEx(job, command);
-
-#else
-        var lua = ScriptProvider.GetScript("HighAvailability");
-
-        var job = new Client.Job
-        {
-            id = Guid.NewGuid().ToString(),
-            expirationInSeconds = 10000
-        };
-
-        soap.BatchJobEx(job, lua);
-#endif
     }
 
     private List<Mount> GetContainerMounts()
@@ -192,16 +215,30 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
             new()
             {
                 Type = "bind",
-                Source = GetSource(_GridServerSettings.GridServerSharedDirectoryInternalScripts),
+                Source = GetSource(_GridServerSettings.GridServerSharedDirectoryCache),
                 ReadOnly = false,
-                Target = _GridServerInternalScriptsPath
+                Target = _GridServerCachePath
             },
             new()
             {
                 Type = "bind",
-                Source = _X11SocketPath,
-                ReadOnly = true,
-                Target = _X11SocketPath
+                Source = GetSource(_GridServerSettings.GridServerSharedDirectoryTemp),
+                ReadOnly = false,
+                Target = _GridServerTempPath
+            },
+            new()
+            {
+                Type = "bind",
+                Source = GetSource(_GridServerSettings.GridServerSharedDirectoryAppData),
+                ReadOnly = false,
+                Target = GridServerAppDataPath
+            },
+            new()
+            {
+                Type = "bind",
+                Source = _GridServerCoreDumpPath,
+                ReadOnly = false,
+                Target = _GridServerCoreDumpPath
             }
         };
 
@@ -214,12 +251,9 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     {
         var environmentVariables = new List<string>
         {
-            $"PORT={Port}",
-            $"SETTINGS_KEY={_GridServerSettings.GridServerSettingsKey}"
+            $"Grid Server_PORT={Port}",
+            $"Grid Server_HTTP_ACCESS_KEY={_GridServerSettings.HttpAccessKey}"
         };
-
-        if (Environment.GetEnvironmentVariable("DISPLAY") != null)
-            environmentVariables.Add($"DISPLAY={Environment.GetEnvironmentVariable("DISPLAY")}");
 
         if (_GridServerSettings.GridServerMaxThreads > 0)
             environmentVariables.Add($"MAXIMUM_THREADS={_GridServerSettings.GridServerMaxThreads}");
@@ -228,8 +262,14 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         if (maxMemory > 0)
             environmentVariables.Add($"MAXIMUM_MEMORY={maxMemory}");
 
-        if (!string.IsNullOrWhiteSpace(_GridServerSettings.HttpAccessKey))
-            environmentVariables.Add($"HTTP_ACCESS_KEY={_GridServerSettings.HttpAccessKey}");
+        if (!string.IsNullOrWhiteSpace(_GridServerSettings.GridServerSettingsKey))
+            environmentVariables.Add($"Grid Server_SETTINGS_KEY={_GridServerSettings.GridServerSettingsKey}");
+
+        if (_GridServerSettings.IsPassUdpPortRangeToGridServerEnabled && _GridServerSettings.GridServerContainerStartingPort != null)
+            environmentVariables.Add($"UDP_PORT_LOW={_GridServerSettings.GridServerContainerStartingPort.Value}");
+
+        if (_GridServerSettings.IsPassUdpPortRangeToGridServerEnabled && _GridServerSettings.GridServerContainerEndingPort != null)
+            environmentVariables.Add($"UDP_PORT_HIGH={_GridServerSettings.GridServerContainerEndingPort.Value}");
 
         if (_GridServerSettings.GridServerEnvironmentVariables != null)
             foreach (var environmentVariable in _GridServerSettings.GridServerEnvironmentVariables)
@@ -240,13 +280,60 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
     private CreateContainerParameters GetCreateContainerParameters()
     {
-        if (string.IsNullOrEmpty(_GridServerSettings.GridServerSettingsKey))
-            throw new Exception("Unable to start a new Grid Server container, GridServerSettingsKey is set to null or is empty");
+        if (string.IsNullOrEmpty(_GridServerSettings.HttpAccessKey))
+            throw new Exception("Unable to start a new Grid Server container, HttpAccessKey is set to null or is empty");
+
+        if (string.IsNullOrEmpty(_GridServerSettings.BaseUrl))
+            throw new Exception("Unable to start a new Grid Server container, BaseUrl is set to null or is empty");
+
+        var containerParameters = new List<string>()
+        {
+            "--port", Port.ToString(),
+            "--baseUrl", _GridServerSettings.BaseUrl
+        };
+
+        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationName))
+            containerParameters.AddRange(new[] { "--applicationName", _GridServerSettings.GridServerApplicationName });
+
+        if (!string.IsNullOrEmpty(_ApplicationSettingsPath))
+        {
+            Logger.Information("GetCreateContainerParameters. Adding --settingsFile command line option: {0}", _ApplicationSettingsPath);
+
+            containerParameters.AddRange(new[] { "--settingsFile", _ApplicationSettingsPath });
+        }
+
+        var sysctls = new Dictionary<string, string>();
+        if (_GridServerSettings.IsGridServerUdpLimitedPortRangeEnabled)
+            if (_GridServerSettings.GridServerContainerStartingPort != null && _GridServerSettings.GridServerContainerEndingPort != null)
+                if (_GridServerSettings.IsPassUdpPortRangeToGridServerEnabled)
+                {
+                    containerParameters.AddRange(new[] { "--udpPortLow", _GridServerSettings.GridServerContainerStartingPort.Value.ToString() });
+                    containerParameters.AddRange(new[] { "--udpPortHigh", _GridServerSettings.GridServerContainerEndingPort.Value.ToString() });
+
+                    sysctls.Add("net.ipv4.ip_local_port_range", _DefaultGridServerContainerPortRange);
+                }
+                else
+                    sysctls.Add("net.ipv4.ip_local_port_range", $"{_GridServerSettings.GridServerContainerStartingPort} {_GridServerSettings.GridServerContainerEndingPort}");
+            else
+            {
+                if (_GridServerSettings.GridServerContainerStartingPort != null || _GridServerSettings.GridServerContainerEndingPort != null)
+                    throw new Exception(
+                        string.Format(
+                            "ServerVIP data for server {0} is invalid. StartingPort:{1}, EndingPort:{2}",
+                            Dns.GetHostName(),
+                            _GridServerSettings.GridServerContainerStartingPort,
+                            _GridServerSettings.GridServerContainerEndingPort
+                        )
+                    );
+
+                sysctls.Add("net.ipv4.ip_local_port_range", _DefaultGridServerContainerPortRange);
+            }
 
         var parameters = new CreateContainerParameters
         {
             Image = $"{_GridServerImageName}:{Version}",
             Name = ContainerName,
+            Cmd = containerParameters,
             Env = GetEnvironmentVariables()
         };
 
@@ -254,12 +341,15 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
         {
             [PortLabel] = Port.ToString(),
             [GridServerVersionLabel] = Version,
-            [ImageNameLabel] = _GridServerImageName
+            [ImageNameLabel] = _GridServerImageName,
+            [GridServerApplicationNameLabel] = ApplicationName,
+            [GridServerBucketNameLabel] = BucketName
         };
 
         parameters.Labels = labels;
         parameters.HostConfig = new HostConfig
         {
+            CapAdd = new List<string> { "SYS_PTRACE" },
             Mounts = GetContainerMounts(),
             Memory = _GridServerSettings.GridServerMaxMemoryInBytes,
             Ulimits = new List<Ulimit>
@@ -304,9 +394,11 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
     {
         if (_Disposed) return;
 
-        _DockerAuthority.KillContainerAsync(ContainerID).Wait();
+        _DockerAuthority.StopContainerWithRetriesAsync(ContainerID).Wait();
         _DockerAuthority.RemoveContainerWithRetriesAsync(ContainerID).Wait();
 
         _Disposed = true;
     }
 }
+
+#endif
