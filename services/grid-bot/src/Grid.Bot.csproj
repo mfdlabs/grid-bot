@@ -14,28 +14,22 @@
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../lib/grpc/Grid.Bot.Grpc.csproj" />
     <ProjectReference Include="../lib/web/Grid.Bot.Web.csproj" />
-    <ProjectReference Include="..\lib\commands\Shared.Commands.csproj" />
-    <ProjectReference Include="..\lib\events\Shared.Events.csproj" />
-    <ProjectReference Include="..\lib\settings\Shared.Settings.csproj" />
-    <ProjectReference Include="..\lib\utility\Shared.Utility.csproj" />
+    <ProjectReference Include="../lib/commands/Shared.Commands.csproj" />
+    <ProjectReference Include="../lib/events/Shared.Events.csproj" />
+    <ProjectReference Include="../lib/settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../lib/utility/Shared.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Random" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Configuration.Core" Version="1.1.1" />
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/random/random/Random.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/configuration/core/Configuration.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="$(RootDirectory)lib/src/random/random/Random.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/redis/redis/Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/configuration/core/Configuration.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
@@ -50,7 +44,7 @@
     <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(OutDir)" />
 
     <ItemGroup>
-      <SslFiles Include="$(ProjectDir)..\ssl\*" />
+      <SslFiles Include="$(ProjectDir)../ssl/*" />
     </ItemGroup>
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
@@ -61,7 +55,7 @@
     <Copy SourceFiles="$(RootDirectory)README.md" DestinationFolder="$(PublishDir)" />
 
     <ItemGroup>
-      <SslFiles Include="$(ProjectDir)..\ssl\*" />
+      <SslFiles Include="$(ProjectDir)../ssl/*" />
     </ItemGroup>
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />

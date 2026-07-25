@@ -4,12 +4,22 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS;DISCORD_SHARDING_ENABLED;DEBUG_LOGGING_IN_PROD;DEBUG_LOG_WEBSOCKET_CLOSED_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="GridBotPackages">
+    <ProjectReference Include="../commands/Shared.Commands.csproj" />
+    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.17.4" />
@@ -17,18 +27,5 @@
     <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Logging" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="$(RootDirectory)lib/src/logging/logging/Logging.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../commands/Shared.Commands.csproj" />
-    <ProjectReference Include="../settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../utility/Shared.Utility.csproj" />
-  </ItemGroup>
 
 </Project>

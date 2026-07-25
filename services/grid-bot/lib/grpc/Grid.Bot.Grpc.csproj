@@ -4,13 +4,13 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   
-  <ItemGroup>
+  <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
 
   <!-- Protobuf -->
-  <ItemGroup>
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
 
     <PackageReference Include="Google.Protobuf" Version="3.24.0" />

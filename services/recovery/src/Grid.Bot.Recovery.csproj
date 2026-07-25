@@ -13,16 +13,10 @@
     <Description>Recovery executable for the MFDLABS grid-bot.</Description>
   </PropertyGroup> 
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Configuration" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="../../lib/src/configuration/configuration/Configuration.csproj" />
-    <ProjectReference Include="..\..\lib\src\logging\logging\Logging.csproj" />
-    <ProjectReference Include="../../lib/src/networking/networking/Networking.csproj" />
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="$(RootDirectory)proto\grid_bot.proto" GrpcServices="Client" />
+    <Protobuf Include="$(RootDirectory)proto/grid_bot.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

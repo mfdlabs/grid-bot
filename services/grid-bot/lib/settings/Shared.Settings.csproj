@@ -10,38 +10,23 @@
     <DefineConstants>$(DefineConstants);DEBUG_LOGGING_IN_PROD</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management/Grid.ProcessManagement.csproj" />
+
+    <ProjectReference Include="$(RootDirectory)lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Discord.Net.Core" Version="3.17.4" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
-  </ItemGroup>
-
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.Configuration" Version="1.1.1" /> 
-    <PackageReference Include="mfdlabs.Redis" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.1.1" />
-
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Docker" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Core" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement" Version="1.1.1" />
     
-    <PackageReference Include="mfdlabs.Thumbnails.Client" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="$(RootDirectory)lib/src/configuration/configuration/Configuration.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/redis/redis/Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management/Grid.ProcessManagement.csproj" />
-
-    <ProjectReference Include="$(RootDirectory)lib/src/clients/thumbnails-client/Thumbnails.Client.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
