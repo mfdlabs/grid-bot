@@ -10,10 +10,6 @@
 
     <Configurations>debug;release</Configurations>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <LocalBuild>false</LocalBuild>
-  </PropertyGroup>
   
   <PropertyGroup Label="RootDirectory">
     <RootDirectory>$(MSBuildThisFileDirectory)..\</RootDirectory>
@@ -29,7 +25,7 @@
     <RepositoryUrl>https://github.com/mfdlabs/grid-bot</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
-    <Version>$([System.DateTime]::Now.ToString(`yyyy.MM.dd`))</Version>
+    <Version>$([System.DateTime]::Now.ToString(`yyyy.MM.dd+HHmmss`))</Version>
 
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <InformationalVersion Condition="'$(CI)' == 'true'">$(IMAGE_TAG)</InformationalVersion>

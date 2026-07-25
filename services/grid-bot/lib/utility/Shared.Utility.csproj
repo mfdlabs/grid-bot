@@ -8,45 +8,28 @@
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
   
-  <ItemGroup>
+  <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.FileSystem" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.Commands" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.Client" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Logging" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Redis" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.ServiceDiscovery" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Threading" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Users.Client" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Docker" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Grid.ProcessManagement.Core" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Thumbnails.Client" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="$(RootDirectory)lib/src/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/commands/Grid.Commands.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/client/Grid.Client.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/logging/logging/Logging.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/redis/redis/Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/threading/threading/Threading.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/clients/users-client/Users.Client.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/networking/networking/Networking.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/clients/thumbnails-client/Thumbnails.Client.csproj" />
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/commands/Grid.Commands.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/client/Grid.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/threading/threading/Threading.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/clients/users-client/Users.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Backtrace" Version="2.1.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />

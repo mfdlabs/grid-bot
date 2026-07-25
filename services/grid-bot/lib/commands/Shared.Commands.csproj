@@ -9,28 +9,19 @@
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' != 'true' ">
-    <PackageReference Include="mfdlabs.FileSystem" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Core" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.FloodCheckers.Redis" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Text" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Networking" Version="1.1.1" />
-    <PackageReference Include="mfdlabs.Configuration" Version="1.1.1" /> 
+  <ItemGroup Label="CustomPackages">
+    <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/text/text/Text.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages" Condition=" '$(LocalBuild)' == 'true' ">
-    <ProjectReference Include="$(RootDirectory)lib/src/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/floodcheckers/redis/FloodCheckers.Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/text/text/Text.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/src/networking/networking/Networking.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+  <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.17.4" />

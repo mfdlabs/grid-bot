@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Library for interacting with Redis based flood checkers!</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
+    <ProjectReference Include="..\..\redis\redis\Redis.csproj" />
+    <ProjectReference Include="..\core\FloodCheckers.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
+  <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
+  <Project Path="../../lib/logging/logging/Logging.csproj" />
+  <Project Path="../../lib/networking/networking/Networking.csproj" />
+  <Project Path="../../lib/threading/threading/Threading.csproj" />
+  <Project Path="../../lib/vault/vault/Vault.csproj" />
+  <Project Path="src/Grid.Bot.Recovery.csproj">
+    <BuildType Solution="Debug|*" Project="debug" />
+    <BuildType Solution="Release|*" Project="release" />
+  </Project>
+</Solution>

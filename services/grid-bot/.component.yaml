@@ -52,6 +52,7 @@ deployment:
           port: http
           tags:
             - ${{ env.NOMAD_ENVIRONMENT }}
+
             - "traefik.enable=true"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
@@ -60,9 +61,9 @@ deployment:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
 
-        - '/_/_data/grid-bot/scripts:/_/_data/grid-bot/scripts'
-        - '/_/_data/grid-bot/logs:/tmp/mfdlabs/logs'
-        - '/_/_data/grid-bot/rcc-logs:/_/_data/grid-bot/rcc-logs'
+        - '/_/data/grid-bot/scripts:/_/data/grid-bot/scripts'
+        - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
+        - '/_/data/grid-bot/rcc-logs:/_/data/grid-bot/rcc-logs'
       config_maps:
         - destination: secrets/file.env
           env: true
