@@ -91,8 +91,8 @@ public sealed class GridServerProcess : GridServerInstanceBase
         if (_GridServerSettings.VerboseLoggingEnabled)
             arguments.Add("-Verbose");
 
-        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationName))
-            arguments.AddRange(new[] { "-ApplicationName", _GridServerSettings.GridServerApplicationName });
+        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerSettingsApplicationName))
+            arguments.AddRange(new[] { "-ApplicationName", _GridServerSettings.GridServerSettingsApplicationName });
 
         if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationSettingsFileName))
         {

@@ -35,10 +35,5 @@ public interface IGridServerProcessSettings : IJobManagerSettings
     /// <summary>
     /// The name of the file to cache app settings in.
     /// </summary>
-    string GridServerApplicationSettingsFileName { get; set; }
-
-    /// <summary>
-    /// The name of the application.
-    /// </summary>
-    string GridServerApplicationName { get; set; }
+    string GridServerApplicationSettingsFileName { get; }
 }

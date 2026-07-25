@@ -13,12 +13,7 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     /// <summary>
     /// Gets the base url for Grid Server
     /// </summary>
-    string BaseUrl { get; set; }
-
-    /// <summary>
-    /// The name of the application.
-    /// </summary>
-    string GridServerApplicationName { get; set; }
+    string BaseUrl { get; }
 
     /// <summary>
     /// The name of the container.
@@ -73,48 +68,48 @@ public interface IGridServerDockerSettings : IJobManagerSettings
     /// <summary>
     /// The name of the file to cache app settings in.
     /// </summary>
-    string GridServerApplicationSettingsFileName { get; set; }
+    string GridServerApplicationSettingsFileName { get; }
 
     /// <summary>
     /// The directory where shared app data is stored.
     /// </summary>
-    string GridServerSharedDirectoryAppData { get; set; }
+    string GridServerSharedDirectoryAppData { get; }
 
     /// <summary>
     /// Additonal volume mappings for Grid Server containers.
     /// </summary>
-    string[] GridServerAdditionalVolumeMappings { get; set; }
+    string[] GridServerAdditionalVolumeMappings { get; }
 
 #if !GRID_SERVER_FOR_WINE
     /// <summary>
     /// The directory where shared Grid Server cache is stored.
     /// </summary>
-    string GridServerSharedDirectoryCache { get; set; }
+    string GridServerSharedDirectoryCache { get; }
 
     /// <summary>
     /// The directory where shared temp files are stored.
     /// </summary>
-    string GridServerSharedDirectoryTemp { get; set; }
+    string GridServerSharedDirectoryTemp { get; }
 
     /// <summary>
     /// Is Grid Server's UDP port range enabled?
     /// </summary>
-    bool IsGridServerUdpLimitedPortRangeEnabled { get; set; }
+    bool IsGridServerUdpLimitedPortRangeEnabled { get; }
 
     /// <summary>
     /// Starting port for Grid Server containers.
     /// </summary>
-    int? GridServerContainerStartingPort { get; set; }
+    int? GridServerContainerStartingPort { get; }
 
     /// <summary>
     /// Ending port for Grid Server containers.
     /// </summary>
-    int? GridServerContainerEndingPort { get; set; }
+    int? GridServerContainerEndingPort { get; }
 
     /// <summary>
     /// Is pass UDP port range to Grid Server enabled?
     /// </summary>
-    bool IsPassUdpPortRangeToGridServerEnabled { get; set; }
+    bool IsPassUdpPortRangeToGridServerEnabled { get; }
 #endif
 
     /// <summary>

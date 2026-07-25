@@ -288,8 +288,8 @@ public sealed class GridServerDockerContainer : GridServerInstanceBase
 
         var containerParameters = new List<string>();
 
-        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationName))
-            containerParameters.AddRange(new[] { "-ApplicationName", _GridServerSettings.GridServerApplicationName });
+        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerSettingsApplicationName))
+            containerParameters.AddRange(new[] { "-ApplicationName", _GridServerSettings.GridServerSettingsApplicationName });
 
         if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationSettingsFileName))
         {
