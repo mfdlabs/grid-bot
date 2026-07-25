@@ -8,36 +8,14 @@
     <LangVersion>10</LangVersion>
   </PropertyGroup>
 
-  <Target Name="AddGitMetadaAssemblyAttributes"
-    BeforeTargets="GetAssemblyAttributes">
-
-    <!--Executes the Git Commands to get the Hash and Branch-->
-    <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true"
-      StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitHash)' == '' " WorkingDirectory="$(RootDirectory)">
-      <Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
-    </Exec>
-    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true"
-      StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitShortHash)' == '' "  WorkingDirectory="$(RootDirectory)">
-      <Output TaskParameter="ConsoleOutput" PropertyName="CommitShortHash" />
-    </Exec>
-    <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true"
-      StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitBranch)' == '' "  WorkingDirectory="$(RootDirectory)">
-      <Output TaskParameter="ConsoleOutput" PropertyName="CommitBranch" />
-    </Exec>
-
-    <ItemGroup>
-      <AssemblyMetadata Include="BuildTimestamp" Value="$([System.DateTime]::UtcNow.ToString(yyyy-MM-ddTHH:mm:ssK))" />
-      <AssemblyMetadata Condition=" $(CommitHash) != '' " Include="GitHash" Value="$(CommitHash)" />
-      <AssemblyMetadata Condition=" $(CommitBranch) != '' " Include="GitBranch" Value="$(CommitBranch)" />
-    </ItemGroup>
-  </Target>
+  <Import Project="$(RootDirectory)targets/git-metadata.targets" Condition="Exists('$(RootDirectory)targets/git-metadata.targets')" />
 
   <PropertyGroup Label="PackageMetadata">
     <Company>MFDLABS</Company>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.ToString(`yyyy`)). All rights reserved.</Copyright>
     <Authors>$(Company);Nikita Petko</Authors>
 
-    <VersionPrefix>1.1.2</VersionPrefix>
+    <Version>$([System.DateTime]::Now.ToString(`yyyy.MM.dd+HHmmss`))</Version>
 
     <RepositoryUrl>https://github.com/mfdlabs/grid-bot-libraries</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

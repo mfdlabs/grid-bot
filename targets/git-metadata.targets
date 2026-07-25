@@ -1,5 +1,5 @@
 <Project>
-    <Target Name="AddGitMetadaAssemblyAttributes"
+    <Target Name="AddGitMetadataAssemblyAttributes"
         BeforeTargets="GetAssemblyAttributes">
 
         <!--Executes the Git Commands to get the Hash and Branch-->
