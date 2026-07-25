@@ -41,14 +41,6 @@ This notice only serves the purpose of giving a clear understanding of project b
 
 The installation of this project is simple, and can go as follows:
 
-- Either through the basic method of cloning the repository and having it fetch dependencies from NuGet by using the solution [grid-bot-bare.sln](./grid-bot-bare.sln).
-- or by cloning the repository with `--recurse-submodules` and then setting the property `LocalBuild` in [Directory.Build.props](./Directory.Build.props) and [shared/Directory.Build.props](./shared/Directory.Build.props), and using the solution [grid-bot.sln](./grid-bot.sln)
-    
-    ```xml
-    <PropertyGroup>
-        <LocalBuild>true</LocalBuild>
-    </PropertyGroup>
-    ```
 
 This repository provides Docker builds at [Docker](https://hub.docker.com/r/mfdlabs/grid-bot).
 

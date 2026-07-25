@@ -1,0 +1,39 @@
+<Solution>
+  <Folder Name="/lib/">
+    <Project Path="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
+    <Project Path="../../lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
+    <Project Path="../../lib/clients/users-client/Users.Client.csproj" />
+    <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
+    <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
+    <Project Path="../../lib/file-system/file-system/FileSystem.csproj" />
+    <Project Path="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
+    <Project Path="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <Project Path="../../lib/grid/client/Grid.Client.csproj" />
+    <Project Path="../../lib/grid/commands/Grid.Commands.csproj" />
+    <Project Path="../../lib/grid/port-management/Grid.PortManagement.csproj" />
+    <Project Path="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
+    <Project Path="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <Project Path="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
+    <Project Path="../../lib/hashing/hashing/Hashing.csproj" />
+    <Project Path="../../lib/logging/logging/Logging.csproj" />
+    <Project Path="../../lib/networking/networking/Networking.csproj" />
+    <Project Path="../../lib/random/random/Random.csproj" />
+    <Project Path="../../lib/redis/redis/Redis.csproj" />
+    <Project Path="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
+    <Project Path="../../lib/text/text/Text.csproj" />
+    <Project Path="../../lib/threading/threading/Threading.csproj" />
+    <Project Path="../../lib/vault/vault/Vault.csproj" />
+  </Folder>
+  <Folder Name="/lib/shared/">
+    <Project Path="lib/commands/Shared.Commands.csproj" />
+    <Project Path="lib/events/Shared.Events.csproj" />
+    <Project Path="lib/grpc/Grid.Bot.Grpc.csproj" />
+    <Project Path="lib/settings/Shared.Settings.csproj" />
+    <Project Path="lib/utility/Shared.Utility.csproj" />
+    <Project Path="lib/web/Grid.Bot.Web.csproj" />
+  </Folder>
+  <Project Path="src/Grid.Bot.csproj">
+    <BuildType Solution="Debug|*" Project="debug" />
+    <BuildType Solution="Release|*" Project="release" />
+  </Project>
+</Solution>
