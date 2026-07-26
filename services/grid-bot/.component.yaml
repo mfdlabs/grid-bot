@@ -65,22 +65,75 @@ deployment:
 
         - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
         - '/_/data/grid-bot/rcc-logs:/_/data/grid-bot/rcc-logs'
-        - '/local/cacert.pem:/_/data/grid-bot/cacert.pem'
 
       artifacts:
         - source: "https://curl.se/ca/cacert.pem"
           destination: "local/cacert-initial.pem"
 
-      config_maps:
-        - destination: local/cacert.pem
+        - destination: local/scripts/00-generate-cacert.sh
           env: false
-          on_change: restart
+          perms: "755"
+          on_change: noop
           data: |
-            {{ file "local/cacert-initial.pem" }}
+            #!/usr/bin/env bash
+            set -euo pipefail
 
-            {{ with secret "pki_int/cert/ca_chain" }}
-            {{ .Data.certificate }}
-            {{ end }}
+            CACERT_INITIAL="/_/data/grid-bot/cacert-initial.pem"
+            CACERT_FINAL="/_/data/grid-bot/cacert.pem"
+
+            : "${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+
+            echo "[pre-script] Fetching Vault issuer chain..."
+
+            CHAIN=$(curl -sf \
+              -H "X-Vault-Token: ${VAULT_TOKEN}" \
+              "${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
+
+            if [[ -z "${CHAIN}" ]]; then
+              echo "[pre-script] ERROR: empty response fetching ca_chain from Vault" >&2
+              exit 1
+            fi
+
+            echo "[pre-script] Writing combined cacert to ${CACERT_FINAL}..."
+            cat "${CACERT_INITIAL}" > "${CACERT_FINAL}"
+            echo "${CHAIN}" >> "${CACERT_FINAL}"
+
+            echo "[pre-script] cacert.pem written successfully."
+
+        - destination: local/scripts/01-generate-client-settings-token.sh
+          env: false
+          perms: "755"
+          on_change: noop
+          data: |
+            #!/usr/bin/env bash
+            set -euo pipefail
+
+            : "${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+            : "${NOMAD_META_environment:?NOMAD_META_environment is not set}"
+
+            ROLE="nomad-client-settings"
+
+            echo "[pre-script] Minting client-settings token via role ${ROLE}..."
+
+            RESPONSE=$(curl -sf \
+              -H "X-Vault-Token: ${VAULT_TOKEN}" \
+              -X POST \
+              "${VAULT_ADDR}/v1/auth/token/create/${ROLE}")
+
+            TOKEN=$(echo "${RESPONSE}" | jq -r '.auth.client_token')
+
+            if [[ -z "${TOKEN}" || "${TOKEN}" == "null" ]]; then
+              echo "[pre-script] ERROR: failed to mint client-settings token" >&2
+              echo "${RESPONSE}" >&2
+              exit 1
+            fi
+
+            export ClientSettingsVaultToken="${TOKEN}"
+            echo "ClientSettingsVaultToken=${TOKEN}" >> /_/data/grid-bot/secrets/client_settings_token.env
+
+            echo "[pre-script] Client-settings token minted and exported."
 
         - destination: secrets/file.env
           env: true
@@ -91,10 +144,11 @@ deployment:
             GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
 
             ClientSettingsVaultAddress="${{ env.VAULT_ADDR }}"
-            ClientSettingsVaultToken="{{ with secret "auth/token/create/grid-bot-client-settings" }}{{ .Auth.ClientToken }}{{ end }}"
 
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
+            PRE_SCRIPTS_DIR="/local/scripts"
+
             VAULT_ADDR="${{ env.VAULT_ADDR }}"
             VAULT_TOKEN="{{ env "VAULT_TOKEN" }}"
 
