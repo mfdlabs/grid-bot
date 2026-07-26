@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0.1-jammy
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /all
 COPY . /all
 
