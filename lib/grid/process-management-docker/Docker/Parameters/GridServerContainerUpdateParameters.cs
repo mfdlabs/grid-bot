@@ -1,7 +1,6 @@
-﻿namespace Grid;
+﻿using Docker.DotNet.Models;
 
-using Docker.DotNet.Models;
-
+namespace Grid.ProcessManagement.Docker;
 
 /// <inheritdoc cref="ContainerUpdateParameters"/>
 public class GridServerContainerUpdateParameters : ContainerUpdateParameters

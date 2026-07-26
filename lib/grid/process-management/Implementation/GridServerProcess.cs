@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.Diagnostics;
@@ -7,12 +7,16 @@ using System.Collections.Generic;
 using Logging;
 using Commands;
 
+using Core;
+
 /// <summary>
 /// Represents the Docker implementation of <see cref="GridServerInstanceBase"/>
 /// </summary>
 public sealed class GridServerProcess : GridServerInstanceBase
 {
-    private readonly IGridServerProcess _Process;
+    private const int _MillisecondToSecond = 1000;
+
+    private readonly IRawGridServerProcess _Process;
     private readonly IGridServerProcessSettings _GridServerSettings;
     private readonly IGridServerFileHelper _FileHelper;
 
@@ -39,7 +43,9 @@ public sealed class GridServerProcess : GridServerInstanceBase
     /// <param name="port">The port</param>
     /// <param name="version">The version.</param>
     /// <param name="gridServerSettings">The <see cref="IGridServerProcessSettings"/></param>
-    /// <param name="gridServerProcess">The <see cref="IGridServerProcess"/></param>
+    /// <param name="applicationName">The GridServer application name.</param>
+    /// <param name="bucketName">The GridServer bucket name.</param>
+    /// <param name="gridServerProcess">The <see cref="IRawGridServerProcess"/></param>
     /// <param name="fileHelper">The <see cref="IGridServerFileHelper"/></param>
     /// <exception cref="ArgumentException"><paramref name="port"/> must be > 0</exception>
     internal GridServerProcess(
@@ -47,10 +53,12 @@ public sealed class GridServerProcess : GridServerInstanceBase
         int port,
         string version,
         IGridServerProcessSettings gridServerSettings,
-        IGridServerProcess gridServerProcess,
+        string applicationName,
+        string bucketName,
+        IRawGridServerProcess gridServerProcess,
         IGridServerFileHelper fileHelper = null
     )
-        : base(logger, version, port, gridServerSettings)
+        : base(logger, version, port, gridServerSettings, applicationName, bucketName)
     {
         if (port < 1) throw new ArgumentException("Port must be > 0", nameof(port));
 
@@ -61,19 +69,42 @@ public sealed class GridServerProcess : GridServerInstanceBase
 
         _FileHelper = fileHelper ?? new GridServerFileHelper(gridServerSettings);
 
-        Logger.Information("Constructing GridServerProcess",
-            new
-            {
-                ProcessName,
-                Port,
-                Version
-            }
+        Logger.Information(
+            "Constructing GridServerProcess, ProcessName = {0}, Port = {1}, Version = {2}",
+            ProcessName,
+            Port,
+            Version
         );
     }
 
     /// <inheritdoc cref="GridServerInstanceBase.Start"/>
     public override bool Start()
-        => _Process.Start(_GridServerSettings.GridServerExecutableName, _FileHelper.GetGridServerPath(true), Port) && WaitForProcessStart();
+        => _Process.Start(_GridServerSettings.GridServerExecutableName, _FileHelper.GetGridServerPath(), Port,  _GridServerSettings.GridServerMaxThreads, _GridServerSettings.GridServerMaxMemoryInBytes, GetArguments()) && WaitForProcessStart();
+
+    private string GetArguments()
+    {
+        var arguments = new List<string>()
+        {
+            "-Console"
+        };
+
+        if (_GridServerSettings.VerboseLoggingEnabled)
+            arguments.Add("-Verbose");
+
+        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerSettingsApplicationName))
+            arguments.AddRange(new[] { "-ApplicationName", _GridServerSettings.GridServerSettingsApplicationName });
+
+        if (!string.IsNullOrEmpty(_GridServerSettings.GridServerApplicationSettingsFileName))
+        {
+            Logger.Information("GetArguments. Adding -SettingsFile command line option: {0}", _GridServerSettings.GridServerApplicationSettingsFileName);
+
+            arguments.AddRange(new[] { "-SettingsFile", _GridServerSettings.GridServerApplicationSettingsFileName });
+        }
+
+        arguments.Add(Port.ToString());
+
+        return string.Join(" ", arguments);
+    }
 
     private bool WaitForProcessStart()
     {
@@ -82,7 +113,7 @@ public sealed class GridServerProcess : GridServerInstanceBase
         try
         {
             WaitForServiceToBecomeAvailable(false, sw);
-            InitializeHA();
+            InitializeHighAvailability();
 
             return true;
         }
@@ -101,9 +132,9 @@ public sealed class GridServerProcess : GridServerInstanceBase
         }
     }
 
-    private void InitializeHA()
+    private void InitializeHighAvailability()
     {
-        using var soap = GetSoapInterface(10000);
+        using var soap = GetSoapInterface(60 * _MillisecondToSecond);
 
 #if !PRE_JSON_EXECUTION
         var command = new ExecuteScriptCommand(

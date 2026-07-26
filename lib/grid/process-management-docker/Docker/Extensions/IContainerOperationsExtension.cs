@@ -1,4 +1,7 @@
-﻿namespace Grid;
+﻿using Docker.DotNet;
+using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
 using System.Net;
@@ -7,9 +10,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
-using Docker.DotNet;
-using Docker.DotNet.Models;
 
 using Newtonsoft.Json;
 

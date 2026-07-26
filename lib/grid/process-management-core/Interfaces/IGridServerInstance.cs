@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 using System;
 using System.Diagnostics;
@@ -56,19 +56,19 @@ public interface IGridServerInstance : IDisposable
     int Port { get; }
 
     /// <summary>
-    /// The RCC version.
+    /// The Grid Server version.
     /// </summary>
     string Version { get; }
 
     /// <summary>
     /// The application settings name.
     /// </summary>
-    //string ApplicationName { get; }
+    string ApplicationName { get; }
 
     /// <summary>
     /// The application bucket name.
     /// </summary>
-    //string BucketName { get; }
+    string BucketName { get; }
 
     /// <summary>
     /// Get the SOAP interface for this Grid Server Instance.
@@ -78,7 +78,7 @@ public interface IGridServerInstance : IDisposable
     GridServerServiceSoap GetSoapInterface(int timeoutInMilliseconds);
 
     /// <summary>
-    /// Start the RCC instance.
+    /// Start the Grid Server instance.
     /// </summary>
     /// <returns>True if the instance was started.</returns>
     bool Start();
@@ -92,7 +92,7 @@ public interface IGridServerInstance : IDisposable
     void WaitForServiceToBecomeAvailable(bool forceTry, Stopwatch stopwatch);
 
     /// <summary>
-    /// Update the resource limits for this RCC instance.
+    /// Update the resource limits for this Grid Server instance.
     /// </summary>
     /// <param name="maximumCores">The new max cores.</param>
     /// <param name="maximumThreads">The new max threads.</param>

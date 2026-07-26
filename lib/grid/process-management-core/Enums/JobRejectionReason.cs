@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 /// <summary>
 /// Reasoning for a job being rejected.
@@ -9,6 +9,11 @@ public enum JobRejectionReason
     /// There was no ready instance to take the job.
     /// </summary>
     NoReadyInstance,
+
+    /// <summary>
+    /// The settings file for GridServer was invalid.
+    /// </summary>
+    GridServerSettingsFileInvalid,
 
     /// <summary>
     /// There was not enough CPU available.

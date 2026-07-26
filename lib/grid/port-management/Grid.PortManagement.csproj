@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Shared library for port allocation on grid-servers!</Description>
-    <RootNamespace>Grid</RootNamespace>
+    <RootNamespace>Grid.PortManagement</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
-    <ProjectReference Include="..\..\random\random\Random.csproj" />
+    <ProjectReference Include="../../random/random/Random.csproj" />
   </ItemGroup>
 
   <ItemGroup>

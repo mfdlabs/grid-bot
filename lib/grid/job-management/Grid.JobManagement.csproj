@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared library for allocating grid-server jobs!</Description>
+    
+    <Version>1.2.5</Version>
+   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\random\random\Random.csproj" />
+    <ProjectReference Include="..\process-management-core\Grid.ProcessManagement.Core.csproj" />
+    <ProjectReference Include="..\process-management-docker\Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="..\process-management\Grid.ProcessManagement.csproj" />
+  </ItemGroup>
+</Project>

@@ -28,6 +28,8 @@ deployment:
       operator: "set_contains"
       value: "grid-bot"
 
+  vault_role: grid-bot-${{ env.NOMAD_ENVIRONMENT }}
+
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
       resources:
@@ -61,10 +63,106 @@ deployment:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
 
-        - '/_/data/grid-bot/scripts:/_/data/grid-bot/scripts'
         - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
-        - '/_/data/grid-bot/rcc-logs:/_/data/grid-bot/rcc-logs'
+        - '/_/data/grid-bot/rcc:/_/data/grid-bot/rcc' # Simply here to just to ensure it actually gets created on the host
+
+      artifacts:
+        - source: "https://curl.se/ca/cacert.pem"
+          destination: "local/initial"
+
       config_maps:
+
+        - destination: local/scripts/00-generate-cacert.sh
+          env: false
+          perms: "755"
+          on_change: noop
+          data: |
+            #!/bin/sh
+            set -eu
+
+            CACERT_INITIAL="/local/initial/cacert.pem"
+            CACERT_FINAL="/_/data/grid-bot/cacert.pem"
+
+            : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+
+            echo "[pre-script] Fetching Vault issuer chain..."
+
+            HTTP_CODE=$(curl -s -o /tmp/vault_ca_chain_response.json -w "%%{http_code}" \
+              -H "X-Vault-Token: $${VAULT_TOKEN}" \
+              "${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
+
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "[pre-script] ERROR: Vault returned HTTP $${HTTP_CODE}" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
+              exit 1
+            fi
+
+            if ! jq -e . /tmp/vault_ca_chain_response.json >/dev/null 2>&1; then
+              echo "[pre-script] ERROR: response is not valid JSON" >&2
+              echo "[pre-script] Raw response follows:" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
+              exit 1
+            fi
+
+            CHAIN=$(jq -r '.data.ca_chain' /tmp/vault_ca_chain_response.json)
+
+            if [ -z "$CHAIN" ] || [ "$CHAIN" = "null" ]; then
+              echo "[pre-script] ERROR: ca_chain field missing or null" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
+              exit 1
+            fi
+
+            echo "[pre-script] Writing combined cacert to $${CACERT_FINAL}..."
+            cat "$CACERT_INITIAL" > "$CACERT_FINAL"
+            printf '%s\n' "$CHAIN" >> "$CACERT_FINAL"
+
+            echo "[pre-script] cacert.pem written successfully."
+
+        - destination: local/scripts/01-generate-client-settings-token.sh
+          env: false
+          perms: "755"
+          on_change: noop
+          data: |
+            #!/bin/sh
+            set -eu
+
+            : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+
+            ROLE="nomad-client-settings"
+
+            RESPONSE=$(curl -sf \
+              -H "X-Vault-Token: $${VAULT_TOKEN}" \
+              -X POST \
+              "$${VAULT_ADDR}/v1/auth/token/create/${ROLE}")
+
+            TOKEN=$(echo "$${RESPONSE}" | jq -r '.auth.client_token')
+
+            if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+              echo "[pre-script] ERROR: failed to mint client-settings token" >&2
+              echo "$RESPONSE" >&2
+              exit 1
+            fi
+
+            umask 077
+            export ClientSettingsVaultToken="$${TOKEN}"
+            echo "[pre-script] Client-settings token written."
+
+        - destination: local/scripts/02-ensure-data-exists.sh
+          env: false
+          perms: "755"
+          on_change: noop
+          data: |
+            #!/bin/sh
+            set -eu
+
+            mkdir -p /_/data/grid-bot/rcc/app-data
+            mkdir -p /_/data/grid-bot/rcc/rcc-logs
+            mkdir -p /_/data/grid-bot/rcc/scripts
+
+            cp /all/scripts/* /_/data/grid-bot/rcc/scripts/ -r
+
         - destination: secrets/file.env
           env: true
           on_change: restart
@@ -73,7 +171,12 @@ deployment:
             WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
             GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
 
+            ClientSettingsVaultAddress="${{ env.VAULT_ADDR }}"
+
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
+            PRE_SCRIPTS_DIR="/local/scripts"
+
             VAULT_ADDR="${{ env.VAULT_ADDR }}"
-            VAULT_TOKEN="${{ env.VAULT_TOKEN }}"
+            VAULT_TOKEN="{{ env "VAULT_TOKEN" }}"
+

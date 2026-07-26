@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 /// <inheritdoc cref="IJob"/>
 public class Job : IJob

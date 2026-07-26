@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 /// <summary>
 /// Represents an unmanaged Grid Server Instance.
@@ -11,7 +11,7 @@ public interface IUnmanagedGridServerInstance
     string Id { get; }
 
     /// <summary>
-    /// Kill the RCC instance.
+    /// Kill the Grid Server instance.
     /// </summary>
     void Kill();
 }

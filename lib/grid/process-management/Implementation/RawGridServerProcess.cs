@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
 
 using System;
 using System.IO;
@@ -7,9 +7,9 @@ using System.Diagnostics;
 
 using Logging;
 
-/// <inheritdoc cref="IGridServerProcess"/>
+/// <inheritdoc cref="IRawGridServerProcess"/>
 [DebuggerDisplay($"{{{nameof(ToString)}(), nq}}")]
-internal class RawGridServerProcess : IGridServerProcess, IDisposable
+internal class RawGridServerProcess : IRawGridServerProcess, IDisposable
 {
     private Process _process;
     private IPEndPoint _endpoint;
@@ -49,25 +49,25 @@ internal class RawGridServerProcess : IGridServerProcess, IDisposable
         _endpoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
     }
 
-    /// <inheritdoc cref="IGridServerProcess.RawProcess"/>
+    /// <inheritdoc cref="IRawGridServerProcess.RawProcess"/>
     public Process RawProcess => _process;
 
-    /// <inheritdoc cref="IGridServerProcess.HasExited"/>
+    /// <inheritdoc cref="IRawGridServerProcess.HasExited"/>
     public bool HasExited => _disposed || _process.SafeGetHasExited();
 
-    /// <inheritdoc cref="IGridServerProcess.EndPoint"/>
+    /// <inheritdoc cref="IRawGridServerProcess.EndPoint"/>
     public IPEndPoint EndPoint => _endpoint;
 
-    /// <inheritdoc cref="IGridServerProcess.IsDisposed"/>
+    /// <inheritdoc cref="IRawGridServerProcess.IsDisposed"/>
     public bool IsDisposed => _disposed;
 
-    /// <inheritdoc cref="IGridServerProcess.SetLogger(ILogger)"/>
+    /// <inheritdoc cref="IRawGridServerProcess.SetLogger(ILogger)"/>
     public void SetLogger(ILogger logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <inheritdoc cref="IGridServerProcess.Kill"/>
+    /// <inheritdoc cref="IRawGridServerProcess.Kill"/>
     public void Kill()
     {
         var (didClose, errorCode) = _process.ForceKill();
@@ -91,11 +91,13 @@ internal class RawGridServerProcess : IGridServerProcess, IDisposable
         _disposed = true;
     }
 
-    /// <inheritdoc cref="IGridServerProcess.Start(string, string, int, string)"/>
+    /// <inheritdoc cref="IRawGridServerProcess.Start(string, string, int, int, long, string)"/>
     public bool Start(
         string executableName,
         string workingDirectory = null,
         int port = 53640,
+        int maxThreads = 0,
+        long maxMemoryInBytes = 0,
         string args = null
     )
     {
@@ -127,6 +129,13 @@ internal class RawGridServerProcess : IGridServerProcess, IDisposable
             startInfo.Arguments = args;
         else
             startInfo.Arguments = $"{port} -Console -Verbose";
+
+        if (maxThreads > 0)
+            startInfo.Environment.Add("MAXIMUM_THREADS", maxThreads.ToString());
+
+        int maxMemory = (int)(maxMemoryInBytes / 1048576);
+        if (maxMemory > 0)
+            startInfo.Environment.Add("MAXIMUM_MEMORY", maxMemory.ToString());
 
         _endpoint = new IPEndPoint(IPAddress.Loopback, port);
         _process = Process.Start(startInfo);

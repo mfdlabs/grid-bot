@@ -1,4 +1,6 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement;
+
+using Core;
 
 /// <summary>
 /// Represents the Grid Server settings.
@@ -19,4 +21,19 @@ public interface IGridServerProcessSettings : IJobManagerSettings
     /// Gets the name of the Windows Registry Value used by process-based grid-servers.
     /// </summary>
     string GridServerRegistryValueName { get; }
+
+    /// <summary>
+    /// The maximum amount of GridServer Service memory in bytes.
+    /// </summary>
+    long GridServerMaxMemoryInBytes { get; }
+
+    /// <summary>
+    /// Determines if verbose logging is enabled or not.
+    /// </summary>
+    bool VerboseLoggingEnabled { get; }
+
+    /// <summary>
+    /// The name of the file to cache app settings in.
+    /// </summary>
+    string GridServerApplicationSettingsFileName { get; }
 }

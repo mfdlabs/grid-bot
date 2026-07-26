@@ -1,12 +1,12 @@
-﻿namespace Grid;
+﻿using Docker.DotNet;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
 using System.Net;
 using System.Text;
 using System.Net.Http;
 using System.Net.Sockets;
-
-using Docker.DotNet;
 
 using Microsoft.Net.Http.Client;
 

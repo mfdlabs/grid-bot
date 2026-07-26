@@ -1,15 +1,18 @@
-﻿namespace Grid;
+﻿using Docker.DotNet;
+using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Docker.DotNet;
-using Docker.DotNet.Models;
-
 using Newtonsoft.Json;
 
 using Logging;
+using Diagnostics;
+
+using Core;
 
 /// <summary>
 /// Represents the default docker authority for Grid Server.
@@ -42,6 +45,7 @@ public class GridServerDockerAuthority
     private readonly CreateContainerOperation _CreateContainerOperation;
     private readonly StartContainerOperation _StartContainerOperation;
     private readonly RemoveContainerOperation _RemoveContainerOperation;
+    private readonly StopContainerOperation _StopContainerOperation;
     private readonly KillContainerOperation _KillContainerOperation;
     private readonly UpdateContainerOperation _UpdateContainerOperation;
 
@@ -67,10 +71,11 @@ public class GridServerDockerAuthority
         _CreateContainerOperation = new CreateContainerOperation(_Logger, dockerClient);
         _StartContainerOperation = new StartContainerOperation(_Logger, dockerClient);
         _RemoveContainerOperation = new RemoveContainerOperation(_Logger, dockerClient, _GridServerSettings);
+        _StopContainerOperation = new StopContainerOperation(_Logger, dockerClient, _GridServerSettings);
         _KillContainerOperation = new KillContainerOperation(_Logger, dockerClient);
         _UpdateContainerOperation = new UpdateContainerOperation(_Logger, dockerClient, DockerSocketHttpClient.CreateClient(dockerClient));
 
-        if (serverInfo != null && serverInfo.PhysicalCoreCount != 0)
+        if (serverInfo.PhysicalCoreCount != 0)
         {
             _PhysicalCoreToLogicalCoreRatio = serverInfo.LogicalCoreCount / serverInfo.PhysicalCoreCount;
 
@@ -156,6 +161,44 @@ public class GridServerDockerAuthority
     /// <returns>True if the container started.</returns>
     internal async Task<bool> StartContainerAsync(string containerName) 
         => await _StartContainerOperation.ExecuteAsync(containerName);
+
+    /// <summary>
+    /// Stop a container with retries.
+    /// </summary>
+    /// <param name="containerId">The ID of the container</param>
+    /// <returns>An awaitable task.</returns>
+    internal async Task StopContainerWithRetriesAsync(string containerId)
+    {
+        int maxAttemptsToWaitForContainerExit = _GridServerSettings.MaxAttemptsToWaitForContainerExit;
+        var sleepInterval = _GridServerSettings.ContainerStopSleepIntervalMilliseconds.HasValue
+            ? TimeSpan.FromMilliseconds(_GridServerSettings.ContainerStopSleepIntervalMilliseconds.Value)
+            : _TimeToSleepBetweenStopContainerAttempts;
+
+        for (int attempt = 0; attempt < maxAttemptsToWaitForContainerExit; ++attempt)
+        {
+            if (await StopContainerAsync(containerId).ConfigureAwait(false))
+                break;
+
+            _Logger.Warning(
+                "StopContainerWithRetriesAsync: containerStopped FAILED for {0} after {1} attempts; sleeping for {2} between retries",
+                containerId,
+                attempt,
+                sleepInterval
+            );
+
+            if (attempt == maxAttemptsToWaitForContainerExit - 1)
+                await _KillContainerOperation.ExecuteAsync(containerId).ConfigureAwait(false);
+            else
+                await Task.Delay(sleepInterval);
+        }
+    }
+
+    /// <summary>
+    /// Stop a container.
+    /// </summary>
+    /// <param name="containerId">The ID of the container</param>
+    /// <returns>True if the container stopped.</returns>
+    internal async Task<bool> StopContainerAsync(string containerId) => await _StopContainerOperation.ExecuteAsync(containerId);
 
     /// <summary>
     /// Remove a container with retries.

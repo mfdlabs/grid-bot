@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 using System;
 using System.Linq;
@@ -11,6 +11,9 @@ using System.Collections.Concurrent;
 using Logging;
 
 using Client;
+using Diagnostics;
+using PortManagement;
+using ClientSettings.Client;
 
 /// <summary>
 /// Represents the base abstract class for all job managers.
@@ -21,10 +24,14 @@ public abstract class JobManagerBase
     private const int _DefaultIntervalToQueryForRunningJobs = 3000;
     private const int _DefaultGridServerJobTimeoutInMilliseconds = 300000;
     private const int _DefaultTimeToCheckForNewGridServerVersion = 10000;
+    private const int _DefaultTimeToFetchGridServerApplicationSettings = 30000;
     private const int _DefaultManagePopulateGridServerIntervalMilliseconds = 10000;
     private const int _DefaultPopulateInstanceSleepInterval = 100;
     private const int _DefaultExpirationForRecoveredInstances = 300000;
     private const int _NegativeFive = -5;
+
+    private static readonly TimeSpan _InitialGridServerApplicationSettingsFetchSleepIntervalBase = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan _InitialGridServerApplicationSettingsFetchSleepIntervalMax = TimeSpan.FromSeconds(15);
 
     /// <summary>
     /// The resource allocation tracker.
@@ -51,6 +58,8 @@ public abstract class JobManagerBase
     private readonly object _PopulateGridServerLock = new();
 
     private readonly IJobManagerSettings _Settings;
+    private readonly IClientSettingsClient _ClientSettingsClient;
+    private readonly ISettingsFileWriter _SettingsFileWriter;
 
     /// <summary>
     /// The Grid Server version.
@@ -58,11 +67,22 @@ public abstract class JobManagerBase
     protected string GridServerVersion;
 
     /// <summary>
+    /// The application settings name.
+    /// </summary>
+    protected string ApplicationName;
+
+    /// <summary>
+    /// The application bucket name.
+    /// </summary>
+    protected string BucketName;
+
+    /// <summary>
     /// The ready instances.
     /// </summary>
     protected BlockingCollection<IGridServerInstance> ReadyInstances = new(new ConcurrentStack<IGridServerInstance>());
 
     private bool _IsRunning;
+    private DateTime _LastSuccessfulGridServerApplicationSettingsFetchTime;
 
     private volatile int _PopulateThreadsWorking;
     private volatile bool _LastInstanceCreationFailed;
@@ -73,24 +93,74 @@ public abstract class JobManagerBase
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="settings">The <see cref="IJobManagerSettings"/></param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/></param>
+    /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/></param>
     /// <param name="resourceAllocationTracker">The <see cref="ResourceAllocationTracker"/></param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="settings"/> cannot be null.
     /// - <paramref name="portAllocator"/> cannot be null.
+    /// - <paramref name="clientSettingsClient"/> cannot be null.
     /// </exception>
     protected JobManagerBase(
         ILogger logger,
         IJobManagerSettings settings,
         IPortAllocator portAllocator,
+        IClientSettingsClient clientSettingsClient,
+        ResourceAllocationTracker resourceAllocationTracker
+    ) : this(
+            logger,
+            settings,
+            portAllocator,
+            clientSettingsClient,
+            new SettingsFileWriter(logger),
+            resourceAllocationTracker
+        )
+    {
+    }
+
+    /// <summary>
+    /// Constructs a new instance of <see cref="JobManagerBase"/>
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/></param>
+    /// <param name="settings">The <see cref="IJobManagerSettings"/></param>
+    /// <param name="portAllocator">The <see cref="IPortAllocator"/></param>
+    /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/></param>
+    /// <param name="settingsFileWriter">The <see cref="ISettingsFileWriter"/></param>
+    /// <param name="resourceAllocationTracker">The <see cref="ResourceAllocationTracker"/></param>
+    /// <exception cref="ArgumentNullException">
+    /// - <paramref name="logger"/> cannot be null.
+    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="portAllocator"/> cannot be null.
+    /// - <paramref name="clientSettingsClient"/> cannot be null.
+    /// - <paramref name="settingsFileWriter"/> cannot be null.
+    /// </exception>
+    protected JobManagerBase(
+        ILogger logger,
+        IJobManagerSettings settings,
+        IPortAllocator portAllocator,
+        IClientSettingsClient clientSettingsClient,
+        ISettingsFileWriter settingsFileWriter,
         ResourceAllocationTracker resourceAllocationTracker
     )
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         PortAllocator = portAllocator ?? throw new ArgumentNullException(nameof(portAllocator));
+        _ClientSettingsClient = clientSettingsClient ?? throw new ArgumentNullException(nameof(clientSettingsClient));
+        _SettingsFileWriter = settingsFileWriter ?? throw new ArgumentNullException(nameof(settingsFileWriter));
 
-        ResourceAllocationTracker = resourceAllocationTracker ?? new ResourceAllocationTracker();
+        ResourceAllocationTracker = resourceAllocationTracker 
+            ?? new ResourceAllocationTracker(
+                ServerInfo.GetPhysicalCoreCount(Logger),
+                _Settings.GridServerMaxThreads,
+                (long)(ServerInfo.GetAvailablePhysicalMemoryInGigabytes(Logger) * 1024),
+                () => _Settings.IsGridServerCpuAllocationCheckEnabled,
+                () => _Settings.IsGridServerThreadsAllocationCheckEnabled,
+                () => _Settings.IsGridServerMemoryAllocationCheckEnabled,
+                () => _Settings.GridServerCpuOverAllocationRatio,
+                () => _Settings.GridServerThreadsOverAllocationRatio,
+                () => _Settings.GridServerMemoryOverAllocationRatio
+            );
     }
 
     /// <summary>
@@ -127,19 +197,21 @@ public abstract class JobManagerBase
     /// </summary>
     public void Start()
     {
-        Logger.Information("Starting JobManager using GridServerProcessManagement.Core");
+        Logger.Information("Starting JobManager using Grid.ProcessManagement.Core");
 
         _IsRunning = true;
 
         do
         {
             ReadGridServerLocation(true);
+            ReadGridServerApplicationName();
         }
-        while (string.IsNullOrWhiteSpace(GridServerVersion));
+        while (string.IsNullOrWhiteSpace(GridServerVersion) || string.IsNullOrWhiteSpace(ApplicationName));
 
         RecoverRunningInstances();
 
         Task.Factory.StartNew(CheckGridServerVersion, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(CheckGridServerApplicationSettings, TaskCreationOptions.LongRunning);
         Task.Factory.StartNew(ManagePopulateReadyInstanceThreads, TaskCreationOptions.LongRunning);
         Task.Factory.StartNew(ClearExpiredJobs, TaskCreationOptions.LongRunning);
     }
@@ -149,7 +221,7 @@ public abstract class JobManagerBase
     /// </summary>
     public void Stop()
     {
-        Logger.Information("Stopping JobManager using GridServerProcessManagement.Core");
+        Logger.Information("Stopping JobManager using Grid.ProcessManagement.Core");
 
         _IsRunning = false;
     }
@@ -299,6 +371,18 @@ public abstract class JobManagerBase
     public string GetVersion() => GridServerVersion;
 
     /// <summary>
+    /// Get the current client settings application name.
+    /// </summary>
+    /// <returns>The client settings application name.</returns>
+    public string GetApplicationName() => ApplicationName;
+
+    /// <summary>
+    /// Get the current client settings bucket name.
+    /// </summary>
+    /// <returns>The client settings bucket name.</returns>
+    public string GetBucketName() => BucketName;
+
+    /// <summary>
     /// Gets the unexpectedly closed game jobs.
     /// </summary>
     /// <returns></returns>
@@ -319,6 +403,12 @@ public abstract class JobManagerBase
             action(soapInterface);
         }
     }
+
+    /// <summary>
+    /// Gets the last successful client settings fetch time.
+    /// </summary>
+    /// <returns>The last successful client settings fetch time.</returns>
+    public DateTime GetLastSuccessfulGridServerApplicationSettingsFetchTime() => _LastSuccessfulGridServerApplicationSettingsFetchTime;
 
     /// <summary>
     /// Get the instance id for an Grid Server by it's job id.
@@ -394,6 +484,7 @@ public abstract class JobManagerBase
     protected void CheckForGridServerReady()
     {
         if (string.IsNullOrWhiteSpace(GridServerVersion)) throw new Exception("Grid Server Version not set");
+        if (string.IsNullOrWhiteSpace(ApplicationName)) throw new Exception("Grid Server ApplicationName not set");
     }
 
     private void DoCloseJob(IJob job, bool attemptToRecycle)
@@ -420,8 +511,9 @@ public abstract class JobManagerBase
                 }
 
                 Logger.Information(
-                    "DoCloseJob. Did not recycle instance - version out of date. CurrentVersion: {0}. UseCount: {1}, Instance Version: {2}, Instance ID: {3}",
+                    "DoCloseJob. Did not recycle instance - version out of date. CurrentVersion: {0}. Current ApplicationName: {1}. UseCount: {2}, Instance Version: {3}, Instance ID: {4}",
                     GridServerVersion,
+                    ApplicationName,
                     instance.UseCount,
                     instance.Version,
                     instance.Id
@@ -512,6 +604,155 @@ public abstract class JobManagerBase
         }
     }
 
+    private bool UpdateGridServerApplicationSettingsWithRetries(string applicationName, string bucketName, byte maxAttempts)
+    {
+        Logger.Information("UpdateGridServerApplicationSettingsWithRetries. Fetching Grid Server application settings with {0} retries.", maxAttempts);
+
+        var didUpdate = UpdateGridServerApplicationSettings(applicationName, bucketName);
+        for (byte index = 1; !didUpdate && index <= maxAttempts; didUpdate = UpdateGridServerApplicationSettings(applicationName, bucketName))
+        {
+            var sleepInterval = ExponentialBackoff.CalculateBackoff(
+                index++,
+                10,
+                _InitialGridServerApplicationSettingsFetchSleepIntervalBase,
+                _InitialGridServerApplicationSettingsFetchSleepIntervalMax,
+                Jitter.Equal
+            );
+
+            Logger.Warning(
+                "UpdateGridServerApplicationSettingsWithRetries. Failed to update Grid Server Application Settings. ApplicationName: {0}. BucketName: {1}. Sleeping for {2} seconds",
+                applicationName,
+                bucketName,
+                sleepInterval.TotalSeconds
+            );
+
+            Thread.Sleep(sleepInterval);
+        }
+
+        return didUpdate;
+    }
+
+    private void CheckGridServerApplicationSettings()
+    {
+        while (_IsRunning)
+        {
+            Thread.Sleep(_DefaultTimeToFetchGridServerApplicationSettings);
+
+            try
+            {
+                ReadGridServerApplicationName();
+                UpdateGridServerApplicationSettings(ApplicationName, BucketName);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error in CheckRccApplicationSettings. Exception: {0}", ex);
+            }
+        }
+    }
+
+    private void ReadGridServerApplicationName()
+    {
+        var newApplicationName = _Settings.GridServerSettingsApplicationName;
+        var newBucketName = _Settings.GridServerSettingsBucketName;
+
+        if (ApplicationName != newApplicationName || BucketName != newBucketName)
+        {
+            if (ApplicationName != newApplicationName)
+                Logger.Information(
+                    "ReadGridServerApplicationName. Grid Server ApplicationName changed or loaded for the first time. ApplicationName = {0}. Old Value = {1}.",
+                    newApplicationName,
+                    ApplicationName
+                );
+
+            if (BucketName != newBucketName)
+                Logger.Information(
+                    "ReadGridServerApplicationName. Grid Server BucketName changed or loaded for the first time. BucketName = {0}. Old Value = {1}.",
+                    newBucketName,
+                    BucketName
+                );
+
+            if (UpdateGridServerApplicationSettingsWithRetries(newApplicationName, newBucketName, 10))
+            {
+                Logger.Information(
+                    "ReadGridServerApplicationName. Successfully changed Grid Server ApplicationName. ApplicationName = {0}, Old ApplicationName Value = {1}, BucketName = {2}, Old BucketName Value = {3}",
+                    newApplicationName,
+                    ApplicationName,
+                    newBucketName,
+                    BucketName
+                );
+
+                ApplicationName = newApplicationName;
+                BucketName = newBucketName;
+
+                KillOutOfDateReadyInstances();
+
+                return;
+            }
+
+            Logger.Warning(
+                "ReadGridServerApplicationName. Failed to change Grid Server ApplicationName. Failed ApplicationName = {0}, Current ApplicationName = {1}, Failed BucketName = {2}, Current BucketName = {3}",
+                newApplicationName,
+                ApplicationName,
+                newBucketName,
+                BucketName
+            );
+        }
+    }
+
+    /// <summary>
+    /// Update the Grid Server app settings.
+    /// </summary>
+    /// <param name="applicationName">The application name.</param>
+    /// <param name="bucketName">The bucket name.</param>
+    /// <returns>If the update was successful or not.</returns>
+    protected bool UpdateGridServerApplicationSettings(string applicationName, string bucketName)
+    {
+        try
+        {
+            return TryUpdateGridServerApplicationSettings(applicationName, bucketName);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("CheckGridServerApplicationSettings. Error in TryUpdateGridServerApplicationSettings. Exception: {0}", ex);
+        }
+
+        return false;
+    }
+
+    private bool TryUpdateGridServerApplicationSettings(string applicationName, string bucketName)
+    {
+        if (string.IsNullOrWhiteSpace(_Settings.GridServerApplicationSettingsFilePath))
+        {
+            Logger.Error("TryUpdateGridServerApplicationSettings. GridServerApplicationSettingsFilePath cannot be null or blank.");
+
+            return false;
+        }
+
+        Logger.Information("TryUpdateGridServerApplicationSettings. Fetching Grid Server application settings from secured endpoint. ApplicationName: {0}. BucketName: {1}", applicationName, bucketName);
+
+        var newGridServerApplicationSettings = _ClientSettingsClient.GetRccOnlyClientApplicationSettings(applicationName, bucketName);
+        if (newGridServerApplicationSettings?.ApplicationSettings == null || newGridServerApplicationSettings.ApplicationSettings.Count == 0)
+        {
+            Logger.Error("TryUpdateGridServerApplicationSettings. ClientApplicationSettingsResponse was null or empty.");
+
+            return false;
+        }
+
+        Logger.Information("TryUpdateGridServerApplicationSettings. Successfully fetched latest Grid Server application settings. Count: {0}", newGridServerApplicationSettings.ApplicationSettings.Count);
+        if (!_SettingsFileWriter.WriteSettingsFile(_Settings.GridServerApplicationSettingsFilePath, newGridServerApplicationSettings))
+        {
+            Logger.Error("TryUpdateGridServerApplicationSettings. Error writing settings file.");
+
+            return false;
+        }
+
+        Logger.Information("TryUpdateGridServerApplicationSettings. Successfully wrote latest GridServer application settings to file: {0}", _Settings.GridServerApplicationSettingsFilePath);
+
+        _LastSuccessfulGridServerApplicationSettingsFetchTime = DateTime.UtcNow;
+
+        return true;
+    }
+
     private void ManagePopulateReadyInstanceThreads()
     {
         var ctsList = new Stack<CancellationTokenSource>(_Settings.PopulateReadyGridServerInstanceThreads);
@@ -526,7 +767,7 @@ public abstract class JobManagerBase
                 {
                     var threadsToCreate = desiredNumberOfThreads - ctsList.Count;
 
-                    Logger.Debug(
+                    Logger.Verbose(
                         "ManagePopulateReadyInstanceThreads. Need to create {0} threads. SettingValue = {1}, threadCount = {2}",
                         threadsToCreate,
                         desiredNumberOfThreads,
@@ -544,7 +785,7 @@ public abstract class JobManagerBase
                 else if (ctsList.Count > desiredNumberOfThreads)
                 {
                     var threadsToCancel = ctsList.Count - desiredNumberOfThreads;
-                    Logger.Debug(
+                    Logger.Verbose(
                         "ManagePopulateReadyInstanceThreads. Need to cancel {0} threads. SettingValue = {1}, threadCount = {2}",
                         threadsToCancel,
                         desiredNumberOfThreads,
@@ -555,7 +796,7 @@ public abstract class JobManagerBase
                         ctsList.Pop().Cancel();
                 }
                 else
-                    Logger.Debug("ManagePopulateReadyInstanceThreads. SettingValue = {0}, threadCount = {1}", desiredNumberOfThreads, ctsList.Count);
+                    Logger.Verbose("ManagePopulateReadyInstanceThreads. SettingValue = {0}, threadCount = {1}", desiredNumberOfThreads, ctsList.Count);
             }
             catch (Exception ex)
             {
@@ -588,7 +829,7 @@ public abstract class JobManagerBase
                 Thread.Sleep(_DefaultPopulateInstanceSleepInterval);
 
             if (!ShouldPopulateReadyInstance())
-                Logger.Debug(
+                Logger.Verbose(
                     "PopulateReadyInstances. No new instance created because there are enough instances. Ready instances: {0}, PopulateThreadsWorking: {1}, Active Jobs: {2}, MaxInstances: {3}, ReadyInstancesToKeepInReserve: {4}.  ThreadId: {5}.",
                     ReadyInstances.Count,
                     _PopulateThreadsWorking,
@@ -657,9 +898,18 @@ public abstract class JobManagerBase
         }
     }
 
+    private bool IsGridServerApplicationSettingsFileValid()
+    {
+        var window = DateTime.UtcNow - _Settings.GridServerApplicationSettingsValidWindow;
+
+        return _LastSuccessfulGridServerApplicationSettingsFetchTime >= window;
+    }
+
     private (IGridServerInstance, JobRejectionReason?) GetReadyInstance(string jobId, double expirationInSeconds, bool waitForReadyInstance)
     {
         var sw = Stopwatch.StartNew();
+         if (!IsGridServerApplicationSettingsFileValid())
+            return (default, JobRejectionReason.GridServerSettingsFileInvalid);
 
         IGridServerInstance instance;
         while (true)
@@ -812,20 +1062,28 @@ public abstract class JobManagerBase
                             if (instance.Version != GridServerVersion)
                             {
                                 Logger.Information(
-                                    "RecoverRunningInstances. Recovered a ready instance with no jobs and a version mismatch. Instance ID = {0}, Port = {1}, Version = {2}, Expected Version = {3}",
+                                    "RecoverRunningInstances. Recovered a ready instance with no jobs and a version mismatch. Instance ID = {0}, Port = {1}, Version = {2}, ApplicationName = {3}, BucketName = {4}, Expected Version = {5}, Expected ApplicationName = {6}, Expected BucketName = {7}",
                                     instance.Id,
                                     instance.Port,
                                     instance.Version,
-                                    GridServerVersion
+                                    instance.ApplicationName,
+                                    instance.BucketName,
+                                    GridServerVersion,
+                                    ApplicationName,
+                                    BucketName
                                 );
 
                                 throw new Exception(
                                     string.Format(
-                                        "Version mismatch for jobless instance. Instance ID = {0}, Port = {1}, Version = {2}, Expected Version = {3}",
+                                        "Version mismatch for jobless instance. Instance ID = {0}, Port = {1}, Version = {2}, ApplicationName = {3}, BucketName = {4}, Expected Version = {5}, Expected ApplicationName = {6}, Expected BucketName = {7}",
                                         instance.Id,
                                         instance.Port,
                                         instance.Version,
-                                        GridServerVersion
+                                        instance.ApplicationName,
+                                        instance.BucketName,
+                                        GridServerVersion,
+                                        ApplicationName,
+                                        BucketName
                                     )
                                 );
                             }
@@ -833,10 +1091,12 @@ public abstract class JobManagerBase
                             ReadyInstances.Add(instance);
 
                             Logger.Information(
-                                "RecoverRunningInstances. Recovered a ready instance. Instance ID = {0}, Port = {1}, Version = {2}",
+                                "RecoverRunningInstances. Recovered a ready instance. Instance ID = {0}, Port = {1}, Version = {2}, ApplicationName = {3}, BucketName = {4}",
                                 instance.Id,
                                 instance.Port,
-                                instance.Version
+                                instance.Version,
+                                instance.ApplicationName,
+                                instance.BucketName
                             );
 
                             return;

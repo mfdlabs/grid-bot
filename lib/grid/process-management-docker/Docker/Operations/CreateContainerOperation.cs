@@ -1,9 +1,10 @@
-﻿namespace Grid;
-
-using System.Threading.Tasks;
-
+﻿
 using Docker.DotNet;
 using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
+
+using System.Threading.Tasks;
 
 using Logging;
 

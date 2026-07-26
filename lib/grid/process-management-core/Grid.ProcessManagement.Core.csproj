@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Shared library for core interaction with grid server processes!</Description>
-    <RootNamespace>Grid</RootNamespace>
+    <RootNamespace>Grid.ProcessManagement.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,8 +19,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
     <ProjectReference Include="..\..\random\random\Random.csproj" />
+    <ProjectReference Include="..\..\clients\client-settings-client\ClientSettings.Client.csproj" />
     
     <ProjectReference Include="..\client\Grid.Client.csproj" />
+    <ProjectReference Include="..\diagnostics\Grid.Diagnostics.csproj" />
     <ProjectReference Include="..\port-management\Grid.PortManagement.csproj" />
     <ProjectReference Include="..\commands\Grid.Commands.csproj" />
   </ItemGroup>

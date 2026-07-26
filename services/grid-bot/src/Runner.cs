@@ -53,10 +53,10 @@ internal static class Runner
         services.AddGlobalLogger();
         services.AddUtilities();
 
+        services.AddClientSettings();
         services.AddJobManager();
         services.AddFloodCheckersRedis();
         services.AddHttpClients();
-        services.AddClientSettings();
 
         services.AddDiscord();
         services.AddDiscordEventHandlers();

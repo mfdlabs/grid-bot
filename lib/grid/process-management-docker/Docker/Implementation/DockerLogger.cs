@@ -1,8 +1,8 @@
-﻿namespace Grid;
+﻿using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System;
-
-using Docker.DotNet.Models;
 
 using Logging;
 

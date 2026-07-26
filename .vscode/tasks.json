@@ -14,21 +14,6 @@
                 "/p:Platform=AnyCPU",
             ],
             "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build-full",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/services/grid-bot/src/Grid.Bot.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary",
-                "/p:Configuration=Debug",
-                "/p:Platform=AnyCPU",
-                "/p:LocalBuild=true"
-            ],
-            "problemMatcher": "$msCompile"
         }
     ]
 }

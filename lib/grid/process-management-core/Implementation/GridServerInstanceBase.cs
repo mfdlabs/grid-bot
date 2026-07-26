@@ -1,4 +1,4 @@
-﻿namespace Grid;
+﻿namespace Grid.ProcessManagement.Core;
 
 using System;
 using System.Net;
@@ -52,6 +52,12 @@ public abstract class GridServerInstanceBase : IGridServerInstance
     /// <inheritdoc cref="IGridServerInstance.Version"/>
     public string Version { get; }
 
+    /// <inheritdoc cref="IGridServerInstance.ApplicationName"/>
+    public string ApplicationName { get; }
+
+    /// <inheritdoc cref="IGridServerInstance.BucketName"/>
+    public string BucketName { get; }
+
     /// <inheritdoc cref="IGridServerInstance.ExpirationTime"/>
     public DateTime ExpirationTime { get; set; }
 
@@ -65,15 +71,21 @@ public abstract class GridServerInstanceBase : IGridServerInstance
     /// <param name="version">The version</param>
     /// <param name="port">The port</param>
     /// <param name="settings">The <see cref="IJobManagerSettings"/></param>
+    /// <param name="applicationName">The name of the application in client settings.</param>
+    /// <param name="bucketName">The name of the application bucket in client settings.</param>
     protected GridServerInstanceBase(
         ILogger logger,
         string version,
         int port,
-        IJobManagerSettings settings
+        IJobManagerSettings settings,
+        string applicationName,
+        string bucketName
     )
     {
         Logger = logger;
         Version = version;
+        ApplicationName = applicationName;
+        BucketName = bucketName;
         Port = port;
         _Settings = settings;
     }
@@ -84,15 +96,21 @@ public abstract class GridServerInstanceBase : IGridServerInstance
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="port">The port</param>
     /// <param name="settings">The <see cref="IJobManagerSettings"/></param>
+    /// <param name="applicationName">The name of the application in client settings.</param>
+    /// <param name="bucketName">The name of the application bucket in client settings.</param>
     protected GridServerInstanceBase(
         ILogger logger,
         int port,
-        IJobManagerSettings settings
+        IJobManagerSettings settings,
+        string applicationName,
+        string bucketName
     )
     {
         Logger = logger;
         Port = port;
         Version = GetVersionFromGridServer();
+        ApplicationName = applicationName;
+        BucketName = bucketName;
         _Settings = settings;
     }
 

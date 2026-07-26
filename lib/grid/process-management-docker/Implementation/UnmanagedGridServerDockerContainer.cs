@@ -1,11 +1,13 @@
-﻿namespace Grid;
+﻿using Docker.DotNet;
+using Docker.DotNet.Models;
+
+namespace Grid.ProcessManagement.Docker;
 
 using System.Threading;
 
-using Docker.DotNet;
-using Docker.DotNet.Models;
-
 using Logging;
+
+using Core;
 
 /// <summary>
 /// Represents the <see cref="IUnmanagedGridServerInstance"/> implementation for Grid Server Docker containers.

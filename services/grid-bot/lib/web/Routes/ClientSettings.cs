@@ -77,5 +77,5 @@ public class ClientSettings
         }
 
         await context.Response.WriteAsJsonAsync(new { applicationSettings });
-    }    
+    }
 }

@@ -84,9 +84,10 @@ public static class Lua
     /// <param name="index">The index to set.</param>
     /// <param name="value">The value.</param>
     /// <exception cref="ArgumentException">Unsupported Lua argument type.</exception>
-    public static void SetArg(LuaValue[] args, int index, object value)
+    public static void SetArg(this LuaValue[] args, int index, object value)
     {
         var luaValue = new LuaValue();
+
         switch (value)
         {
             case int _:
@@ -138,13 +139,13 @@ public static class Lua
     /// </summary>
     /// <param name="luaValue">The <see cref="LuaValue"/></param>
     /// <returns>The actual value of the <see cref="LuaValue"/></returns>
-    public static object ConvertLua(LuaValue luaValue) 
+    public static object ConvertLua(this LuaValue luaValue) 
         => luaValue.type switch
         {
             LuaType.LUA_TBOOLEAN => Convert.ToBoolean(luaValue.value),
             LuaType.LUA_TNUMBER => Convert.ToDouble(luaValue.value),
             LuaType.LUA_TSTRING => luaValue.value,
-            LuaType.LUA_TTABLE => GetValues(luaValue.table),
+            LuaType.LUA_TTABLE => luaValue.table.GetValues(),
             _ => null,
         };
 
@@ -157,8 +158,8 @@ public static class Lua
     {
         var luaValues = new LuaValue[args.Length];
 
-        for (int i = 0; i < args.Length; i++) 
-            SetArg(luaValues, i, args[i]);
+        for (int i = 0; i < args.Length; i++)
+            luaValues.SetArg(i, args[i]);
 
         return luaValues;
     }
@@ -168,10 +169,12 @@ public static class Lua
     /// </summary>
     /// <param name="args">The <see cref="LuaValue"/> arguments.</param>
     /// <returns>The  raw values.</returns>
-    public static object[] GetValues(LuaValue[] args)
+    public static object[] GetValues(this LuaValue[] args)
     {
         var values = new object[args.Length];
-        for (var i = 0; i < args.Length; i++) values[i] = ConvertLua(args[i]);
+
+        for (var i = 0; i < args.Length; i++) values[i] = args[i].ConvertLua();
+
         return values;
     }
 }
