@@ -68,7 +68,7 @@ deployment:
 
       artifacts:
         - source: "https://curl.se/ca/cacert.pem"
-          destination: "local/cacert-initial.pem"
+          destination: "local/initial"
 
       config_maps:
 
@@ -80,7 +80,7 @@ deployment:
             #!/bin/sh
             set -eu
 
-            CACERT_INITIAL="/_/data/grid-bot/cacert-initial.pem"
+            CACERT_INITIAL="/local/initial/cacert.pem"
             CACERT_FINAL="/_/data/grid-bot/cacert.pem"
 
             : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
@@ -88,15 +88,28 @@ deployment:
 
             echo "[pre-script] Fetching Vault issuer chain..."
 
-            RESPONSE=$(curl -sf \
+            HTTP_CODE=$(curl -s -o /tmp/vault_ca_chain_response.json -w "%%{http_code}" \
               -H "X-Vault-Token: $${VAULT_TOKEN}" \
-              "$${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
+              "${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
 
-            CHAIN=$(echo "$RESPONSE" | jq -r '.data.ca_chain')
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "[pre-script] ERROR: Vault returned HTTP $${HTTP_CODE}" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
+              exit 1
+            fi
+
+            if ! jq -e . /tmp/vault_ca_chain_response.json >/dev/null 2>&1; then
+              echo "[pre-script] ERROR: response is not valid JSON" >&2
+              echo "[pre-script] Raw response follows:" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
+              exit 1
+            fi
+
+            CHAIN=$(jq -r '.data.ca_chain' /tmp/vault_ca_chain_response.json)
 
             if [ -z "$CHAIN" ] || [ "$CHAIN" = "null" ]; then
-              echo "[pre-script] ERROR: failed to extract ca_chain from Vault response" >&2
-              echo "$RESPONSE" >&2
+              echo "[pre-script] ERROR: ca_chain field missing or null" >&2
+              cat /tmp/vault_ca_chain_response.json >&2
               exit 1
             fi
 
@@ -116,7 +129,6 @@ deployment:
 
             : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
             : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
-            : "$${NOMAD_META_environment:?NOMAD_META_environment is not set}"
 
             ROLE="nomad-client-settings"
 
@@ -136,6 +148,16 @@ deployment:
             umask 077
             export ClientSettingsVaultToken="$${TOKEN}"
             echo "[pre-script] Client-settings token written."
+
+        - destination: local/scripts/02-ensure-app-data-exists.sh
+          env: false
+          perms: "755"
+          on_change: noop
+          data: |
+            #!/bin/sh
+            set -eu
+
+            mkdir -p /_/data/grid-bot/app-data
 
         - destination: secrets/file.env
           env: true
