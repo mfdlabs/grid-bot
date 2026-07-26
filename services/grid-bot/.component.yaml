@@ -70,6 +70,8 @@ deployment:
         - source: "https://curl.se/ca/cacert.pem"
           destination: "local/cacert-initial.pem"
 
+      config_maps:
+
         - destination: local/scripts/00-generate-cacert.sh
           env: false
           perms: "755"
