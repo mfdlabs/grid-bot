@@ -175,7 +175,7 @@ public static class IServiceCollectionExtensions
 #endif
 
         gridSettings.GridServerAdditionalVolumeMappings = [
-            ..gridSettings.GridServerAdditionalVolumeMappings,
+            ..gridSettings.GridServerAdditionalVolumeMappingsSetting,
             $"{gridSettings.GridServerSharedDirectoryInternalScripts}:{gridSettings.GridServerInsideDirectoryInternalScripts}"
         ];
 

@@ -158,17 +158,13 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     );
 
     /// <inheritdoc cref="IGridServerDockerSettings.GridServerAdditionalVolumeMappings"/>
-    public string[] GridServerAdditionalVolumeMappings
-    {
-        get => GetOrDefault(
-            nameof(GridServerAdditionalVolumeMappings),
-            Array.Empty<string>
-        );
-        set => Set(
-            nameof(GridServerAdditionalVolumeMappings),
-            value
-        );
-    }
+    public string[] GridServerAdditionalVolumeMappingsSetting  => GetOrDefault(
+        nameof(GridServerAdditionalVolumeMappings),
+        Array.Empty<string>
+    );
+
+    /// <inheritdoc cref="IGridServerDockerSettings.GridServerAdditionalVolumeMappings"/>
+    public string[] GridServerAdditionalVolumeMappings { get; set; }
 
     /// <inheritdoc cref="IGridServerDockerSettings.ReservedCoresPerGridServerInstance"/>
     public int? ReservedCoresPerGridServerInstance => GetOrDefault<int?>(
