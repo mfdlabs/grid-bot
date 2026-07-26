@@ -63,7 +63,6 @@ deployment:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
 
-        - '/_/data/grid-bot/scripts:/_/data/grid-bot/scripts'
         - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
         - '/_/data/grid-bot/rcc-logs:/_/data/grid-bot/rcc-logs'
         - '/local/cacert.pem:/_/data/grid-bot/cacert.pem'
@@ -91,10 +90,11 @@ deployment:
             WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
             GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
 
+            ClientSettingsVaultAddress="${{ env.VAULT_ADDR }}"
             ClientSettingsVaultToken="{{ with secret "auth/token/create/grid-bot-client-settings" }}{{ .Auth.ClientToken }}{{ end }}"
 
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
-            VAULT_ADDR="{{ env "VAULT_ADDR" }}"
+            VAULT_ADDR="${{ env.VAULT_ADDR }}"
             VAULT_TOKEN="{{ env "VAULT_TOKEN" }}"
 

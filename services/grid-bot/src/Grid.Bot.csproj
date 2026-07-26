@@ -56,9 +56,11 @@
 
     <ItemGroup>
       <SslFiles Include="$(ProjectDir)../ssl/*" />
+            <ScriptFiles Include="$(ProjectDir)../scripts/**/**" />
     </ItemGroup>
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
+    <Copy SourceFiles="@(ScriptFiles)" DestinationFolder="$(PublishDir)scripts\%(RecursiveDir)" />
   </Target>
 
   <ItemGroup>
