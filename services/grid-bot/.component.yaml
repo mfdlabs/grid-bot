@@ -28,6 +28,8 @@ deployment:
       operator: "set_contains"
       value: "grid-bot"
 
+  vault_role: grid-bot-${{ env.NOMAD_ENVIRONMENT }}
+
   containers: # Maps to the groups section in Nomad
     - image: mfdlabs/grid-bot
       resources:
@@ -64,7 +66,23 @@ deployment:
         - '/_/data/grid-bot/scripts:/_/data/grid-bot/scripts'
         - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
         - '/_/data/grid-bot/rcc-logs:/_/data/grid-bot/rcc-logs'
+        - '/local/cacert.pem:/_/data/grid-bot/cacert.pem'
+
+      artifacts:
+        - source: "https://curl.se/ca/cacert.pem"
+          destination: "local/cacert-initial.pem"
+
       config_maps:
+        - destination: local/cacert.pem
+          env: false
+          on_change: restart
+          data: |
+            {{ file "local/cacert-initial.pem" }}
+
+            {{ with secret "pki_int/cert/ca_chain" }}
+            {{ .Data.certificate }}
+            {{ end }}
+
         - destination: secrets/file.env
           env: true
           on_change: restart
@@ -73,7 +91,10 @@ deployment:
             WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
             GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"
 
+            ClientSettingsVaultToken="{{ with secret "auth/token/create/grid-bot-client-settings" }}{{ .Auth.ClientToken }}{{ end }}"
+
             DISPLAY=:1
             DEFAULT_LOG_LEVEL=Information
-            VAULT_ADDR="${{ env.VAULT_ADDR }}"
-            VAULT_TOKEN="${{ env.VAULT_TOKEN }}"
+            VAULT_ADDR="{{ env "VAULT_ADDR" }}"
+            VAULT_TOKEN="{{ env "VAULT_TOKEN" }}"
+
