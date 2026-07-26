@@ -62,7 +62,7 @@
 
     <Copy SourceFiles="@(SslFiles)" DestinationFolder="$(PublishDir)ssl" />
     <Copy SourceFiles="@(ScriptFiles)" DestinationFolder="$(PublishDir)scripts\%(RecursiveDir)" />
-    <Copy SourceFiles="@(EntrypointScript)" DestinationFolder="$(PublishDir)entrypoint.sh" />
+    <Copy SourceFiles="@(EntrypointScript)" DestinationFolder="$(PublishDir)" />
   </Target>
 
   <ItemGroup>
