@@ -134,7 +134,7 @@ deployment:
             fi
 
             umask 077
-            printf '%s' "$TOKEN" > "/_/data/grid-bot/secrets/client_settings_token"
+            export ClientSettingsVaultToken="$${TOKEN}"
             echo "[pre-script] Client-settings token written."
 
         - destination: secrets/file.env
