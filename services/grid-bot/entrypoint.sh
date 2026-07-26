@@ -10,7 +10,7 @@ if [ -n "$PRE_SCRIPTS_DIR" ]; then
       chmod +x "$script"
 
       # Source the script to run it in the current shell context
-      source "$script"
+      . "$script"
     fi
   done
 fi
