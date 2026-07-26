@@ -412,6 +412,34 @@ public class ClientSettingsFactory : IClientSettingsFactory
         }
     }
 
+    /// <inheritdoc cref="IClientSettingsFactory.GetBucketedSettingsForApplication(string, string, bool)"/>
+    public Secrets GetBucketedSettingsForApplication(string application, string bucketName, bool withDependencies = true)
+    {
+        if (string.IsNullOrWhiteSpace(application))
+            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(application)), nameof(application));
+
+        if (string.IsNullOrWhiteSpace(bucketName))
+            throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(bucketName)), nameof(bucketName));
+
+        var settings = GetSettingsForApplication(application, withDependencies);
+
+        if (settings == null)
+            return null;
+
+        var bucketedSettings = new Dictionary<string, object>();
+
+        foreach (var kvp in settings)
+        {
+            if (kvp.Key.StartsWith($"{bucketName}_"))
+            {
+                var keyWithoutBucket = kvp.Key.Substring(bucketName.Length + 1);
+                bucketedSettings[keyWithoutBucket] = kvp.Value;
+            }
+        }
+
+        return bucketedSettings;
+    }
+
     /// <inheritdoc cref="IClientSettingsFactory.GetSettingForApplication{T}(string, string, bool)"/>
     public T GetSettingForApplication<T>(string application, string setting, bool withDependencies = true)
     {

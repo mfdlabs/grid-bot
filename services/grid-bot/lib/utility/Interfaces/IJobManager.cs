@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 using Client;
 
+using ProcessManagement.Core;
+
 /// <summary>
 /// Interface for a job manager.
 /// </summary>

@@ -18,6 +18,7 @@
     <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/commands/Grid.Commands.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/client/Grid.Client.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/job-management/Grid.JobManagement.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />

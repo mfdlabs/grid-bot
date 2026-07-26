@@ -28,6 +28,10 @@ using Thumbnails.Client;
 using Events;
 using Utility;
 
+using Grid.JobManagement;
+using Grid.PortManagement;
+using Grid.ProcessManagement;
+
 using EnvironmentProvider = Grid.Bot.EnvironmentProvider;
 
 /// <summary>
@@ -170,43 +174,35 @@ public static class IServiceCollectionExtensions
         }
 #endif
 
+        gridSettings.GridServerAdditionalVolumeMappings = [
+            ..gridSettings.GridServerAdditionalVolumeMappings,
+            $"{gridSettings.GridServerSharedDirectoryInternalScripts}:{gridSettings.GridServerInsideDirectoryInternalScripts}"
+        ];
+
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
             logLevelGetter: () => gridSettings.JobManagerLogLevel,
             logToConsole: gridSettings.JobManagerLogToConsole
         );
 
+        var clientSettingsFactory = services
+            .BuildServiceProvider()
+            .GetRequiredService<IClientSettingsFactory>();
+
+        var clientSettingsClient = new ClientSettingsFactoryProxyClient(clientSettingsFactory);
+
         var portAllocator = new PortAllocator(logger);
+        var jobManagerFactory = new JobManagerGridServerFactory();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var jobManager = new ProcessJobManager(
-                logger,
-                portAllocator,
-                gridSettings
-            );
+        var jobManagerGridServer = jobManagerFactory.GetJobManager(
+            logger,
+            clientSettingsClient,
+            gridSettings
+        );
 
-            jobManager.Start();
+        jobManagerGridServer.Start();
 
-            services.AddSingleton(jobManager);
-            services.AddSingleton(_ => null as DockerJobManager);
-
-        }
-        else
-        {
-            var jobManager = new DockerJobManager(
-                logger,
-                portAllocator,
-                gridSettings,
-                RandomFactory.GetDefaultRandom()
-            );
-
-            jobManager.Start();
-
-            services.AddSingleton(jobManager);
-            services.AddSingleton(_ => null as ProcessJobManager);
-        }
-
+        services.AddSingleton<IJobManagerGridServer>(jobManagerGridServer);
         services.AddSingleton<IJobManager, JobManager>();
 
         return services;

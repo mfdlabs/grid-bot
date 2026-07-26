@@ -10,6 +10,8 @@
     <Project Path="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <Project Path="../../lib/grid/client/Grid.Client.csproj" />
     <Project Path="../../lib/grid/commands/Grid.Commands.csproj" />
+    <Project Path="../../lib/grid/diagnostics/Grid.Diagnostics.csproj" />
+    <Project Path="../../lib/grid/job-management/Grid.JobManagement.csproj" />
     <Project Path="../../lib/grid/port-management/Grid.PortManagement.csproj" />
     <Project Path="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <Project Path="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />

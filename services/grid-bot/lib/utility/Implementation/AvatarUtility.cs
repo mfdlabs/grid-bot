@@ -17,6 +17,7 @@ using Thumbnails.Client;
 using Threading.Extensions;
 
 using Grid.Commands;
+using Grid.ProcessManagement.Core;
 
 using GridJob = Grid.Client.Job;
 

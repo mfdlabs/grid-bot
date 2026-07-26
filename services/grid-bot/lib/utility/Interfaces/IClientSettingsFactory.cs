@@ -30,6 +30,19 @@ public interface IClientSettingsFactory
     Secrets GetSettingsForApplication(string application, bool withDependencies = true);
 
     /// <summary>
+    /// Gets the settings for the specified application and bucket.
+    /// </summary>
+    /// <param name="application">The name of the application.</param>
+    /// <param name="bucketName">The name of the bucket.</param>
+    /// <param name="withDependencies">if set to <c>true</c> [with dependencies].</param>
+    /// <returns>The settings for the specified application and bucket.</returns>
+    /// <exception cref="ArgumentException">
+    /// - <paramref name="application"/> is <c>null</c> or whitespace.
+    /// - <paramref name="bucketName"/> is <c>null</c> or whitespace
+    /// </exception>
+    Secrets GetBucketedSettingsForApplication(string application, string bucketName, bool withDependencies = true);
+
+    /// <summary>
     /// Gets the specific setting for the specified application.
     /// </summary>
     /// <typeparam name="T">The type of the setting. Can either be a string, int or bool.</typeparam>

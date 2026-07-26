@@ -6,6 +6,10 @@ using System.Collections.Generic;
 
 using Logging;
 
+using ProcessManagement;
+using ProcessManagement.Core;
+using ProcessManagement.Docker;
+
 /// <summary>
 /// Settings provider for all arbiter related stuff.
 /// </summary>
@@ -109,7 +113,7 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
         string.Empty
     );
 
-    /// <inheritdoc cref="IGridServerDockerSettings.GridServerSharedDirectoryLogs"/>
+    /// <inheritdoc cref="IGridServerDockerSettings.MaxDelayBeforeFetchingNewGridServerContainer"/>
     public TimeSpan MaxDelayBeforeFetchingNewGridServerContainer => GetOrDefault(
         nameof(MaxDelayBeforeFetchingNewGridServerContainer),
         TimeSpan.FromSeconds(10)
@@ -121,11 +125,50 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
         () => System.IO.Path.Combine(Directory.GetCurrentDirectory(), "logs")
     );
 
-    /// <inheritdoc cref="IGridServerDockerSettings.GridServerSharedDirectoryInternalScripts"/>
+    /// <summary>
+    /// Gets the directory where shared Grid Server Service internal scripts are stored.
+    /// </summary>
+    /// <remarks>
+    /// Originally, this was built into process-management-docker,
+    /// but was removed because it is technically not feasible
+    /// </remarks>
     public string GridServerSharedDirectoryInternalScripts => GetOrDefault(
         nameof(GridServerSharedDirectoryInternalScripts),
         () => System.IO.Path.Combine(Directory.GetCurrentDirectory(), "internal-scripts")
     );
+
+    /// <summary>
+    /// Gets the directory where shared Grid Server Service internal scripts are stored inside the container.
+    /// </summary>
+    public string GridServerInsideDirectoryInternalScripts => GetOrDefault(
+        nameof(GridServerInsideDirectoryInternalScripts),
+        "/opt/roblox/rcc_service/internalscripts"
+    );
+
+    /// <inheritdoc cref="IGridServerDockerSettings.BaseUrl"/>
+    public string BaseUrl => GetOrDefault(
+        nameof(BaseUrl),
+        "http://www.sitetest4.robloxlabs.com"
+    );
+
+    /// <inheritdoc cref="IGridServerDockerSettings.GridServerSharedDirectoryAppData"/>
+    public string GridServerSharedDirectoryAppData => GetOrDefault(
+        nameof(GridServerSharedDirectoryAppData),
+        () => System.IO.Path.Combine(Directory.GetCurrentDirectory(), "app-data")
+    );
+
+    /// <inheritdoc cref="IGridServerDockerSettings.GridServerAdditionalVolumeMappings"/>
+    public string[] GridServerAdditionalVolumeMappings
+    {
+        get => GetOrDefault(
+            nameof(GridServerAdditionalVolumeMappings),
+            Array.Empty<string>
+        );
+        set => Set(
+            nameof(GridServerAdditionalVolumeMappings),
+            value
+        );
+    }
 
     /// <inheritdoc cref="IGridServerDockerSettings.ReservedCoresPerGridServerInstance"/>
     public int? ReservedCoresPerGridServerInstance => GetOrDefault<int?>(
@@ -139,7 +182,7 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
         500 * 1024 * 1024
     );
 
-    /// <inheritdoc cref="IGridServerDockerSettings.GridServerMaxThreads"/>
+    /// <inheritdoc cref="IJobManagerSettings.GridServerMaxThreads"/>
     public int GridServerMaxThreads => GetOrDefault(
         nameof(GridServerMaxThreads),
         0
@@ -152,9 +195,9 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     );
 
     /// <inheritdoc cref="IGridServerDockerSettings.HttpAccessKey"/>
-    public string HttpAccessKey => GetOrDefault(
+    public string HttpAccessKey => GetOrDefault<string>(
         nameof(HttpAccessKey),
-        string.Empty
+        Guid.NewGuid().ToString() // Appeasing the original thing where all I need is the tags
     );
 
     /// <inheritdoc cref="IGridServerDockerSettings.GridServerPrimaryDnsServer"/>
@@ -217,6 +260,67 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
         TimeSpan.FromSeconds(5)
     );
 
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerSettingsApplicationName"/>
+    public string GridServerSettingsApplicationName => GetOrDefault(
+        nameof(GridServerSettingsApplicationName),
+        () => "RCCService" + GridServerSettingsKey
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerSettingsBucketName"/>
+    public string GridServerSettingsBucketName => GetOrDefault(
+        nameof(GridServerSettingsBucketName),
+        string.Empty
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerApplicationSettingsFilePath"/>
+    public string GridServerApplicationSettingsFilePath => GetOrDefault(
+        nameof(GridServerApplicationSettingsFilePath),
+        () => System.IO.Path.Combine(GridServerSharedDirectoryAppData, GridServerApplicationSettingsFileName)
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerApplicationSettingsValidWindow"/>
+    public TimeSpan GridServerApplicationSettingsValidWindow => GetOrDefault(
+        nameof(GridServerApplicationSettingsValidWindow),
+        TimeSpan.FromHours(1)
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.IsGridServerCpuAllocationCheckEnabled"/>
+    public bool IsGridServerCpuAllocationCheckEnabled => GetOrDefault(
+        nameof(IsGridServerCpuAllocationCheckEnabled),
+        false
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.IsGridServerThreadsAllocationCheckEnabled"/>
+    public bool IsGridServerThreadsAllocationCheckEnabled => GetOrDefault(
+        nameof(IsGridServerThreadsAllocationCheckEnabled),
+        false
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.IsGridServerMemoryAllocationCheckEnabled"/>
+    public bool IsGridServerMemoryAllocationCheckEnabled => GetOrDefault(
+        nameof(IsGridServerMemoryAllocationCheckEnabled),
+        false
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerCpuOverAllocationRatio"/>
+    public double GridServerCpuOverAllocationRatio => GetOrDefault(
+        nameof(GridServerCpuOverAllocationRatio),
+        1
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerThreadsOverAllocationRatio"/>
+    public double GridServerThreadsOverAllocationRatio => GetOrDefault(
+        nameof(GridServerThreadsOverAllocationRatio),
+        1
+    );
+
+    /// <inheritdoc cref="IJobManagerSettings.GridServerMemoryOverAllocationRatio"/>
+    public double GridServerMemoryOverAllocationRatio => GetOrDefault(
+        nameof(GridServerMemoryOverAllocationRatio),
+        1
+    );
+
     /// <inheritdoc cref="IGridServerDockerSettings.MaxTimeToWaitForImage"/>
     public TimeSpan MaxTimeToWaitForImage => GetOrDefault(
         nameof(MaxTimeToWaitForImage),
@@ -245,5 +349,17 @@ public class GridSettings : BaseSettingsProvider, IGridServerDockerSettings, IGr
     public string GridServerRegistryValueName => GetOrDefault<string>(
         nameof(GridServerRegistryValueName),
         () => throw new InvalidOperationException($"Missing required configuration value '{nameof(GridServerRegistryValueName)}")
+    );
+
+    /// <inheritdoc cref="IGridServerProcessSettings.VerboseLoggingEnabled"/>
+    public bool VerboseLoggingEnabled => GetOrDefault(
+        nameof(VerboseLoggingEnabled),
+        false
+    );
+
+    /// <inheritdoc cref="IGridServerProcessSettings.GridServerApplicationSettingsFileName"/>
+    public string GridServerApplicationSettingsFileName => GetOrDefault<string>(
+        nameof(GridServerApplicationSettingsFileName),
+        "grid-server-settings.json"
     );
 }
