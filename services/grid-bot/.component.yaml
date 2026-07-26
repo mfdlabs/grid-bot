@@ -83,23 +83,26 @@ deployment:
             CACERT_INITIAL="/_/data/grid-bot/cacert-initial.pem"
             CACERT_FINAL="/_/data/grid-bot/cacert.pem"
 
-            : "${VAULT_ADDR:?VAULT_ADDR is not set}"
-            : "${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+            : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
 
             echo "[pre-script] Fetching Vault issuer chain..."
 
-            CHAIN=$(curl -sf \
-              -H "X-Vault-Token: ${VAULT_TOKEN}" \
-              "${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
+            RESPONSE=$(curl -sf \
+              -H "X-Vault-Token: $${VAULT_TOKEN}" \
+              "$${VAULT_ADDR}/v1/pki_int/cert/ca_chain")
 
-            if [[ -z "${CHAIN}" ]]; then
-              echo "[pre-script] ERROR: empty response fetching ca_chain from Vault" >&2
+            CHAIN=$(echo "$${RESPONSE}" | jq -r '.data.ca_chain')
+
+            if [[ -z "$${CHAIN}" || "$${CHAIN}" == "null" ]]; then
+              echo "[pre-script] ERROR: failed to extract ca_chain from Vault response" >&2
+              echo "$${RESPONSE}" >&2
               exit 1
             fi
 
-            echo "[pre-script] Writing combined cacert to ${CACERT_FINAL}..."
-            cat "${CACERT_INITIAL}" > "${CACERT_FINAL}"
-            echo "${CHAIN}" >> "${CACERT_FINAL}"
+            echo "[pre-script] Writing combined cacert to $${CACERT_FINAL}..."
+            cat "$${CACERT_INITIAL}" > "$${CACERT_FINAL}"
+            printf '%s\n' "$${CHAIN}" >> "$${CACERT_FINAL}"
 
             echo "[pre-script] cacert.pem written successfully."
 
@@ -111,29 +114,28 @@ deployment:
             #!/usr/bin/env bash
             set -euo pipefail
 
-            : "${VAULT_ADDR:?VAULT_ADDR is not set}"
-            : "${VAULT_TOKEN:?VAULT_TOKEN is not set}"
-            : "${NOMAD_META_environment:?NOMAD_META_environment is not set}"
+            : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
+            : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
+            : "$${NOMAD_META_environment:?NOMAD_META_environment is not set}"
 
             ROLE="nomad-client-settings"
 
-            echo "[pre-script] Minting client-settings token via role ${ROLE}..."
+            echo "[pre-script] Minting client-settings token via role $${ROLE}..."
 
             RESPONSE=$(curl -sf \
-              -H "X-Vault-Token: ${VAULT_TOKEN}" \
+              -H "X-Vault-Token: $${VAULT_TOKEN}" \
               -X POST \
-              "${VAULT_ADDR}/v1/auth/token/create/${ROLE}")
+              "$${VAULT_ADDR}/v1/auth/token/create/${ROLE}")
 
-            TOKEN=$(echo "${RESPONSE}" | jq -r '.auth.client_token')
+            TOKEN=$(echo "$${RESPONSE}" | jq -r '.auth.client_token')
 
-            if [[ -z "${TOKEN}" || "${TOKEN}" == "null" ]]; then
+            if [[ -z "$${TOKEN}" || "$${TOKEN}" == "null" ]]; then
               echo "[pre-script] ERROR: failed to mint client-settings token" >&2
-              echo "${RESPONSE}" >&2
+              echo "$${RESPONSE}" >&2
               exit 1
             fi
 
-            export ClientSettingsVaultToken="${TOKEN}"
-            echo "ClientSettingsVaultToken=${TOKEN}" >> /_/data/grid-bot/secrets/client_settings_token.env
+            export ClientSettingsVaultToken="$${TOKEN}"
 
             echo "[pre-script] Client-settings token minted and exported."
 
