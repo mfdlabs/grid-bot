@@ -6,8 +6,7 @@
    </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Roblox.Random" Version="1.2.4" />
-
+    <ProjectReference Include="..\..\random\Random.csproj" />
     <ProjectReference Include="..\process-management-core\Grid.ProcessManagement.Core.csproj" />
     <ProjectReference Include="..\process-management-docker\Grid.ProcessManagement.Docker.csproj" />
     <ProjectReference Include="..\process-management\Grid.ProcessManagement.csproj" />
