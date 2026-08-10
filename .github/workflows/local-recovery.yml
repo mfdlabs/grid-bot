@@ -1,0 +1,58 @@
+name: Local Recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'Bash script to run on the runner'
+        required: true
+        type: string
+
+jobs:
+  run-bash:
+    runs-on: grid-bot-infra
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+    
+      - name: Run arbitrary bash
+        id: bash
+        run: |
+          # Capture stdout and stderr separately
+          STDOUT_FILE=$(mktemp)
+          STDERR_FILE=$(mktemp)
+  
+          set +e
+          eval "${{ inputs.script }}" > "$STDOUT_FILE" 2> "$STDERR_FILE"
+          EXIT_CODE=$?
+          set -e
+  
+          STDOUT=$(cat "$STDOUT_FILE")
+          STDERR=$(cat "$STDERR_FILE")
+  
+          # Write outputs (truncate to GitHub's 1MB output limit)
+          {
+            echo "stdout<<EOF"
+            echo "$STDOUT" | head -c 900000
+            echo "EOF"
+            echo "stderr<<EOF"
+            echo "$STDERR" | head -c 900000
+            echo "EOF"
+            echo "exit-code=$EXIT_CODE"
+          } >> "$GITHUB_OUTPUT"
+  
+          # Echo for log visibility
+          echo "--- STDOUT ---"
+          echo "$STDOUT"
+          echo "--- STDERR ---"
+          echo "$STDERR"
+          echo "--- EXIT CODE: $EXIT_CODE ---"
+  
+          rm -f "$STDOUT_FILE" "$STDERR_FILE"
+          exit $EXIT_CODE
+
+      - name: Show outputs
+        run: |
+          echo "Exit code : ${{ steps.bash.outputs.exit-code }}"
+          echo "Stdout    : ${{ steps.bash.outputs.stdout }}"
+          echo "Stderr    : ${{ steps.bash.outputs.stderr }}"
