@@ -4,15 +4,17 @@ package grid.bot.v1;
 
 option csharp_namespace = "Grid.Bot.V1";
 
+import "google/protobuf/empty.proto";
+
 // GridBotAPI defines the gRPC service for checking health
 service GridBotAPI {
     // CheckHealth checks the health of the service.
     // Used by the recovery instance to determine if recovery is needed.
-    rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse);
-};
+    rpc CheckHealth(google.protobuf.Empty) returns (CheckHealthResponse);
 
-// CheckHealthRequest is the request for the CheckHealth RPC.
-message CheckHealthRequest {
+    // SetStatus sets the maintenance status of the service.
+    // Used by the DevOps pipeline to set the maintenance status of the service.
+    rpc SetStatus(SetStatusRequest) returns (google.protobuf.Empty);
 };
 
 // CheckHealthResponse is the response for the CheckHealth RPC.
@@ -26,3 +28,12 @@ message CheckHealthResponse {
     // shards is a list of shard display names.
     repeated string shards = 3;
 };
+
+// SetStatusRequest is the request for the SetStatus RPC.
+message SetStatusRequest {
+    // Determines if maintenance mode is enabled or disabled.
+    bool maintenance_enabled = 1;
+
+    // The message to display when maintenance mode is enabled.
+    string maintenance_message = 2;
+}
