@@ -53,7 +53,7 @@ jobs:
     name: Get Component Names
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name != 'workflow_dispatch' && !contains(github.event.head_commit.message, '#!skip-build!#') }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-build!#') }}
 
     outputs:
       components: ${{ steps.parse-commit-message.outputs.components }}
@@ -344,7 +344,7 @@ jobs:
   upload-artifacts:
     name: Upload Artifacts
 
-    if: ${{ always() && !contains(github.event.head_commit.message, '#!skip-release!#') && !contains(github.event.head_commit.message, '#!skip-image!#') && !contains(github.event.head_commit.message, '#!skip-build!#') && needs.build.result == 'success' }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') && !contains(github.event.head_commit.message, '#!skip-image!#') && needs.build.result == 'success' }}
 
     needs: build
 
