@@ -71,9 +71,31 @@ jobs:
             // component parts of commit messages do not close with !#, to find the end,
             // just read the unti a newline character is found
 
+            function getComponentNames(commitMessage) {
+              const regex1 = /#!components: ([a-zA-Z0-9_\-., ]+)/g;
+              const regex2 = /#!components: ([a-zA-Z0-9_\-., ]+)/;
+
+              return commitMessage.match(regex1)?.map(x => x.match(regex2)[1].split(','))
+                .flat()
+                .map(x => x.trim())
+                .filter((x, i, a) => i === a.indexOf(x))
+                .join(',');
+            }
+
+            function getDeployableComponents(commitMessage) {
+              const regex1 = /#!deployable-components: ([a-zA-Z0-9_\-., ]+)/g;
+              const regex2 = /#!deployable-components: ([a-zA-Z0-9_\-., ]+)/;
+
+              return commitMessage.match(regex1)?.map(x => x.match(regex2)[1].split(','))
+                .flat()
+                .map(x => x.trim())
+                .filter((x, i, a) => i === a.indexOf(x))
+                .join(',');
+            }
+
             const headCommitMessage = `${{ github.event.head_commit.message }}`;
-            const components = headCommitMessage.match(/#!components: ([a-zA-Z0-9_\-.,]+)/);
-            const deployableComponents = headCommitMessage.match(/#!deployable-components: ([a-zA-Z0-9_\-.,]+)/);
+            const components = getComponentNames(headCommitMessage);
+            const deployableComponents = getDeployableComponents(headCommitMessage);
 
             core.setOutput('components', components || '');
             core.setOutput('deployable-components', deployableComponents || '');
