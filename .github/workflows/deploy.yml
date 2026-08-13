@@ -59,7 +59,6 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const yaml = require('yaml');
-            const crypto = require('crypto');
 
             let components = ${{ steps.find-component-directories.outputs.components }};
             components = new Map(Object.entries(components));
@@ -99,31 +98,30 @@ jobs:
               //   - script: raw script contents
               // (where script will create a temp file.)
 
-              function mapDeploymentScriptsCallback(kind) {
-                return script => {
-                  if (script.path) {
-                    // If not absolute path, make it relative to the component config file
-                    const scriptPath = path.isAbsolute(script.path)
-                      ? script.path
-                      : path.join(path.dirname(configFileName), script.path)
+              function mapDeploymentScriptsCallback(script) {
+                if (script.path) {
+                  // If not absolute path, make it relative to the component config file
+                  const scriptPath = path.isAbsolute(script.path)
+                    ? script.path
+                    : path.join(path.dirname(configFileName), script.path)
 
-                    return scriptPath;
+                  // Read the script file to ensure it exists
+                  if (!fs.existsSync(scriptPath)) {
+                    throw new Error(`Deployment script file not found: ${scriptPath}`);
                   }
-
-                  if (script.script) {
-                    const scriptHash = crypto.createHash('sha256').update(script.script).digest('hex');
-                    const tempFile = path.join(process.env.RUNNER_TEMP, `${kind}-deployment-script-${scriptHash}.sh`);
-                    fs.writeFileSync(tempFile, script.script, { mode: 0o755 });
                   
-                    return tempFile;
-                  }
-
-                  throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
+                  return fs.readFileSync(scriptPath, 'utf8');
                 }
+
+                if (script.script) {
+                  return script.script;
+                }
+
+                throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
               }
               
-              beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScriptsCallback('before'));
-              afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScriptsCallback('after'));
+              beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScriptsCallback);
+              afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScriptsCallback);
 
               perComponentDeploymentScripts[component] = {
                 before: beforeDeploymentScripts,
@@ -173,6 +171,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
+            const crypto = require('crypto');
             const child_process = require('child_process');
 
             const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
@@ -185,13 +184,16 @@ jobs:
             for (const [jobName, jobDefinition] of jobs) {
               const [componentName] = jobName.split(':');
               
-              const deploymentScripts = perComponentDeploymentScripts[componentName] || {};
+              const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
 
               if (deploymentScripts.before) {
-                for (const scriptPath of deploymentScripts.before) {
-                  console.log(`Running before deployment script for ${componentName}: ${scriptPath}`);
+                for (const scriptData of deploymentScripts.before) {
+                  console.log(`Running before deployment script for ${componentName}`);
 
                   try {
+                    const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                    fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
                     child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
                   } catch (error) {
                     // Should mark as failed here because before deployment scripts
@@ -222,10 +224,13 @@ jobs:
               }
 
               if (deploymentScripts.after) {
-                for (const scriptPath of deploymentScripts.after) {
-                  console.log(`Running after deployment script for ${componentName}: ${scriptPath}`);
+                for (const scriptData of deploymentScripts.after) {
+                  console.log(`Running after deployment script for ${componentName}`);
 
                   try {
+                    const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                    fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
                     child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
                   } catch (error) {
                     // After deployment scripts are not critical to the deployment process, 
