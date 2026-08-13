@@ -111,6 +111,7 @@ do
 	end
 
 	local vm_enabled_for_admins = FVariable:add_flag("LuaVMEnabledForAdmins", true)
+	local log_vm_information_for_admins = FVariable:add_flag("LuaVMLogInformationForAdmins", false)
 
 	local user_is_admin = args['is_admin']
 
@@ -560,20 +561,21 @@ do
 			old_error(...)
 		end
 
-		print("LuaVM is disabled for this user, printing debug information:")
-		print("User is admin:", user_is_admin)
-		print("LuaVMEnabledForAdmins:", vm_enabled_for_admins)
-		print("LuaVMEnabledForUser:", should_virtualize)
-		print("LuaVMTimeout:", timeout)
-		print("LuaVMMaxResultLength:", max_result_length)
-		print("LuaVMMaxLogLength:", max_log_length)
-		print("LuaVMMaxLogLineLength:", max_log_line_length)
-		print("LuaVMEnableLogMessagePrefixes:", enable_log_message_prefixes)
-		print("LuaVMBlacklistedClassNames:", FVariable:get_variable("LuaVMBlacklistedClassNames"))
-		print("LuaVMBlacklistedClassProperties:", FVariable:get_variable("LuaVMBlacklistedClassProperties"))
-		print("LuaVMBlacklistedClassMethods:", FVariable:get_variable("LuaVMBlacklistedClassMethods"))
-		print("LuaVMLuaGlobals:", FVariable:get_variable("LuaVMLuaGlobals"))
-		print("LuaVMRobloxGlobals:", FVariable:get_variable("LuaVMRobloxGlobals"))
+		if log_vm_information_for_admins and user_is_admin then
+			print("LuaVM is disabled for this user, printing debug information:")
+			print("LuaVMEnabledForAdmins:", vm_enabled_for_admins)
+			print("LuaVMEnabledForUser:", should_virtualize)
+			print("LuaVMTimeout:", timeout)
+			print("LuaVMMaxResultLength:", max_result_length)
+			print("LuaVMMaxLogLength:", max_log_length)
+			print("LuaVMMaxLogLineLength:", max_log_line_length)
+			print("LuaVMEnableLogMessagePrefixes:", enable_log_message_prefixes)
+			print("LuaVMBlacklistedClassNames:", FVariable:get_variable("LuaVMBlacklistedClassNames"))
+			print("LuaVMBlacklistedClassProperties:", FVariable:get_variable("LuaVMBlacklistedClassProperties"))
+			print("LuaVMBlacklistedClassMethods:", FVariable:get_variable("LuaVMBlacklistedClassMethods"))
+			print("LuaVMLuaGlobals:", FVariable:get_variable("LuaVMLuaGlobals"))
+			print("LuaVMRobloxGlobals:", FVariable:get_variable("LuaVMRobloxGlobals"))
+		end
 	end
 end
 
