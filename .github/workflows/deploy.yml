@@ -78,6 +78,10 @@ jobs:
             let perComponentDeploymentScripts = {};
 
             for (const [component, configFileName] of components) {
+              const [, componentVersion] = component.split(':');
+
+              process.env.NOMAD_VERSION = componentVersion;
+
               // Parse yaml
               const componentConfigData = fs.readFileSync(configFileName, 'utf8');
               const replacedContents = componentConfigData.replace(
