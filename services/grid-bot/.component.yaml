@@ -66,6 +66,16 @@ deployment:
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
 
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc
+          port: grpc
+          tags:
+            - ${{ env.NOMAD_ENVIRONMENT }}
+
+            - "traefik.enable=true"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.rule=Host(`grid-bot-grpc.wck02.vmminfra.dev`)"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.entrypoints=https"
+            - "traefik.http.services.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.loadbalancer.server.scheme=h2c"
+
       volumes:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'

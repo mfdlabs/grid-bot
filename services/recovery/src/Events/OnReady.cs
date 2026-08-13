@@ -36,7 +36,7 @@ public class OnShardReady(
     OnInteraction onInteractionEvent
 )
 {
-    private Atomic<int> _shardCount = 0; // needs to be atomic due to the race situation here.
+    private OnceFlag _readyFlag = new();
 
     private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -54,8 +54,6 @@ public class OnShardReady(
     /// <param name="shard">The client for the shard.</param>
     public Task Invoke(DiscordSocketClient shard)
     {
-        _shardCount++;
-
         _logger.Debug(
             "Shard '{0}' ready as '{0}#{1}'",
             shard.ShardId,
@@ -63,12 +61,9 @@ public class OnShardReady(
             _client.CurrentUser.Discriminator
         );
 
-        if (_shardCount == _client.Shards.Count)
+
+        Call.Once(ref _readyFlag, () =>
         {
-            _shardCount = 0;
-
-            _logger.Debug("Final shard ready!");
-
             _client.MessageReceived += _onMessageEvent.Invoke;
             _client.InteractionCreated += _onInteractionEvent.Invoke;
 
@@ -76,8 +71,8 @@ public class OnShardReady(
 
             _client.SetStatusAsync(UserStatus.DoNotDisturb);
             _client.SetGameAsync(GetStatusText(text));
+        });
 
-        }
 
         return Task.CompletedTask;
     }

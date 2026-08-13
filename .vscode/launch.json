@@ -5,7 +5,7 @@
             "name": "Grid.Bot",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build: grid-bot",
             "program": "${workspaceFolder}/services/grid-bot/src/bin/Debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/services/grid-bot/src/",
             "console": "internalConsole",
@@ -23,6 +23,38 @@
             "request": "launch",
             "program": "${workspaceFolder}/services/grid-bot/src/bin/Debug/net8.0/Grid.Bot.dll",
             "cwd": "${workspaceFolder}/services/grid-bot/src/",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
+        },
+
+        {
+            "name": "Grid.Bot.Recovery",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build: grid-bot-recovery",
+            "program": "${workspaceFolder}/services/recovery/src/bin/Debug/net8.0/Grid.Bot.Recovery.dll",
+            "cwd": "${workspaceFolder}/services/recovery/src/",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "logging": {
+                "moduleLoad": false
+            },
+            "requireExactSource": false,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Grid.Bot.Recovery (No build)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/recovery/src/bin/Debug/net8.0/Grid.Bot.Recovery.dll",
+            "cwd": "${workspaceFolder}/services/recovery/src/",
             "console": "internalConsole",
             "stopAtEntry": false,
             "justMyCode": true,
