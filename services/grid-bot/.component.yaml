@@ -13,6 +13,13 @@ build:
     image_name: mfdlabs/grid-bot
     
 deployment:
+  before:
+    - id: test # Arbitrary for identification, isn't actually used.
+      script: |
+        #!/bin/sh
+
+        echo Test!
+
   count: 1
   namespace: grid-bot
 
