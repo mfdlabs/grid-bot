@@ -24,6 +24,12 @@ on:
         default: "grid-bot,1000:2048"
         type: string
 
+      dry_run:
+        description: "Whether to perform a dry run (i.e., validate the deployment without actually deploying)"
+        required: false
+        default: false
+        type: boolean
+
 permissions:
   deployments: write
 
@@ -176,6 +182,8 @@ jobs:
             const crypto = require('crypto');
             const child_process = require('child_process');
 
+            const isDryRun = ${{ github.event.inputs.dry_run }} === 'true';
+
             const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
 
             let jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
@@ -192,53 +200,67 @@ jobs:
                 for (const { id, scriptData } of deploymentScripts.before) {
                   console.log(`Running before deployment script for ${componentName}: ${id}`);
 
-                  try {
-                    const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
-                    fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+                  if (!isDryRun) {
+                    try {
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
 
-                    child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
-                  } catch (error) {
-                    // Should mark as failed here because before deployment scripts
-                    // are critical to the deployment process. 
-                    // If they fail, we should not proceed with the deployment.
+                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
 
-                    console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
-                    console.error(error);
-                    failedJobs.push(jobName);
-                    
-                    continue;
+                      fs.unlinkSync(scriptPath);
+                    } catch (error) {
+                      // Should mark as failed here because before deployment scripts
+                      // are critical to the deployment process. 
+                      // If they fail, we should not proceed with the deployment.
+
+                      console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
+                      console.error(error);
+                      failedJobs.push(jobName);
+                      
+                      continue;
+                    }
                   }
                 }
               }
+
+                
 
               // Equivalent to mktemp 
               const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
 
               fs.writeFileSync(tempFile, jobDefinition);
 
-              // Poll the job status
-              try {
-                child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
-              } catch (error) {
-                failedJobs.push(jobName);
+              if (!isDryRun) {
+                // Poll the job status
+                try {
+                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
+                } catch (error) {
+                  failedJobs.push(jobName);
 
-                continue;
+                  continue;
+                }
+              } else {
+                console.log(`Dry run: would have deployed job ${jobName} with definition:\n${jobDefinition}`);
               }
 
               if (deploymentScripts.after) {
                 for (const { id, scriptData } of deploymentScripts.after) {
                   console.log(`Running after deployment script for ${componentName}: ${id}`);
 
-                  try {
-                    const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
-                    fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+                  if (!isDryRun) {
+                    try {
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
 
-                    child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
-                  } catch (error) {
-                    // After deployment scripts are not critical to the deployment process, 
-                    // log as a warning and continue with the next job.
-                    console.warn(`After deployment script failed for ${componentName}: ${id}`);
-                    console.warn(error);
+                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+
+                      fs.unlinkSync(scriptPath);
+                    } catch (error) {
+                      // After deployment scripts are not critical to the deployment process, 
+                      // log as a warning and continue with the next job.
+                      console.warn(`After deployment script failed for ${componentName}: ${id}`);
+                      console.warn(error);
+                    }
                   }
                 }
               }
