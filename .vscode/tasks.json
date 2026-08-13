@@ -2,12 +2,26 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build: grid-bot",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
                 "${workspaceFolder}/services/grid-bot/src/Grid.Bot.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary",
+                "/p:Configuration=Debug",
+                "/p:Platform=AnyCPU",
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build: grid-bot-recovery",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/services/recovery/src/Grid.Bot.Recovery.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary",
                 "/p:Configuration=Debug",
