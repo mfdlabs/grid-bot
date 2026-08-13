@@ -75,8 +75,8 @@ jobs:
             const components = headCommitMessage.match(/#!components: ([a-zA-Z0-9_\-.,]+)/);
             const deployableComponents = headCommitMessage.match(/#!deployable-components: ([a-zA-Z0-9_\-.,]+)/);
 
-            core.setOutput('components', components && components[1] || '');
-            core.setOutput('deployable-components', deployableComponents && deployableComponents[1] || '');
+            core.setOutput('components', components || '');
+            core.setOutput('deployable-components', deployableComponents || '');
 
   build:
     name: Build Components

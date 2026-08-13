@@ -31,7 +31,7 @@ deployment:
         # Download current version proto file
         echo "[pre-deploy] Downloading grid_bot.proto for version ${{ env.NOMAD_VERSION }}..."
         
-        PROTO_URL="https://raw.githubusercontent.com/mfdlabs/grid-bot/grid-bot-${{ env "NOMAD_VERSION" }}/proto/grid_bot.proto"
+        PROTO_URL="https://raw.githubusercontent.com/mfdlabs/grid-bot/grid-bot-${{ env.NOMAD_VERSION }}/proto/grid_bot.proto"
 
         curl -sSL "$PROTO_URL" -o /tmp/grid_bot.proto
 

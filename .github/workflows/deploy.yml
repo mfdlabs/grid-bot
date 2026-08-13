@@ -60,6 +60,12 @@ jobs:
       - name: Read Deployment Scripts
         uses: actions/github-script@v7
         id: read-deployment-scripts
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          NOMAD_SHORT_ENVIRONMENT: ${{ github.event.inputs.nomad_environment == 'production' && 'prod' || 'stage' }}
+
+          VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ vars.VAULT_TOKEN }}
         with:
           script: |
             const fs = require('fs');
