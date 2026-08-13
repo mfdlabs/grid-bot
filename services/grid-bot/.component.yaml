@@ -52,7 +52,7 @@ deployment:
 
         echo "[pre-deploy] Checking if grid-bot is alive at $GRID_BOT_GRPC_HOST..."
 
-        if ! /tmp/grpcurl -insecure -proto /tmp/grid_bot.proto "$GRID_BOT_GRPC_HOST" "$GRID_BOT_CHECKHEALTH_RPC" >/dev/null 2>&1; then
+        if ! /tmp/grpcurl -insecure -import-path /tmp -proto /tmp/grid_bot.proto "$GRID_BOT_GRPC_HOST" "$GRID_BOT_CHECKHEALTH_RPC" >/dev/null 2>&1; then
           echo "[pre-deploy] grid-bot is not alive, skipping maintenance status update."
           exit 0
         fi
@@ -65,15 +65,18 @@ deployment:
 
         if ! /tmp/grpcurl \
           -insecure \
+          -import-path /tmp \
           -proto /tmp/grid_bot.proto \
-          -d "{\"maintenance_enabled\":true,\"maintenance_text\":\"${MAINTENANCE_STATUS_TEXT}\"}" \
+          -d "{\"maintenance_enabled\":true,\"maintenance_message\":\"${MAINTENANCE_STATUS_TEXT}\"}" \
           "$GRID_BOT_GRPC_HOST" \
           "$GRID_BOT_SETSTATUS_RPC"; then
           echo "[pre-deploy] ERROR: Failed to set maintenance status." >&2
           exit 1
         fi
 
-        echo "[pre-deploy] Maintenance status set successfully."
+        echo "[pre-deploy] Maintenance status set successfully. Waiting for 5 seconds to ensure the status is propagated..."
+
+        sleep 5
 
   count: 1
   namespace: grid-bot
