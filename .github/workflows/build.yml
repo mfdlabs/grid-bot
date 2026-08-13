@@ -46,6 +46,7 @@ on:
 permissions:
   contents: write
   deployments: write
+  pull-requests: write
 
 jobs:
   # Allows for a switch between push and workflow_dispatch
@@ -56,7 +57,7 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '#!skip-build!#') }}
 
     outputs:
-      components: ${{ steps.parse-commit-message.outputs.components }}
+      components: ${{ github.event == 'workflow_dispatch' && github.event.inputs.components || steps.parse-commit-message.outputs.components }}
       deployable-components: ${{ steps.parse-commit-message.outputs.deployable-components }}
 
     steps:
