@@ -63,6 +63,7 @@ jobs:
     steps:
       - name: Parse commit message
         id: parse-commit-message
+        if: ${{ github.event_name == 'push' }}
         uses: actions/github-script@v7
         with:
           script: |
