@@ -26,7 +26,7 @@ on:
 
 permissions:
   deployments: write
-     
+
 jobs:
   parse-input-components:
     name: Validate and find component directories
@@ -110,11 +110,13 @@ jobs:
                     throw new Error(`Deployment script file not found: ${scriptPath}`);
                   }
                   
-                  return fs.readFileSync(scriptPath, 'utf8');
+                  const id = script.id ?? crypto.randomBytes(8).toString('hex');
+                  
+                  return {id, scriptData: fs.readFileSync(scriptPath, 'utf8')};
                 }
 
                 if (script.script) {
-                  return script.script;
+                  return {id: script.id ?? crypto.randomBytes(8).toString('hex'), scriptData: script.script};
                 }
 
                 throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
@@ -162,7 +164,7 @@ jobs:
         uses: nferch/setup-nomad@v4.0.0
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
- 
+
       - name: Deploy Nomad Jobs
         uses: actions/github-script@v7
         id: deploy-nomad-jobs
@@ -187,8 +189,8 @@ jobs:
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
 
               if (deploymentScripts.before) {
-                for (const scriptData of deploymentScripts.before) {
-                  console.log(`Running before deployment script for ${componentName}`);
+                for (const { id, scriptData } of deploymentScripts.before) {
+                  console.log(`Running before deployment script for ${componentName}: ${id}`);
 
                   try {
                     const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
@@ -224,8 +226,8 @@ jobs:
               }
 
               if (deploymentScripts.after) {
-                for (const scriptData of deploymentScripts.after) {
-                  console.log(`Running after deployment script for ${componentName}`);
+                for (const { id, scriptData } of deploymentScripts.after) {
+                  console.log(`Running after deployment script for ${componentName}: ${id}`);
 
                   try {
                     const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
@@ -235,7 +237,7 @@ jobs:
                   } catch (error) {
                     // After deployment scripts are not critical to the deployment process, 
                     // log as a warning and continue with the next job.
-                    console.warn(`After deployment script failed for ${componentName}: ${scriptPath}`);
+                    console.warn(`After deployment script failed for ${componentName}: ${id}`);
                     console.warn(error);
                   }
                 }
@@ -245,4 +247,3 @@ jobs:
             if (failedJobs.length > 0) {
               core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
             }
-
