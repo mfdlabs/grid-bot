@@ -28,12 +28,22 @@ deployment:
         curl -sSL "$GRPCURL_URL" | tar -xz -C /tmp
         chmod +x /tmp/grpcurl
 
+        if ! command -v /tmp/grpcurl >/dev/null 2>&1; then
+          echo "[pre-deploy] ERROR: grpcurl not found after download." >&2
+          exit 1
+        fi
+
         # Download current version proto file
         echo "[pre-deploy] Downloading grid_bot.proto for version ${{ env.NOMAD_VERSION }}..."
         
         PROTO_URL="https://raw.githubusercontent.com/mfdlabs/grid-bot/grid-bot-${{ env.NOMAD_VERSION }}/proto/grid_bot.proto"
 
         curl -sSL "$PROTO_URL" -o /tmp/grid_bot.proto
+
+        if ! [ -f /tmp/grid_bot.proto ]; then
+          echo "[pre-deploy] ERROR: grid_bot.proto not found after download." >&2
+          exit 1
+        fi
 
         # If we are not alive then skip 
         GRID_BOT_GRPC_HOST="${{ env.NOMAD_ENVIRONMENT }}-grid-bot.wck02.vmminfra.dev:443"
