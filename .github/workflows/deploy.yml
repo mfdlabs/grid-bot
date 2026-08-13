@@ -182,7 +182,7 @@ jobs:
             const crypto = require('crypto');
             const child_process = require('child_process');
 
-            const isDryRun = ${{ github.event.inputs.dry_run }} === 'true';
+            const isDryRun = ${{ github.event.inputs.dry_run }};
 
             const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
 
