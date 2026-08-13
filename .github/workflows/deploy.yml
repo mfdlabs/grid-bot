@@ -41,6 +41,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Needed Node Modules
+        run: npm install yaml
+
       - name: Validate and Find components
         uses: mfdlabs/component-finder-action@v10
         id: find-component-directories
@@ -55,7 +58,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const yaml = require('js-yaml');
+            const yaml = require('yaml');
             const crypto = require('crypto');
 
             let components = ${{ steps.find-component-directories.outputs.components }};
