@@ -121,7 +121,7 @@ deployment:
             - ${{ env.NOMAD_ENVIRONMENT }}
 
             - "traefik.enable=true"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.${{ env.RBX_ENVIRONMENT }}.robloxlabs.com`) || Host(`versioncompatibility.api.${{ env.RBX_ENVIRONMENT }}.robloxlabs.com`) || Host(`avatar.${{ env.RBX_ENVIRONMENT }}.robloxlabs.com`))"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
 
         - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
