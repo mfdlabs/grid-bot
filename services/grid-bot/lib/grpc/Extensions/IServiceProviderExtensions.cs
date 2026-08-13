@@ -44,6 +44,9 @@ public static class IServiceProviderExtensions
             return;
         }
 
+        var maintenanceSettings = services.GetRequiredService<MaintenanceSettings>();
+        var discordSettings = services.GetRequiredService<DiscordSettings>();
+
         var client = services.GetRequiredService<DiscordShardedClient>();
         
         logger.Information("Starting gRPC server on {0}", grpcSettings.GridBotGrpcServerEndpoint);
@@ -54,6 +57,8 @@ public static class IServiceProviderExtensions
         builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
 
         builder.Services.AddSingleton(client);
+        builder.Services.AddSingleton(maintenanceSettings);
+        builder.Services.AddSingleton(discordSettings);
 
         builder.Services.AddGrpc();
 

@@ -65,13 +65,16 @@ public class Maintenance(
         if (string.IsNullOrEmpty(statusText))
             statusText = _maintenanceSettings.MaintenanceStatus;
 
-        _maintenanceSettings.MaintenanceEnabled = true;
+        using (_maintenanceSettings.BeginTransaction())
+        {
+            _maintenanceSettings.MaintenanceEnabled = true;
 
-        _discordShardedClient.SetStatusAsync(UserStatus.DoNotDisturb);
-        _discordShardedClient.SetGameAsync(GetStatusText(statusText));
+            _discordShardedClient.SetStatusAsync(UserStatus.DoNotDisturb);
+            _discordShardedClient.SetGameAsync(GetStatusText(statusText));
 
-        if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
-            _maintenanceSettings.MaintenanceStatus = statusText;
+            if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
+                _maintenanceSettings.MaintenanceStatus = statusText;
+        }
 
         await this.ReplyWithReferenceAsync($"Successfully enabled the maintenance status with the optional message of '{(string.IsNullOrEmpty(statusText) ? "No Message" : statusText)}'!");
     }
@@ -89,12 +92,15 @@ public class Maintenance(
             return;
         }
 
-        _maintenanceSettings.MaintenanceEnabled = false;
+        using (_maintenanceSettings.BeginTransaction())
+        {
+            _maintenanceSettings.MaintenanceEnabled = false;
 
-        _discordShardedClient.SetStatusAsync(_discordSettings.BotStatus);
+            _discordShardedClient.SetStatusAsync(_discordSettings.BotStatus);
 
-        if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
-            _discordShardedClient.SetGameAsync(_discordSettings.BotStatusMessage);
+            if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
+                _discordShardedClient.SetGameAsync(_discordSettings.BotStatusMessage);
+        }
 
         await this.ReplyWithReferenceAsync("Successfully disabled the maintenance status!");
     }
@@ -125,6 +131,7 @@ public class Maintenance(
         }
 
         _maintenanceSettings.MaintenanceStatus = statusText;
+        _maintenanceSettings.ApplyCurrent();
 
         _discordShardedClient.SetGameAsync(GetStatusText(statusText));
 

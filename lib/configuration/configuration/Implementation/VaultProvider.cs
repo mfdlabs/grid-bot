@@ -24,6 +24,29 @@ using Threading.Extensions;
 /// </summary>
 public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
 {
+    private class NoOpDisposable : IDisposable
+    {
+        public void Dispose()
+        {
+            // No-op
+        }
+    }
+
+    private class TransactionDisposable : IDisposable
+    {
+        private readonly VaultProvider _provider;
+
+        public TransactionDisposable(VaultProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public void Dispose()
+        {
+            _provider.ApplyCurrent();
+        }
+    }
+
     private static readonly TimeSpan _defaultRefreshIntervalConstant = TimeSpan.FromMinutes(10);
     private static TimeSpan _defaultRefreshInterval
     {
@@ -62,6 +85,9 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
     /// <inheritdoc cref="IVaultProvider.Path"/>
     public virtual string Path { get; set; }
 
+    /// <inheritdoc cref="IVaultProvider.AutomaticWrite"/>
+    public virtual bool AutomaticWrite { get; set; } = true;
+
     /// <summary>
     /// Gets the refresh interval for the settings provider.
     /// </summary>
@@ -72,7 +98,8 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
 
     private static void TryInitializeGlobalRefreshThread()
     {
-        Call.Once(ref _refreshAheadOnceFlag, () => {
+        Call.Once(ref _refreshAheadOnceFlag, () =>
+        {
             new Thread(RefreshThread)
             {
                 IsBackground = true,
@@ -108,7 +135,8 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
 
         _CachedValues[variable] = realValue;
 
-        ApplyCurrent();
+        if (AutomaticWrite)
+            ApplyCurrent();
     }
 
     /// <inheritdoc cref="IVaultProvider.ApplyCurrent"/>
@@ -342,6 +370,19 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
 
     /// <inheritdoc cref="IVaultProvider.Refresh"/>
     public void Refresh() => DoRefresh();
+
+    /// <inheritdoc cref="IVaultProvider.BeginTransaction"/>
+    public IDisposable BeginTransaction()
+    {
+        if (AutomaticWrite)
+        {
+            _logger?.Debug("VaultProvider: BeginTransaction called, but AutomaticWrite is enabled, so this is a no-op!");
+
+            return new NoOpDisposable();
+        }
+
+        return new TransactionDisposable(this);
+    }
 
     /// <inheritdoc cref="BaseProvider.GetRawValue(string, out string)"/>
     protected override bool GetRawValue(string key, out string value)

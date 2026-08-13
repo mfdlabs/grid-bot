@@ -53,7 +53,10 @@ public class MicrosoftLogger(ILogger logger) : IMLogger
                 break;
             case MLogLevel.Error:
             case MLogLevel.Critical:
-                _logger.Error(message);
+                if (exception is not null)
+                    _logger.Error(exception, message);
+                else
+                    _logger.Error(message);
 
                 break;
             default:

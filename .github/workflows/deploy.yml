@@ -24,27 +24,130 @@ on:
         default: "grid-bot,1000:2048"
         type: string
 
+      dry_run:
+        description: "Whether to perform a dry run (i.e., validate the deployment without actually deploying)"
+        required: false
+        default: false
+        type: boolean
+
 permissions:
   deployments: write
-     
+
 jobs:
   parse-input-components:
     name: Validate and find component directories
     runs-on: ubuntu-latest
 
     outputs:
+      per-component-deployment-scripts: ${{ steps.read-deployment-scripts.outputs.per-component-deployment-scripts }}
+
       nomad-files: ${{ steps.components-to-nomad-jobs.outputs.nomad-files }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Needed Node Modules
+        run: npm install yaml
+
       - name: Validate and Find components
-        uses: mfdlabs/component-finder-action@v8
+        uses: mfdlabs/component-finder-action@v10
         id: find-component-directories
         with:
           components: ${{ github.event.inputs.components }}
           component-search-directories: services
+
+      - name: Read Deployment Scripts
+        uses: actions/github-script@v7
+        id: read-deployment-scripts
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          NOMAD_SHORT_ENVIRONMENT: ${{ github.event.inputs.nomad_environment == 'production' && 'prod' || 'stage' }}
+
+          VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ vars.VAULT_TOKEN }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const yaml = require('yaml');
+
+            let components = ${{ steps.find-component-directories.outputs.components }};
+            components = new Map(Object.entries(components));
+
+            let perComponentDeploymentScripts = {};
+
+            for (const [component, configFileName] of components) {
+              const [, componentVersion] = component.split(':');
+
+              process.env.NOMAD_VERSION = componentVersion;
+
+              // Parse yaml
+              const componentConfigData = fs.readFileSync(configFileName, 'utf8');
+              const replacedContents = componentConfigData.replace(
+                /\$\{{ env.([A-Za-z_]+) }}/g, // back slash needed here to escape from github action
+                (_, envVar) => {
+                  const value = process.env[envVar]
+
+                  if (!value) {
+                    return 'undefined'
+                  }
+
+                  return value
+                },
+              )
+
+              const componentConfig = yaml.parse(replacedContents);
+
+              if (!componentConfig.deployment) {
+                continue
+              }
+
+              let beforeDeploymentScripts = componentConfig.deployment.before || [];
+              let afterDeploymentScripts = componentConfig.deployment.after || [];
+
+              // Can either be:
+              // after:
+              //   - path: path/to/script
+              // or
+              // after:
+              //   - script: raw script contents
+              // (where script will create a temp file.)
+
+              function mapDeploymentScriptsCallback(script) {
+                if (script.path) {
+                  // If not absolute path, make it relative to the component config file
+                  const scriptPath = path.isAbsolute(script.path)
+                    ? script.path
+                    : path.join(path.dirname(configFileName), script.path)
+
+                  // Read the script file to ensure it exists
+                  if (!fs.existsSync(scriptPath)) {
+                    throw new Error(`Deployment script file not found: ${scriptPath}`);
+                  }
+                  
+                  const id = script.id ?? crypto.randomBytes(8).toString('hex');
+                  
+                  return {id, scriptData: fs.readFileSync(scriptPath, 'utf8')};
+                }
+
+                if (script.script) {
+                  return {id: script.id ?? crypto.randomBytes(8).toString('hex'), scriptData: script.script};
+                }
+
+                throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
+              }
+              
+              beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScriptsCallback);
+              afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScriptsCallback);
+
+              perComponentDeploymentScripts[component] = {
+                before: beforeDeploymentScripts,
+                after: afterDeploymentScripts,
+              };
+            }
+
+            core.setOutput('per-component-deployment-scripts', JSON.stringify(perComponentDeploymentScripts));
 
       - name: Components to Nomad Jobs
         uses: mfdlabs/component-nomad-parser-action@v18
@@ -77,16 +180,27 @@ jobs:
         uses: nferch/setup-nomad@v4.0.0
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
- 
+
       - name: Deploy Nomad Jobs
         uses: actions/github-script@v7
         id: deploy-nomad-jobs
         continue-on-error: true
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          NOMAD_SHORT_ENVIRONMENT: ${{ github.event.inputs.nomad_environment == 'production' && 'prod' || 'stage' }}
+
+          VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ vars.VAULT_TOKEN }}
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
+            const crypto = require('crypto');
             const child_process = require('child_process');
+
+            const isDryRun = ${{ github.event.inputs.dry_run }};
+
+            const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
 
             let jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
             jobs = new Map(Object.entries(jobs));
@@ -94,22 +208,80 @@ jobs:
             const failedJobs = [];
 
             for (const [jobName, jobDefinition] of jobs) {
-              const [componentName] = jobName.split(':'); 
+              const [componentName] = jobName.split(':');
+              
+              const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
+
+              if (deploymentScripts.before) {
+                for (const { id, scriptData } of deploymentScripts.before) {
+                  console.log(`Running before deployment script for ${componentName}: ${id}`);
+
+                  if (!isDryRun) {
+                    try {
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
+                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+
+                      fs.unlinkSync(scriptPath);
+                    } catch (error) {
+                      // Should mark as failed here because before deployment scripts
+                      // are critical to the deployment process. 
+                      // If they fail, we should not proceed with the deployment.
+
+                      console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
+                      console.error(error);
+                      failedJobs.push(jobName);
+                      
+                      continue;
+                    }
+                  }
+                }
+              }
+
+                
 
               // Equivalent to mktemp 
               const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
 
               fs.writeFileSync(tempFile, jobDefinition);
 
-              // Poll the job status
-              try {
-                child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
-              } catch (error) {
-                failedJobs.push(jobName);
+              if (!isDryRun) {
+                // Poll the job status
+                try {
+                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
+                } catch (error) {
+                  failedJobs.push(jobName);
+
+                  continue;
+                }
+              } else {
+                console.log(`Dry run: would have deployed job ${jobName} with definition:\n${jobDefinition}`);
+              }
+
+              if (deploymentScripts.after) {
+                for (const { id, scriptData } of deploymentScripts.after) {
+                  console.log(`Running after deployment script for ${componentName}: ${id}`);
+
+                  if (!isDryRun) {
+                    try {
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
+                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
+                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+
+                      fs.unlinkSync(scriptPath);
+                    } catch (error) {
+                      // After deployment scripts are not critical to the deployment process, 
+                      // log as a warning and continue with the next job.
+                      console.warn(`After deployment script failed for ${componentName}: ${id}`);
+                      console.warn(error);
+                    }
+                  }
+                }
               }
             }
 
             if (failedJobs.length > 0) {
               core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
             }
-

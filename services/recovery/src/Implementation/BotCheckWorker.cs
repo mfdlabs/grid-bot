@@ -128,13 +128,12 @@ public class BotCheckWorker(
 
     private async Task<bool> CallToHealthCheck()
     {
-        var request = new CheckHealthRequest();
         var callOptions = new CallOptions(deadline: DateTime.UtcNow.AddSeconds(3));
 
         try
         {
             // Okay means it doesn't throw an exception.
-            _lastHealthCheckResponse = await _client.CheckHealthAsync(request, callOptions);
+            _lastHealthCheckResponse = await _client.CheckHealthAsync(new(), callOptions);
 
             _logger.Debug(
                 "Bot check health, Latency = {0}, Status = {1}, Shards = {2}",
