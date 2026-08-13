@@ -558,7 +558,7 @@ jobs:
               if (pr.data.length > 0) {
                 prNumber = pr.data[0].number;
               }
-            } else if (${{ github.event_name }} === 'workflow_dispatch') {
+            } else if ('${{ github.event_name }}' === 'workflow_dispatch') {
               console.log(`Searching for PR with head: ${github.repository_owner}:${github.event.inputs.branch}`);
 
               const pr = await github.rest.pulls.list({
