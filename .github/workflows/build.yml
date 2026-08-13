@@ -352,26 +352,18 @@ jobs:
   upload-artifacts:
     name: Upload Artifacts
 
-    if: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') && !contains(github.event.head_commit.message, '#!skip-image!#') && needs.build.result == 'success' }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') && needs.build.result == 'success' }}
 
     needs: build
 
     runs-on: ubuntu-latest
 
-    outputs:
-      components: ${{ steps.build-docker-images.outputs.components }}
-
     env:
-      BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
+      BUILD_CONFIGURATION: ${{ github.ref == 'refs/heads/master' && 'Release' || 'Debug' }}
 
-      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
+      CREATE_RELEASE: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') }}
 
       COMPONENTS: ${{ needs.build.outputs.components }}
-
-      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-      CREATE_IMAGE: ${{ (github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#')) && vars.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
 
     steps:
       - name: Download Artifacts
@@ -412,6 +404,34 @@ jobs:
                 data: data,
               });
             }
+
+  build-docker-images:
+    name: Build Docker Images
+
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-image!#') && needs.build.result == 'success' }}
+
+    needs: 
+      - build
+
+    runs-on: local
+
+    outputs:
+      components: ${{ steps.build-docker-images.outputs.components }}
+
+    env:
+      COMPONENTS: ${{ needs.build.outputs.components }}
+
+      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      CREATE_IMAGE: ${{ !contains(github.event.head_commit.message, '#!skip-image!#') && vars.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: components
+          path: ${{ github.workspace }}/.deploy
 
       - name: Unpack Artifacts
         if: ${{ env.CREATE_IMAGE }}
@@ -506,11 +526,12 @@ jobs:
   tag-pr:
     name: Tag PR with Release and Docker Image Information
 
-    if: ${{ github.ref != 'refs/heads/master' && needs.upload-artifacts.outputs.components != '' }}
+    if: ${{ github.ref != 'refs/heads/master' && needs.upload-artifacts.result == 'success' && needs.build-docker-images.result == 'success' && needs.build-docker-images.outputs.components != '' }}
 
     needs:
       - build
       - upload-artifacts
+      - build-docker-images
 
     runs-on: ubuntu-latest
 
@@ -523,6 +544,8 @@ jobs:
             // Determine the PR number from push/workflow_dispatch event
             let prNumber = null;
             if (github.event_name === 'push') {
+              console.log(`Searching for PR with head: ${github.repository_owner}:${github.ref.replace('refs/heads/', '')}`);
+
               const pr = await github.rest.pulls.list({
                 owner: github.repository_owner,
                 repo: github.repository.split('/')[1],
@@ -534,6 +557,8 @@ jobs:
                 prNumber = pr.data[0].number;
               }
             } else if (github.event_name === 'workflow_dispatch') {
+              console.log(`Searching for PR with head: ${github.repository_owner}:${github.event.inputs.branch}`);
+
               const pr = await github.rest.pulls.list({
                 owner: github.repository_owner,
                 repo: github.repository.split('/')[1],
@@ -555,7 +580,7 @@ jobs:
           github-token: ${{ secrets.DEPLOYER_TOKEN }}
           script: |
             const prNumber = parseInt('${{ steps.pr-number.outputs.pr-number }}', 10);
-            const components = ${{ needs.upload-artifacts.outputs.components }};
+            const components = ${{ needs.build-docker-images.outputs.components }};
             let dockerCommands = ${{ needs.build.outputs.docker-commands }};
             dockerCommands = Object.keys(dockerCommands).map(key => {
               const [component, image] = key.split('@');
@@ -590,12 +615,12 @@ jobs:
 
     needs: 
       - get-component-names
-      - upload-artifacts
+      - build-docker-images
 
     runs-on: ubuntu-latest
 
     env:
-      COMPONENTS: ${{ needs.upload-artifacts.outputs.components }}
+      COMPONENTS: ${{ needs.build-docker-images.outputs.components }}
       DEPLOYABLE_COMPONENTS: ${{ needs.get-component-names.outputs.deployable-components }}
 
     steps:
