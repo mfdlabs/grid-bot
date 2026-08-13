@@ -14,11 +14,56 @@ build:
     
 deployment:
   before:
-    - id: test # Arbitrary for identification, isn't actually used.
+    - id: set-maintenance-status
       script: |
         #!/bin/sh
 
-        echo Test!
+        # Download grpcurl
+
+        GRPCURL_VERSION="1.9.3"
+        GRPCURL_URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz"
+
+        echo "[pre-deploy] Downloading grpcurl v${GRPCURL_VERSION}..."
+
+        curl -sSL "$GRPCURL_URL" | tar -xz -C /tmp
+        chmod +x /tmp/grpcurl
+
+        # Download current version proto file
+        echo "[pre-deploy] Downloading grid_bot.proto for version ${{ env.NOMAD_VERSION }}..."
+        
+        PROTO_URL="https://raw.githubusercontent.com/mfdlabs/grid-bot/grid-bot-${{ env "NOMAD_VERSION" }}/proto/grid_bot.proto"
+
+        curl -sSL "$PROTO_URL" -o /tmp/grid_bot.proto
+
+        # If we are not alive then skip 
+        GRID_BOT_GRPC_HOST="${{ env.NOMAD_ENVIRONMENT }}-grid-bot.wck02.vmminfra.dev:443"
+        GRID_BOT_GRPC_SVC="grid.bot.v1.GridBotAPI"
+        GRID_BOT_CHECKHEALTH_RPC="${GRID_BOT_GRPC_SVC}/CheckHealth"
+
+        echo "[pre-deploy] Checking if grid-bot is alive at $GRID_BOT_GRPC_HOST..."
+
+        if ! /tmp/grpcurl -insecure -proto /tmp/grid_bot.proto "$GRID_BOT_GRPC_HOST" "$GRID_BOT_CHECKHEALTH_RPC" >/dev/null 2>&1; then
+          echo "[pre-deploy] grid-bot is not alive, skipping maintenance status update."
+          exit 0
+        fi
+
+        # Set maintenance status to "Deploying new version ${{ env.NOMAD_VERSION }}"
+        GRID_BOT_SETSTATUS_RPC="${GRID_BOT_GRPC_SVC}/SetStatus"
+        MAINTENANCE_STATUS_TEXT="Deploying new version ${{ env.NOMAD_VERSION }}"
+
+        echo "[pre-deploy] Setting maintenance status to 'Deploying new version ${{ env.NOMAD_VERSION }}'..."
+
+        if ! /tmp/grpcurl \
+          -insecure \
+          -proto /tmp/grid_bot.proto \
+          -d "{\"maintenance_enabled\":true,\"maintenance_text\":\"${MAINTENANCE_STATUS_TEXT}\"}" \
+          "$GRID_BOT_GRPC_HOST" \
+          "$GRID_BOT_SETSTATUS_RPC"; then
+          echo "[pre-deploy] ERROR: Failed to set maintenance status." >&2
+          exit 1
+        fi
+
+        echo "[pre-deploy] Maintenance status set successfully."
 
   count: 1
   namespace: grid-bot
@@ -66,13 +111,13 @@ deployment:
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.rule=(Host(`clientsettingscdn.sitetest4.robloxlabs.com`) || Host(`versioncompatibility.api.sitetest4.robloxlabs.com`) || Host(`avatar.sitetest4.robloxlabs.com`))"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-web.entrypoints=http,https"
 
-        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc
+        - name: ${{ env.NOMAD_ENVIRONMENT }}-grid-bot
           port: grpc
           tags:
             - ${{ env.NOMAD_ENVIRONMENT }}
 
             - "traefik.enable=true"
-            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.rule=Host(`grid-bot-grpc.wck02.vmminfra.dev`)"
+            - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.rule=Host(`${{ env.NOMAD_ENVIRONMENT }}-grid-bot.wck02.vmminfra.dev`)"
             - "traefik.http.routers.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.entrypoints=https"
             - "traefik.http.services.${{ env.NOMAD_ENVIRONMENT }}-grid-bot-grpc.loadbalancer.server.scheme=h2c"
 
