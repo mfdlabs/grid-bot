@@ -490,6 +490,91 @@ jobs:
 
             core.setOutput('components', components);
 
+  # This job is only run on non-master branches,
+  # and is used to notify (just send a comment)
+  # about created release and docker images
+  # so that transparency is maintained and the 
+  # PR author knows what was built and can be deployed
+  tag-pr:
+    name: Tag PR with Release and Docker Image Information
+
+    if: ${{ github.ref != 'refs/heads/master' && needs.upload-artifacts.outputs.components != '' }}
+
+    needs:
+      - build
+      - upload-artifacts
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine PR Number
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Determine the PR number from push/workflow_dispatch event
+            let prNumber = null;
+            if (github.event_name === 'push') {
+              const pr = await github.rest.pulls.list({
+                owner: github.repository_owner,
+                repo: github.repository.split('/')[1],
+                head: `${github.repository_owner}:${github.ref.replace('refs/heads/', '')}`,
+                state: 'open'
+              });
+
+              if (pr.data.length > 0) {
+                prNumber = pr.data[0].number;
+              }
+            } else if (github.event_name === 'workflow_dispatch') {
+              const pr = await github.rest.pulls.list({
+                owner: github.repository_owner,
+                repo: github.repository.split('/')[1],
+                head: `${github.repository_owner}:${github.event.inputs.branch}`,
+                state: 'open'
+              });
+
+              if (pr.data.length > 0) {
+                prNumber = pr.data[0].number;
+              }
+            }
+
+            core.setOutput('pr-number', prNumber);
+
+      - name: Tag PR with Release and Docker Image Information
+        if: ${{ steps.pr-number.outputs.pr-number != null }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr-number.outputs.pr-number }}', 10);
+            const components = ${{ needs.upload-artifacts.outputs.components }};
+            let dockerCommands = ${{ needs.build.outputs.docker-commands }};
+            dockerCommands = Object.keys(dockerCommands).map(key => {
+              const [component, image] = key.split('@');
+              return { component, image };
+            });
+            dockerCommands = dockerCommands.reduce((acc, { component, image }) => {
+              acc[component] = image;
+              return acc;
+            }, {});
+
+            let commentBody = 'The following components have been built and are available for deployment:\n\n';
+
+            for (const component of components) {
+              const [name, version] = component.split(':');
+
+              commentBody += `- **${name}**: Version \`${version}\`\n`;
+              commentBody += `  - Release: [${name}-${version}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${name}-${version})\n`;
+              commentBody += `  - Docker Image: \`${dockerCommands[name]}:${version}\`\n`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: '${{ github.repository_owner }}',
+              repo: '${{ github.repository }}'.split('/')[1],
+              issue_number: prNumber,
+              body: commentBody
+            });
+
   deploy:
     name: Deploy Components
     
