@@ -8,6 +8,9 @@ public class MaintenanceSettings : BaseSettingsProvider
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.MaintenancePath;
 
+    /// <inheritdoc cref="Configuration.IVaultProvider.AutomaticWrite"/>
+    public override bool AutomaticWrite => false;
+
     /// <summary>
     /// Is maintenance enabled?
     /// </summary>
