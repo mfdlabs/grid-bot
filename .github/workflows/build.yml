@@ -413,7 +413,7 @@ jobs:
     needs: 
       - build
 
-    runs-on: local
+    runs-on: ubuntu-latest
 
     outputs:
       components: ${{ steps.build-docker-images.outputs.components }}
