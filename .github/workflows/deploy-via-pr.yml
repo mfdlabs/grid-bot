@@ -20,7 +20,7 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            const authorizedTeams = ['@mfdlabs/grid-bot-development'];
+            const authorizedTeams = ['mfdlabs/grid-bot-development'];
 
             const commentAuthor = `${{ github.event.comment.user.login }}`;
             const isAuthorized = await Promise.all(authorizedTeams.map(async (team) => {
@@ -46,7 +46,7 @@ jobs:
             // Can be in the form of:
             // #!(prod?)-deploy: ${component}:${version},[CPU:MEM]?
             const commentBody = `${{ github.event.comment.body }}`;
-            const deployCommandRegex = /^#!deploy:\s*([a-zA-Z0-9_-]+):([0-9]+\.[0-9]+\.[0-9]+)(:[0-9]+:[0-9]+)?$/;
+            const deployCommandRegex = /^#!(?:prod-)?deploy:\s*([a-zA-Z0-9_-]+):([a-zA-Z0-9._-]+)(?:,([0-9]+:[0-9]+))?$/;
             const match = commentBody.match(deployCommandRegex);
 
             if (!match) {
@@ -55,9 +55,10 @@ jobs:
               return;
             }
 
+            const environment = commentBody.startsWith('#!prod-deploy:') ? 'production' : 'staging';
             const component = match[1];
             const version = match[2];
-            const resources = match[3] ? match[3].substring(1).split(':') : null; // [CPU, MEM]
+            const resources = match[3] ? match[3].split(':') : null;
 
             console.log(`Deploying component: ${component}, version: ${version}, resources: ${resources}`);
 
