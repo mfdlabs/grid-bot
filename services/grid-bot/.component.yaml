@@ -139,7 +139,7 @@ deployment:
         - '/tmp/.X11-unix:/tmp/.X11-unix'
 
         - '/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/logs:/tmp/mfdlabs/logs'
-        - '/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc:/_/data/grid-bot/rcc' # Simply here to just to ensure it actually gets created on the host
+        - '/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc:/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc' # Simply here to just to ensure it actually gets created on the host
 
       artifacts:
         - source: "https://curl.se/ca/cacert.pem"
@@ -232,11 +232,11 @@ deployment:
             #!/bin/sh
             set -eu
 
-            mkdir -p /_/data/grid-bot/rcc/app-data
-            mkdir -p /_/data/grid-bot/rcc/rcc-logs
-            mkdir -p /_/data/grid-bot/rcc/scripts
+            mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/app-data
+            mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/rcc-logs
+            mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/scripts
 
-            cp /all/scripts/* /_/data/grid-bot/rcc/scripts/ -r
+            cp /all/scripts/* /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/scripts/ -r
 
         - destination: secrets/file.env
           env: true
