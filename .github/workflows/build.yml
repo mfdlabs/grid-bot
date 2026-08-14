@@ -46,6 +46,7 @@ on:
 permissions:
   contents: write
   deployments: write
+  pull-requests: write
 
 jobs:
   # Allows for a switch between push and workflow_dispatch
@@ -53,10 +54,10 @@ jobs:
     name: Get Component Names
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name != 'workflow_dispatch' && !contains(github.event.head_commit.message, '#!skip-build!#') }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-build!#') }}
 
     outputs:
-      components: ${{ steps.parse-commit-message.outputs.components }}
+      components: ${{ github.event.inputs.components || steps.parse-commit-message.outputs.components }}
       deployable-components: ${{ steps.parse-commit-message.outputs.deployable-components }}
 
     steps:
@@ -91,6 +92,13 @@ jobs:
                 .map(x => x.trim())
                 .filter((x, i, a) => i === a.indexOf(x))
                 .join(',');
+            }
+
+            if (github.event_name == 'workflow_dispatch') {
+              core.setOutput('components', `${{ github.event.inputs.components }}`);
+              core.setOutput('deployable-components', '');
+              
+              return;
             }
 
             const headCommitMessage = `${{ github.event.head_commit.message }}`;
@@ -344,26 +352,18 @@ jobs:
   upload-artifacts:
     name: Upload Artifacts
 
-    if: ${{ always() && !contains(github.event.head_commit.message, '#!skip-release!#') && !contains(github.event.head_commit.message, '#!skip-image!#') && !contains(github.event.head_commit.message, '#!skip-build!#') && needs.build.result == 'success' }}
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') && needs.build.result == 'success' }}
 
     needs: build
 
     runs-on: ubuntu-latest
 
-    outputs:
-      components: ${{ steps.build-docker-images.outputs.components }}
-
     env:
-      BUILD_CONFIGURATION: ${{ github.event.inputs.build_configuration || (github.event_name == 'push' && github.ref == 'refs/heads/master' && 'Release') || 'Debug' }}
+      BUILD_CONFIGURATION: ${{ github.ref == 'refs/heads/master' && 'Release' || 'Debug' }}
 
-      CREATE_RELEASE: ${{ github.event.inputs.create_release || !contains(github.event.head_commit.message, '#!skip-release!#') }}
+      CREATE_RELEASE: ${{ !contains(github.event.head_commit.message, '#!skip-release!#') }}
 
       COMPONENTS: ${{ needs.build.outputs.components }}
-
-      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-      CREATE_IMAGE: ${{ (github.event.inputs.create_image || !contains(github.event.head_commit.message, '#!skip-image!#')) && vars.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
 
     steps:
       - name: Download Artifacts
@@ -404,6 +404,34 @@ jobs:
                 data: data,
               });
             }
+
+  build-docker-images:
+    name: Build Docker Images
+
+    if: ${{ !contains(github.event.head_commit.message, '#!skip-image!#') && needs.build.result == 'success' }}
+
+    needs: 
+      - build
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      components: ${{ steps.build-docker-images.outputs.components }}
+
+    env:
+      COMPONENTS: ${{ needs.build.outputs.components }}
+
+      DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      CREATE_IMAGE: ${{ !contains(github.event.head_commit.message, '#!skip-image!#') && vars.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: components
+          path: ${{ github.workspace }}/.deploy
 
       - name: Unpack Artifacts
         if: ${{ env.CREATE_IMAGE }}
@@ -490,6 +518,90 @@ jobs:
 
             core.setOutput('components', components);
 
+  # This job is only run on non-master branches,
+  # and is used to notify (just send a comment)
+  # about created release and docker images
+  # so that transparency is maintained and the 
+  # PR author knows what was built and can be deployed
+  tag-pr:
+    name: Tag PR with Release and Docker Image Information
+
+    if: ${{ github.ref != 'refs/heads/master' && needs.upload-artifacts.result != 'failure' && needs.build-docker-images.result != 'failure' && needs.build-docker-images.outputs.components != '' }}
+
+    needs:
+      - build
+      - upload-artifacts
+      - build-docker-images
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine PR Number
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`Event Name: ${{ github.event_name }}`);
+
+            // Determine the PR number from push/workflow_dispatch event
+            const headRef = '${{ github.ref }}'.replace('refs/heads/', '');
+
+            let prNumber = null;
+            console.log(`Searching for PR with head: ${{ github.repository_owner }}:${headRef}`);
+
+            const pr = await github.rest.pulls.list({
+              owner: '${{ github.repository_owner }}',
+              repo: '${{ github.repository }}'.split('/')[1],
+              head: `${{ github.repository_owner }}:${headRef}`,
+              state: 'open'
+            });
+
+            if (pr.data.length > 0) {
+              prNumber = pr.data[0].number;
+            }
+
+            if (pr.data.length > 0) {
+              prNumber = pr.data[0].number;
+            }
+
+            core.setOutput('pr-number', prNumber);
+
+      - name: Tag PR with Release and Docker Image Information
+        if: ${{ steps.pr-number.outputs.pr-number != null }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr-number.outputs.pr-number }}', 10);
+            const components = ${{ needs.build-docker-images.outputs.components }};
+            let dockerCommands = ${{ needs.build.outputs.docker-commands }};
+            dockerCommands = Object.keys(dockerCommands).map(key => {
+              const [component, image] = key.split('@');
+              return { component, image };
+            });
+            dockerCommands = dockerCommands.reduce((acc, { component, image }) => {
+              acc[component] = image;
+              return acc;
+            }, {});
+
+            let commentBody = 'The following components have been built and are available for deployment:\n\n';
+
+            for (const component of components) {
+              const [name, version] = component.split(':');
+
+              commentBody += `- **${name}**: Version \`${version}\`\n`;
+              commentBody += `  - Release: [${name}-${version}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${name}-${version})\n`;
+              commentBody += `  - Docker Image: \`${dockerCommands[name]}:${version}\`\n`;
+              commentBody += `  - Deploy with reply: \`#!deploy: ${name}:${version}\`\n\n`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: '${{ github.repository_owner }}',
+              repo: '${{ github.repository }}'.split('/')[1],
+              issue_number: prNumber,
+              body: commentBody
+            });
+
   deploy:
     name: Deploy Components
     
@@ -497,12 +609,12 @@ jobs:
 
     needs: 
       - get-component-names
-      - upload-artifacts
+      - build-docker-images
 
     runs-on: ubuntu-latest
 
     env:
-      COMPONENTS: ${{ needs.upload-artifacts.outputs.components }}
+      COMPONENTS: ${{ needs.build-docker-images.outputs.components }}
       DEPLOYABLE_COMPONENTS: ${{ needs.get-component-names.outputs.deployable-components }}
 
     steps:

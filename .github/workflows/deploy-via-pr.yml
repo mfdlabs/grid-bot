@@ -1,0 +1,82 @@
+name: Deploy via PR
+
+on:
+  issue_comment:
+    types: [created]
+  
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    name: Deploy via PR
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && (startsWith(github.event.comment.body, '#!deploy:') || startsWith(github.event.comment.body, '#!prod-deploy:')) }}
+    steps:
+      - name: Ensure is user is authorized to deploy
+        uses: actions/github-script@v7
+        id: check-user
+        continue-on-error: true
+        with:
+          script: |
+            const authorizedTeams = ['mfdlabs/grid-bot-development'];
+
+            const commentAuthor = `${{ github.event.comment.user.login }}`;
+            const isAuthorized = await Promise.all(authorizedTeams.map(async (team) => {
+              const [org, teamSlug] = team.split('/');
+              const teamMembers = await github.rest.teams.listMembersInOrg({
+                org,
+                team_slug: teamSlug,
+              });
+
+              return teamMembers.data.some(member => member.login === commentAuthor);
+            }));
+
+            if (!isAuthorized.some(auth => auth)) {
+              throw new Error(`User ${commentAuthor} is not authorized to deploy.`);
+            }
+      
+      - name: Extract deployment arguments from comment
+        uses: actions/github-script@v7
+        if: ${{ steps.check-user.outcome == 'success' }}
+        id: extract-args
+        with:
+          script: |
+            // Can be in the form of:
+            // #!(prod?)-deploy: ${component}:${version},[CPU:MEM]?
+            const commentBody = `${{ github.event.comment.body }}`;
+            const deployCommandRegex = /^#!(?:prod-)?deploy:\s*([a-zA-Z0-9_-]+):([a-zA-Z0-9._-]+)(?:,([0-9]+:[0-9]+))?$/;
+            const match = commentBody.match(deployCommandRegex);
+
+            if (!match) {
+              console.log('No valid deploy command found in the comment.');
+
+              return;
+            }
+
+            const environment = commentBody.startsWith('#!prod-deploy:') ? 'production' : 'staging';
+            const component = match[1];
+            const version = match[2];
+            const resources = match[3] ? match[3].split(':') : null;
+
+            console.log(`Deploying component: ${component}, version: ${version}, resources: ${resources}`);
+
+            const actionInputs = {
+              components: `${component}:${version}`,
+              nomad_environment: 'staging' // Always staging because we don't want to deploy to production from PRs
+            };
+
+            if (resources) {
+              actionInputs.nomad_resources = `${component},${resources[0]}:${resources[1]}`;
+            }
+
+            core.setOutput('action-inputs', JSON.stringify(actionInputs));
+
+      - name: Dispatch Deployment
+        uses: benc-uk/workflow-dispatch@v1
+        if: ${{ steps.check-user.outcome == 'success' && steps.extract-args.outputs.action-inputs }}
+        with:
+          workflow: deploy.yml
+          inputs: ${{ steps.extract-args.outputs.action-inputs }}
+          token: ${{ secrets.DEPLOYER_TOKEN }}
