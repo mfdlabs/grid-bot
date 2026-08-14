@@ -1,0 +1,100 @@
+name: Build via PR
+
+on:
+  issue_comment:
+    types: [created]
+  
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    name: Build via PR
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '#!build:') }}
+    steps:
+      - name: Ensure is user is authorized to build
+        uses: actions/github-script@v7
+        id: check-user
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const authorizedTeams = ['mfdlabs/grid-bot-development'];
+
+            const commentAuthor = `${{ github.event.comment.user.login }}`;
+            const isAuthorized = await Promise.all(authorizedTeams.map(async (team) => {
+              const [org, teamSlug] = team.split('/');
+              const teamMembers = await github.rest.teams.listMembersInOrg({
+                org,
+                team_slug: teamSlug,
+              });
+
+              return teamMembers.data.some(member => member.login === commentAuthor);
+            }));
+
+            if (!isAuthorized.some(auth => auth)) {
+              throw new Error(`User ${commentAuthor} is not authorized to deploy.`);
+            }
+      
+      - name: Extract build arguments from comment
+        uses: actions/github-script@v7
+        if: ${{ steps.check-user.outcome == 'success' }}
+        id: extract-args
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            // Can be in the form of:
+            // #!build: ${component}(:versionSuffix)?(@[debug|release])?
+            const commentBody = `${{ github.event.comment.body }}`;
+            const buildCommandRegex = /^#!build:\s*([a-zA-Z0-9_-]+)(?::([a-zA-Z0-9._-]+))?(?:@([a-zA-Z0-9_-]+))?$/;
+            const match = commentBody.match(buildCommandRegex);
+
+            if (!match) {
+              console.log('No valid deploy command found in the comment.');
+
+              return;
+            }
+
+            // Add a thumbs up reaction to the comment to indicate that the command was recognized
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1',
+            });
+
+            const component = match[1];
+            const versionSuffix = match[2] || '';
+            const buildType = (match[3] || 'debug') === 'debug' ? 'Debug' : 'Release';
+
+            console.log(`Building component: ${component}, version suffix: ${versionSuffix ?? 'none'}, build type: ${buildType}`);
+
+            const actionInputs = {
+              components: `${component}`,
+              build_configuration: buildType
+            };
+
+            if (versionSuffix) {
+              actionInputs.version_suffix = versionSuffix;
+            }
+
+            const prNumber = context.payload.issue.number;
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            core.setOutput('action-inputs', JSON.stringify(actionInputs));
+            core.setOutput('ref', pr.data.head.ref);
+
+      - name: Dispatch Build
+        uses: benc-uk/workflow-dispatch@v1
+        if: ${{ steps.check-user.outcome == 'success' && steps.extract-args.outputs.action-inputs }}
+        with:
+          workflow: build.yml
+          ref: ${{ steps.extract-args.outputs.ref }}
+          inputs: ${{ steps.extract-args.outputs.action-inputs }}
+          token: ${{ secrets.DEPLOYER_TOKEN }}
