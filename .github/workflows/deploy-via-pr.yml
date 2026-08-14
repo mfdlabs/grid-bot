@@ -88,5 +88,6 @@ jobs:
         if: ${{ steps.check-user.outcome == 'success' && steps.extract-args.outputs.action-inputs }}
         with:
           workflow: deploy.yml
+          ref: ${{ github.ref }}
           inputs: ${{ steps.extract-args.outputs.action-inputs }}
           token: ${{ secrets.DEPLOYER_TOKEN }}
