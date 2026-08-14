@@ -3,6 +3,7 @@ namespace Grid.Bot.Web.Routes;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Http;
 
@@ -14,6 +15,14 @@ using Utility;
 using Extensions;
 
 using Threading.Extensions;
+
+using Models;
+using Models.V1;
+using Models.V2;
+
+using BodyColorsModelV1 = Grid.Bot.Web.Models.V1.BodyColorsModel;
+using System.Net.Http.Json;
+
 
 /// <summary>
 /// Routes for the avatar API.
@@ -30,15 +39,28 @@ public class Avatar
     private const string _avatarFetchBodyColorsMapRightLegColorKey = "rightLegColorId";
     private const string _avatarFetchBodyColorsMapLeftLegColorKey = "leftLegColorId";
 
+    private const int _gearAssetTypeId = 19;
+    private static readonly int[] _animationAssetTypeIds = [
+        48, // ClimbAnimation
+        50, // FallAnimation
+        51, // IdleAnimation
+        52, // JumpAnimation
+        53, // RunAnimation
+        54, // SwimAnimation
+        55, // WalkAnimation
+        61, // EmoteAnimation
+    ];
+
+    private const string _robloxPlaceIdHeader = "Roblox-Place-Id";
     private const string _getAvatarFetchUserIdKey = "userId";
     private const string _getAvatarFetchPlaceIdKey = "placeId";
-    private const string _getAvatarFetchUrlFormat = $"{{0}}/v1/avatar-fetch?{_getAvatarFetchUserIdKey}={{1}}&{_getAvatarFetchPlaceIdKey}={{2}}";
+    private const string _getAvatarFetchUrlFormat = $"{{0}}/v1/users/{{1}}/avatar";
 
     private readonly ILogger _logger;
     private readonly AvatarSettings _settings;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    private readonly ExpirableDictionary<string, dynamic> _avatarFetchCache;
+    private readonly ExpirableDictionary<string, AvatarFetchModel> _avatarFetchCache;
 
     /// <summary>
     /// Construct a new instance of <see cref="Avatar" />
@@ -55,30 +77,52 @@ public class Avatar
         _avatarFetchCache = new(_settings.AvatarFetchCacheEntryTtl, _settings.AvatarFetchCacheTraversalInterval);
     }
 
+    private static AvatarFetchModel ConvertToAvatarFetchModel(AvatarModel avatarModel)
+    {
+        var model = new AvatarFetchModel
+        {
+            Scales = avatarModel.Scales,
+            ResolvedAvatarType = avatarModel.PlayerAvatarType,
+            BodyColors = BodyColorsModelV1.FromV2(avatarModel.BodyColors)
+        };
+
+        // Extract gear assets from avatarModel.Assets (backpack gear IDs not used)
+        var equippedGearVersionIds = new List<long>();
+
+        foreach (var asset in avatarModel.Assets)
+            if (asset.AssetType.Id == _gearAssetTypeId)
+                equippedGearVersionIds.Add(asset.CurrentVersionId);
+
+        model.EquippedGearVersionIds = [.. equippedGearVersionIds];
+
+        // Extract animation assets from avatarModel.Assets
+        var animationAssetIds = new Dictionary<string, long>();
+        foreach (var asset in avatarModel.Assets)
+            if (Array.Exists(_animationAssetTypeIds, id => id == asset.AssetType.Id))
+                animationAssetIds[asset.AssetType.Name] = asset.Id;
+
+        model.AnimationAssetIds = animationAssetIds;
+
+        // Extract all other assets from avatarModel.Assets
+        var otherAssetIdAndTypeIds = new List<AssetIdAndTypeModel>();
+
+        foreach (var asset in avatarModel.Assets)
+            if (asset.AssetType.Id != _gearAssetTypeId && !Array.Exists(_animationAssetTypeIds, id => id == asset.AssetType.Id))
+                otherAssetIdAndTypeIds.Add(new AssetIdAndTypeModel
+                {
+                    AssetId = asset.Id,
+                    AssetTypeId = asset.AssetType.Id
+                });
+
+        model.AssetAndAssetTypeIds = [.. otherAssetIdAndTypeIds];
+
+        return model;
+    }
+
     private static string ConstructAvatarCacheKey(long userId, long placeId)
         => string.Format(_avatarFetchCacheKeyFormat, userId, placeId);
 
-    private static dynamic DowngradeBodyColorsFormat(dynamic data)
-    {
-        var bodyColors = data[_avatarFetchBodyColorsMapKey];
-
-        var newBodyColors = new 
-        {
-            HeadColor = bodyColors[_avatarFetchBodyColorsMapHeadColorKey],
-            TorsoColor = bodyColors[_avatarFetchBodyColorsMapTorsoColorKey],
-            RightArmColor = bodyColors[_avatarFetchBodyColorsMapRightArmColorKey],
-            LeftArmColor = bodyColors[_avatarFetchBodyColorsMapLeftArmColorKey],
-            RightLegColor = bodyColors[_avatarFetchBodyColorsMapRightLegColorKey],
-            LeftLegColor = bodyColors[_avatarFetchBodyColorsMapLeftLegColorKey]
-        };
-
-        data[_avatarFetchBodyColorsMapKey] = JObject.FromObject(newBodyColors);
-
-        return data;
-    }
-
-
-    private dynamic GetAvatarFetchForUser(long userId, long placeId)
+    private AvatarFetchModel GetAvatarFetchForUser(long userId, long placeId)
     {
         return _avatarFetchCache.GetOrAdd(
             ConstructAvatarCacheKey(userId, placeId),
@@ -87,17 +131,25 @@ public class Avatar
                 _logger.Information("Cache miss for user {0} in place {1}", userId, placeId);
 
                 using var httpClient = _httpClientFactory.CreateClient();
-                var url = string.Format(_getAvatarFetchUrlFormat, _settings.AvatarApiUrl, userId, placeId);
+                var url = string.Format(_getAvatarFetchUrlFormat, _settings.AvatarApiUrl, userId);
 
-                var response = httpClient.GetAsync(url).Sync();
-                var data = response.Content.ReadAsStringAsync().Sync();
+                // Add the Roblox-Place-Id header to the request
+                var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+                requestMessage.Headers.Add(_robloxPlaceIdHeader, placeId.ToString());
 
-                var dynData = JsonConvert.DeserializeObject<dynamic>(data);
+                var response = httpClient.SendAsync(requestMessage).Sync();
+                var avatarModel = response.Content.ReadFromJsonAsync<AvatarModel>().Sync();
 
-                if (_settings.AvatarFetchShouldDowngradeBodyColorsFormat)
-                    dynData = DowngradeBodyColorsFormat(dynData);
+                if (avatarModel == null)
+                {
+                    _logger.Warning("Failed to fetch avatar for user {0} in place {1}: No data returned", userId, placeId);
 
-                return dynData;
+                    return null;
+                }
+
+                var avatarFetchModel = ConvertToAvatarFetchModel(avatarModel);
+                
+                return avatarFetchModel;
             });
     }
 
@@ -126,6 +178,6 @@ public class Avatar
         }
 
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(text: (string)JsonConvert.SerializeObject(avatarFetchData));
+        await context.Response.WriteAsync(JsonConvert.SerializeObject(avatarFetchData));
     }
 }

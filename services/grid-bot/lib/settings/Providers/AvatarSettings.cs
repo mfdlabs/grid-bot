@@ -27,11 +27,6 @@ public class AvatarSettings : BaseSettingsProvider
     public TimeSpan AvatarFetchCacheEntryTtl => GetOrDefault(nameof(AvatarFetchCacheEntryTtl), TimeSpan.FromMinutes(5));
 
     /// <summary>
-    /// Determines whether or not body colors are downgraded to pre v2 (v1.1).
-    /// </summary>
-    public bool AvatarFetchShouldDowngradeBodyColorsFormat => GetOrDefault(nameof(AvatarFetchShouldDowngradeBodyColorsFormat), true);
-
-    /// <summary>
     /// Gets the url to be used for asset fetch.
     /// </summary>
     public string RenderAssetFetchUrl => GetOrDefault(
