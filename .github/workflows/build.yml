@@ -592,6 +592,7 @@ jobs:
               commentBody += `- **${name}**: Version \`${version}\`\n`;
               commentBody += `  - Release: [${name}-${version}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${name}-${version})\n`;
               commentBody += `  - Docker Image: \`${dockerCommands[name]}:${version}\`\n`;
+              commentBody += `  - Deploy with reply: \`#!deploy: ${name}:${version}\`\n\n`;
             }
 
             await github.rest.issues.createComment({
