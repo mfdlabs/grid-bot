@@ -138,8 +138,8 @@ deployment:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - '/tmp/.X11-unix:/tmp/.X11-unix'
 
-        - '/_/data/grid-bot/logs:/tmp/mfdlabs/logs'
-        - '/_/data/grid-bot/rcc:/_/data/grid-bot/rcc' # Simply here to just to ensure it actually gets created on the host
+        - '/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/logs:/tmp/mfdlabs/logs'
+        - '/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc:/_/data/grid-bot/rcc' # Simply here to just to ensure it actually gets created on the host
 
       artifacts:
         - source: "https://curl.se/ca/cacert.pem"
