@@ -19,6 +19,7 @@ jobs:
         id: check-user
         continue-on-error: true
         with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
           script: |
             const authorizedTeams = ['mfdlabs/grid-bot-development'];
 
@@ -42,6 +43,7 @@ jobs:
         if: ${{ steps.check-user.outcome == 'success' }}
         id: extract-args
         with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
           script: |
             // Can be in the form of:
             // #!(prod?)-deploy: ${component}:${version},[CPU:MEM]?
@@ -55,6 +57,14 @@ jobs:
               return;
             }
 
+            // Add a thumbs up reaction to the comment to indicate that the command was recognized
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'thumbs_up',
+            });
+
             const environment = commentBody.startsWith('#!prod-deploy:') ? 'production' : 'staging';
             const component = match[1];
             const version = match[2];
@@ -64,7 +74,7 @@ jobs:
 
             const actionInputs = {
               components: `${component}:${version}`,
-              nomad_environment: 'staging' // Always staging because we don't want to deploy to production from PRs
+              nomad_environment: environment
             };
 
             if (resources) {
