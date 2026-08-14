@@ -62,7 +62,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: context.payload.comment.id,
-              content: 'thumbs_up',
+              content: '+1',
             });
 
             const environment = commentBody.startsWith('#!prod-deploy:') ? 'production' : 'staging';
