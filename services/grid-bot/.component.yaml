@@ -156,7 +156,7 @@ deployment:
             set -eu
 
             CACERT_INITIAL="/local/initial/cacert.pem"
-            CACERT_FINAL="/_/data/grid-bot/cacert.pem"
+            CACERT_FINAL="/_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/cacert.pem"
 
             : "$${VAULT_ADDR:?VAULT_ADDR is not set}"
             : "$${VAULT_TOKEN:?VAULT_TOKEN is not set}"
