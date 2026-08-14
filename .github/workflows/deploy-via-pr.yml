@@ -81,13 +81,21 @@ jobs:
               actionInputs.nomad_resources = `${component},${resources[0]}:${resources[1]}`;
             }
 
+            const prNumber = context.payload.issue.number;
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
             core.setOutput('action-inputs', JSON.stringify(actionInputs));
+            core.setOutput('ref', pr.data.head.ref);
 
       - name: Dispatch Deployment
         uses: benc-uk/workflow-dispatch@v1
         if: ${{ steps.check-user.outcome == 'success' && steps.extract-args.outputs.action-inputs }}
         with:
           workflow: deploy.yml
-          ref: ${{ github.ref }}
+          ref: ${{ steps.extract-args.outputs.ref }}
           inputs: ${{ steps.extract-args.outputs.action-inputs }}
           token: ${{ secrets.DEPLOYER_TOKEN }}
