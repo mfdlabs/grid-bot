@@ -72,4 +72,16 @@ public class CommandsSettings : BaseSettingsProvider
         nameof(ShouldWarnWhenCommandsAreDisabled),
         true
     );
+
+    /// <summary>
+    /// Feature gate for the EvaluateCSharp command. 
+    /// If this is false, the command will not usable
+    /// regardless of role permissions. 
+    /// If this is true, the command will be usable by the
+    /// owner role only.
+    /// </summary>
+    public bool EvaluateCSharpCommandEnabled => GetOrDefault(
+        nameof(EvaluateCSharpCommandEnabled),
+        true
+    );
 }
