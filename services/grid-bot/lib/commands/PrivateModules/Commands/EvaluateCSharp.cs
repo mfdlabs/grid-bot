@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Runtime;
 using System.Reflection;
 using System.Diagnostics;
 using System.Runtime.Loader;
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 
@@ -50,7 +52,7 @@ public class CSharpExecutionContext
 /// tells the runtime to fall back to the Default ALC, which is what we want for everything
 /// except the one dynamic assembly we just emitted (which we load explicitly via stream).
 /// </summary>
-file sealed class CollectibleScriptLoadContext() : AssemblyLoadContext(isCollectible: true)
+sealed class CollectibleScriptLoadContext() : AssemblyLoadContext(isCollectible: true)
 {
     protected override Assembly Load(AssemblyName assemblyName) => null;
 }
@@ -143,12 +145,12 @@ public partial class EvaluateCSharp(
         return (input, null);
     }
 
-    /// <summary>
-    /// Compiles and runs <paramref name="script"/> in its own collectible
-    /// <see cref="AssemblyLoadContext"/>, so the generated assembly can be unloaded
-    /// (and its memory reclaimed) once execution finishes, instead of living for the
-    /// lifetime of the process the way <see cref="CSharpScript.RunAsync"/> does.
-    /// </summary>
+    private static void TryDeleteFile(string path)
+    {
+        try { File.Delete(path); }
+        catch { /* best-effort - a leftover temp file is harmless, just don't let cleanup crash the eval */ }
+    }
+
     private static async Task<ScriptExecutionResult> RunIsolatedAsync(string script, CSharpExecutionContext globals)
     {
         var options = ScriptOptions.Default
@@ -180,11 +182,16 @@ public partial class EvaluateCSharp(
             compilation.Options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary)
         );
 
-        using var assemblyStream = new MemoryStream();
-        var emitResult = compilation.Emit(assemblyStream);
+        var tempAssemblyPath = Path.Combine(Path.GetTempPath(), $"eval-{Guid.NewGuid():N}.dll");
+
+        EmitResult emitResult;
+        using (var fileStream = new FileStream(tempAssemblyPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            emitResult = compilation.Emit(fileStream);
 
         if (!emitResult.Success)
         {
+            TryDeleteFile(tempAssemblyPath);
+
             var errors = string.Join(
                 Environment.NewLine,
                 emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)
@@ -197,8 +204,9 @@ public partial class EvaluateCSharp(
 
         try
         {
-            assemblyStream.Position = 0;
-            var assembly = loadContext.LoadFromStream(assemblyStream);
+            var assembly = loadContext.LoadFromAssemblyPath(tempAssemblyPath);
+
+            TryDeleteFile(tempAssemblyPath);
 
             MethodInfo factory = null;
             foreach (var type in assembly.GetTypes())
@@ -353,6 +361,8 @@ public partial class EvaluateCSharp(
         finally
         {
             if (timing.IsRunning) timing.Stop();
+
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
 
             for (var i = 0; i < 2; i++)
             {
