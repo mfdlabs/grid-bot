@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Diagnostics;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -43,6 +44,28 @@ public class CSharpExecutionContext
 }
 
 /// <summary>
+/// A collectible <see cref="AssemblyLoadContext"/> used to host a single evaluated script
+/// assembly so it (and everything it roots) can be fully unloaded after the eval completes.
+/// Returning null from <see cref="Load"/> means "I don't know how to resolve this myself" and
+/// tells the runtime to fall back to the Default ALC, which is what we want for everything
+/// except the one dynamic assembly we just emitted (which we load explicitly via stream).
+/// </summary>
+file sealed class CollectibleScriptLoadContext() : AssemblyLoadContext(isCollectible: true)
+{
+    protected override Assembly Load(AssemblyName assemblyName) => null;
+}
+
+/// <summary>
+/// Result of running a script in isolation. Mirrors the subset of <see cref="ScriptState"/>
+/// that <see cref="EvaluateCSharp"/> actually consumes, since we no longer get a real
+/// <see cref="ScriptState"/> back from the manual compile/emit/load pipeline.
+/// </summary>
+/// <param name="Success">Whether the script compiled and ran without throwing.</param>
+/// <param name="ReturnValue">The value returned by the script, if any.</param>
+/// <param name="Exception">The compilation or runtime exception, if any.</param>
+readonly record struct ScriptExecutionResult(bool Success, object ReturnValue, Exception Exception);
+
+/// <summary>
 /// Interaction handler for evaluating C# code.
 /// </summary>
 /// <summary>
@@ -69,12 +92,13 @@ public partial class EvaluateCSharp(
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
+    private const string _factoryMethodName = "<Factory>";
 
     private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
-    
+
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
@@ -119,26 +143,110 @@ public partial class EvaluateCSharp(
         return (input, null);
     }
 
-    private async Task HandleResponseAsync(string result, ScriptState metadata, Stopwatch timing)
+    /// <summary>
+    /// Compiles and runs <paramref name="script"/> in its own collectible
+    /// <see cref="AssemblyLoadContext"/>, so the generated assembly can be unloaded
+    /// (and its memory reclaimed) once execution finishes, instead of living for the
+    /// lifetime of the process the way <see cref="CSharpScript.RunAsync"/> does.
+    /// </summary>
+    private static async Task<ScriptExecutionResult> RunIsolatedAsync(string script, CSharpExecutionContext globals)
+    {
+        var options = ScriptOptions.Default
+            .WithReferences(
+                Assembly.GetEntryAssembly(),
+                Assembly.GetExecutingAssembly()
+            )
+            .WithImports(
+                "System",
+                "System.Linq",
+                "System.Collections.Generic",
+                "System.Threading.Tasks",
+
+                "Discord",
+                "Discord.WebSocket",
+                "Discord.Interactions",
+
+                "Grid",
+                "Grid.Bot",
+                "Grid.Bot.Utility",
+                "Grid.Bot.Extensions"
+            )
+            .WithAllowUnsafe(true);
+
+        var cSharpScript = CSharpScript.Create(script, options, typeof(CSharpExecutionContext));
+
+        var compilation = cSharpScript.GetCompilation();
+        compilation = compilation.WithOptions(
+            compilation.Options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary)
+        );
+
+        using var assemblyStream = new MemoryStream();
+        var emitResult = compilation.Emit(assemblyStream);
+
+        if (!emitResult.Success)
+        {
+            var errors = string.Join(
+                Environment.NewLine,
+                emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)
+            );
+
+            return new ScriptExecutionResult(false, null, new InvalidOperationException(errors));
+        }
+
+        var loadContext = new CollectibleScriptLoadContext();
+
+        try
+        {
+            assemblyStream.Position = 0;
+            var assembly = loadContext.LoadFromStream(assemblyStream);
+
+            MethodInfo factory = null;
+            foreach (var type in assembly.GetTypes())
+            {
+                factory = type.GetMethod(
+                    _factoryMethodName,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
+                );
+
+                if (factory != null) break;
+            }
+
+            if (factory is null)
+                throw new InvalidOperationException("Could not locate the generated script entry point.");
+
+            var submissionStates = new object[] { globals, null };
+
+            var task = (Task<object>)factory.Invoke(null, [submissionStates]);
+            var returnValue = await task.ConfigureAwait(false);
+
+            return new ScriptExecutionResult(true, returnValue, null);
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            return new ScriptExecutionResult(false, null, ex.InnerException);
+        }
+        catch (Exception ex)
+        {
+            return new ScriptExecutionResult(false, null, ex);
+        }
+        finally
+        {
+            loadContext.Unload();
+        }
+    }
+
+    private async Task HandleResponseAsync(ScriptExecutionResult result, Stopwatch timing)
     {
         var builder = new EmbedBuilder()
-            .WithTitle(
-                metadata?.Exception == null && metadata != null
-                    ? "C# Success"
-                    : "C# Error"
-            )
+            .WithTitle(result.Success ? "C# Success" : "C# Error")
             .WithAuthor(Context.User)
-            .WithCurrentTimestamp();
-
-        if (metadata?.Exception == null && metadata != null)
-            builder.WithColor(Color.Green);
-        else
-            builder.WithColor(Color.Red);
+            .WithCurrentTimestamp()
+            .WithColor(result.Success ? Color.Green : Color.Red);
 
         var (fileNameOrResult, resultFile) = DetermineResult(
-            metadata?.Exception == null
-                ? result
-                : metadata.Exception.ToString(),
+            result.Success
+                ? result.ReturnValue?.ToString()
+                : result.Exception?.ToString(),
             Context.Message.Id.ToString() + "-result.txt"
         );
 
@@ -151,8 +259,8 @@ public partial class EvaluateCSharp(
         if (resultFile != null)
             attachments.Add(new(resultFile, fileNameOrResult));
 
-        var text = metadata?.Exception == null && metadata != null
-            ? string.IsNullOrEmpty(result)
+        var text = result.Success
+            ? result.ReturnValue is null
                 ? "Executed script with no return!"
                 : null
             : "An error occured while executing your script:";
@@ -228,29 +336,8 @@ public partial class EvaluateCSharp(
 
         try
         {
-            var result = await CSharpScript.RunAsync(
+            var result = await RunIsolatedAsync(
                 script,
-                ScriptOptions.Default
-                    .WithReferences(
-                        Assembly.GetEntryAssembly(),
-                        Assembly.GetExecutingAssembly()
-                    )
-                    .WithImports(
-                        "System",
-                        "System.Linq",
-                        "System.Collections.Generic",
-                        "System.Threading.Tasks",
-
-                        "Discord",
-                        "Discord.WebSocket",
-                        "Discord.Interactions",
-
-                        "Grid",
-                        "Grid.Bot",
-                        "Grid.Bot.Utility",
-                        "Grid.Bot.Extensions"
-                    )
-                    .WithAllowUnsafe(true),
                 new CSharpExecutionContext
                 {
                     Context = Context,
@@ -261,23 +348,17 @@ public partial class EvaluateCSharp(
 
             timing.Stop();
 
-            await HandleResponseAsync(result.ReturnValue?.ToString(), result, timing);
-        }
-        catch (CompilationErrorException ex)
-        {
-            timing.Stop();
-
-            await HandleResponseAsync(ex.Message, null, timing);
-        }
-        catch (Exception ex)
-        {
-            timing.Stop();
-
-            await HandleResponseAsync(ex.ToString(), null, timing);
+            await HandleResponseAsync(result, timing);
         }
         finally
         {
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+            if (timing.IsRunning) timing.Stop();
+
+            for (var i = 0; i < 2; i++)
+            {
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
+                GC.WaitForPendingFinalizers();
+            }
         }
     }
 }
