@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 using Discord;
 using Discord.Commands;
@@ -75,7 +76,7 @@ public partial class EvaluateCSharp(
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
-    private static readonly ScriptOptions _scriptOptions = 
+    private static readonly ScriptOptions _scriptOptions =
         ScriptOptions.Default
             .WithReferences(
                 Assembly.GetEntryAssembly(),
@@ -97,7 +98,7 @@ public partial class EvaluateCSharp(
                 "Grid.Bot.Extensions"
             )
             .WithAllowUnsafe(true);
-    
+
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
@@ -249,9 +250,17 @@ public partial class EvaluateCSharp(
 
         var timing = Stopwatch.StartNew();
 
+        var loader = new InteractiveAssemblyLoader();
+
+        var loadedAssembliesField = typeof(InteractiveAssemblyLoader)
+            .GetField("_loadedAssembliesBySimpleName", BindingFlags.Instance | BindingFlags.NonPublic);
+        var loadedAssembliesClearMethod = loadedAssembliesField?.FieldType.GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public);
+
         try
         {
-            var csharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext));
+
+
+            var csharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext), loader);
             var runner = csharpScript.CreateDelegate();
 
             var result = await runner(new CSharpExecutionContext
@@ -279,7 +288,12 @@ public partial class EvaluateCSharp(
         }
         finally
         {
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+            // Clear the loaded assemblies to prevent memory leaks
+            loadedAssembliesClearMethod?.Invoke(loadedAssembliesField?.GetValue(loader), null);
+            loader.Dispose();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
     }
 }
