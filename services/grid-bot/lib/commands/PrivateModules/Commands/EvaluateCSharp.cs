@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Diagnostics;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -13,7 +14,6 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 using Discord;
 using Discord.Commands;
@@ -41,6 +41,17 @@ public class CSharpExecutionContext
     /// The <see cref="IServiceProvider"/>.
     /// </summary>
     public IServiceProvider Services { get; init; }
+}
+
+/// <summary>
+/// Custom assembly load context for loading assemblies in a collectible context.
+/// </summary>
+file class CustomAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true)
+{
+    protected override Assembly Load(AssemblyName assemblyName)
+    {
+        return null; // Return null to use the default load context for dependencies
+    }
 }
 
 /// <summary>
@@ -75,6 +86,11 @@ public partial class EvaluateCSharp(
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+
+    private static readonly MetadataReference[] _assemblies =
+        [.. AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
+            .Select(a => MetadataReference.CreateFromFile(a.Location))];
 
     private static readonly ScriptOptions _scriptOptions =
         ScriptOptions.Default
@@ -143,11 +159,11 @@ public partial class EvaluateCSharp(
         return (input, null);
     }
 
-    private async Task HandleResponseAsync(string result, Exception ex, Stopwatch timing)
+    private async Task HandleResponseAsync(string result, bool isError, Exception ex, Stopwatch timing)
     {
         var builder = new EmbedBuilder()
             .WithTitle(
-                ex == null
+                ex == null && !isError
                     ? "C# Success"
                     : "C# Error"
             )
@@ -175,7 +191,7 @@ public partial class EvaluateCSharp(
         if (resultFile != null)
             attachments.Add(new(resultFile, fileNameOrResult));
 
-        var text = ex == null
+        var text = ex == null && !isError
             ? string.IsNullOrEmpty(result)
                 ? "Executed script with no return!"
                 : null
@@ -250,50 +266,42 @@ public partial class EvaluateCSharp(
 
         var timing = Stopwatch.StartNew();
 
-        var loader = new InteractiveAssemblyLoader();
-
-        var loadedAssembliesField = typeof(InteractiveAssemblyLoader)
-            .GetField("_loadedAssembliesBySimpleName", BindingFlags.Instance | BindingFlags.NonPublic);
-        var loadedAssembliesClearMethod = loadedAssembliesField?.FieldType.GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public);
+        var globals = new CSharpExecutionContext
+        {
+            Context = Context,
+            Client = _client,
+            Services = _services
+        };
 
         try
         {
 
 
-            var csharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext), loader);
+            var csharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext));
             var runner = csharpScript.CreateDelegate();
 
-            var result = await runner(new CSharpExecutionContext
-            {
-                Context = Context,
-                Client = _client,
-                Services = _services
-            });
+            var result = await runner(globals);
 
             timing.Stop();
 
-            await HandleResponseAsync(result?.ToString(), null, timing);
+            await HandleResponseAsync(result?.ToString(), false, null, timing);
         }
         catch (CompilationErrorException ex)
         {
             timing.Stop();
 
-            await HandleResponseAsync(ex.Message, null, timing);
+            await HandleResponseAsync(ex.Message, true, null, timing);
         }
         catch (Exception ex)
         {
             timing.Stop();
 
-            await HandleResponseAsync(null, ex, timing);
+            await HandleResponseAsync(null, true, ex, timing);
         }
         finally
         {
-            // Clear the loaded assemblies to prevent memory leaks
-            loadedAssembliesClearMethod?.Invoke(loadedAssembliesField?.GetValue(loader), null);
-            loader.Dispose();
-
             GC.Collect();
             GC.WaitForPendingFinalizers();
-        }
+        }    
     }
 }
