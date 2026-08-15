@@ -101,6 +101,29 @@ public partial class EvaluateCSharp(
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
+    private static readonly ScriptOptions _scriptOptions = 
+        ScriptOptions.Default
+            .WithReferences(
+                Assembly.GetEntryAssembly(),
+                Assembly.GetExecutingAssembly()
+            )
+            .WithImports(
+                "System",
+                "System.Linq",
+                "System.Collections.Generic",
+                "System.Threading.Tasks",
+
+                "Discord",
+                "Discord.WebSocket",
+                "Discord.Interactions",
+
+                "Grid",
+                "Grid.Bot",
+                "Grid.Bot.Utility",
+                "Grid.Bot.Extensions"
+            )
+            .WithAllowUnsafe(true);
+
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
@@ -153,29 +176,7 @@ public partial class EvaluateCSharp(
 
     private static async Task<ScriptExecutionResult> RunIsolatedAsync(string script, CSharpExecutionContext globals)
     {
-        var options = ScriptOptions.Default
-            .WithReferences(
-                Assembly.GetEntryAssembly(),
-                Assembly.GetExecutingAssembly()
-            )
-            .WithImports(
-                "System",
-                "System.Linq",
-                "System.Collections.Generic",
-                "System.Threading.Tasks",
-
-                "Discord",
-                "Discord.WebSocket",
-                "Discord.Interactions",
-
-                "Grid",
-                "Grid.Bot",
-                "Grid.Bot.Utility",
-                "Grid.Bot.Extensions"
-            )
-            .WithAllowUnsafe(true);
-
-        var cSharpScript = CSharpScript.Create(script, options, typeof(CSharpExecutionContext));
+        var cSharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext));
 
         var compilation = cSharpScript.GetCompilation();
         compilation = compilation.WithOptions(
