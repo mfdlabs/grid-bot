@@ -33,6 +33,7 @@
     <Project Path="lib/settings/Shared.Settings.csproj" />
     <Project Path="lib/utility/Shared.Utility.csproj" />
     <Project Path="lib/web/Grid.Bot.Web.csproj" />
+    <Project Path="lib/eval-runner/Grid.Bot.Eval.Runner.csproj" />
   </Folder>
   <Project Path="src/Grid.Bot.csproj">
     <BuildType Solution="Debug|*" Project="debug" />
