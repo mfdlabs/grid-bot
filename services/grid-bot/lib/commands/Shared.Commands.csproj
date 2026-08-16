@@ -11,6 +11,7 @@
 
   <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../utility/Shared.Utility.csproj" />
+    <ProjectReference Include="../eval-runner/Grid.Bot.Eval.Runner.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">
@@ -26,7 +27,6 @@
     <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Interactions" Version="3.17.4" />
     <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.11" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0-dev" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />

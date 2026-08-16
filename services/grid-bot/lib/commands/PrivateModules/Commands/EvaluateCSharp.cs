@@ -4,55 +4,25 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
-using System.Runtime.Loader;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
 
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
+
+using Newtonsoft.Json;
+
+using FileSystem;
 
 using Utility;
 using Extensions;
 
-/// <summary>
-/// Context for the C# script execution.
-/// </summary>
-public class CSharpExecutionContext
-{
-    /// <summary>
-    /// The <see cref="ShardedCommandContext"/>.
-    /// </summary>
-    public ShardedCommandContext Context { get; init; }
-
-    /// <summary>
-    /// The <see cref="DiscordShardedClient"/>.
-    /// </summary>
-    public DiscordShardedClient Client { get; init; }
-
-    /// <summary>
-    /// The <see cref="IServiceProvider"/>.
-    /// </summary>
-    public IServiceProvider Services { get; init; }
-}
-
-/// <summary>
-/// Custom assembly load context for loading assemblies in a collectible context.
-/// </summary>
-file class CustomAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true)
-{
-    protected override Assembly Load(AssemblyName assemblyName)
-    {
-        return null; // Return null to use the default load context for dependencies
-    }
-}
+using Eval.Runner.Models;
 
 /// <summary>
 /// Interaction handler for evaluating C# code.
@@ -62,21 +32,15 @@ file class CustomAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true
 /// </summary>
 /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
 /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
-/// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
-/// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="scriptsSettings"/> cannot be null.
 /// - <paramref name="commandsSettings"/> cannot be null.
-/// - <paramref name="client"/> cannot be null.
-/// - <paramref name="services"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Owner)]
 [RequireBotRole(BotRole.Owner)]
 public partial class EvaluateCSharp(
     ScriptsSettings scriptsSettings,
-    CommandsSettings commandsSettings,
-    DiscordShardedClient client,
-    IServiceProvider services
+    CommandsSettings commandsSettings
 ) : ModuleBase<ShardedCommandContext>
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
@@ -84,36 +48,24 @@ public partial class EvaluateCSharp(
 
     private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
     private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
-    private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
-    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
-    private static readonly MetadataReference[] _assemblies =
-        [.. AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
-            .Select(a => MetadataReference.CreateFromFile(a.Location))];
+    private static readonly TimeSpan _scriptExecutionTimeout = TimeSpan.FromSeconds(10);
 
-    private static readonly ScriptOptions _scriptOptions =
-        ScriptOptions.Default
-            .WithReferences(
-                Assembly.GetEntryAssembly(),
-                Assembly.GetExecutingAssembly()
-            )
-            .WithImports(
-                "System",
-                "System.Linq",
-                "System.Collections.Generic",
-                "System.Threading.Tasks",
+    private static readonly Assembly _evalRunnerAssembly = typeof(ResultModel).Assembly;
+    private static readonly string _evalRunnerProgram = _evalRunnerAssembly.GetName().Name;
+    private static readonly string _evalRunnerFullPath =
+        Path.Combine(
+            Path.GetDirectoryName(_evalRunnerAssembly.Location),
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? _evalRunnerProgram + ".exe"
+                : _evalRunnerProgram
+        );
 
-                "Discord",
-                "Discord.WebSocket",
-                "Discord.Interactions",
-
-                "Grid",
-                "Grid.Bot",
-                "Grid.Bot.Utility",
-                "Grid.Bot.Extensions"
-            )
-            .WithAllowUnsafe(true);
+    static EvaluateCSharp()
+    {
+        if (!File.Exists(_evalRunnerFullPath))
+            throw new FileNotFoundException($"The eval-runner executable was not found at {_evalRunnerFullPath}. Please ensure that the eval-runner is built and present in the same directory as the bot executable.");
+    }
 
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
@@ -159,43 +111,65 @@ public partial class EvaluateCSharp(
         return (input, null);
     }
 
-    private async Task HandleResponseAsync(string result, bool isError, Exception ex, Stopwatch timing)
+    private async Task CSharpErrorAsync(string error, TimeSpan elapsed)
+        => await HandleResponseAsync(null, new() { ErrorMessage = error, ExecutionTime = elapsed.TotalSeconds, Success = false });
+
+    private async Task HandleResponseAsync(string result, EvalMetadata metadata)
     {
         var builder = new EmbedBuilder()
             .WithTitle(
-                ex == null && !isError
+                metadata.Success
                     ? "C# Success"
                     : "C# Error"
             )
             .WithAuthor(Context.User)
             .WithCurrentTimestamp();
 
-        if (ex == null)
+        if (metadata.Success)
             builder.WithColor(Color.Green);
         else
             builder.WithColor(Color.Red);
 
+        var (fileNameOrStdout, stdoutFile) = DetermineDescription(
+            metadata.StdoutLogs,
+            Context.Message.Id.ToString() + "-stdout.txt"
+        );
+
+        if (stdoutFile == null && !string.IsNullOrEmpty(fileNameOrStdout))
+            builder.AddField("STDOUT", $"```\n{fileNameOrStdout}\n```");
+
+        var (fileNameOrStderr, stderrFile) = DetermineDescription(
+            metadata.StderrLogs,
+            Context.Message.Id.ToString() + "-stderr.txt"
+        );
+
+        if (stderrFile == null && !string.IsNullOrEmpty(fileNameOrStderr))
+            builder.AddField("STDERR", $"```\n{fileNameOrStderr}\n```");
+
         var (fileNameOrResult, resultFile) = DetermineResult(
-            ex == null
+            metadata.Success
                 ? result
-                : ex.ToString(),
+                : metadata.ErrorMessage,
             Context.Message.Id.ToString() + "-result.txt"
         );
 
         if (resultFile == null && !string.IsNullOrEmpty(fileNameOrResult))
             builder.AddField("Result", $"```\n{fileNameOrResult}\n```");
 
-        builder.AddField("Execution Time", $"{timing.Elapsed.TotalSeconds:f5}s");
+        builder.AddField("Execution Time", $"{metadata.ExecutionTime:f5}s");
 
         var attachments = new List<FileAttachment>();
+        if (stdoutFile != null)
+            attachments.Add(new(stdoutFile, fileNameOrStdout));
+
         if (resultFile != null)
             attachments.Add(new(resultFile, fileNameOrResult));
 
-        var text = ex == null && !isError
-            ? string.IsNullOrEmpty(result)
-                ? "Executed script with no return!"
-                : null
-            : "An error occured while executing your script:";
+        var text = metadata.Success
+                    ? string.IsNullOrEmpty(result)
+                        ? "Executed script with no return!"
+                        : null
+                    : "An error occured while executing your script:";
 
         if (attachments.Count > 0)
             await this.ReplyWithFilesAsync(
@@ -266,42 +240,65 @@ public partial class EvaluateCSharp(
 
         var timing = Stopwatch.StartNew();
 
-        var globals = new CSharpExecutionContext
-        {
-            Context = Context,
-            Client = _client,
-            Services = _services
-        };
+        var tempScriptFileName = Path.GetTempFileName();
 
         try
         {
+            File.WriteAllText(tempScriptFileName, script);
 
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = _evalRunnerFullPath,
+                Arguments = $"\"{tempScriptFileName}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
 
-            var csharpScript = CSharpScript.Create(script, _scriptOptions, typeof(CSharpExecutionContext));
-            var runner = csharpScript.CreateDelegate();
+            // Pass-through environment variables to the eval-runner process
+            foreach (var envVar in Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>())
+                processStartInfo.Environment[envVar.Key.ToString()] = envVar.Value.ToString();
 
-            var result = await runner(globals);
+            // Only log line present will be the result of the script execution, which is a JSON string.
+            var process = Process.Start(processStartInfo) 
+                ?? throw new InvalidOperationException("Failed to start the eval-runner process.");
+
+            using var cancelTokenSrc = new CancellationTokenSource(_scriptExecutionTimeout);
+
+            await process.WaitForExitAsync(cancelTokenSrc.Token);
+
+            var output = await process.StandardOutput.ReadToEndAsync(cancelTokenSrc.Token);
+            var result = JsonConvert.DeserializeObject<ResultModel>(output)
+                ?? throw new InvalidOperationException("Failed to deserialize the output from the eval-runner process.");
 
             timing.Stop();
 
-            await HandleResponseAsync(result?.ToString(), false, null, timing);
+            await HandleResponseAsync(result.Result, result.Metadata);
         }
-        catch (CompilationErrorException ex)
+        catch (OperationCanceledException)
         {
             timing.Stop();
 
-            await HandleResponseAsync(ex.Message, true, null, timing);
+            await CSharpErrorAsync($"The script execution exceeded the timeout of {_scriptExecutionTimeout.TotalSeconds} seconds.", timing.Elapsed);
+        }
+        catch (InvalidOperationException ex)
+        {
+            timing.Stop();
+
+            await CSharpErrorAsync($"An error occurred while executing the script: {ex.Message}", timing.Elapsed);
         }
         catch (Exception ex)
         {
             timing.Stop();
 
-            await HandleResponseAsync(null, true, ex, timing);
+            await CSharpErrorAsync(ex.ToString(), timing.Elapsed);
         }
         finally
         {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }    
+            if (timing.IsRunning) timing.Stop();
+
+            tempScriptFileName.PollDeletion();
+        }
     }
 }
