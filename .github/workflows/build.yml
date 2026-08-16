@@ -174,7 +174,6 @@ jobs:
         uses: actions/github-script@v7
         id: build-components
         env:
-          VERSION: ${{ steps.version.outputs.version }}
           NOMAD_VERSION: ${{ steps.version.outputs.version }}
           
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
