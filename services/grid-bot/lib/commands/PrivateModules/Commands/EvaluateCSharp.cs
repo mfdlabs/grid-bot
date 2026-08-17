@@ -130,7 +130,7 @@ public partial class EvaluateCSharp(
         else
             builder.WithColor(Color.Red);
 
-        var (fileNameOrStdout, stdoutFile) = DetermineDescription(
+        var (fileNameOrStdout, stdoutFile) = DetermineResult(
             metadata.StdoutLogs,
             Context.Message.Id.ToString() + "-stdout.txt"
         );
@@ -138,7 +138,7 @@ public partial class EvaluateCSharp(
         if (stdoutFile == null && !string.IsNullOrEmpty(fileNameOrStdout))
             builder.AddField("STDOUT", $"```\n{fileNameOrStdout}\n```");
 
-        var (fileNameOrStderr, stderrFile) = DetermineDescription(
+        var (fileNameOrStderr, stderrFile) = DetermineResult(
             metadata.StderrLogs,
             Context.Message.Id.ToString() + "-stderr.txt"
         );
