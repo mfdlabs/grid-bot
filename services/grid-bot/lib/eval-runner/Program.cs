@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 
 using Newtonsoft.Json;
 
+using Logging;
 using Threading.Extensions;
 
 using Models;
@@ -115,6 +116,9 @@ internal class Program
 
     private static void Main(string[] args)
     {
+        Logger.ConcurrentLoggingEnabled = false; // Disable concurrent logging for this process to avoid issues with redirected output
+        Logger.LogPrefixesEnabled = false;
+
         var scriptFilePath = args[0];
 
         var timing = Stopwatch.StartNew();

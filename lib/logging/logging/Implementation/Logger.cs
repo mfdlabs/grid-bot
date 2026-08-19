@@ -8,14 +8,11 @@ using System.Text;
 using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-
-#if CONCURRENT_LOGGING_ENABLED
-using System.Threading.Tasks;
-#endif
 
 using Windows.Win32;
 using Windows.Win32.System.Console;
@@ -122,22 +119,6 @@ public class Logger : ILogger
 
     static Logger()
     {
-        Console.SetOut(
-            new StreamWriter(
-                Console.OpenStandardOutput(),
-                Encoding.ASCII
-            )
-            { AutoFlush = true }
-        );
-
-        Console.SetError(
-            new StreamWriter(
-                Console.OpenStandardError(),
-                Encoding.ASCII
-            )
-            { AutoFlush = true }
-        );
-
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
         unsafe
@@ -180,6 +161,36 @@ public class Logger : ILogger
 
     // language=regex
     private const string _loggerNameRegex = @"^[a-zA-Z0-9_\-\.]{1,100}$";
+
+    private static bool _concurrentLoggingEnabledBacking = true;
+    private static bool _concurrentLoggingEnabled => Environment.GetEnvironmentVariable("CONCURRENT_LOGGING_ENABLED")?.ToLower() == "true" || Logger._concurrentLoggingEnabledBacking;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether concurrent logging is enabled.
+    /// </summary>
+    public static bool ConcurrentLoggingEnabled
+    {
+        get => Logger._concurrentLoggingEnabled;
+        set => Logger._concurrentLoggingEnabledBacking = value;
+    }
+
+    private static bool _logPrefixesEnabledBacking = true;
+    private static bool _logPrefixesEnabled => Environment.GetEnvironmentVariable("LOG_PREFIXES_ENABLED")?.ToLower() == "true" || Logger._logPrefixesEnabledBacking;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether log prefixes are enabled.
+    /// </summary>
+    /// <remarks>
+    /// If false, the log prefixes will be disabled
+    /// and only the log level and message will be logged.
+    /// 
+    /// Does not matter if cut log prefix is enabled or not, this will override it.
+    /// </remarks>
+    public static bool LogPrefixesEnabled
+    {
+        get => Logger._logPrefixesEnabled;
+        set => Logger._logPrefixesEnabledBacking = value;
+    }
 
     private static string _logFileBaseDirectoryBacking;
     private static string _defaultLogFileDirectory => Environment.GetEnvironmentVariable("DEFAULT_LOG_FILE_DIRECTORY");
@@ -520,6 +531,13 @@ public class Logger : ILogger
     /// <returns>The constructed string.</returns>
     protected string _constructNonColorLogMessage(LogLevel logLevel, Func<string> messageGetter)
     {
+        if (!Logger.LogPrefixesEnabled)
+            return string.Format(
+                "[{0}] {1}\n",
+                logLevel.ToString().ToUpper(),
+                messageGetter()
+            );
+
         if (_cutLogPrefix)
             return string.Format(
                 "[{0}]{1}{2}{3}{4}[{5}] {6}\n",
@@ -554,6 +572,17 @@ public class Logger : ILogger
     /// <returns>The constructed string.</returns>
     protected string _constructColorLogMessage(LogLevel logLevel, Logger.LogColor color, Func<string> messageGetter)
     {
+        if (!Logger.LogPrefixesEnabled)
+            return string.Format(
+                "{0}{1}{2} {3}{4}{5}\n",
+                Logger._getAnsiColorByLogColor(color),
+                logLevel.ToString().ToUpper(),
+                Logger._getAnsiColorByLogColor(LogColor.Reset),
+                Logger._getAnsiColorByLogColor(color),
+                messageGetter(),
+                Logger._getAnsiColorByLogColor(LogColor.Reset)
+            );
+
         if (_cutLogPrefix)
             return string.Format(
                 "{0}{1}{2}{3}{4}{5} {6}{7}{8}\n",
@@ -630,9 +659,21 @@ public class Logger : ILogger
     {
         if (this._disposed) throw new ObjectDisposedException(this.GetType().Name);
 
-#if CONCURRENT_LOGGING_ENABLED
-        Task.Factory.StartNew(() =>
+        if (Logger.ConcurrentLoggingEnabled) {
+            Task.Factory.StartNew(() =>
+            {
+                try { this._writeLog(logLevel, color, messageGetter); }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    this.Warning("Error while performing log: {0}", ex);
+#endif
+                }
+            });
+        }
+        else
         {
+
             try { this._writeLog(logLevel, color, messageGetter); }
             catch (Exception ex)
             {
@@ -640,16 +681,7 @@ public class Logger : ILogger
                 this.Warning("Error while performing log: {0}", ex);
 #endif
             }
-        });
-#else
-        try { this._writeLog(logLevel, color, messageGetter); }
-        catch (Exception ex)
-        {
-#if DEBUG
-            this.Warning("Error while performing log: {0}", ex);
-#endif
         }
-#endif
     }
 
     /// <summary>
