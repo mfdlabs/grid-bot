@@ -72,7 +72,6 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const yaml = require('yaml');
-            const crypto = require('crypto');
 
             let components = ${{ steps.find-component-directories.outputs.components }};
             components = new Map(Object.entries(components));
@@ -82,7 +81,7 @@ jobs:
             for (const [component, configFileName] of components) {
               const [, componentVersion] = component.split(':');
 
-              process.env.NOMAD_VERSION = componentVersion || 'latest';
+              process.env.NOMAD_VERSION = componentVersion;
 
               // Parse yaml
               const componentConfigData = fs.readFileSync(configFileName, 'utf8');
@@ -108,27 +107,38 @@ jobs:
               let beforeDeploymentScripts = componentConfig.deployment.before || [];
               let afterDeploymentScripts = componentConfig.deployment.after || [];
 
+              // Can either be:
+              // after:
+              //   - path: path/to/script
+              // or
+              // after:
+              //   - script: raw script contents
+              // (where script will create a temp file.)
+
               function mapDeploymentScriptsCallback(script) {
                 if (script.path) {
+                  // If not absolute path, make it relative to the component config file
                   const scriptPath = path.isAbsolute(script.path)
                     ? script.path
                     : path.join(path.dirname(configFileName), script.path)
 
+                  // Read the script file to ensure it exists
                   if (!fs.existsSync(scriptPath)) {
                     throw new Error(`Deployment script file not found: ${scriptPath}`);
                   }
-
+                  
                   const id = script.id ?? crypto.randomBytes(8).toString('hex');
-                  return { id, scriptData: fs.readFileSync(scriptPath, 'utf8') };
+                  
+                  return {id, scriptData: fs.readFileSync(scriptPath, 'utf8')};
                 }
 
                 if (script.script) {
-                  return { id: script.id ?? crypto.randomBytes(8).toString('hex'), scriptData: script.script };
+                  return {id: script.id ?? crypto.randomBytes(8).toString('hex'), scriptData: script.script};
                 }
 
                 throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
               }
-
+              
               beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScriptsCallback);
               afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScriptsCallback);
 
@@ -166,7 +176,6 @@ jobs:
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      DEPLOY_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
 
     steps:
       - name: Setup Nomad CLI
@@ -192,7 +201,6 @@ jobs:
             const child_process = require('child_process');
 
             const isDryRun = ${{ github.event.inputs.dry_run }};
-            const deployEnv = process.env.DEPLOY_ENVIRONMENT;
 
             const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
 
@@ -200,104 +208,52 @@ jobs:
             jobs = new Map(Object.entries(jobs));
 
             const failedJobs = [];
-            const deploymentIdsByJob = {};
 
             for (const [jobName, jobDefinition] of jobs) {
-              // jobName format: "component:version" (version may be omitted)
-              const [componentName, rawVersion] = jobName.split(':');
-              const componentVersion = (rawVersion && rawVersion.trim()) ? rawVersion.trim() : 'latest';
-
+              const [componentName] = jobName.split(':');
+              
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
-
-              // Create a GitHub deployment record for this component/job unless dry run.
-              if (!isDryRun) {
-                const createDep = await github.rest.repos.createDeployment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: context.sha,
-                  environment: deployEnv,
-                  production_environment: false,
-                  auto_merge: false,
-                  required_contexts: [],
-                  task: `deploy:${componentName}`,
-                  description: `Deploy ${componentName}:${componentVersion}`,
-                  payload: JSON.stringify({
-                    component: componentName,
-                    version: componentVersion,
-                    release: componentVersion,
-                    nomad_environment: deployEnv
-                  })
-                });
-
-                deploymentIdsByJob[jobName] = createDep.data.id;
-              }
-
-              let beforeFailed = false;
 
               if (deploymentScripts.before) {
                 for (const { id, scriptData } of deploymentScripts.before) {
                   console.log(`Running before deployment script for ${componentName}: ${id}`);
 
                   if (!isDryRun) {
-                    const scriptPath = path.join(
-                      process.env.RUNNER_TEMP,
-                      `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`
-                    );
-
                     try {
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
                       fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
                       child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+
                       fs.unlinkSync(scriptPath);
                     } catch (error) {
-                      console.error(`Before deployment script failed for ${componentName}: ${id}`);
+                      // Should mark as failed here because before deployment scripts
+                      // are critical to the deployment process. 
+                      // If they fail, we should not proceed with the deployment.
+
+                      console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
                       console.error(error);
                       failedJobs.push(jobName);
-                      beforeFailed = true;
-
-                      try {
-                        await github.rest.repos.createDeploymentStatus({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          deployment_id: deploymentIdsByJob[jobName],
-                          state: "failure",
-                          description: `Before deployment script failed for ${componentName}:${componentVersion}`
-                        });
-                      } catch (statusError) {
-                        console.warn(`Failed to set failure status for deployment ${deploymentIdsByJob[jobName]}:`);
-                        console.warn(statusError);
-                      }
-
-                      break;
+                      
+                      continue;
                     }
                   }
                 }
               }
 
-              if (beforeFailed) {
-                continue;
-              }
+                
 
+              // Equivalent to mktemp 
               const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
+
               fs.writeFileSync(tempFile, jobDefinition);
 
               if (!isDryRun) {
+                // Poll the job status
                 try {
                   child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
                 } catch (error) {
                   failedJobs.push(jobName);
-
-                  try {
-                    await github.rest.repos.createDeploymentStatus({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      deployment_id: deploymentIdsByJob[jobName],
-                      state: "failure",
-                      description: `Nomad deploy failed for ${componentName}:${componentVersion}`
-                    });
-                  } catch (statusError) {
-                    console.warn(`Failed to set failure status for deployment ${deploymentIdsByJob[jobName]}:`);
-                    console.warn(statusError);
-                  }
 
                   continue;
                 }
@@ -311,69 +267,67 @@ jobs:
 
                   if (!isDryRun) {
                     try {
-                      const scriptPath = path.join(
-                        process.env.RUNNER_TEMP,
-                        `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`
-                      );
+                      const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
                       fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
 
                       child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+
                       fs.unlinkSync(scriptPath);
                     } catch (error) {
+                      // After deployment scripts are not critical to the deployment process, 
+                      // log as a warning and continue with the next job.
                       console.warn(`After deployment script failed for ${componentName}: ${id}`);
                       console.warn(error);
                     }
                   }
                 }
               }
-
-              // Mark deployment success, then mark previous same-component deployments stale (inactive)
-              if (!isDryRun) {
-                const currentDeploymentId = deploymentIdsByJob[jobName];
-
-                try {
-                  await github.rest.repos.createDeploymentStatus({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    deployment_id: currentDeploymentId,
-                    state: "success",
-                    description: `Nomad deploy succeeded for ${componentName}:${componentVersion}`
-                  });
-                } catch (statusError) {
-                  console.warn(`Failed to set success status for deployment ${currentDeploymentId}:`);
-                  console.warn(statusError);
-                }
-
-                try {
-                  const previousDeployments = await github.paginate(
-                    github.rest.repos.listDeployments,
-                    {
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      environment: deployEnv,
-                      task: `deploy:${componentName}`,
-                      per_page: 100
-                    }
-                  );
-
-                  for (const d of previousDeployments) {
-                    if (d.id === currentDeploymentId) continue;
-
-                    await github.rest.repos.createDeploymentStatus({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      deployment_id: d.id,
-                      state: "inactive",
-                      description: `Superseded by ${componentName}:${componentVersion} (deployment ${currentDeploymentId})`
-                    });
-                  }
-                } catch (staleError) {
-                  console.warn(`Failed to mark previous deployments inactive for ${componentName}:`);
-                  console.warn(staleError);
-                }
-              }
             }
 
             if (failedJobs.length > 0) {
               core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
+            }
+
+      - name: Mark old deployments inactive
+        if: ${{ success() && github.event.inputs.dry_run == 'false' }}
+        uses: actions/github-script@v7
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+        with:
+          script: |
+            const environment = process.env.NOMAD_ENVIRONMENT;
+
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment,
+              per_page: 100,
+            });
+
+            // Sort newest first; skip the most recent (the one just created this run)
+            const sorted = deployments.data.sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            );
+            const toInactivate = sorted.slice(1);
+
+            for (const deployment of toInactivate) {
+              // Check current state first to avoid redundant status entries
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                per_page: 1,
+              });
+
+              const latestState = statuses.data[0]?.state;
+              if (latestState === 'inactive') continue;
+
+              console.log(`Marking deployment ${deployment.id} (created ${deployment.created_at}) as inactive`);
+
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: 'inactive',
+              });
             }
