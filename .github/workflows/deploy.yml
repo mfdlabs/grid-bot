@@ -344,13 +344,16 @@ jobs:
                 }
 
                 try {
-                  const { data: previousDeployments } = await github.rest.repos.listDeployments({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    environment: deployEnv,
-                    task: `deploy:${componentName}`,
-                    per_page: 100
-                  });
+                  const previousDeployments = await github.paginate(
+                    github.rest.repos.listDeployments,
+                    {
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      environment: deployEnv,
+                      task: `deploy:${componentName}`,
+                      per_page: 100
+                    }
+                  );
 
                   for (const d of previousDeployments) {
                     if (d.id === currentDeploymentId) continue;
