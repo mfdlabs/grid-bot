@@ -67,7 +67,7 @@ jobs:
 
             const component = match[1];
             const versionSuffix = match[2] || '';
-            const buildType = (match[3] || 'debug') === 'debug' ? 'Debug' : 'Release';
+            const buildType = (match[3] || 'release') === 'release' ? 'Release' : 'Debug';
 
             console.log(`Building component: ${component}, version suffix: ${versionSuffix ?? 'none'}, build type: ${buildType}`);
 
