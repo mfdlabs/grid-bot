@@ -373,7 +373,7 @@ jobs:
               }
             };
             
-            const getPreviousStableNomadVersion = (jobName, namespace) => {
+            const getCurrentStableNomadVersion = (jobName, namespace) => {
               try {
                 const history = getNomadJobHistory(jobName, namespace);
             
@@ -381,20 +381,22 @@ jobs:
                   return null;
                 }
             
-                // The first history entry is the version currently at the head of
-                // Nomad's version history. Select the newest stable version other
-                // than that current entry.
-                const currentVersion = history[0].version;
+                // The newest history entry is the version currently being served.
+                // It may be marked stable even if the job's deployment has just completed.
+                const currentVersion = history[0];
             
-                const previousStable = history.find((entry) => (
-                  entry.version !== currentVersion &&
-                  entry.stable
-                ));
+                if (currentVersion.stable) {
+                  return currentVersion.version;
+                }
             
-                return previousStable?.version || null;
+                // If the newest version is unstable or failed, use the newest stable
+                // version as the rollback target.
+                const latestStableVersion = history.find((entry) => entry.stable);
+            
+                return latestStableVersion?.version || null;
               } catch (error) {
                 console.warn(
-                  `Unable to determine previous stable Nomad version for ${jobName} ` +
+                  `Unable to determine current stable Nomad version for ${jobName} ` +
                   `(namespace: ${namespace}): ${error.message}`,
                 );
             
@@ -525,7 +527,7 @@ jobs:
               let previousJobSpec = null;
               
               if (!isDryRun) {
-                previousVersion = getPreviousStableNomadVersion(
+                previousVersion = getCurrentStableNomadVersion(
                   nomadJobName,
                   nomadNamespace,
                 );
