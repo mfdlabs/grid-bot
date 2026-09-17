@@ -251,9 +251,18 @@ jobs:
               return match ? match[1] : fallback;
             };
 
-            const getPreviousNomadVersion = (jobName) => {
+            // Nomad jobs are not necessarily deployed to the "default" namespace
+            // (e.g. component.yaml can set `namespace: grid-bot`), so we must
+            // read it out of the generated HCL and pass it explicitly to every
+            // nomad CLI invocation that targets an existing job by name.
+            const getNamespaceFromDefinition = (jobDefinition) => {
+              const match = jobDefinition.match(/^\s*namespace\s*=\s*"([^"]+)"/m);
+              return match ? match[1] : 'default';
+            };
+
+            const getPreviousNomadVersion = (jobName, namespace) => {
               try {
-                const history = child_process.execSync(`nomad job history -json ${jobName}`, {
+                const history = child_process.execSync(`nomad job history -namespace=${namespace} -json ${jobName}`, {
                   encoding: 'utf8',
                   stdio: ['ignore', 'pipe', 'pipe'],
                 });
@@ -270,28 +279,28 @@ jobs:
 
                 return String(previous.Version);
               } catch (error) {
-                console.warn(`Unable to inspect previous Nomad history for ${jobName}: ${error.message}`);
+                console.warn(`Unable to inspect previous Nomad history for ${jobName} (namespace: ${namespace}): ${error.message}`);
                 return null;
               }
             };
 
-            const getPreviousNomadJobDefinition = (jobName) => {
+            const getPreviousNomadJobDefinition = (jobName, namespace) => {
               try {
-                return child_process.execSync(`nomad job inspect ${jobName}`, {
+                return child_process.execSync(`nomad job inspect -namespace=${namespace} ${jobName}`, {
                   encoding: 'utf8',
                   stdio: ['ignore', 'pipe', 'pipe'],
                 });
               } catch (error) {
-                console.warn(`Unable to inspect previous Nomad job definition for ${jobName}: ${error.message}`);
+                console.warn(`Unable to inspect previous Nomad job definition for ${jobName} (namespace: ${namespace}): ${error.message}`);
                 return null;
               }
             };
 
-            const rollbackNomadJob = (jobName, previousVersion, previousJobSpec) => {
+            const rollbackNomadJob = (jobName, namespace, previousVersion, previousJobSpec) => {
               try {
                 if (previousVersion) {
-                  console.warn(`Attempting rollback for ${jobName} to Nomad version ${previousVersion}`);
-                  child_process.execSync(`nomad job revert ${jobName} ${previousVersion}`, {
+                  console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) to Nomad version ${previousVersion}`);
+                  child_process.execSync(`nomad job revert -namespace=${namespace} ${jobName} ${previousVersion}`, {
                     stdio: 'inherit',
                     env: process.env,
                   });
@@ -306,18 +315,18 @@ jobs:
 
                   fs.writeFileSync(restoreFile, previousJobSpec);
 
-                  console.warn(`Attempting rollback for ${jobName} using the last-known-good definition.`);
-                  child_process.execSync(`nomad job run ${restoreFile}`, {
+                  console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) using the last-known-good definition.`);
+                  child_process.execSync(`nomad job run -namespace=${namespace} ${restoreFile}`, {
                     stdio: 'inherit',
                     env: process.env,
                   });
                   return true;
                 }
 
-                console.warn(`No previous Nomad version or job definition was found for ${jobName}; automatic rollback is not possible.`);
+                console.warn(`No previous Nomad version or job definition was found for ${jobName} (namespace: ${namespace}); automatic rollback is not possible.`);
                 return false;
               } catch (error) {
-                console.error(`Rollback failed for ${jobName}`);
+                console.error(`Rollback failed for ${jobName} (namespace: ${namespace})`);
                 console.error(error);
                 return false;
               }
@@ -327,13 +336,14 @@ jobs:
               const [componentName] = jobName.split(':');
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
               const nomadJobName = getJobNameFromDefinition(jobDefinition, componentName);
+              const nomadNamespace = getNamespaceFromDefinition(jobDefinition);
 
               let previousVersion = null;
               let previousJobSpec = null;
 
               if (!isDryRun) {
-                previousVersion = getPreviousNomadVersion(nomadJobName);
-                previousJobSpec = getPreviousNomadJobDefinition(nomadJobName);
+                previousVersion = getPreviousNomadVersion(nomadJobName, nomadNamespace);
+                previousJobSpec = getPreviousNomadJobDefinition(nomadJobName, nomadNamespace);
               }
 
               if (deploymentScripts.before) {
@@ -368,13 +378,13 @@ jobs:
 
               if (!isDryRun) {
                 try {
-                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit', env: process.env });
+                  child_process.execSync(`nomad job run -namespace=${nomadNamespace} ${tempFile}`, { stdio: 'inherit', env: process.env });
                 } catch (error) {
                   const reason = error?.stderr?.toString?.() || error?.message || String(error);
 
                   console.error(`Deployment failed for ${jobName}; attempting rollback...`);
 
-                  const rollbackSucceeded = rollbackNomadJob(nomadJobName, previousVersion, previousJobSpec);
+                  const rollbackSucceeded = rollbackNomadJob(nomadJobName, nomadNamespace, previousVersion, previousJobSpec);
 
                   failureSummary.push({ job: jobName, reason: reason.trim() });
 
