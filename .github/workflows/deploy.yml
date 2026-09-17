@@ -202,14 +202,13 @@ jobs:
   deploy-nomad-jobs:
     name: Deploy Nomad Jobs
     runs-on: grid-bot-infra
-
     needs: parse-input-components
     environment: ${{ github.event.inputs.nomad_environment }}
-
     if: ${{ needs.parse-input-components.outputs.nomad-files != '{}' && needs.parse-input-components.outputs.nomad-files != '' }}
 
     outputs:
       failure-summary: ${{ steps.deploy-nomad-jobs.outputs.failure-summary }}
+      deploy-summary: ${{ steps.deploy-nomad-jobs.outputs.deploy-summary }}
 
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
@@ -245,6 +244,7 @@ jobs:
 
             const failedJobs = [];
             const failureSummary = [];
+            const deploySummary = [];
 
             const getJobNameFromDefinition = (jobDefinition, fallback) => {
               const match = jobDefinition.match(/^\s*job\s+"([^"]+)"/m);
@@ -258,6 +258,22 @@ jobs:
             const getNamespaceFromDefinition = (jobDefinition) => {
               const match = jobDefinition.match(/^\s*namespace\s*=\s*"([^"]+)"/m);
               return match ? match[1] : 'default';
+            };
+
+            const getCurrentNomadVersion = (jobName, namespace) => {
+              try {
+                const inspect = child_process.execSync(`nomad job inspect -namespace=${namespace} -json ${jobName}`, {
+                  encoding: 'utf8',
+                  stdio: ['ignore', 'pipe', 'pipe'],
+                });
+
+                const parsed = JSON.parse(inspect);
+                const version = parsed?.Job?.Version;
+
+                return version == null ? null : String(version);
+              } catch (error) {
+                return null;
+              }
             };
 
             const getPreviousNomadVersion = (jobName, namespace) => {
@@ -332,6 +348,31 @@ jobs:
               }
             };
 
+            // Runs a command while still streaming to the console (for live logs
+            // in the Actions run), but also captures the combined output so it
+            // can be attached to the PR comment.
+            const runAndCapture = (command) => {
+              let output = '';
+
+              try {
+                output = child_process.execSync(command, {
+                  encoding: 'utf8',
+                  env: process.env,
+                  stdio: ['ignore', 'pipe', 'pipe'],
+                });
+
+                console.log(output);
+
+                return { output, error: null };
+              } catch (error) {
+                const combined = [error.stdout, error.stderr].filter(Boolean).join('\n') || error.message;
+
+                console.log(combined);
+
+                return { output: combined, error };
+              }
+            };
+
             for (const [jobName, jobDefinition] of jobs) {
               const [componentName] = jobName.split(':');
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
@@ -364,7 +405,12 @@ jobs:
                       console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
                       console.error(error);
 
-                      failureSummary.push({ job: jobName, reason: `Before deployment script failed: ${reason}`.trim() });
+                      failureSummary.push({
+                        job: jobName,
+                        namespace: nomadNamespace,
+                        reason: `Before deployment script failed: ${reason}`.trim(),
+                        logs: reason,
+                      });
                       failedJobs.push(jobName);
 
                       continue;
@@ -377,29 +423,55 @@ jobs:
               fs.writeFileSync(tempFile, jobDefinition);
 
               if (!isDryRun) {
-                try {
-                  child_process.execSync(`nomad job run -namespace=${nomadNamespace} ${tempFile}`, { stdio: 'inherit', env: process.env });
-                } catch (error) {
-                  const reason = error?.stderr?.toString?.() || error?.message || String(error);
+                const { output, error } = runAndCapture(`nomad job run -namespace=${nomadNamespace} -detach=false ${tempFile}`);
 
+                if (error) {
                   console.error(`Deployment failed for ${jobName}; attempting rollback...`);
 
                   const rollbackSucceeded = rollbackNomadJob(nomadJobName, nomadNamespace, previousVersion, previousJobSpec);
 
-                  failureSummary.push({ job: jobName, reason: reason.trim() });
+                  failureSummary.push({
+                    job: jobName,
+                    namespace: nomadNamespace,
+                    reason: (error.stderr?.toString?.() || error.message || 'Unknown error').trim(),
+                    logs: output,
+                    rolledBack: rollbackSucceeded,
+                  });
 
                   if (!rollbackSucceeded) {
                     console.error(`Rollback was not possible for ${jobName}.`);
-                    failureSummary.push({ job: jobName, reason: 'Automatic rollback failed or no rollback target was available.' });
-                  } else {
-                    failureSummary.push({ job: jobName, reason: 'Automatic rollback to the previous Nomad version/definition succeeded.' });
                   }
 
                   failedJobs.push(jobName);
                   continue;
                 }
+
+                const newVersion = getCurrentNomadVersion(nomadJobName, nomadNamespace);
+                const changed = previousVersion == null || newVersion == null
+                  ? true // Treat unknown/new jobs as a change (first-time deployment)
+                  : previousVersion !== newVersion;
+
+                deploySummary.push({
+                  job: jobName,
+                  namespace: nomadNamespace,
+                  nomadJobName,
+                  previousVersion,
+                  newVersion,
+                  changed,
+                  logs: output,
+                });
               } else {
                 console.log(`Dry run: would have deployed job ${jobName} with definition:\n${jobDefinition}`);
+
+                deploySummary.push({
+                  job: jobName,
+                  namespace: nomadNamespace,
+                  nomadJobName,
+                  previousVersion,
+                  newVersion: null,
+                  changed: null, // Unknown in dry-run mode
+                  logs: `Dry run: no deployment was executed.\n\n${jobDefinition}`,
+                });
               }
 
               if (deploymentScripts.after) {
@@ -424,6 +496,7 @@ jobs:
             }
 
             core.setOutput('failure-summary', JSON.stringify(failureSummary));
+            core.setOutput('deploy-summary', JSON.stringify(deploySummary));
 
             if (failedJobs.length > 0) {
               core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
@@ -493,6 +566,7 @@ jobs:
           NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
           DEPLOY_RESULT: ${{ needs.deploy-nomad-jobs.result }}
           FAILURE_SUMMARY: ${{ needs.deploy-nomad-jobs.outputs.failure-summary }}
+          DEPLOY_SUMMARY: ${{ needs.deploy-nomad-jobs.outputs.deploy-summary }}
         with:
           github-token: ${{ secrets.DEPLOYER_TOKEN }}
           script: |
@@ -501,48 +575,119 @@ jobs:
             const result = process.env.DEPLOY_RESULT;
             const nomadUiUrl = (process.env.NOMAD_UI_URL || '').replace(/\/$/, '');
 
-            const jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
-            const jobLinks = Object.entries(jobs || {})
-              .map(([component]) => {
-                const jobName = component.split(':')[0];
-                const url = nomadUiUrl
-                  ? `${nomadUiUrl}/ui/jobs/${encodeURIComponent(jobName)}`
-                  : null;
+            const deploySummary = JSON.parse(process.env.DEPLOY_SUMMARY || '[]');
+            const failureSummary = JSON.parse(process.env.FAILURE_SUMMARY || '[]');
 
-                return url
-                  ? `- **${jobName}**: [Nomad job](${url})`
-                  : `- **${jobName}**`;
-              })
-              .join('\n') || '- No Nomad jobs were generated for this run.';
+            // Truncate long log blobs so the comment stays within GitHub's size limits
+            const truncateLogs = (logs, maxLength = 15000) => {
+              if (!logs) return '(no logs captured)';
+              if (logs.length <= maxLength) return logs;
+
+              return `${logs.slice(0, maxLength)}\n\n... (truncated, see workflow run logs for full output)`;
+            };
+
+            const nomadJobUrl = (jobName, namespace) => {
+              if (!nomadUiUrl) return null;
+
+              return `${nomadUiUrl}/ui/jobs/${encodeURIComponent(jobName)}@${encodeURIComponent(namespace)}`;
+            };
+
+            const renderLogsDetails = (title, logs) => [
+              `<details>`,
+              `<summary>${title}</summary>`,
+              ``,
+              '```',
+              truncateLogs(logs),
+              '```',
+              `</details>`,
+            ].join('\n');
 
             let body;
 
             if (result === 'success') {
+              const sections = deploySummary.map((entry) => {
+                const {
+                  job,
+                  namespace,
+                  nomadJobName,
+                  previousVersion,
+                  newVersion,
+                  changed,
+                  logs,
+                } = entry;
+
+                const url = nomadJobUrl(nomadJobName, namespace);
+                const jobLine = url
+                  ? `**${job}** — [Nomad job](${url})`
+                  : `**${job}**`;
+
+                let statusLine;
+                if (changed === null) {
+                  statusLine = `_Dry run — no changes were applied._`;
+                } else if (changed) {
+                  statusLine = previousVersion == null
+                    ? `🆕 New deployment (Nomad version \`${newVersion}\`)`
+                    : `🔄 Updated: Nomad version \`${previousVersion}\` → \`${newVersion}\``;
+                } else {
+                  statusLine = `➖ No changes detected; job re-applied at version \`${newVersion}\` (no-op redeploy)`;
+                }
+
+                const rollbackHint = previousVersion != null
+                  ? `Rollback with reply: \`#!${environment === 'production' ? 'prod-' : ''}rollback: ${job.split(':')[0]},${previousVersion}\``
+                  : `_No previous version was found; rollback via history is not available._`;
+
+                return [
+                  jobLine,
+                  statusLine,
+                  rollbackHint,
+                  ``,
+                  renderLogsDetails(`Deployment logs for ${job}`, logs),
+                ].join('\n');
+              });
+
               body = [
                 `## ✅ Deployment succeeded`,
                 ``,
                 `Environment: \`${environment}\``,
                 ``,
-                `Nomad jobs:`,
-                jobLinks,
+                sections.join('\n\n---\n\n'),
               ].join('\n');
             } else {
-              const failureSummary = JSON.parse(process.env.FAILURE_SUMMARY || '[]');
+              const failureSections = failureSummary.map(({ job, namespace, reason, logs, rolledBack }) => {
+                const rollbackLine = rolledBack === true
+                  ? `↩️ Automatically rolled back to the previous Nomad version.`
+                  : rolledBack === false
+                    ? `⚠️ Automatic rollback failed or no rollback target was available. Manual intervention required.`
+                    : '';
 
-              const failureDetails = failureSummary.length > 0
-                ? failureSummary.map(({ job, reason }) => `- **${job}**: \`${reason}\``).join('\n')
-                : '- No detailed failure information was captured.';
+                return [
+                  `**${job}**`,
+                  `Reason: \`${reason}\``,
+                  rollbackLine,
+                  ``,
+                  renderLogsDetails(`Failure logs for ${job}`, logs),
+                ].filter(Boolean).join('\n');
+              });
+
+              const successSections = deploySummary.map((entry) => {
+                const { job, namespace, nomadJobName, previousVersion, newVersion, changed, logs } = entry;
+                const url = nomadJobUrl(nomadJobName, namespace);
+                const jobLine = url ? `**${job}** — [Nomad job](${url})` : `**${job}**`;
+                const statusLine = changed
+                  ? `🔄 Updated: Nomad version \`${previousVersion ?? 'n/a'}\` → \`${newVersion}\``
+                  : `➖ No changes detected (version \`${newVersion}\`)`;
+
+                return [jobLine, statusLine, renderLogsDetails(`Deployment logs for ${job}`, logs)].join('\n');
+              });
 
               body = [
                 `## ❌ Deployment failed`,
                 ``,
                 `Environment: \`${environment}\``,
                 ``,
-                `Failure details:`,
-                failureDetails,
-                ``,
-                `Nomad jobs:`,
-                jobLinks,
+                `### Failed jobs`,
+                failureSections.join('\n\n---\n\n') || '_No detailed failure information was captured._',
+                successSections.length > 0 ? `\n### Jobs that still deployed successfully\n\n${successSections.join('\n\n---\n\n')}` : '',
                 ``,
                 `[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
               ].join('\n');
