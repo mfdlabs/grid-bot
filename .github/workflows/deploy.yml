@@ -201,18 +201,101 @@ jobs:
             const child_process = require('child_process');
 
             const isDryRun = ${{ github.event.inputs.dry_run }};
-
             const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
-
             let jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
             jobs = new Map(Object.entries(jobs));
 
             const failedJobs = [];
 
+            const getJobNameFromDefinition = (jobDefinition, fallback) => {
+              const match = jobDefinition.match(/^\s*job\s+"([^"]+)"/m);
+              return match ? match[1] : fallback;
+            };
+
+            const getPreviousNomadVersion = (jobName) => {
+              try {
+                const history = child_process.execSync(`nomad job history -json ${jobName}`, {
+                  encoding: 'utf8',
+                  stdio: ['ignore', 'pipe', 'pipe'],
+                });
+
+                const parsed = JSON.parse(history);
+                if (!Array.isArray(parsed) || parsed.length < 2) {
+                  return null;
+                }
+
+                const previous = parsed[1];
+                if (!previous || previous.Version == null) {
+                  return null;
+                }
+
+                return String(previous.Version);
+              } catch (error) {
+                console.warn(`Unable to inspect previous Nomad history for ${jobName}: ${error.message}`);
+                return null;
+              }
+            };
+
+            const getPreviousNomadJobDefinition = (jobName) => {
+              try {
+                return child_process.execSync(`nomad job inspect ${jobName}`, {
+                  encoding: 'utf8',
+                  stdio: ['ignore', 'pipe', 'pipe'],
+                });
+              } catch (error) {
+                console.warn(`Unable to inspect previous Nomad job definition for ${jobName}: ${error.message}`);
+                return null;
+              }
+            };
+
+            const rollbackNomadJob = (jobName, previousVersion, previousJobSpec) => {
+              try {
+                if (previousVersion) {
+                  console.warn(`Attempting rollback for ${jobName} to Nomad version ${previousVersion}`);
+                  child_process.execSync(`nomad job revert ${jobName} ${previousVersion}`, {
+                    stdio: 'inherit',
+                    env: process.env,
+                  });
+                  return true;
+                }
+
+                if (previousJobSpec) {
+                  const restoreFile = path.join(
+                    process.env.RUNNER_TEMP,
+                    `nomad-rollback-${jobName.replace(/[^a-zA-Z0-9_.-]/g, '-')}.hcl`
+                  );
+
+                  fs.writeFileSync(restoreFile, previousJobSpec);
+
+                  console.warn(`Attempting rollback for ${jobName} using the last-known-good definition.`);
+                  child_process.execSync(`nomad job run ${restoreFile}`, {
+                    stdio: 'inherit',
+                    env: process.env,
+                  });
+                  return true;
+                }
+
+                console.warn(`No previous Nomad version or job definition was found for ${jobName}; automatic rollback is not possible.`);
+                return false;
+              } catch (error) {
+                console.error(`Rollback failed for ${jobName}`);
+                console.error(error);
+                return false;
+              }
+            };
+
             for (const [jobName, jobDefinition] of jobs) {
               const [componentName] = jobName.split(':');
-              
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
+              const nomadJobName = getJobNameFromDefinition(jobDefinition, componentName);
+
+              let previousVersion = null;
+              let previousJobSpec = null;
+
+              if (!isDryRun) {
+                previousVersion = getPreviousNomadVersion(nomadJobName);
+                previousJobSpec = getPreviousNomadJobDefinition(nomadJobName);
+              }
 
               if (deploymentScripts.before) {
                 for (const { id, scriptData } of deploymentScripts.before) {
@@ -227,34 +310,32 @@ jobs:
 
                       fs.unlinkSync(scriptPath);
                     } catch (error) {
-                      // Should mark as failed here because before deployment scripts
-                      // are critical to the deployment process. 
-                      // If they fail, we should not proceed with the deployment.
-
                       console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
                       console.error(error);
                       failedJobs.push(jobName);
-                      
+
                       continue;
                     }
                   }
                 }
               }
 
-                
-
-              // Equivalent to mktemp 
               const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
-
               fs.writeFileSync(tempFile, jobDefinition);
 
               if (!isDryRun) {
-                // Poll the job status
                 try {
-                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
+                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit', env: process.env });
                 } catch (error) {
-                  failedJobs.push(jobName);
+                  console.error(`Deployment failed for ${jobName}; attempting rollback...`);
 
+                  const rollbackSucceeded = rollbackNomadJob(nomadJobName, previousVersion, previousJobSpec);
+
+                  if (!rollbackSucceeded) {
+                    console.error(`Rollback was not possible for ${jobName}.`);
+                  }
+
+                  failedJobs.push(jobName);
                   continue;
                 }
               } else {
@@ -274,8 +355,6 @@ jobs:
 
                       fs.unlinkSync(scriptPath);
                     } catch (error) {
-                      // After deployment scripts are not critical to the deployment process, 
-                      // log as a warning and continue with the next job.
                       console.warn(`After deployment script failed for ${componentName}: ${id}`);
                       console.warn(error);
                     }
