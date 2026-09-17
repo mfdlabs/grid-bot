@@ -442,69 +442,87 @@ jobs:
               }
             };
 
-            const rollbackNomadJob = (
-              jobName,
-              namespace,
-              previousVersion,
-              previousJobSpec,
-            ) => {
+            const failDeploymentIfNeeded = (jobName, namespace) => {
+              // If the failed `nomad job run` left an active deployment in a
+              // non-terminal state, Nomad will refuse the revert until it's
+              // explicitly marked as failed.
               try {
-                if (previousVersion) {
-                  console.warn(
-                    `Attempting rollback for ${jobName} ` +
-                    `(namespace: ${namespace}) to Nomad version ${previousVersion}`,
-                  );
-
-                  const result = runNomad([
-                    'job',
-                    'revert',
+                const statusResult = runNomad([
+                  'job',
+                  'status',
+                  '-namespace',
+                  namespace,
+                  '-json',
+                  jobName,
+                ]);
+            
+                if (statusResult.failed) {
+                  return;
+                }
+            
+                const parsed = JSON.parse(statusResult.output);
+                const latestDeploymentId = parsed?.LatestDeployment?.ID || parsed?.LatestDeployment?.Id;
+                const latestDeploymentStatus = parsed?.LatestDeployment?.Status;
+            
+                if (latestDeploymentId && latestDeploymentStatus === 'running') {
+                  console.warn(`Marking stuck deployment ${latestDeploymentId} as failed before reverting ${jobName}.`);
+            
+                  runNomad([
+                    'deployment',
+                    'fail',
                     '-namespace',
                     namespace,
-                    jobName,
-                    previousVersion,
+                    latestDeploymentId,
                   ]);
-
-                  return !result.failed;
                 }
-
-                if (previousJobSpec) {
-                  const restoreFile = path.join(
-                    process.env.RUNNER_TEMP,
-                    `nomad-rollback-${jobName.replace(/[^a-zA-Z0-9_.-]/g, '-')}.json`,
-                  );
-
-                  fs.writeFileSync(restoreFile, previousJobSpec);
-
-                  console.warn(
-                    `Attempting rollback for ${jobName} ` +
-                    `(namespace: ${namespace}) using the saved job definition.`,
-                  );
-
-                  const result = runNomad([
-                    'job',
-                    'run',
-                    '-namespace',
-                    namespace,
-                    restoreFile,
-                  ]);
-
-                  return !result.failed;
-                }
-
-                console.warn(
-                  `No previous Nomad version or job definition was found for ` +
-                  `${jobName} (namespace: ${namespace}); automatic rollback is not possible.`,
-                );
-
-                return false;
               } catch (error) {
-                console.error(
-                  `Rollback failed for ${jobName} ` +
-                  `(namespace: ${namespace}): ${error.message}`,
-                );
-
-                return false;
+                console.warn(`Unable to inspect/fail deployment state for ${jobName}: ${error.message}`);
               }
+            };
+            
+            const rollbackNomadJob = (jobName, namespace, previousVersion, previousJobSpec) => {
+              failDeploymentIfNeeded(jobName, namespace);
+            
+              if (previousVersion) {
+                console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) to Nomad version ${previousVersion}`);
+            
+                const result = runNomad([
+                  'job',
+                  'revert',
+                  '-namespace',
+                  namespace,
+                  jobName,
+                  previousVersion,
+                ]);
+            
+                return { success: !result.failed, output: result.output };
+              }
+            
+              if (previousJobSpec) {
+                const restoreFile = path.join(
+                  process.env.RUNNER_TEMP,
+                  `nomad-rollback-${jobName.replace(/[^a-zA-Z0-9_.-]/g, '-')}.json`,
+                );
+            
+                fs.writeFileSync(restoreFile, previousJobSpec);
+            
+                console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) using the saved job definition.`);
+            
+                const result = runNomad([
+                  'job',
+                  'run',
+                  '-namespace',
+                  namespace,
+                  restoreFile,
+                ]);
+            
+                return { success: !result.failed, output: result.output };
+              }
+            
+              return {
+                success: false,
+                output: `No previous Nomad version or job definition was found for ${jobName} (namespace: ${namespace}); automatic rollback is not possible.`,
+              };
             };
 
             for (const [jobName, jobDefinition] of jobs) {
@@ -611,39 +629,30 @@ jobs:
                 deploymentOutput = result.output;
 
                 if (result.failed) {
-                  const reason =
-                    result.output || 'Nomad deployment failed.';
-
-                  console.error(
-                    `Deployment failed for ${jobName}; attempting rollback...`,
-                  );
-
-                  const rollbackSucceeded = rollbackNomadJob(
+                  const reason = result.output || 'Nomad deployment failed.';
+                
+                  console.error(`Deployment failed for ${jobName}; attempting rollback...`);
+                
+                  const rollback = rollbackNomadJob(
                     nomadJobName,
                     nomadNamespace,
                     previousVersion,
                     previousJobSpec,
                   );
-
+                
                   failureSummary.push({
                     job: jobName,
                     namespace: nomadNamespace,
                     reason,
-                    logs: deploymentOutput,
-                    rolledBack: rollbackSucceeded,
+                    logs: [
+                      deploymentOutput,
+                      '',
+                      `--- Rollback attempt ---`,
+                      rollback.output || '(no rollback output captured)',
+                    ].join('\n'),
+                    rolledBack: rollback.success,
                   });
-
-                  if (!rollbackSucceeded) {
-                    failureSummary.push({
-                      job: jobName,
-                      namespace: nomadNamespace,
-                      reason:
-                        'Automatic rollback failed or no rollback target was available.',
-                      logs: '',
-                      rolledBack: false,
-                    });
-                  }
-
+                
                   failedJobs.push(jobName);
                   continue;
                 }
