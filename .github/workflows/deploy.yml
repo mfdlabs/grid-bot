@@ -503,19 +503,20 @@ jobs:
                   process.env.RUNNER_TEMP,
                   `nomad-rollback-${jobName.replace(/[^a-zA-Z0-9_.-]/g, '-')}.json`,
                 );
-            
+              
                 fs.writeFileSync(restoreFile, previousJobSpec);
-            
+              
                 console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) using the saved job definition.`);
-            
+              
                 const result = runNomad([
                   'job',
                   'run',
                   '-namespace',
                   namespace,
+                  '-json',       // <-- required: previousJobSpec is Nomad's JSON API job format, not HCL
                   restoreFile,
                 ]);
-            
+              
                 return { success: !result.failed, output: result.output };
               }
             
