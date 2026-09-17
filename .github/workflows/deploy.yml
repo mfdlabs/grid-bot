@@ -323,56 +323,6 @@ jobs:
               };
             };
 
-            const getCurrentNomadVersion = (jobName, namespace) => {
-              try {
-                const result = runNomad([
-                  'job',
-                  'inspect',
-                  '-namespace',
-                  namespace,
-                  '-json',
-                  jobName,
-                ]);
-
-                if (result.failed) {
-                  throw new Error(result.output || 'Nomad inspect failed.');
-                }
-
-                const parsed = JSON.parse(result.output);
-
-                const candidates = [
-                  parsed,
-                  parsed?.Job,
-                  parsed?.job,
-                  ...(Array.isArray(parsed) ? parsed : []),
-                ];
-
-                for (const candidate of candidates) {
-                  if (candidate?.Version != null) {
-                    return String(candidate.Version);
-                  }
-
-                  if (candidate?.version != null) {
-                    return String(candidate.version);
-                  }
-                }
-
-                console.warn(
-                  `Nomad inspect returned no version for ${jobName} ` +
-                  `(namespace: ${namespace}).`,
-                );
-
-                return null;
-              } catch (error) {
-                console.warn(
-                  `Unable to inspect current Nomad version for ${jobName} ` +
-                  `(namespace: ${namespace}): ${error.message}`,
-                );
-
-                return null;
-              }
-            };
-
             const getVersionFromDeploymentOutput = (output) => {
               const match = output.match(/^\s*Job Version\s*=\s*(\d+)\s*$/m);
               return match ? match[1] : null;
