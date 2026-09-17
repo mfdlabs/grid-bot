@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       component:
-        description: "Component name to rollback (for example: grid-bot)"
+        description: "Component name to rollback, for example: grid-bot"
         required: true
         type: string
 
@@ -17,21 +17,89 @@ on:
           - staging
           - production
 
+      nomad_namespace:
+        description: "Nomad namespace containing the job"
+        required: false
+        default: "grid-bot"
+        type: string
+
       force_version:
-        description: "Optional Nomad job version to revert to. If omitted, the previous version will be used."
+        description: "Optional Nomad version to revert to. If omitted, the latest stable version before the current version is used."
         required: false
         default: ""
         type: string
 
+permissions:
+  deployments: write
+  pull-requests: write
+  issues: write
+
 jobs:
+  find-related-pr:
+    name: Find Related Pull Request
+    runs-on: ubuntu-latest
+
+    outputs:
+      pr-number: ${{ steps.pr-number.outputs.pr-number }}
+
+    steps:
+      - name: Determine PR Number
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`Event Name: ${{ github.event_name }}`);
+
+            const headRef = '${{ github.ref }}'.replace('refs/heads/', '');
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+
+            console.log(`Searching for PR with head: ${owner}:${headRef}`);
+
+            const pullRequests = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: `${owner}:${headRef}`,
+              state: 'open',
+            });
+
+            const prNumber = pullRequests.data.length > 0
+              ? String(pullRequests.data[0].number)
+              : '';
+
+            core.setOutput('pr-number', prNumber);
+
   rollback:
-    name: Roll back Nomad Job
+    name: Roll Back Nomad Job
     runs-on: grid-bot-infra
-    environment: ${{ github.event.inputs.nomad_environment }}
+
+    needs:
+      - find-related-pr
+
+    environment: ${{ inputs.nomad_environment }}
+
+    concurrency:
+      group: rollback-${{ inputs.nomad_environment }}-${{ inputs.component }}
+      cancel-in-progress: false
+
+    outputs:
+      job-name: ${{ steps.rollback.outputs.job-name }}
+      namespace: ${{ steps.rollback.outputs.namespace }}
+      rollback-version: ${{ steps.rollback.outputs.rollback-version }}
+      previous-version: ${{ steps.rollback.outputs.previous-version }}
+      job-url: ${{ steps.rollback.outputs.job-url }}
+      rollback-output: ${{ steps.rollback.outputs.rollback-output }}
 
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_TLS_SKIP_VERIFY: "1"
+
+      COMPONENT: ${{ inputs.component }}
+      NOMAD_ENVIRONMENT: ${{ inputs.nomad_environment }}
+      NOMAD_NAMESPACE: ${{ inputs.nomad_namespace }}
+      FORCE_VERSION: ${{ inputs.force_version }}
+      NOMAD_UI_URL: ${{ vars.NOMAD_UI_URL }}
 
     steps:
       - name: Setup Nomad CLI
@@ -39,75 +107,441 @@ jobs:
         env:
           NOMAD_TLS_SKIP_VERIFY: 1
 
-      - name: Resolve Nomad job name
-        id: resolve-job
-        shell: bash
-        run: |
-          COMPONENT="${{ github.event.inputs.component }}"
-          ENV="${{ github.event.inputs.nomad_environment }}"
-          SHORT_ENV="${ENV/production/prod}"
-          SHORT_ENV="${SHORT_ENV/staging/stage}"
-
-          JOB_NAME="${COMPONENT}-${SHORT_ENV}"
-          echo "job_name=${JOB_NAME}" >> "$GITHUB_OUTPUT"
-
-      - name: Rollback to the previous version
+      - name: Roll back Nomad job
+        id: rollback
         uses: actions/github-script@v7
-        env:
-          NOMAD_JOB_NAME: ${{ steps.resolve-job.outputs.job_name }}
-          NOMAD_FORCE_VERSION: ${{ github.event.inputs.force_version }}
         with:
           script: |
-            const child_process = require('child_process');
+            const childProcess = require('child_process');
 
-            const jobName = process.env.NOMAD_JOB_NAME;
-            const forceVersion = (process.env.NOMAD_FORCE_VERSION || '').trim();
+            const component = process.env.COMPONENT;
+            const environment = process.env.NOMAD_ENVIRONMENT;
+            const namespace = process.env.NOMAD_NAMESPACE;
+            const requestedVersion = (process.env.FORCE_VERSION || '').trim();
+            const nomadUiUrl = (process.env.NOMAD_UI_URL || '').replace(/\/$/, '');
 
-            if (!jobName) {
-              throw new Error('No Nomad job name could be resolved.');
-            }
+            const outputLines = [];
 
-            let versionToRevert = forceVersion;
+            const log = (message) => {
+              console.log(message);
+              outputLines.push(message);
+            };
 
-            if (!versionToRevert) {
-              const historyOutput = child_process.execSync(`nomad job history -json ${jobName}`, {
+            const runNomad = (args) => {
+              log(`$ nomad ${args.join(' ')}`);
+
+              const result = childProcess.spawnSync('nomad', args, {
                 encoding: 'utf8',
-                stdio: ['ignore', 'pipe', 'pipe'],
+                env: process.env,
               });
 
-              const history = JSON.parse(historyOutput);
-              if (!Array.isArray(history) || history.length < 2) {
-                throw new Error(`No earlier Nomad version exists for ${jobName}.`);
+              const output = [
+                result.stdout || '',
+                result.stderr || '',
+              ]
+                .filter(Boolean)
+                .join('\n')
+                .trim();
+
+              if (output) {
+                log(output);
               }
 
-              const previous = history[1];
-              if (previous == null || previous.Version == null) {
-                throw new Error(`Unable to determine the previous Nomad version for ${jobName}.`);
+              if (result.error || result.status !== 0) {
+                throw new Error(
+                  output ||
+                  result.error?.message ||
+                  'Nomad command failed.',
+                );
               }
 
-              versionToRevert = String(previous.Version);
+              return output;
+            };
+
+            const setOutputs = ({
+              jobName,
+              rollbackVersion,
+              previousVersion,
+              jobUrl,
+            }) => {
+              core.setOutput('job-name', jobName || '');
+              core.setOutput('namespace', namespace || '');
+              core.setOutput('rollback-version', rollbackVersion || '');
+              core.setOutput('previous-version', previousVersion || '');
+              core.setOutput('job-url', jobUrl || '');
+              core.setOutput('rollback-output', outputLines.join('\n'));
+            };
+
+            try {
+              if (!component) {
+                throw new Error('Component name was not provided.');
+              }
+
+              if (!environment) {
+                throw new Error('Nomad environment was not provided.');
+              }
+
+              if (!namespace) {
+                throw new Error('Nomad namespace was not provided.');
+              }
+
+              let shortEnvironment;
+
+              switch (environment) {
+                case 'production':
+                  shortEnvironment = 'prod';
+                  break;
+                case 'staging':
+                  shortEnvironment = 'stage';
+                  break;
+                default:
+                  throw new Error(`Unsupported environment: ${environment}`);
+              }
+
+              const jobName = `${component}-${shortEnvironment}`;
+              const jobUrl = nomadUiUrl
+                ? `${nomadUiUrl}/ui/jobs/${encodeURIComponent(jobName)}@${encodeURIComponent(namespace)}`
+                : '';
+
+              log(`Resolved Nomad job: ${jobName}`);
+              log(`Nomad namespace: ${namespace}`);
+
+              let rollbackVersion = requestedVersion;
+              let previousVersion = '';
+
+              if (rollbackVersion) {
+                if (!/^\d+$/.test(rollbackVersion)) {
+                  throw new Error(
+                    `Invalid Nomad version "${rollbackVersion}". ` +
+                    'The version must be numeric.',
+                  );
+                }
+
+                log(`Using explicitly requested Nomad version ${rollbackVersion}.`);
+              } else {
+                const historyOutput = runNomad([
+                  'job',
+                  'history',
+                  '-namespace',
+                  namespace,
+                  '-json',
+                  jobName,
+                ]);
+
+                let history;
+
+                try {
+                  history = JSON.parse(historyOutput);
+                } catch (error) {
+                  throw new Error(
+                    `Unable to parse Nomad history: ${error.message}`,
+                  );
+                }
+
+                if (!Array.isArray(history)) {
+                  throw new Error(
+                    `Unexpected Nomad history response for ${jobName}.`,
+                  );
+                }
+
+                const versions = history
+                  .filter((entry) => entry && entry.Version != null)
+                  .map((entry) => ({
+                    version: String(entry.Version),
+                    versionNumber: Number(entry.Version),
+                    stable: entry.Stable === true,
+                    status: entry.Status || '',
+                    submitTime: Number(entry.SubmitTime || 0),
+                  }))
+                  .filter((entry) => Number.isFinite(entry.versionNumber))
+                  .sort((left, right) => {
+                    if (right.versionNumber !== left.versionNumber) {
+                      return right.versionNumber - left.versionNumber;
+                    }
+
+                    return right.submitTime - left.submitTime;
+                  });
+
+                if (versions.length < 2) {
+                  throw new Error(
+                    `No earlier Nomad version exists for ${jobName} ` +
+                    `(namespace: ${namespace}).`,
+                  );
+                }
+
+                const currentVersion = versions[0];
+
+                const stableVersions = versions.filter((entry) => (
+                  entry.stable &&
+                  entry.version !== currentVersion.version
+                ));
+
+                if (stableVersions.length === 0) {
+                  throw new Error(
+                    `No previous stable Nomad version exists for ${jobName} ` +
+                    `(namespace: ${namespace}).`,
+                  );
+                }
+
+                const targetVersion = stableVersions[0];
+
+                previousVersion = currentVersion.version;
+                rollbackVersion = targetVersion.version;
+
+                log(
+                  `Current Nomad version: ${currentVersion.version}; ` +
+                  `selected previous stable version: ${rollbackVersion}.`,
+                );
+              }
+
+              setOutputs({
+                jobName,
+                rollbackVersion,
+                previousVersion,
+                jobUrl,
+              });
+
+              const revertOutput = runNomad([
+                'job',
+                'revert',
+                '-namespace',
+                namespace,
+                jobName,
+                rollbackVersion,
+              ]);
+
+              log(
+                `Rollback requested for ${jobName} to Nomad version ` +
+                `${rollbackVersion}.`,
+              );
+
+              // Verify the job after the revert request. Nomad's revert
+              // command normally waits for the deployment to complete.
+              const statusOutput = runNomad([
+                'job',
+                'status',
+                '-namespace',
+                namespace,
+                '-json',
+                jobName,
+              ]);
+
+              let status;
+
+              try {
+                status = JSON.parse(statusOutput);
+              } catch (error) {
+                throw new Error(
+                  `Unable to parse Nomad status after rollback: ${error.message}`,
+                );
+              }
+
+              const resultingVersion =
+                status?.Version ??
+                status?.Job?.Version ??
+                status?.Job?.version;
+
+              const resultingStatus =
+                status?.Status ??
+                status?.Job?.Status ??
+                status?.Job?.status;
+
+              log(
+                `Nomad reported version ${resultingVersion ?? 'unknown'} ` +
+                `with status ${resultingStatus ?? 'unknown'}.`,
+              );
+
+              if (
+                resultingVersion != null &&
+                String(resultingVersion) !== String(rollbackVersion)
+              ) {
+                throw new Error(
+                  `Nomad reported version ${resultingVersion} after rollback; ` +
+                  `expected version ${rollbackVersion}.`,
+                );
+              }
+
+              setOutputs({
+                jobName,
+                rollbackVersion,
+                previousVersion,
+                jobUrl,
+              });
+
+              // Keep this variable referenced so command output is retained
+              // in the step log and workflow output.
+              void revertOutput;
+            } catch (error) {
+              outputLines.push(`ERROR: ${error.message}`);
+
+              core.setOutput('rollback-output', outputLines.join('\n'));
+              core.setFailed(error.message);
             }
 
-            console.log(`Reverting ${jobName} to Nomad version ${versionToRevert}`);
-            child_process.execSync(`nomad job revert ${jobName} ${versionToRevert}`, {
-              stdio: 'inherit',
-              env: process.env,
-            });
-
-            console.log(`Rollback complete for ${jobName}.`);
-
-      - name: Confirm rollback status
+      - name: Create rollback deployment status
+        if: ${{ success() }}
         uses: actions/github-script@v7
         env:
-          NOMAD_JOB_NAME: ${{ steps.resolve-job.outputs.job_name }}
+          JOB_NAME: ${{ steps.rollback.outputs.job-name }}
+          JOB_NAMESPACE: ${{ steps.rollback.outputs.namespace }}
+          ROLLBACK_VERSION: ${{ steps.rollback.outputs.rollback-version }}
+          JOB_URL: ${{ steps.rollback.outputs.job-url }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const child_process = require('child_process');
-            const jobName = process.env.NOMAD_JOB_NAME;
+            const environment = process.env.NOMAD_ENVIRONMENT;
+            const jobName = process.env.JOB_NAME;
+            const namespace = process.env.JOB_NAMESPACE;
+            const rollbackVersion = process.env.ROLLBACK_VERSION;
 
-            const status = child_process.execSync(`nomad job status ${jobName}`, { encoding: 'utf8' });
-            console.log(status);
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment,
+              per_page: 100,
+            });
 
-            if (!status.includes('Status')) {
-              throw new Error(`Nomad job ${jobName} does not appear to be in a healthy state after rollback.`);
+            const deployment = deployments.data
+              .sort((left, right) => (
+                new Date(right.created_at) - new Date(left.created_at)
+              ))[0];
+
+            if (!deployment) {
+              console.log(
+                `No GitHub deployment found for environment ${environment}; ` +
+                'skipping deployment status update.',
+              );
+              return;
             }
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+              state: 'success',
+              description: `Rolled back ${jobName} to Nomad version ${rollbackVersion}`,
+              environment_url: process.env.JOB_URL || undefined,
+            });
+
+            console.log(
+              `Updated GitHub deployment ${deployment.id} with rollback status.`,
+            );
+
+  comment-rollback-result:
+    name: Comment Rollback Result
+    runs-on: ubuntu-latest
+
+    needs:
+      - find-related-pr
+      - rollback
+
+    if: ${{ always() && needs.find-related-pr.outputs.pr-number != '' }}
+
+    steps:
+      - name: Comment Rollback Result
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ needs.find-related-pr.outputs.pr-number }}
+          ROLLBACK_RESULT: ${{ needs.rollback.result }}
+          COMPONENT: ${{ inputs.component }}
+          NOMAD_ENVIRONMENT: ${{ inputs.nomad_environment }}
+          NOMAD_NAMESPACE: ${{ inputs.nomad_namespace }}
+          JOB_NAME: ${{ needs.rollback.outputs.job-name }}
+          ROLLBACK_VERSION: ${{ needs.rollback.outputs.rollback-version }}
+          PREVIOUS_VERSION: ${{ needs.rollback.outputs.previous-version }}
+          JOB_URL: ${{ needs.rollback.outputs.job-url }}
+          ROLLBACK_OUTPUT: ${{ needs.rollback.outputs.rollback-output }}
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const prNumber = Number(process.env.PR_NUMBER);
+            const result = process.env.ROLLBACK_RESULT;
+            const component = process.env.COMPONENT;
+            const environment = process.env.NOMAD_ENVIRONMENT;
+            const namespace = process.env.NOMAD_NAMESPACE;
+            const jobName = process.env.JOB_NAME || `${component}-${environment}`;
+            const rollbackVersion = process.env.ROLLBACK_VERSION || 'unknown';
+            const previousVersion = process.env.PREVIOUS_VERSION || '';
+            const jobUrl = process.env.JOB_URL || '';
+            const rollbackOutput = process.env.ROLLBACK_OUTPUT || '(no rollback output captured)';
+
+            const escapeHtml = (value) => String(value)
+              .replaceAll('&', '&amp;')
+              .replaceAll('<', '&lt;')
+              .replaceAll('>', '&gt;');
+
+            const truncate = (value, maximum = 15000) => {
+              if (value.length <= maximum) {
+                return value;
+              }
+
+              return [
+                value.slice(0, maximum),
+                '',
+                '... logs truncated; see the workflow run for the complete output.',
+              ].join('\n');
+            };
+
+            const renderLogs = (title, logs) => [
+              '<details>',
+              `<summary>${escapeHtml(title)}</summary>`,
+              '',
+              '```text',
+              truncate(logs),
+              '```',
+              '</details>',
+            ].join('\n');
+
+            const commandPrefix = environment === 'production'
+              ? '#!prod-rollback'
+              : '#!rollback';
+
+            const explicitRollbackCommand =
+              `${commandPrefix}: ${component},${rollbackVersion}`;
+
+            const jobLine = jobUrl
+              ? `**${jobName}** — [Nomad job](${jobUrl})`
+              : `**${jobName}**`;
+
+            let body;
+
+            if (result === 'success') {
+              body = [
+                '## ✅ Rollback succeeded',
+                '',
+                `Environment: \`${environment}\``,
+                `Namespace: \`${namespace}\``,
+                '',
+                jobLine,
+                '',
+                previousVersion
+                  ? `Rolled back Nomad version \`${previousVersion}\` → \`${rollbackVersion}\`.`
+                  : `Rolled back to Nomad version \`${rollbackVersion}\`.`,
+                '',
+                `Repeat this rollback explicitly with: \`${explicitRollbackCommand}\``,
+                '',
+                renderLogs('Rollback logs', rollbackOutput),
+              ].join('\n');
+            } else {
+              body = [
+                '## ❌ Rollback failed',
+                '',
+                `Environment: \`${environment}\``,
+                `Namespace: \`${namespace}\``,
+                '',
+                jobLine,
+                '',
+                `The rollback to Nomad version \`${rollbackVersion}\` did not complete successfully.`,
+                '',
+                `[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+                '',
+                renderLogs('Rollback logs', rollbackOutput),
+              ].join('\n');
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
