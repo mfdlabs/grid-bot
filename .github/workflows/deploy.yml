@@ -32,6 +32,7 @@ on:
 
 permissions:
   deployments: write
+  pull-requests: write
 
 jobs:
   parse-input-components:
@@ -164,6 +165,40 @@ jobs:
           components: ${{ steps.find-component-directories.outputs.components }}
           resources: ${{ github.event.inputs.nomad_resources }}
 
+  find-related-pr:
+    name: Find Related Pull Request
+    runs-on: ubuntu-latest
+
+    outputs:
+      pr-number: ${{ steps.pr-number.outputs.pr-number }}
+
+    steps:
+      - name: Determine PR Number
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`Event Name: ${{ github.event_name }}`);
+
+            // Determine the PR number from the branch that triggered this workflow_dispatch
+            const headRef = '${{ github.ref }}'.replace('refs/heads/', '');
+
+            let prNumber = '';
+            console.log(`Searching for PR with head: ${{ github.repository_owner }}:${headRef}`);
+
+            const pr = await github.rest.pulls.list({
+              owner: '${{ github.repository_owner }}',
+              repo: '${{ github.repository }}'.split('/')[1],
+              head: `${{ github.repository_owner }}:${headRef}`,
+              state: 'open'
+            });
+
+            if (pr.data.length > 0) {
+              prNumber = pr.data[0].number;
+            }
+
+            core.setOutput('pr-number', prNumber);
+
   deploy-nomad-jobs:
     name: Deploy Nomad Jobs
     runs-on: grid-bot-infra
@@ -172,6 +207,9 @@ jobs:
     environment: ${{ github.event.inputs.nomad_environment }}
 
     if: ${{ needs.parse-input-components.outputs.nomad-files != '{}' && needs.parse-input-components.outputs.nomad-files != '' }}
+
+    outputs:
+      failure-summary: ${{ steps.deploy-nomad-jobs.outputs.failure-summary }}
 
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
@@ -206,6 +244,7 @@ jobs:
             jobs = new Map(Object.entries(jobs));
 
             const failedJobs = [];
+            const failureSummary = [];
 
             const getJobNameFromDefinition = (jobDefinition, fallback) => {
               const match = jobDefinition.match(/^\s*job\s+"([^"]+)"/m);
@@ -310,8 +349,12 @@ jobs:
 
                       fs.unlinkSync(scriptPath);
                     } catch (error) {
+                      const reason = error?.stderr?.toString?.() || error?.message || String(error);
+
                       console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
                       console.error(error);
+
+                      failureSummary.push({ job: jobName, reason: `Before deployment script failed: ${reason}`.trim() });
                       failedJobs.push(jobName);
 
                       continue;
@@ -327,12 +370,19 @@ jobs:
                 try {
                   child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit', env: process.env });
                 } catch (error) {
+                  const reason = error?.stderr?.toString?.() || error?.message || String(error);
+
                   console.error(`Deployment failed for ${jobName}; attempting rollback...`);
 
                   const rollbackSucceeded = rollbackNomadJob(nomadJobName, previousVersion, previousJobSpec);
 
+                  failureSummary.push({ job: jobName, reason: reason.trim() });
+
                   if (!rollbackSucceeded) {
                     console.error(`Rollback was not possible for ${jobName}.`);
+                    failureSummary.push({ job: jobName, reason: 'Automatic rollback failed or no rollback target was available.' });
+                  } else {
+                    failureSummary.push({ job: jobName, reason: 'Automatic rollback to the previous Nomad version/definition succeeded.' });
                   }
 
                   failedJobs.push(jobName);
@@ -362,6 +412,8 @@ jobs:
                 }
               }
             }
+
+            core.setOutput('failure-summary', JSON.stringify(failureSummary));
 
             if (failedJobs.length > 0) {
               core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
@@ -410,3 +462,85 @@ jobs:
                 state: 'inactive',
               });
             }
+
+  comment-deploy-result:
+    name: Comment Deployment Result
+    runs-on: ubuntu-latest
+
+    needs:
+      - parse-input-components
+      - find-related-pr
+      - deploy-nomad-jobs
+
+    if: ${{ always() && needs.find-related-pr.outputs.pr-number != '' }}
+
+    steps:
+      - name: Comment Deployment Result
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ needs.find-related-pr.outputs.pr-number }}
+          NOMAD_UI_URL: ${{ vars.NOMAD_UI_URL }}
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          DEPLOY_RESULT: ${{ needs.deploy-nomad-jobs.result }}
+          FAILURE_SUMMARY: ${{ needs.deploy-nomad-jobs.outputs.failure-summary }}
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const prNumber = Number(process.env.PR_NUMBER);
+            const environment = process.env.NOMAD_ENVIRONMENT;
+            const result = process.env.DEPLOY_RESULT;
+            const nomadUiUrl = (process.env.NOMAD_UI_URL || '').replace(/\/$/, '');
+
+            const jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
+            const jobLinks = Object.entries(jobs || {})
+              .map(([component]) => {
+                const jobName = component.split(':')[0];
+                const url = nomadUiUrl
+                  ? `${nomadUiUrl}/ui/jobs/${encodeURIComponent(jobName)}`
+                  : null;
+
+                return url
+                  ? `- **${jobName}**: [Nomad job](${url})`
+                  : `- **${jobName}**`;
+              })
+              .join('\n') || '- No Nomad jobs were generated for this run.';
+
+            let body;
+
+            if (result === 'success') {
+              body = [
+                `## ✅ Deployment succeeded`,
+                ``,
+                `Environment: \`${environment}\``,
+                ``,
+                `Nomad jobs:`,
+                jobLinks,
+              ].join('\n');
+            } else {
+              const failureSummary = JSON.parse(process.env.FAILURE_SUMMARY || '[]');
+
+              const failureDetails = failureSummary.length > 0
+                ? failureSummary.map(({ job, reason }) => `- **${job}**: \`${reason}\``).join('\n')
+                : '- No detailed failure information was captured.';
+
+              body = [
+                `## ❌ Deployment failed`,
+                ``,
+                `Environment: \`${environment}\``,
+                ``,
+                `Failure details:`,
+                failureDetails,
+                ``,
+                `Nomad jobs:`,
+                jobLinks,
+                ``,
+                `[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              ].join('\n');
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
