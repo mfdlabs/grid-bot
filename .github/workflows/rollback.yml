@@ -1,0 +1,113 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Component name to rollback (for example: grid-bot)"
+        required: true
+        type: string
+
+      nomad_environment:
+        description: "Environment to rollback"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - staging
+          - production
+
+      force_version:
+        description: "Optional Nomad job version to revert to. If omitted, the previous version will be used."
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  rollback:
+    name: Roll back Nomad Job
+    runs-on: grid-bot-infra
+    environment: ${{ github.event.inputs.nomad_environment }}
+
+    env:
+      NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+      - name: Setup Nomad CLI
+        uses: nferch/setup-nomad@v4.0.0
+        env:
+          NOMAD_TLS_SKIP_VERIFY: 1
+
+      - name: Resolve Nomad job name
+        id: resolve-job
+        shell: bash
+        run: |
+          COMPONENT="${{ github.event.inputs.component }}"
+          ENV="${{ github.event.inputs.nomad_environment }}"
+          SHORT_ENV="${ENV/production/prod}"
+          SHORT_ENV="${SHORT_ENV/staging/stage}"
+
+          JOB_NAME="${COMPONENT}-${SHORT_ENV}"
+          echo "job_name=${JOB_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Rollback to the previous version
+        uses: actions/github-script@v7
+        env:
+          NOMAD_JOB_NAME: ${{ steps.resolve-job.outputs.job_name }}
+          NOMAD_FORCE_VERSION: ${{ github.event.inputs.force_version }}
+        with:
+          script: |
+            const child_process = require('child_process');
+
+            const jobName = process.env.NOMAD_JOB_NAME;
+            const forceVersion = (process.env.NOMAD_FORCE_VERSION || '').trim();
+
+            if (!jobName) {
+              throw new Error('No Nomad job name could be resolved.');
+            }
+
+            let versionToRevert = forceVersion;
+
+            if (!versionToRevert) {
+              const historyOutput = child_process.execSync(`nomad job history -json ${jobName}`, {
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+              });
+
+              const history = JSON.parse(historyOutput);
+              if (!Array.isArray(history) || history.length < 2) {
+                throw new Error(`No earlier Nomad version exists for ${jobName}.`);
+              }
+
+              const previous = history[1];
+              if (previous == null || previous.Version == null) {
+                throw new Error(`Unable to determine the previous Nomad version for ${jobName}.`);
+              }
+
+              versionToRevert = String(previous.Version);
+            }
+
+            console.log(`Reverting ${jobName} to Nomad version ${versionToRevert}`);
+            child_process.execSync(`nomad job revert ${jobName} ${versionToRevert}`, {
+              stdio: 'inherit',
+              env: process.env,
+            });
+
+            console.log(`Rollback complete for ${jobName}.`);
+
+      - name: Confirm rollback status
+        uses: actions/github-script@v7
+        env:
+          NOMAD_JOB_NAME: ${{ steps.resolve-job.outputs.job_name }}
+        with:
+          script: |
+            const child_process = require('child_process');
+            const jobName = process.env.NOMAD_JOB_NAME;
+
+            const status = child_process.execSync(`nomad job status ${jobName}`, { encoding: 'utf8' });
+            console.log(status);
+
+            if (!status.includes('Status')) {
+              throw new Error(`Nomad job ${jobName} does not appear to be in a healthy state after rollback.`);
+            }
