@@ -32,6 +32,8 @@ on:
 
 permissions:
   deployments: write
+  pull-requests: write
+  issues: write
 
 jobs:
   parse-input-components:
@@ -40,7 +42,6 @@ jobs:
 
     outputs:
       per-component-deployment-scripts: ${{ steps.read-deployment-scripts.outputs.per-component-deployment-scripts }}
-
       nomad-files: ${{ steps.components-to-nomad-jobs.outputs.nomad-files }}
 
     steps:
@@ -72,75 +73,73 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const yaml = require('yaml');
+            const crypto = require('crypto');
 
             let components = ${{ steps.find-component-directories.outputs.components }};
             components = new Map(Object.entries(components));
 
-            let perComponentDeploymentScripts = {};
+            const perComponentDeploymentScripts = {};
 
             for (const [component, configFileName] of components) {
               const [, componentVersion] = component.split(':');
 
               process.env.NOMAD_VERSION = componentVersion;
 
-              // Parse yaml
               const componentConfigData = fs.readFileSync(configFileName, 'utf8');
               const replacedContents = componentConfigData.replace(
-                /\$\{{ env.([A-Za-z_]+) }}/g, // back slash needed here to escape from github action
+                /\$\{{ env.([A-Za-z_]+) }}/g,
                 (_, envVar) => {
-                  const value = process.env[envVar]
+                  const value = process.env[envVar];
 
                   if (!value) {
-                    return 'undefined'
+                    return 'undefined';
                   }
 
-                  return value
+                  return value;
                 },
-              )
+              );
 
               const componentConfig = yaml.parse(replacedContents);
 
               if (!componentConfig.deployment) {
-                continue
+                continue;
               }
 
               let beforeDeploymentScripts = componentConfig.deployment.before || [];
               let afterDeploymentScripts = componentConfig.deployment.after || [];
 
-              // Can either be:
-              // after:
-              //   - path: path/to/script
-              // or
-              // after:
-              //   - script: raw script contents
-              // (where script will create a temp file.)
-
-              function mapDeploymentScriptsCallback(script) {
+              function mapDeploymentScript(script) {
                 if (script.path) {
-                  // If not absolute path, make it relative to the component config file
                   const scriptPath = path.isAbsolute(script.path)
                     ? script.path
-                    : path.join(path.dirname(configFileName), script.path)
+                    : path.join(path.dirname(configFileName), script.path);
 
-                  // Read the script file to ensure it exists
                   if (!fs.existsSync(scriptPath)) {
                     throw new Error(`Deployment script file not found: ${scriptPath}`);
                   }
-                  
+
                   const id = script.id ?? crypto.randomBytes(8).toString('hex');
-                  
-                  return {id, scriptData: fs.readFileSync(scriptPath, 'utf8')};
+
+                  return {
+                    id,
+                    scriptData: fs.readFileSync(scriptPath, 'utf8'),
+                  };
                 }
 
                 if (script.script) {
-                  return {id: script.id ?? crypto.randomBytes(8).toString('hex'), scriptData: script.script};
+                  return {
+                    id: script.id ?? crypto.randomBytes(8).toString('hex'),
+                    scriptData: script.script,
+                  };
                 }
 
-                throw new Error(`Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`);
+                throw new Error(
+                  `Invalid deployment script in ${configFileName}: ${JSON.stringify(script)}`,
+                );
               }
-              
-              beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScriptsCallback);
-              afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScriptsCallback);
+
+              beforeDeploymentScripts = beforeDeploymentScripts.map(mapDeploymentScript);
+              afterDeploymentScripts = afterDeploymentScripts.map(mapDeploymentScript);
 
               perComponentDeploymentScripts[component] = {
                 before: beforeDeploymentScripts,
@@ -148,7 +147,10 @@ jobs:
               };
             }
 
-            core.setOutput('per-component-deployment-scripts', JSON.stringify(perComponentDeploymentScripts));
+            core.setOutput(
+              'per-component-deployment-scripts',
+              JSON.stringify(perComponentDeploymentScripts),
+            );
 
       - name: Components to Nomad Jobs
         uses: mfdlabs/component-nomad-parser-action@v18
@@ -164,6 +166,40 @@ jobs:
           components: ${{ steps.find-component-directories.outputs.components }}
           resources: ${{ github.event.inputs.nomad_resources }}
 
+  find-related-pr:
+    name: Find Related Pull Request
+    runs-on: ubuntu-latest
+
+    outputs:
+      pr-number: ${{ steps.pr-number.outputs.pr-number }}
+
+    steps:
+      - name: Determine PR Number
+        id: pr-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`Event Name: ${{ github.event_name }}`);
+
+            const headRef = '${{ github.ref }}'.replace('refs/heads/', '');
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+
+            console.log(`Searching for PR with head: ${owner}:${headRef}`);
+
+            const pullRequests = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: `${owner}:${headRef}`,
+              state: 'open',
+            });
+
+            const prNumber = pullRequests.data.length > 0
+              ? String(pullRequests.data[0].number)
+              : '';
+
+            core.setOutput('pr-number', prNumber);
+
   deploy-nomad-jobs:
     name: Deploy Nomad Jobs
     runs-on: grid-bot-infra
@@ -172,6 +208,10 @@ jobs:
     environment: ${{ github.event.inputs.nomad_environment }}
 
     if: ${{ needs.parse-input-components.outputs.nomad-files != '{}' && needs.parse-input-components.outputs.nomad-files != '' }}
+
+    outputs:
+      failure-summary: ${{ steps.deploy-nomad-jobs.outputs.failure-summary }}
+      deploy-summary: ${{ steps.deploy-nomad-jobs.outputs.deploy-summary }}
 
     env:
       NOMAD_ADDR: ${{ vars.NOMAD_ADDR }}
@@ -198,92 +238,759 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const crypto = require('crypto');
-            const child_process = require('child_process');
+            const childProcess = require('child_process');
 
             const isDryRun = ${{ github.event.inputs.dry_run }};
-
-            const perComponentDeploymentScripts = ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
+            const perComponentDeploymentScripts =
+              ${{ needs.parse-input-components.outputs.per-component-deployment-scripts }};
 
             let jobs = ${{ needs.parse-input-components.outputs.nomad-files }};
             jobs = new Map(Object.entries(jobs));
 
             const failedJobs = [];
+            const failureSummary = [];
+            const deploySummary = [];
+
+            const getErrorOutput = (error) => {
+              const stdout = error?.stdout?.toString?.() || '';
+              const stderr = error?.stderr?.toString?.() || '';
+              const message = error?.message || '';
+
+              return [stdout, stderr, message]
+                .filter(Boolean)
+                .join('\n')
+                .trim();
+            };
+
+            const getJobNameFromDefinition = (jobDefinition, fallback) => {
+              const match = jobDefinition.match(/^\s*job\s+"([^"]+)"/m);
+              return match ? match[1] : fallback;
+            };
+
+            const getNamespaceFromDefinition = (jobDefinition) => {
+              const match = jobDefinition.match(/^\s*namespace\s*=\s*"([^"]+)"/m);
+              return match ? match[1] : 'default';
+            };
+
+            const runNomad = (args, options = {}) => {
+              const result = childProcess.spawnSync('nomad', args, {
+                encoding: 'utf8',
+                env: process.env,
+                ...options,
+              });
+
+              const stdout = result.stdout || '';
+              const stderr = result.stderr || '';
+              const output = [stdout, stderr]
+                .filter(Boolean)
+                .join('\n')
+                .trim();
+
+              if (output) {
+                console.log(output);
+              }
+
+              return {
+                output,
+                status: result.status,
+                error: result.error,
+                failed: Boolean(result.error) || result.status !== 0,
+              };
+            };
+
+            const runScript = (scriptPath) => {
+              const result = childProcess.spawnSync(scriptPath, [], {
+                encoding: 'utf8',
+                env: process.env,
+              });
+
+              const stdout = result.stdout || '';
+              const stderr = result.stderr || '';
+              const output = [stdout, stderr]
+                .filter(Boolean)
+                .join('\n')
+                .trim();
+
+              if (output) {
+                console.log(output);
+              }
+
+              return {
+                output,
+                status: result.status,
+                error: result.error,
+                failed: Boolean(result.error) || result.status !== 0,
+              };
+            };
+
+            const getVersionFromDeploymentOutput = (output) => {
+              const match = output.match(/^\s*Job Version\s*=\s*(\d+)\s*$/m);
+              return match ? match[1] : null;
+            };
+
+            const getNomadJobHistory = (jobName, namespace) => {
+              const result = runNomad([
+                'job',
+                'history',
+                '-namespace',
+                namespace,
+                '-json',
+                jobName,
+              ]);
+            
+              if (result.failed) {
+                throw new Error(result.output || 'Nomad job history failed.');
+              }
+            
+              const history = JSON.parse(result.output);
+            
+              if (!Array.isArray(history)) {
+                throw new Error(`Unexpected Nomad history response for ${jobName}.`);
+              }
+            
+              return history
+                .filter((entry) => entry && entry.Version != null)
+                .map((entry) => ({
+                  version: String(entry.Version),
+                  stable: entry.Stable === true,
+                  submitTime: entry.SubmitTime || entry.SubmitTime,
+                }));
+            };
+            
+            const getCurrentNomadVersion = (jobName, namespace) => {
+              try {
+                const history = getNomadJobHistory(jobName, namespace);
+            
+                // Nomad returns the newest version first.
+                return history[0]?.version || null;
+              } catch (error) {
+                console.warn(
+                  `Unable to determine current Nomad version for ${jobName} ` +
+                  `(namespace: ${namespace}): ${error.message}`,
+                );
+            
+                return null;
+              }
+            };
+            
+            const getCurrentStableNomadVersion = (jobName, namespace) => {
+              try {
+                const history = getNomadJobHistory(jobName, namespace);
+            
+                if (history.length === 0) {
+                  return null;
+                }
+            
+                // The newest history entry is the version currently being served.
+                // It may be marked stable even if the job's deployment has just completed.
+                const currentVersion = history[0];
+            
+                if (currentVersion.stable) {
+                  return currentVersion.version;
+                }
+            
+                // If the newest version is unstable or failed, use the newest stable
+                // version as the rollback target.
+                const latestStableVersion = history.find((entry) => entry.stable);
+            
+                return latestStableVersion?.version || null;
+              } catch (error) {
+                console.warn(
+                  `Unable to determine current stable Nomad version for ${jobName} ` +
+                  `(namespace: ${namespace}): ${error.message}`,
+                );
+            
+                return null;
+              }
+            };
+
+            const getPreviousNomadJobDefinition = (jobName, namespace) => {
+              try {
+                const result = runNomad([
+                  'job',
+                  'inspect',
+                  '-namespace',
+                  namespace,
+                  '-json',
+                  jobName,
+                ]);
+            
+                if (result.failed) {
+                  throw new Error(result.output || 'Nomad inspect failed.');
+                }
+            
+                return result.output;
+              } catch (error) {
+                console.warn(
+                  `Unable to inspect previous Nomad job definition for ${jobName} ` +
+                  `(namespace: ${namespace}): ${error.message}`,
+                );
+            
+                return null;
+              }
+            };
+
+            const failDeploymentIfNeeded = (jobName, namespace) => {
+              // If the failed `nomad job run` left an active deployment in a
+              // non-terminal state, Nomad will refuse the revert until it's
+              // explicitly marked as failed.
+              try {
+                const statusResult = runNomad([
+                  'job',
+                  'status',
+                  '-namespace',
+                  namespace,
+                  '-json',
+                  jobName,
+                ]);
+            
+                if (statusResult.failed) {
+                  return;
+                }
+            
+                const parsed = JSON.parse(statusResult.output);
+                const latestDeploymentId = parsed?.LatestDeployment?.ID || parsed?.LatestDeployment?.Id;
+                const latestDeploymentStatus = parsed?.LatestDeployment?.Status;
+            
+                if (latestDeploymentId && latestDeploymentStatus === 'running') {
+                  console.warn(`Marking stuck deployment ${latestDeploymentId} as failed before reverting ${jobName}.`);
+            
+                  runNomad([
+                    'deployment',
+                    'fail',
+                    '-namespace',
+                    namespace,
+                    latestDeploymentId,
+                  ]);
+                }
+              } catch (error) {
+                console.warn(`Unable to inspect/fail deployment state for ${jobName}: ${error.message}`);
+              }
+            };
+            
+            const rollbackNomadJob = (jobName, namespace, previousVersion, previousJobSpec) => {
+              failDeploymentIfNeeded(jobName, namespace);
+            
+              if (previousVersion) {
+                console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) to Nomad version ${previousVersion}`);
+            
+                const result = runNomad([
+                  'job',
+                  'revert',
+                  '-namespace',
+                  namespace,
+                  jobName,
+                  previousVersion,
+                ]);
+            
+                return { success: !result.failed, output: result.output };
+              }
+            
+              if (previousJobSpec) {
+                const restoreFile = path.join(
+                  process.env.RUNNER_TEMP,
+                  `nomad-rollback-${jobName.replace(/[^a-zA-Z0-9_.-]/g, '-')}.json`,
+                );
+              
+                fs.writeFileSync(restoreFile, previousJobSpec);
+              
+                console.warn(`Attempting rollback for ${jobName} (namespace: ${namespace}) using the saved job definition.`);
+              
+                const result = runNomad([
+                  'job',
+                  'run',
+                  '-namespace',
+                  namespace,
+                  '-json',       // <-- required: previousJobSpec is Nomad's JSON API job format, not HCL
+                  restoreFile,
+                ]);
+              
+                return { success: !result.failed, output: result.output };
+              }
+            
+              return {
+                success: false,
+                output: `No previous Nomad version or job definition was found for ${jobName} (namespace: ${namespace}); automatic rollback is not possible.`,
+              };
+            };
 
             for (const [jobName, jobDefinition] of jobs) {
               const [componentName] = jobName.split(':');
-              
               const deploymentScripts = perComponentDeploymentScripts[jobName] || {};
+              const nomadJobName = getJobNameFromDefinition(
+                jobDefinition,
+                componentName,
+              );
+              const nomadNamespace = getNamespaceFromDefinition(jobDefinition);
 
-              if (deploymentScripts.before) {
-                for (const { id, scriptData } of deploymentScripts.before) {
-                  console.log(`Running before deployment script for ${componentName}: ${id}`);
+              let previousVersion = null;
+              let previousJobSpec = null;
+              
+              if (!isDryRun) {
+                previousVersion = getCurrentStableNomadVersion(
+                  nomadJobName,
+                  nomadNamespace,
+                );
+              
+                previousJobSpec = getPreviousNomadJobDefinition(
+                  nomadJobName,
+                  nomadNamespace,
+                );
+              }
 
-                  if (!isDryRun) {
-                    try {
-                      const scriptPath = path.join(process.env.RUNNER_TEMP, `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
-                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+              let beforeScriptFailed = false;
 
-                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+              for (const { id, scriptData } of deploymentScripts.before || []) {
+                console.log(
+                  `Running before deployment script for ${componentName}: ${id}`,
+                );
 
-                      fs.unlinkSync(scriptPath);
-                    } catch (error) {
-                      // Should mark as failed here because before deployment scripts
-                      // are critical to the deployment process. 
-                      // If they fail, we should not proceed with the deployment.
+                if (isDryRun) {
+                  continue;
+                }
 
-                      console.error(`Before deployment script failed for ${componentName}: ${scriptPath}`);
-                      console.error(error);
-                      failedJobs.push(jobName);
-                      
-                      continue;
-                    }
-                  }
+                const scriptPath = path.join(
+                  process.env.RUNNER_TEMP,
+                  `before-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`,
+                );
+
+                fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
+                const result = runScript(scriptPath);
+
+                try {
+                  fs.unlinkSync(scriptPath);
+                } catch {
+                  // The runner cleans up temporary files automatically.
+                }
+
+                if (result.failed) {
+                  const reason =
+                    result.output || 'Before deployment script failed.';
+
+                  console.error(
+                    `Before deployment script failed for ${componentName}: ${id}`,
+                  );
+
+                  failureSummary.push({
+                    job: jobName,
+                    namespace: nomadNamespace,
+                    reason: `Before deployment script failed: ${reason}`,
+                    logs: result.output,
+                    rolledBack: false,
+                  });
+
+                  failedJobs.push(jobName);
+                  beforeScriptFailed = true;
+                  break;
                 }
               }
 
-                
+              if (beforeScriptFailed) {
+                continue;
+              }
 
-              // Equivalent to mktemp 
-              const tempFile = path.join(process.env.RUNNER_TEMP, `nomad-job-${componentName}.hcl`);
+              const tempFile = path.join(
+                process.env.RUNNER_TEMP,
+                `nomad-job-${componentName}.hcl`,
+              );
 
               fs.writeFileSync(tempFile, jobDefinition);
 
-              if (!isDryRun) {
-                // Poll the job status
-                try {
-                  child_process.execSync(`nomad job run ${tempFile}`, { stdio: 'inherit' });
-                } catch (error) {
-                  failedJobs.push(jobName);
+              let deploymentOutput = '';
+              let newVersion = null;
 
+              if (isDryRun) {
+                deploymentOutput =
+                  `Dry run: no deployment was executed.\n\n${jobDefinition}`;
+              
+                console.log(deploymentOutput);
+              } else {
+                const result = runNomad([
+                  'job',
+                  'run',
+                  '-namespace',
+                  nomadNamespace,
+                  '-detach=false',
+                  tempFile,
+                ]);
+              
+                deploymentOutput = result.output;
+              
+                if (result.failed) {
+                  const reason = result.output || 'Nomad deployment failed.';
+              
+                  console.error(
+                    `Deployment failed for ${jobName}; attempting rollback...`,
+                  );
+              
+                  const rollback = rollbackNomadJob(
+                    nomadJobName,
+                    nomadNamespace,
+                    previousVersion,
+                    previousJobSpec,
+                  );
+              
+                  failureSummary.push({
+                    job: jobName,
+                    namespace: nomadNamespace,
+                    reason,
+                    logs: [
+                      deploymentOutput,
+                      '',
+                      '--- Rollback attempt ---',
+                      rollback.output || '(no rollback output captured)',
+                    ].join('\n'),
+                    rolledBack: rollback.success,
+                  });
+              
+                  failedJobs.push(jobName);
                   continue;
                 }
-              } else {
-                console.log(`Dry run: would have deployed job ${jobName} with definition:\n${jobDefinition}`);
+              
+                newVersion = getVersionFromDeploymentOutput(deploymentOutput);
+              
+                if (newVersion == null) {
+                  newVersion = getCurrentNomadVersion(
+                    nomadJobName,
+                    nomadNamespace,
+                  );
+                }
               }
 
-              if (deploymentScripts.after) {
-                for (const { id, scriptData } of deploymentScripts.after) {
-                  console.log(`Running after deployment script for ${componentName}: ${id}`);
+              const changed = isDryRun
+                ? null
+                : previousVersion == null || newVersion == null
+                  ? true
+                  : previousVersion !== newVersion;
 
-                  if (!isDryRun) {
-                    try {
-                      const scriptPath = path.join(process.env.RUNNER_TEMP, `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`);
-                      fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+              deploySummary.push({
+                job: jobName,
+                namespace: nomadNamespace,
+                nomadJobName,
+                previousVersion,
+                newVersion,
+                changed,
+                logs: deploymentOutput,
+              });
 
-                      child_process.execSync(scriptPath, { stdio: 'inherit', env: process.env });
+              for (const { id, scriptData } of deploymentScripts.after || []) {
+                console.log(
+                  `Running after deployment script for ${componentName}: ${id}`,
+                );
 
-                      fs.unlinkSync(scriptPath);
-                    } catch (error) {
-                      // After deployment scripts are not critical to the deployment process, 
-                      // log as a warning and continue with the next job.
-                      console.warn(`After deployment script failed for ${componentName}: ${id}`);
-                      console.warn(error);
-                    }
-                  }
+                if (isDryRun) {
+                  continue;
+                }
+
+                const scriptPath = path.join(
+                  process.env.RUNNER_TEMP,
+                  `after-deploy-${componentName}-${crypto.randomBytes(8).toString('hex')}.sh`,
+                );
+
+                fs.writeFileSync(scriptPath, scriptData, { mode: 0o755 });
+
+                const result = runScript(scriptPath);
+
+                try {
+                  fs.unlinkSync(scriptPath);
+                } catch {
+                  // The runner cleans up temporary files automatically.
+                }
+
+                if (result.failed) {
+                  console.warn(
+                    `After deployment script failed for ${componentName}: ${id}`,
+                  );
+                  console.warn(result.output);
                 }
               }
             }
 
+            core.setOutput(
+              'failure-summary',
+              JSON.stringify(failureSummary),
+            );
+
+            core.setOutput(
+              'deploy-summary',
+              JSON.stringify(deploySummary),
+            );
+
             if (failedJobs.length > 0) {
-              core.setFailed(`Failed to deploy the following jobs: ${failedJobs.join(', ')}`);
+              core.setFailed(
+                `Failed to deploy the following jobs: ${failedJobs.join(', ')}`,
+              );
             }
+
+      - name: Mark old deployments inactive
+        if: ${{ success() && github.event.inputs.dry_run == 'false' }}
+        uses: actions/github-script@v7
+        env:
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+        with:
+          script: |
+            const environment = process.env.NOMAD_ENVIRONMENT;
+
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment,
+              per_page: 100,
+            });
+
+            const sorted = deployments.data.sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at),
+            );
+
+            const toInactivate = sorted.slice(1);
+
+            for (const deployment of toInactivate) {
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                per_page: 1,
+              });
+
+              const latestState = statuses.data[0]?.state;
+
+              if (latestState === 'inactive') {
+                continue;
+              }
+
+              console.log(
+                `Marking deployment ${deployment.id} ` +
+                `(created ${deployment.created_at}) as inactive`,
+              );
+
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: 'inactive',
+              });
+            }
+
+  comment-deploy-result:
+    name: Comment Deployment Result
+    runs-on: ubuntu-latest
+
+    needs:
+      - parse-input-components
+      - find-related-pr
+      - deploy-nomad-jobs
+
+    if: ${{ always() && needs.find-related-pr.outputs.pr-number != '' }}
+
+    steps:
+      - name: Comment Deployment Result
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ needs.find-related-pr.outputs.pr-number }}
+          NOMAD_UI_URL: ${{ vars.NOMAD_UI_URL }}
+          NOMAD_ENVIRONMENT: ${{ github.event.inputs.nomad_environment }}
+          DEPLOY_RESULT: ${{ needs.deploy-nomad-jobs.result }}
+          FAILURE_SUMMARY: ${{ needs.deploy-nomad-jobs.outputs.failure-summary }}
+          DEPLOY_SUMMARY: ${{ needs.deploy-nomad-jobs.outputs.deploy-summary }}
+        with:
+          github-token: ${{ secrets.DEPLOYER_TOKEN }}
+          script: |
+            const prNumber = Number(process.env.PR_NUMBER);
+            const environment = process.env.NOMAD_ENVIRONMENT;
+            const result = process.env.DEPLOY_RESULT;
+            const nomadUiUrl = (process.env.NOMAD_UI_URL || '').replace(/\/$/, '');
+
+            const parseJson = (value, fallback) => {
+              try {
+                return JSON.parse(value || fallback);
+              } catch (error) {
+                console.warn(`Unable to parse workflow output: ${error.message}`);
+                return JSON.parse(fallback);
+              }
+            };
+
+            const deploySummary = parseJson(
+              process.env.DEPLOY_SUMMARY,
+              '[]',
+            );
+
+            const failureSummary = parseJson(
+              process.env.FAILURE_SUMMARY,
+              '[]',
+            );
+
+            const truncateLogs = (logs, maxLength = 15000) => {
+              if (!logs) {
+                return '(no logs captured)';
+              }
+
+              if (logs.length <= maxLength) {
+                return logs;
+              }
+
+              return [
+                logs.slice(0, maxLength),
+                '',
+                '... logs truncated; see the workflow run for the complete output.',
+              ].join('\n');
+            };
+
+            const escapeHtml = (value) => String(value)
+              .replaceAll('&', '&amp;')
+              .replaceAll('<', '&lt;')
+              .replaceAll('>', '&gt;');
+
+            const nomadJobUrl = (jobName, namespace) => {
+              if (!nomadUiUrl) {
+                return null;
+              }
+
+              return (
+                `${nomadUiUrl}/ui/jobs/` +
+                `${encodeURIComponent(jobName)}@${encodeURIComponent(namespace)}`
+              );
+            };
+
+            const renderLogsDetails = (title, logs) => [
+              '<details>',
+              `<summary>${escapeHtml(title)}</summary>`,
+              '',
+              '```text',
+              truncateLogs(logs),
+              '```',
+              '</details>',
+            ].join('\n');
+
+            const renderJobHeader = (entry) => {
+              const url = nomadJobUrl(
+                entry.nomadJobName,
+                entry.namespace,
+              );
+
+              return url
+                ? `**${entry.job}** — [Nomad job](${url})`
+                : `**${entry.job}**`;
+            };
+
+            const renderRollbackHint = (entry) => {
+              if (entry.previousVersion == null) {
+                return '_No previous Nomad version was found for this job._';
+              }
+
+              const commandPrefix = environment === 'production'
+                ? '#!prod-rollback'
+                : '#!rollback';
+
+              const componentName = entry.job.split(':')[0];
+
+              return (
+                `Rollback with reply: \`${commandPrefix}: ` +
+                `${componentName},${entry.previousVersion}\``
+              );
+            };
+
+            let body;
+
+            if (result === 'success') {
+              const sections = deploySummary.map((entry) => {
+                let statusLine;
+
+                if (entry.changed === null) {
+                  statusLine = '_Dry run — no changes were applied._';
+                } else if (entry.previousVersion == null) {
+                  statusLine =
+                    `🆕 New deployment (Nomad version \`${entry.newVersion ?? 'unknown'}\`)`;
+                } else if (entry.newVersion == null) {
+                  statusLine =
+                    `🔄 Deployment completed; the resulting Nomad version could not be determined. ` +
+                    `Previous version was \`${entry.previousVersion}\`.`;
+                } else if (entry.previousVersion !== entry.newVersion) {
+                  statusLine =
+                    `🔄 Updated: Nomad version \`${entry.previousVersion}\` ` +
+                    `→ \`${entry.newVersion}\``;
+                } else {
+                  statusLine =
+                    `➖ No changes detected; job remains at Nomad version ` +
+                    `\`${entry.newVersion}\`.`;
+                }
+
+                return [
+                  renderJobHeader(entry),
+                  statusLine,
+                  renderRollbackHint(entry),
+                  '',
+                  renderLogsDetails(
+                    `Deployment logs for ${entry.job}`,
+                    entry.logs,
+                  ),
+                ].join('\n');
+              });
+
+              body = [
+                '## ✅ Deployment succeeded',
+                '',
+                `Environment: \`${environment}\``,
+                '',
+                sections.join('\n\n---\n\n') ||
+                  '_No deployment summary was produced._',
+              ].join('\n');
+            } else {
+              const failureSections = failureSummary.map((entry) => {
+                const rollbackLine = entry.rolledBack === true
+                  ? '↩️ Automatically rolled back to the previous Nomad version.'
+                  : entry.rolledBack === false
+                    ? '⚠️ Automatic rollback failed or no rollback target was available. Manual intervention is required.'
+                    : '';
+
+                return [
+                  `**${entry.job}**`,
+                  `Reason: ${entry.reason || 'Unknown failure.'}`,
+                  rollbackLine,
+                  '',
+                  renderLogsDetails(
+                    `Failure logs for ${entry.job}`,
+                    entry.logs,
+                  ),
+                ].filter(Boolean).join('\n');
+              });
+
+              const successfulSections = deploySummary.map((entry) => [
+                renderJobHeader(entry),
+                entry.changed === false
+                  ? `➖ No changes detected; job remains at Nomad version \`${entry.newVersion ?? 'unknown'}\`.`
+                  : `🔄 Updated: Nomad version \`${entry.previousVersion ?? 'n/a'}\` ` +
+                    `→ \`${entry.newVersion ?? 'unknown'}\``,
+                renderLogsDetails(
+                  `Deployment logs for ${entry.job}`,
+                  entry.logs,
+                ),
+              ].join('\n'));
+
+              body = [
+                '## ❌ Deployment failed',
+                '',
+                `Environment: \`${environment}\``,
+                '',
+                '### Failed jobs',
+                failureSections.join('\n\n---\n\n') ||
+                  '_No detailed failure information was captured._',
+                successfulSections.length > 0
+                  ? [
+                      '',
+                      '### Jobs that deployed successfully',
+                      '',
+                      successfulSections.join('\n\n---\n\n'),
+                    ].join('\n')
+                  : '',
+                '',
+                `[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              ].join('\n');
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
