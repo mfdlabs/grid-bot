@@ -378,40 +378,76 @@ jobs:
               return match ? match[1] : null;
             };
 
-            const getPreviousNomadVersion = (jobName, namespace) => {
+            const getNomadJobHistory = (jobName, namespace) => {
+              const result = runNomad([
+                'job',
+                'history',
+                '-namespace',
+                namespace,
+                '-json',
+                jobName,
+              ]);
+            
+              if (result.failed) {
+                throw new Error(result.output || 'Nomad job history failed.');
+              }
+            
+              const history = JSON.parse(result.output);
+            
+              if (!Array.isArray(history)) {
+                throw new Error(`Unexpected Nomad history response for ${jobName}.`);
+              }
+            
+              return history
+                .filter((entry) => entry && entry.Version != null)
+                .map((entry) => ({
+                  version: String(entry.Version),
+                  stable: entry.Stable === true,
+                  submitTime: entry.SubmitTime || entry.SubmitTime,
+                }));
+            };
+            
+            const getCurrentNomadVersion = (jobName, namespace) => {
               try {
-                const result = runNomad([
-                  'job',
-                  'history',
-                  '-namespace',
-                  namespace,
-                  '-json',
-                  jobName,
-                ]);
-
-                if (result.failed) {
-                  throw new Error(result.output || 'Nomad history failed.');
-                }
-
-                const parsed = JSON.parse(result.output);
-
-                if (!Array.isArray(parsed) || parsed.length < 2) {
-                  return null;
-                }
-
-                const previous = parsed[1];
-
-                if (!previous || previous.Version == null) {
-                  return null;
-                }
-
-                return String(previous.Version);
+                const history = getNomadJobHistory(jobName, namespace);
+            
+                // Nomad returns the newest version first.
+                return history[0]?.version || null;
               } catch (error) {
                 console.warn(
-                  `Unable to inspect previous Nomad history for ${jobName} ` +
+                  `Unable to determine current Nomad version for ${jobName} ` +
                   `(namespace: ${namespace}): ${error.message}`,
                 );
-
+            
+                return null;
+              }
+            };
+            
+            const getPreviousStableNomadVersion = (jobName, namespace) => {
+              try {
+                const history = getNomadJobHistory(jobName, namespace);
+            
+                if (history.length === 0) {
+                  return null;
+                }
+            
+                // The first history entry is the version currently at the head of
+                // Nomad's version history. Select the newest stable version other
+                // than that current entry.
+                const currentVersion = history[0].version;
+            
+                const previousStable = history.find((entry) => (
+                  entry.version !== currentVersion &&
+                  entry.stable
+                ));
+            
+                return previousStable?.version || null;
+              } catch (error) {
+                console.warn(
+                  `Unable to determine previous stable Nomad version for ${jobName} ` +
+                  `(namespace: ${namespace}): ${error.message}`,
+                );
+            
                 return null;
               }
             };
@@ -426,18 +462,18 @@ jobs:
                   '-json',
                   jobName,
                 ]);
-
+            
                 if (result.failed) {
                   throw new Error(result.output || 'Nomad inspect failed.');
                 }
-
+            
                 return result.output;
               } catch (error) {
                 console.warn(
                   `Unable to inspect previous Nomad job definition for ${jobName} ` +
                   `(namespace: ${namespace}): ${error.message}`,
                 );
-
+            
                 return null;
               }
             };
@@ -537,13 +573,13 @@ jobs:
 
               let previousVersion = null;
               let previousJobSpec = null;
-
+              
               if (!isDryRun) {
-                previousVersion = getPreviousNomadVersion(
+                previousVersion = getPreviousStableNomadVersion(
                   nomadJobName,
                   nomadNamespace,
                 );
-
+              
                 previousJobSpec = getPreviousNomadJobDefinition(
                   nomadJobName,
                   nomadNamespace,
@@ -615,7 +651,7 @@ jobs:
               if (isDryRun) {
                 deploymentOutput =
                   `Dry run: no deployment was executed.\n\n${jobDefinition}`;
-
+              
                 console.log(deploymentOutput);
               } else {
                 const result = runNomad([
@@ -626,21 +662,23 @@ jobs:
                   '-detach=false',
                   tempFile,
                 ]);
-
+              
                 deploymentOutput = result.output;
-
+              
                 if (result.failed) {
                   const reason = result.output || 'Nomad deployment failed.';
-                
-                  console.error(`Deployment failed for ${jobName}; attempting rollback...`);
-                
+              
+                  console.error(
+                    `Deployment failed for ${jobName}; attempting rollback...`,
+                  );
+              
                   const rollback = rollbackNomadJob(
                     nomadJobName,
                     nomadNamespace,
                     previousVersion,
                     previousJobSpec,
                   );
-                
+              
                   failureSummary.push({
                     job: jobName,
                     namespace: nomadNamespace,
@@ -648,26 +686,23 @@ jobs:
                     logs: [
                       deploymentOutput,
                       '',
-                      `--- Rollback attempt ---`,
+                      '--- Rollback attempt ---',
                       rollback.output || '(no rollback output captured)',
                     ].join('\n'),
                     rolledBack: rollback.success,
                   });
-                
+              
                   failedJobs.push(jobName);
                   continue;
                 }
-
-                // `nomad job inspect -json` has had different response shapes
-                // across CLI versions. Prefer inspect, then use the version
-                // printed by `nomad job run` as a reliable fallback.
-                newVersion = getCurrentNomadVersion(
-                  nomadJobName,
-                  nomadNamespace,
-                );
-
+              
+                newVersion = getVersionFromDeploymentOutput(deploymentOutput);
+              
                 if (newVersion == null) {
-                  newVersion = getVersionFromDeploymentOutput(deploymentOutput);
+                  newVersion = getCurrentNomadVersion(
+                    nomadJobName,
+                    nomadNamespace,
+                  );
                 }
               }
 
