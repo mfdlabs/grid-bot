@@ -27,7 +27,7 @@ public class Help : ModuleBase
     private readonly HashSet<(string[] aliases, Embed embed, BotRole role)> _aliasesToEmbeds = new();
 
     /// <summary>
-    /// Construct a new instance of <see cref="Support"/>.
+    /// Construct a new instance of <see cref="Help"/>.
     /// </summary>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <param name="commandService">The <see cref="CommandService"/>.</param>
