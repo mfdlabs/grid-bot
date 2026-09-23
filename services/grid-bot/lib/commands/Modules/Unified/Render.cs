@@ -95,7 +95,7 @@ public class Render(
     /// </summary>
     /// <param name="userNameOrId">The ID of the Roblox user.</param>
     /// <param name="context">The context of the unified command.</param>
-    public async Task DoRenderAsync(string userNameOrId, IUnifiedCommandContext context)
+    public async Task DoRenderAsync(IUnifiedCommandContext context, string userNameOrId)
     {
         RenderPerformanceCounters.TotalRenders.WithLabels(userNameOrId).Inc();
 
@@ -210,7 +210,7 @@ public class RenderTextCommand(Render renderCommand) : TextCommandModuleBase
 
     [Command("render"), TextCommandSummary("Renders a Roblox character by Roblox user ID."), Alias("r")]
     public async Task DoRenderAsync(string userNameOrId)
-        => await _renderCommand.DoRenderAsync(userNameOrId, new UnifiedCommandContext(Context)).ConfigureAwait(false);
+        => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), userNameOrId).ConfigureAwait(false);
 }
 
 
@@ -228,13 +228,13 @@ public class RenderInteraction(Render renderCommand) : InteractionModuleBase
     public async Task RenderByIdAsync(
         [InteractionSummary("id", "The ID of the Roblox user.")]
         long id
-    ) => await _renderCommand.DoRenderAsync(id.ToString(), new UnifiedCommandContext(Context)).ConfigureAwait(false);
+    ) => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), id.ToString()).ConfigureAwait(false);
 
     [SlashCommand("username", "Renders a Roblox character by Roblox username.")]
     public async Task RenderByUsernameAsync(
         [InteractionSummary("username", "The username of the Roblox user.")]
         string username
-    ) => await _renderCommand.DoRenderAsync(username, new UnifiedCommandContext(Context)).ConfigureAwait(false);
+    ) => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), username).ConfigureAwait(false);
 }
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.Commands;
 
 using System;
 using System.Text;
@@ -95,41 +95,42 @@ public class ScriptLogger : IScriptLogger
         }
     }
 
-    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, IInteractionContext)"/>
-    public async Task LogScriptAsync(string script, IInteractionContext context)
+    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, IUnifiedCommandContext)"/>
+    public async Task LogScriptAsync(string script, IUnifiedCommandContext context)
     {
         if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
         if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
-        if (context.Interaction is not SocketInteraction interaction) return;
 
-        // username based off machine info
-        var userInfo = context.User.ToString();
-        var guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
-        var channelInfo = interaction.GetChannelAsString();
+        string userInfo;
+        string guildInfo;
+        string channelInfo;
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
+        if (context.IsInteraction)
+        {
+            if (context.Interaction is not SocketInteraction interaction) return;
 
-        await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
-    }
+            // username based off machine info
+            userInfo = context.User.ToString();
+            guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
+            channelInfo = interaction.GetChannelAsString();
 
-    /// <inheritdoc cref="IScriptLogger.LogScriptAsync(string, ICommandContext)"/>
-    public async Task LogScriptAsync(string script, ICommandContext context)
-    {
-        if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
-        ArgumentNullException.ThrowIfNull(context, nameof(context));
+            _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
+        }
+        else
+        {
+            if (context.Message is not SocketUserMessage message) return;
 
-        if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
-        if (context.Message is not SocketUserMessage message) return;
+            // username based off machine info
+            userInfo = context.User.ToString();
+            guildInfo = context.Guild?.Id.ToString() ?? "DMs";
+            channelInfo = message.Channel?.ToString();
 
-        // username based off machine info
-        var userInfo = context.User.ToString();
-        var guildInfo = context.Guild?.Id.ToString() ?? "DMs";
-        var channelInfo = message.Channel?.ToString();
+            _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
+        }
 
-        _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
-        
+
         await DoLogScriptAsync(script, userInfo, guildInfo, channelInfo);
     }
 
@@ -154,7 +155,7 @@ public class ScriptLogger : IScriptLogger
         if (_scriptHashes.Contains(scriptHash))
         {
             _scriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
-            
+
             // Just log the hash
             content += "\n\n**Script already logged**";
 

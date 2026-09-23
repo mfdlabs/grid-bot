@@ -27,6 +27,7 @@ using Thumbnails.Client;
 
 using Events;
 using Utility;
+using Commands;
 using UnifiedCommands.Public;
 
 using Grid.JobManagement;
@@ -117,7 +118,8 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddUnifiedCommands(this IServiceCollection services)
         => services
             .AddSingleton<Support>()
-            .AddSingleton<Render>();
+            .AddSingleton<Render>()
+            .AddSingleton<ExecuteScript>();
 
     /// <summary>
     /// Add all utilities to the service collection.
