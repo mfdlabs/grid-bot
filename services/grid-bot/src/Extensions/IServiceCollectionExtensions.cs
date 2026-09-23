@@ -35,7 +35,6 @@ using Grid.ProcessManagement;
 
 using EnvironmentProvider = Grid.Bot.EnvironmentProvider;
 
-
 /// <summary>
 /// Extension methods for <see cref="IServiceCollection"/>.
 /// </summary>
@@ -116,7 +115,9 @@ public static class IServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddUnifiedCommands(this IServiceCollection services)
-        => services.AddSingleton<Support>();
+        => services
+            .AddSingleton<Support>()
+            .AddSingleton<Render>();
 
     /// <summary>
     /// Add all utilities to the service collection.

@@ -87,7 +87,7 @@ public class AvatarSettings : BaseSettingsProvider
     /// </summary>
     public int RbxThumbnailsRolloutPercent => GetOrDefault(
         nameof(RbxThumbnailsRolloutPercent),
-        0
+        100
     );
 
     /// <summary>
