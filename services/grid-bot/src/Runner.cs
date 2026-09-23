@@ -58,6 +58,8 @@ internal static class Runner
         services.AddFloodCheckersRedis();
         services.AddHttpClients();
 
+        services.AddUnifiedCommands();
+
         services.AddDiscord();
         services.AddDiscordEventHandlers();
 

@@ -1,19 +1,25 @@
-namespace Grid.Bot.Commands.Public;
+namespace Grid.Bot.UnifiedCommands.Public;
 
 using System;
 using System.Threading.Tasks;
 
+using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 
 using Logging;
 using Thumbnails.Client;
 
 using Utility;
-using Extensions;
+using Commands;
 
-/// <summary>
-/// Command handler for rendering a Roblox character.
-/// </summary>
+using TextCommandSummary = Discord.Commands.SummaryAttribute;
+using InteractionGroup = Discord.Interactions.GroupAttribute;
+using InteractionSummary = Discord.Interactions.SummaryAttribute;
+
+using TextCommandModuleBase = Discord.Commands.ModuleBase;
+using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
+
 /// <remarks>
 /// Construct a new instance of <see cref="Render"/>.
 /// </remarks>
@@ -38,7 +44,7 @@ public class Render(
     IAvatarUtility avatarUtility,
     IFloodCheckerRegistry floodCheckerRegistry,
     IAdminUtility adminUtility
-) : ModuleBase
+)
 {
     private readonly AvatarSettings _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
 
@@ -48,44 +54,50 @@ public class Render(
     private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
 
-    /// <inheritdoc cref="ModuleBase{TContext}.BeforeExecuteAsync(CommandInfo)"/>
-    protected override async Task BeforeExecuteAsync(CommandInfo command)
+    /// <summary>
+    /// Executes before the render command is processed, checking for admin status and flood control.
+    /// </summary>
+    /// <param name="context">The context of the unified command.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ApplicationException">
+    /// - Thrown when the user is blocked by the global flood checker.
+    /// - Thrown when the user is blocked by the per-user flood checker.
+    /// </exception>
+    public Task BeforeExecuteAsync(IUnifiedCommandContext context)
     {
-        if (!_adminUtility.UserIsAdmin(Context.User))
+        if (!_adminUtility.UserIsAdmin(context.User))
         {
             if (_floodCheckerRegistry.RenderFloodChecker.IsFlooded())
             {
                 RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
 
-                throw new ApplicationException("Too many people are using this command at once, please wait a few moments and try again.");
+                return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
             }
 
             _floodCheckerRegistry.RenderFloodChecker.UpdateCount();
 
-            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserRenderFloodChecker(Context.User.Id);
+            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserRenderFloodChecker(context.User.Id);
             if (perUserFloodChecker.IsFlooded())
             {
-                RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(Context.User.Id.ToString()).Inc();
+                RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
 
-                throw new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again.");
+                return Task.FromException(new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again."));
             }
 
             perUserFloodChecker.UpdateCount();
         }
 
-        await base.BeforeExecuteAsync(command);
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Renders a Roblox character by Roblox user ID.
     /// </summary>
     /// <param name="userNameOrId">The ID of the Roblox user.</param>
-    [Command("render"), Summary("Renders a Roblox character by Roblox user ID."), Alias("r")]
-    public async Task DoRenderAsync(string userNameOrId)
+    /// <param name="context">The context of the unified command.</param>
+    public async Task DoRenderAsync(IUnifiedCommandContext context, string userNameOrId)
     {
         RenderPerformanceCounters.TotalRenders.WithLabels(userNameOrId).Inc();
-
-        using var _ = Context.Channel.EnterTypingState();
 
         if (!long.TryParse(userNameOrId, out var userId))
         {
@@ -94,7 +106,7 @@ public class Render(
             var id = await _rbxUsersUtility.GetUserIdByUsernameAsync(userNameOrId).ConfigureAwait(false);
             if (id == null)
             {
-                await this.ReplyWithReferenceAsync($"The user by the name '{userNameOrId}' does not exist.");
+                await context.RespondAsync($"The user by the name '{userNameOrId}' does not exist.").ConfigureAwait(false);
 
                 return;
             }
@@ -106,7 +118,7 @@ public class Render(
         {
             RenderPerformanceCounters.TotalRendersWithInvalidIds.Inc();
 
-            await this.ReplyWithReferenceAsync("The ID must be greater than 0.");
+            await context.RespondAsync("The ID must be greater than 0.").ConfigureAwait(false);
 
             return;
         }
@@ -116,7 +128,7 @@ public class Render(
             RenderPerformanceCounters.TotalRendersAgainstBannedUsers.WithLabels(userNameOrId).Inc();
 
             _logger.Warning("The input user ID of {0} was linked to a banned user account.", userId);
-            await this.ReplyWithReferenceAsync($"The user '{userNameOrId}' is banned or does not exist.");
+            await context.RespondAsync($"The user '{userNameOrId}' is banned or does not exist.").ConfigureAwait(false);
 
             return;
         }
@@ -144,16 +156,16 @@ public class Render(
             {
                 RenderPerformanceCounters.TotalRendersWithErrors.Inc();
 
-                await this.ReplyWithReferenceAsync("An error occurred while rendering the character.");
+                await context.RespondAsync("An error occurred while rendering the character.").ConfigureAwait(false);
 
                 return;
             }
 
             using (stream)
-                await this.ReplyWithFileAsync(
+                await context.RespondWithFileAsync(
                     stream,
                     fileName
-                );
+                ).ConfigureAwait(false);
 
         }
         catch (ThumbnailResponseException e)
@@ -165,13 +177,13 @@ public class Render(
             if (e.State == ThumbnailResponseState.InReview)
             {
                 // Bogus error here for the sake of the user. Like flood checker error.
-                await this.ReplyWithReferenceAsync("The thumbnail service placed the request in review, please try again later.");
+                await context.RespondAsync("The thumbnail service placed the request in review, please try again later.").ConfigureAwait(false);
 
                 return;
             }
 
             // Bogus error for anything else, we don't need this to be noted that we are using rbx-thumbnails.
-            await this.ReplyWithReferenceAsync($"The thumbnail service responded with the following state: {e.State}");
+            await context.RespondAsync($"The thumbnail service responded with the following state: {e.State}").ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -179,7 +191,52 @@ public class Render(
 
             _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", userNameOrId, e);
 
-            await this.ReplyWithReferenceAsync("An error occurred while rendering the character.");
+            await context.RespondAsync("An error occurred while rendering the character.").ConfigureAwait(false);
         }
     }
 }
+
+#region MODULE PROXIES
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+public class RenderTextCommand(Render renderCommand) : TextCommandModuleBase
+{
+    private readonly Render _renderCommand = renderCommand ?? throw new ArgumentNullException(nameof(renderCommand));
+
+    protected override async Task BeforeExecuteAsync(CommandInfo command)
+        => await _renderCommand.BeforeExecuteAsync(new UnifiedCommandContext(Context)).ConfigureAwait(false);
+
+
+    [Command("render"), TextCommandSummary("Renders a Roblox character by Roblox user ID."), Alias("r")]
+    public async Task DoRenderAsync(string userNameOrId)
+        => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), userNameOrId).ConfigureAwait(false);
+}
+
+
+[InteractionGroup("render", "Commands used for rendering a Roblox character.")]
+[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
+public class RenderInteraction(Render renderCommand) : InteractionModuleBase
+{
+    private readonly Render _renderCommand = renderCommand ?? throw new ArgumentNullException(nameof(renderCommand));
+
+    public override async Task BeforeExecuteAsync(ICommandInfo command)
+        => await _renderCommand.BeforeExecuteAsync(new UnifiedCommandContext(Context)).ConfigureAwait(false);
+
+    [SlashCommand("id", "Renders a Roblox character by Roblox user ID.")]
+    public async Task RenderByIdAsync(
+        [InteractionSummary("id", "The ID of the Roblox user.")]
+        long id
+    ) => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), id.ToString()).ConfigureAwait(false);
+
+    [SlashCommand("username", "Renders a Roblox character by Roblox username.")]
+    public async Task RenderByUsernameAsync(
+        [InteractionSummary("username", "The username of the Roblox user.")]
+        string username
+    ) => await _renderCommand.DoRenderAsync(new UnifiedCommandContext(Context), username).ConfigureAwait(false);
+}
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#endregion

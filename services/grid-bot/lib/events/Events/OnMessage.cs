@@ -267,6 +267,7 @@ public partial class OnMessage(
             using var _ = _commandProcessingTime.WithLabels(commandName).NewTimer();
 
             var context = new ShardedCommandContext(_discordClient, message);
+            using var __ = context.Channel.EnterTypingState();
 
             await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
         });

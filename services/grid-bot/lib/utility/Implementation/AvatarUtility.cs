@@ -328,7 +328,7 @@ public class AvatarUtility : IAvatarUtility
                                 _avatarSettings.RenderDimensions,
                                 Format.Png,
                                 false
-                            ).SyncOrDefault().Data?.FirstOrDefault()
+                            ).SyncOrDefault()?.Data?.FirstOrDefault()
                         );
 
                         return DownloadFile(url);
@@ -340,7 +340,7 @@ public class AvatarUtility : IAvatarUtility
                                 _avatarSettings.RenderDimensions,
                                 Format.Png,
                                 false
-                            ).SyncOrDefault().Data?.FirstOrDefault()
+                            ).SyncOrDefault()?.Data?.FirstOrDefault()
                         );
 
                         return DownloadFile(url);

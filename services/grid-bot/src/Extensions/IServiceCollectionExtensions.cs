@@ -27,6 +27,8 @@ using Thumbnails.Client;
 
 using Events;
 using Utility;
+using Commands;
+using UnifiedCommands.Public;
 
 using Grid.JobManagement;
 using Grid.PortManagement;
@@ -84,7 +86,7 @@ public static class IServiceCollectionExtensions
 
         return singletons.Cast<IConfigurationProvider>();
     }
-    
+
     /// <summary>
     /// Add settings classes and their interfaces to the service collection.
     /// </summary>
@@ -107,6 +109,17 @@ public static class IServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Add the unified command service to the service collection.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+    /// <returns>The <see cref="IServiceCollection"/>.</returns>
+    public static IServiceCollection AddUnifiedCommands(this IServiceCollection services)
+        => services
+            .AddSingleton<Support>()
+            .AddSingleton<Render>()
+            .AddSingleton<ExecuteScript>();
 
     /// <summary>
     /// Add all utilities to the service collection.

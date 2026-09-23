@@ -81,9 +81,6 @@ public class OnInteraction(
         "command_name"
     );
 
-    private string GetGuildId(SocketInteraction interaction)
-        => interaction.GetGuild(_client).ToString() ?? "DM";
-
     /// <summary>
     /// Invoke the event handler.
     /// </summary>

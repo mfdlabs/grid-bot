@@ -1,4 +1,4 @@
-namespace Grid.Bot.Interactions.Public;
+namespace Grid.Bot.UnifiedCommands.Public;
 
 using System;
 using System.IO;
@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 using Discord;
-using Discord.WebSocket;
+using Discord.Commands;
 using Discord.Interactions;
 
 using Loretta.CodeAnalysis;
@@ -23,6 +23,7 @@ using Logging;
 using FileSystem;
 
 using Utility;
+using Commands;
 using Extensions;
 
 using Grid.Commands;
@@ -31,12 +32,17 @@ using Grid.ProcessManagement.Core;
 
 using ClientJob = Client.Job;
 
+using TextCommandGroup = Discord.Commands.GroupAttribute;
+using TextCommandSummary = Discord.Commands.SummaryAttribute;
+using InteractionGroup = Discord.Interactions.GroupAttribute;
+using InteractionSummary = Discord.Interactions.SummaryAttribute;
+
+using TextCommandModuleBase = Discord.Commands.ModuleBase;
+using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
+
 /// <summary>
-/// Interaction handler for executing Luau code.
-/// </summary>
-/// <remarks>
 /// Construct a new instance of <see cref="ExecuteScript"/>.
-/// </remarks>
+/// </summary>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
 /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
@@ -61,9 +67,6 @@ using ClientJob = Client.Job;
 /// - <paramref name="scriptLogger"/> cannot be null.
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
-[Group("execute", "Commands used for executing Luau code.")]
-[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
-[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
 public partial class ExecuteScript(
     ILogger logger,
     GridSettings gridSettings,
@@ -76,7 +79,7 @@ public partial class ExecuteScript(
     IDiscordWebhookAlertManager discordWebhookAlertManager,
     IScriptLogger scriptLogger,
     IGridServerFileHelper gridServerFileHelper
-) : InteractionModuleBase
+)
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
@@ -96,7 +99,6 @@ public partial class ExecuteScript(
     private readonly IScriptLogger _scriptLogger = scriptLogger ?? throw new ArgumentNullException(nameof(scriptLogger));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
-
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
     [GeneratedRegex("[\"“‘”]", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
@@ -106,32 +108,19 @@ public partial class ExecuteScript(
 
     private const string _ErrorConvertingToJson = "Can't convert to JSON";
 
-    /// <inheritdoc cref="InteractionModuleBase{TContext}.BeforeExecuteAsync(ICommandInfo)"/>
-    public override async Task BeforeExecuteAsync(ICommandInfo command)
+    private static string GetCodeBlockContents(string s)
     {
-        if (!_adminUtility.UserIsAdmin(Context.User))
+        var match = CodeBlockRegex().Match(s);
+
+        if (match != null && match.Groups.Count == 3)
         {
-            if (_floodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded())
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+            if (!s.Contains($"```{match.Groups[1].Value}\n"))
+                return $"{match.Groups[1].Value} {match.Groups[2].Value}";
 
-                throw new ApplicationException("Too many people are using this command at once, please wait a few moments and try again.");
-            }
-
-            _floodCheckerRegistry.RenderFloodChecker.UpdateCount();
-
-            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(Context.User.Id);
-            if (perUserFloodChecker.IsFlooded())
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(Context.User.Id.ToString()).Inc();
-
-                throw new ApplicationException("You are sending execute script commands too quickly, please wait a few moments and try again.");
-            }
-
-            perUserFloodChecker.UpdateCount();
+            return match.Groups[2].Value;
         }
 
-        await base.BeforeExecuteAsync(command);
+        return s.Replace("`", ""); // Return the value here again?
     }
 
     private static string EscapeQuotes(string s) => QuotesRegex().Replace(s, "\"");
@@ -202,10 +191,10 @@ public partial class ExecuteScript(
         return (input, null);
     }
 
-    private async Task LuaErrorAsync(string error)
-        => await HandleResponseAsync(null, new() { ErrorMessage = error, ExecutionTime = 0, Success = false });
+    private async Task LuaErrorAsync(IUnifiedCommandContext context, string error)
+        => await HandleResponseAsync(context, null, new() { ErrorMessage = error, ExecutionTime = 0, Success = false });
 
-    private async Task HandleResponseAsync(string result, ReturnMetadata metadata)
+    private async Task HandleResponseAsync(IUnifiedCommandContext context, string result, ReturnMetadata metadata)
     {
         var builder = new EmbedBuilder()
             .WithTitle(
@@ -213,7 +202,7 @@ public partial class ExecuteScript(
                     ? "Lua Success"
                     : "Lua Error"
             )
-            .WithAuthor(Context.User)
+            .WithAuthor(context.User)
             .WithCurrentTimestamp();
 
         if (metadata.Success)
@@ -229,9 +218,11 @@ public partial class ExecuteScript(
             builder.WithColor(Color.Red);
         }
 
+        var id = context.Message?.Id.ToString() ?? context.Interaction?.Id.ToString();
+
         var (fileNameOrOutput, outputFile) = DetermineDescription(
             metadata.Logs,
-            Context.Interaction.Id.ToString() + "-output.txt"
+            id + "-output.txt"
         );
 
         if (outputFile == null && !string.IsNullOrEmpty(fileNameOrOutput))
@@ -241,7 +232,7 @@ public partial class ExecuteScript(
             metadata.Success
                 ? result
                 : metadata.ErrorMessage,
-            Context.Interaction.Id.ToString() + "-result.txt"
+            id + "-result.txt"
         );
 
         if (resultFile == null && !string.IsNullOrEmpty(fileNameOrResult))
@@ -259,25 +250,25 @@ public partial class ExecuteScript(
             attachments.Add(new(resultFile, fileNameOrResult));
 
         var text = metadata.Success
-                    ? string.IsNullOrEmpty(result)
-                        ? "Executed script with no return!"
-                        : null
-                    : "An error occured while executing your script:";
+            ? string.IsNullOrEmpty(result)
+                ? "Executed script with no return!"
+                : null
+            : "An error occured while executing your script:";
 
         if (attachments.Count > 0)
-            await FollowupWithFilesAsync(
+            await context.RespondWithFilesAsync(
                 attachments,
                 text,
                 embed: builder.Build()
             );
         else
-            await FollowupAsync(
+            await context.RespondAsync(
                 text,
                 embed: builder.Build()
             );
     }
 
-    private async Task<bool> ParseLuaAsync(string input)
+    private static async Task<bool> ParseLuaAsync(IUnifiedCommandContext context, string input)
     {
         var options = new LuaParseOptions(LuaSyntaxOptions.Roblox);
         var syntaxTree = LuaSyntaxTree.ParseText(input, options);
@@ -301,13 +292,13 @@ public partial class ExecuteScript(
 
             var embed = new EmbedBuilder()
                 .WithTitle("Lua Error")
-                .WithAuthor(Context.User)
+                .WithAuthor(context.User)
                 .WithCurrentTimestamp()
                 .WithColor(Color.Red)
                 .WithDescription($"```\n{errorString}\n```")
                 .Build();
 
-            await FollowupAsync("There was a Luau syntax error in your script:", embed: embed);
+            await context.RespondAsync("There was a Luau syntax error in your script:", embed: embed).ConfigureAwait(false);
 
             return false;
         }
@@ -315,23 +306,120 @@ public partial class ExecuteScript(
         return true;
     }
 
+    private async Task AlertForSystem(IUnifiedCommandContext context, string script, string originalScript, string scriptId, string scriptName, Exception ex)
+    {
+        _backtraceUtility.UploadException(ex);
+
+        var userInfo = context.User.ToString();
+        var guildInfo = context.Guild?.ToString() ?? "DMs";
+        var channelInfo = context.Channel?.ToString();
+
+        // Script & original script in attachments
+        var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
+        var originalScriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(originalScript)), "original-script.lua");
+
+        var content = $"""
+            **User:** {userInfo}
+            **Guild:** {guildInfo}
+            **Channel:** {channelInfo}
+            **Script ID:** {scriptId}
+            **Script Name:** {scriptName}
+
+            The script execution failed with the following error:
+            ```{ex.Message}```
+            """;
+
+        await _discordWebhookAlertManager.SendAlertAsync(
+            "Script Execution Fault",
+            content,
+            Color.Red,
+            [scriptAttachment, originalScriptAttachment]
+        );
+    }
+
+    /// <summary>
+    /// Executes before the executeScript command is processed, checking for admin status and flood control.
+    /// </summary>
+    /// <param name="context">The context of the unified command.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ApplicationException">
+    /// - Thrown when the user is blocked by the global flood checker.
+    /// - Thrown when the user is blocked by the per-user flood checker.
+    /// </exception>
+    public Task BeforeExecuteAsync(IUnifiedCommandContext context)
+    {
+        if (!_adminUtility.UserIsAdmin(context.User))
+        {
+            if (_floodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded())
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+
+                return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
+            }
+
+            _floodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
+
+            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(context.User.Id);
+            if (perUserFloodChecker.IsFlooded())
+            {
+                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+
+                return Task.FromException(new ApplicationException("You are sending execute commands too quickly, please wait a few moments and try again."));
+            }
+
+            perUserFloodChecker.UpdateCount();
+        }
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Execute a script via raw text.
     /// </summary>
+    /// <param name="context">The unified command context.</param>
+    /// <param name="file">The file attachment containing the script, if any.</param>
     /// <param name="script">The script to execute.</param>
-    [SlashCommand("script", "Execute a script via raw text.")]
-    public async Task ExecuteScriptFromTextAsync(
-        [Summary("script", "The script to execute.")]
-        string script
-    )
+    public async Task DoExecuteScriptAsync(IUnifiedCommandContext context, IAttachment file = null, string script = "")
     {
-        ScriptExecutionPerformanceCounters.TotalScriptExecutionsByUser.WithLabels(Context.User.Id.ToString()).Inc();
+        ScriptExecutionPerformanceCounters.TotalScriptExecutionsByUser.WithLabels(context.User.Id.ToString()).Inc();
 
         if (string.IsNullOrWhiteSpace(script))
         {
+            if (file is null)
+            {
+                await context.RespondAsync("The command must include text or a file attachment!").ConfigureAwait(false);
+
+                return;
+            }
+
+            if (!file.Filename.EndsWith(".lua"))
+            {
+                await context.RespondAsync("The file must be a .lua file.").ConfigureAwait(false);
+
+                return;
+            }
+
+            var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
+
+            if (file.Size / 1000 > maxSize)
+            {
+                await context.RespondAsync($"The input attachment ({file.Filename}) cannot be larger than {maxSize} KiB!").ConfigureAwait(false);
+
+                return;
+            }
+
+            ScriptExecutionPerformanceCounters.TotalScriptExecutionsFromFiles.WithLabels(file.Filename, file.Size.ToString()).Inc();
+
+            script = await file.GetAttachmentContentsAscii();
+        }
+
+        script = GetCodeBlockContents(script);
+
+        if (string.IsNullOrEmpty(script))
+        {
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNoContent.Inc();
 
-            await LuaErrorAsync("The script cannot be empty!");
+            await LuaErrorAsync(context, "There must be content within a code block!");
 
             return;
         }
@@ -340,18 +428,18 @@ public partial class ExecuteScript(
 
         var originalScript = script;
 
-        await _scriptLogger.LogScriptAsync(script, Context);
+        await _scriptLogger.LogScriptAsync(script, context);
 
         if (ContainsUnicode(script))
         {
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnicode.Inc();
 
-            await LuaErrorAsync("Scripts can only contain ASCII characters!");
+            await LuaErrorAsync(context, "Scripts can only contain ASCII characters!");
 
             return;
         }
 
-        if (!await ParseLuaAsync(script))
+        if (!await ParseLuaAsync(context, script))
             return;
 
         var scriptId = Guid.NewGuid().ToString();
@@ -373,7 +461,7 @@ public partial class ExecuteScript(
 
 #if !PRE_JSON_EXECUTION
         // isAdmin allows a bypass of disabled methods and virtualized globals
-        var settings = new ExecuteScriptSettings(filesafeScriptId, new Dictionary<string, object>() { { "is_admin", _adminUtility.UserIsAdmin(Context.User) } });
+        var settings = new ExecuteScriptSettings(filesafeScriptId, new Dictionary<string, object>() { { "is_admin", _adminUtility.UserIsAdmin(context.User) } });
         var gserverCommand = new ExecuteScriptCommand(settings);
 #else
         var gserverCommand = Lua.NewScript(
@@ -397,7 +485,7 @@ public partial class ExecuteScript(
             {
                 _logger.Error("The job was rejected: {0}", rejectionReason);
 
-                await FollowupAsync("Internal error, please try again later.");
+                await context.RespondAsync("Internal error, please try again later.").ConfigureAwait(false);
 
                 return;
             }
@@ -415,7 +503,7 @@ public partial class ExecuteScript(
 
                 var (newResult, metadata) = _luaUtility.ParseResult(serverResult);
 
-                await HandleResponseAsync(newResult, metadata);
+                await HandleResponseAsync(context, newResult, metadata);
             }
         }
         catch (Exception ex)
@@ -449,7 +537,7 @@ public partial class ExecuteScript(
                             line = (int.Parse(line) - lineIndex).ToString();
                     }
 
-                    await LuaErrorAsync($"Line {line}: {error}");
+                    await LuaErrorAsync(context, $"Line {line}: {error}");
 
                     return;
                 }
@@ -458,7 +546,7 @@ public partial class ExecuteScript(
                 {
                     ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonJsonSerializableResults.Inc();
 
-                    await LuaErrorAsync("The script returned a value that could not be converted to JSON.");
+                    await LuaErrorAsync(context, "The script returned a value that could not be converted to JSON.");
 
                     return;
                 }
@@ -469,8 +557,8 @@ public partial class ExecuteScript(
             if (ex is CommunicationException && ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException)
             {
                 ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonAsciiResults.Inc();
-                
-                await LuaErrorAsync("The script returned invalid ASCII characters.");
+
+                await LuaErrorAsync(context, "The script returned invalid ASCII characters.");
 
                 return;
             }
@@ -479,7 +567,7 @@ public partial class ExecuteScript(
             {
                 ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
 
-                await HandleResponseAsync(null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
+                await HandleResponseAsync(context, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
             }
@@ -487,7 +575,7 @@ public partial class ExecuteScript(
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();
 
             if (ex is not Discord.Net.HttpException)
-                await AlertForSystem(script, originalScript, scriptId, scriptName, ex);
+                await AlertForSystem(context, script, originalScript, scriptId, scriptName, ex);
 
             throw;
         }
@@ -525,70 +613,49 @@ public partial class ExecuteScript(
 #endif
         }
     }
+}
 
-    private async Task AlertForSystem(string script, string originalScript, string scriptId, string scriptName, Exception ex)
-    {
-        _backtraceUtility.UploadException(ex);
+#region MODULE PROXIES
 
-        var interaction = Context.Interaction as SocketInteraction;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-        var userInfo = Context.User.ToString();
-        var guildInfo = interaction.GetGuild(Context.Client)?.ToString() ?? "DMs";
-        var channelInfo = interaction.GetChannelAsString();
+public class ExecuteScriptTextCommand(ExecuteScript executeScriptCommand) : TextCommandModuleBase
+{
+    private readonly ExecuteScript _executeScriptCommand = executeScriptCommand ?? throw new ArgumentNullException(nameof(executeScriptCommand));
 
-        // Script & original script in attachments
-        var scriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(script)), "script.lua");
-        var originalScriptAttachment = new FileAttachment(new MemoryStream(Encoding.ASCII.GetBytes(originalScript)), "original-script.lua");
+    protected override async Task BeforeExecuteAsync(CommandInfo command)
+        => await _executeScriptCommand.BeforeExecuteAsync(new UnifiedCommandContext(Context)).ConfigureAwait(false);
 
-        var content = $"""
-                **User:** {userInfo}
-                **Guild:** {guildInfo}
-                **Channel:** {channelInfo}
-                **Script ID:** {scriptId}
-                **Script Name:** {scriptName}
 
-                The script execution failed with the following error:
-                ```{ex.Message}```
-                """;
+    [Command("execute"), TextCommandSummary("Execute a script via raw text."), Alias("ex", "exc", "x")]
+    public async Task DoExecuteScriptAsync([Remainder] string script = "")
+        => await _executeScriptCommand.DoExecuteScriptAsync(new UnifiedCommandContext(Context), Context.GetAttachment(), script).ConfigureAwait(false);
+}
 
-        await _discordWebhookAlertManager.SendAlertAsync(
-            "Script Execution Fault",
-            content,
-            Color.Red,
-            [scriptAttachment, originalScriptAttachment]
-        );
-    }
 
-    /// <summary>
-    /// Execute a script via a file.
-    /// </summary>
-    /// <param name="file">The file to execute.</param>
+[InteractionGroup("execute", "Commands used for executing Luau code.")]
+[IntegrationType(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.BotDm, InteractionContextType.PrivateChannel)]
+public class ExecuteScriptInteraction(ExecuteScript executeScriptCommand) : InteractionModuleBase
+{
+    private readonly ExecuteScript _executeScriptCommand = executeScriptCommand ?? throw new ArgumentNullException(nameof(executeScriptCommand));
+
+    public override async Task BeforeExecuteAsync(ICommandInfo command)
+        => await _executeScriptCommand.BeforeExecuteAsync(new UnifiedCommandContext(Context)).ConfigureAwait(false);
+
+    [SlashCommand("script", "Execute a script via raw text.")]
+    public async Task ExecuteScriptFromTextAsync(
+        [InteractionSummary("script", "The script to execute.")]
+        string script
+    ) => await _executeScriptCommand.DoExecuteScriptAsync(new UnifiedCommandContext(Context), null, script).ConfigureAwait(false);
+
     [SlashCommand("file", "Execute a script via a file.")]
     public async Task ExecuteScriptFromFileAsync(
-        [Summary("file", "The file to execute.")]
+        [InteractionSummary("file", "The file to execute.")]
         IAttachment file
-    )
-    {
-        if (!file.Filename.EndsWith(".lua"))
-        {
-            await FollowupAsync("The file must be a .lua file.");
-
-            return;
-        }
-
-        var maxSize = _scriptsSettings.ScriptExecutionMaxFileSizeKb;
-
-        if (file.Size / 1000 > maxSize)
-        {
-            await FollowupAsync($"The input attachment ({file.Filename}) cannot be larger than {maxSize} KiB!");
-
-            return;
-        }
-
-        ScriptExecutionPerformanceCounters.TotalScriptExecutionsFromFiles.WithLabels(file.Filename, file.Size.ToString()).Inc();
-
-        var contents = await file.GetAttachmentContentsAscii();
-
-        await ExecuteScriptFromTextAsync(contents);
-    }
+    ) => await _executeScriptCommand.DoExecuteScriptAsync(new UnifiedCommandContext(Context), file).ConfigureAwait(false);
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#endregion
