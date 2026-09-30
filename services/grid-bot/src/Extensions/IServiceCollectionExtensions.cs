@@ -130,7 +130,6 @@ public static class IServiceCollectionExtensions
     {
         services.AddSingleton<IBacktraceUtility, BacktraceUtility>()
             .AddSingleton<IAdminUtility, AdminUtility>()
-            .AddSingleton<IAvatarUtility, AvatarUtility>()
             .AddSingleton<ILuaUtility, LuaUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IScriptLogger, ScriptLogger>()
