@@ -1,6 +1,7 @@
 namespace Grid.Bot.UnifiedCommands.Public;
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Discord;
@@ -8,6 +9,7 @@ using Discord.Commands;
 using Discord.Interactions;
 
 using Logging;
+using Users.Client;
 using Thumbnails.Client;
 
 using Utility;
@@ -25,14 +27,14 @@ using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 /// </remarks>
 /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
-/// <param name="rbxUsersUtility">The <see cref="IRbxUsersUtility"/>.</param>
+/// <param name="usersClient">The <see cref="IUsersClient"/>.</param>
 /// <param name="avatarUtility">The <see cref="IAvatarUtility"/>.</param>
 /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="avatarSettings"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
-/// - <paramref name="rbxUsersUtility"/> cannot be null.
+/// - <paramref name="usersClient"/> cannot be null.
 /// - <paramref name="avatarUtility"/> cannot be null.
 /// - <paramref name="floodCheckerRegistry"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
@@ -40,7 +42,7 @@ using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 public class Render(
     AvatarSettings avatarSettings,
     ILogger logger,
-    IRbxUsersUtility rbxUsersUtility,
+    IUsersClient usersClient,
     IAvatarUtility avatarUtility,
     IFloodCheckerRegistry floodCheckerRegistry,
     IAdminUtility adminUtility
@@ -49,10 +51,49 @@ public class Render(
     private readonly AvatarSettings _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IRbxUsersUtility _rbxUsersUtility = rbxUsersUtility ?? throw new ArgumentNullException(nameof(rbxUsersUtility));
+    private readonly IUsersClient _usersClient = usersClient ?? throw new ArgumentNullException(nameof(usersClient));
     private readonly IAvatarUtility _avatarUtility = avatarUtility ?? throw new ArgumentNullException(nameof(avatarUtility));
     private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+
+    private async Task<long?> ResolveUserIdAsync(string username)
+    {
+        var request = new MultiGetByUsernameRequest
+        {
+            ExcludeBannedUsers = false,
+            Usernames = [username]
+        };
+
+        try
+        {
+            var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
+
+            return response.Data.FirstOrDefault()?.Id;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<bool> DetermineIfUserExistsAsync(long id)
+    {
+        try
+        {
+            var request = new MultiGetByUserIdRequest
+            {
+                ExcludeBannedUsers = false,
+                UserIds = [id]
+            };
+
+            var response = await _usersClient.MultiGetUsersByIdsAsync(request);
+            return response.Data.Count == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     /// <summary>
     /// Executes before the render command is processed, checking for admin status and flood control.
@@ -103,7 +144,7 @@ public class Render(
         {
             RenderPerformanceCounters.TotalRendersViaUsername.Inc();
 
-            var id = await _rbxUsersUtility.GetUserIdByUsernameAsync(userNameOrId).ConfigureAwait(false);
+            var id = await ResolveUserIdAsync(userNameOrId).ConfigureAwait(false);
             if (id == null)
             {
                 await context.RespondAsync($"The user by the name '{userNameOrId}' does not exist.").ConfigureAwait(false);
@@ -123,7 +164,7 @@ public class Render(
             return;
         }
 
-        if (await _rbxUsersUtility.GetIsUserBannedAsync(userId).ConfigureAwait(false))
+        if (await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
         {
             RenderPerformanceCounters.TotalRendersAgainstBannedUsers.WithLabels(userNameOrId).Inc();
 

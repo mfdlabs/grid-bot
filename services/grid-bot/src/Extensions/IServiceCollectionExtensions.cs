@@ -132,7 +132,6 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IAdminUtility, AdminUtility>()
             .AddSingleton<IAvatarUtility, AvatarUtility>()
             .AddSingleton<ILuaUtility, LuaUtility>()
-            .AddSingleton<IRbxUsersUtility, RbxUsersUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IScriptLogger, ScriptLogger>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
