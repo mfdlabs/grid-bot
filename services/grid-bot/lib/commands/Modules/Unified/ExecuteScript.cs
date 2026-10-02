@@ -5,34 +5,45 @@ using System.IO;
 using System.Xml;
 using System.Linq;
 using System.Text;
+using System.Net.Http;
+using System.Reflection;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Discord.Interactions;
 
 using Loretta.CodeAnalysis;
 using Loretta.CodeAnalysis.Lua;
 
+using Newtonsoft.Json;
+
+using Prometheus;
+
+using Random;
 using Logging;
+using Networking;
 using FileSystem;
 
 using Utility;
 using Commands;
 using Extensions;
 
+using Grid.Client;
 using Grid.Commands;
 using Grid.ProcessManagement;
-using Grid.ProcessManagement.Core;
 
 using ClientJob = Client.Job;
+using Job = ProcessManagement.Core.Job;
 
-using TextCommandGroup = Discord.Commands.GroupAttribute;
 using TextCommandSummary = Discord.Commands.SummaryAttribute;
 using InteractionGroup = Discord.Interactions.GroupAttribute;
 using InteractionSummary = Discord.Interactions.SummaryAttribute;
@@ -41,63 +52,47 @@ using TextCommandModuleBase = Discord.Commands.ModuleBase;
 using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 
 /// <summary>
-/// Construct a new instance of <see cref="ExecuteScript"/>.
+/// Execute scripts within the Grid environment.
 /// </summary>
-/// <param name="logger">The <see cref="ILogger"/>.</param>
-/// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
-/// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
-/// <param name="luaUtility">The <see cref="ILuaUtility"/>.</param>
-/// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
-/// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
-/// <param name="jobManager">The <see cref="IJobManager"/>.</param>
-/// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-/// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
-/// <param name="scriptLogger">The <see cref="IScriptLogger"/>.</param>
-/// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
-/// <exception cref="ArgumentNullException">
-/// - <paramref name="logger"/> cannot be null.
-/// - <paramref name="gridSettings"/> cannot be null.
-/// - <paramref name="scriptsSettings"/> cannot be null.
-/// - <paramref name="luaUtility"/> cannot be null.
-/// - <paramref name="floodCheckerRegistry"/> cannot be null.
-/// - <paramref name="backtraceUtility"/> cannot be null.
-/// - <paramref name="jobManager"/> cannot be null.
-/// - <paramref name="adminUtility"/> cannot be null.
-/// - <paramref name="discordWebhookAlertManager"/> cannot be null.
-/// - <paramref name="scriptLogger"/> cannot be null.
-/// - <paramref name="gridServerFileHelper"/> cannot be null.
-/// </exception>
-public partial class ExecuteScript(
-    ILogger logger,
-    GridSettings gridSettings,
-    ScriptsSettings scriptsSettings,
-    ILuaUtility luaUtility,
-    IFloodCheckerRegistry floodCheckerRegistry,
-    IBacktraceUtility backtraceUtility,
-    IJobManager jobManager,
-    IAdminUtility adminUtility,
-    IDiscordWebhookAlertManager discordWebhookAlertManager,
-    IScriptLogger scriptLogger,
-    IGridServerFileHelper gridServerFileHelper
-)
+public partial class ExecuteScript
 {
+    #region Metrics
+
+    private static readonly Gauge _scriptLoggingTotalScriptHashes = Metrics.CreateGauge(
+        "script_logging_script_hashes_total",
+        "Total number of script hashes logged ever"
+    );
+    private static readonly Counter _scriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
+        "script_logging_scripts_logged_total",
+        "Total number of scripts logged",
+        "source" // from command or interaction
+    );
+    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
+        "script_logging_existing_scripts_logged_total",
+        "Total number of existing scripts logged",
+        "script_hash"
+    );
+
+    #endregion
+
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
 
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger;
 
-    private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
-    private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
+    private readonly GridSettings _gridSettings;
+    private readonly ScriptsSettings _scriptsSettings;
 
-    private readonly ILuaUtility _luaUtility = luaUtility ?? throw new ArgumentNullException(nameof(luaUtility));
-    private readonly IFloodCheckerRegistry _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
-    private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
-    private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-    private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
-    private readonly IScriptLogger _scriptLogger = scriptLogger ?? throw new ArgumentNullException(nameof(scriptLogger));
-    private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
+    private readonly IFloodCheckerRegistry _floodCheckerRegistry;
+    private readonly IBacktraceUtility _backtraceUtility;
+    private readonly IJobManager _jobManager;
+    private readonly IAdminUtility _adminUtility;
+    private readonly ILocalIpAddressProvider _localIpAddressProvider;
+    private readonly IPercentageInvoker _percentageInvoker;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
+    private readonly IGridServerFileHelper _gridServerFileHelper;
 
     [GeneratedRegex(@"```(.*?)\s(.*?)```", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex CodeBlockRegex();
@@ -105,8 +100,112 @@ public partial class ExecuteScript(
     private static partial Regex QuotesRegex();
     [GeneratedRegex(@"Execute Script:(\d+): (.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex GridSyntaxErrorRegex();
+    [GeneratedRegex(@"{{(\d{1,2})}}", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex FormatPartRegex();
+
+    private readonly ConcurrentBag<string> _scriptHashes = [];
 
     private const string _ErrorConvertingToJson = "Can't convert to JSON";
+
+    private static readonly string _luaVM;
+    private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
+    private const string _luaVmResource = "Grid.Bot.Resources.LuaVMTemplate.lua";
+
+
+    static ExecuteScript()
+    {
+        using var stream = _assembly.GetManifestResourceStream(_luaVmResource);
+        using var reader = new StreamReader(stream);
+
+        _luaVM = FixFormatString(reader.ReadToEnd());
+
+        static string FixFormatString(string input)
+        {
+            input = input.Replace("{", "{{");
+            input = input.Replace("}", "}}");
+
+            input = FormatPartRegex().Replace(input, (m) => { return $"{{{m.Groups[1]}}}"; });
+
+            return input;
+        }
+    }
+
+    /// <summary>
+    /// Construct a new instance of <see cref="ExecuteScript"/>.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/>.</param>
+    /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
+    /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
+    /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
+    /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
+    /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
+    /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+    /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
+    /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/> to use.</param>
+    /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
+    /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
+    /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
+    /// <exception cref="ArgumentNullException">
+    /// - <paramref name="logger"/> cannot be null.
+    /// - <paramref name="gridSettings"/> cannot be null.
+    /// - <paramref name="scriptsSettings"/> cannot be null.
+    /// - <paramref name="floodCheckerRegistry"/> cannot be null.
+    /// - <paramref name="backtraceUtility"/> cannot be null.
+    /// - <paramref name="jobManager"/> cannot be null.
+    /// - <paramref name="adminUtility"/> cannot be null.
+    /// - <paramref name="localIpAddressProvider"/> cannot be null.
+    /// - <paramref name="percentageInvoker"/> cannot be null.
+    /// - <paramref name="httpClientFactory"/> cannot be null.
+    /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
+    /// - <paramref name="gridServerFileHelper"/> cannot be null.
+    /// </exception>
+    public ExecuteScript(
+        ILogger logger,
+        GridSettings gridSettings,
+        ScriptsSettings scriptsSettings,
+        IFloodCheckerRegistry floodCheckerRegistry,
+        IBacktraceUtility backtraceUtility,
+        IJobManager jobManager,
+        IAdminUtility adminUtility,
+        ILocalIpAddressProvider localIpAddressProvider,
+        IPercentageInvoker percentageInvoker,
+        IHttpClientFactory httpClientFactory,
+        IDiscordWebhookAlertManager discordWebhookAlertManager,
+        IGridServerFileHelper gridServerFileHelper
+    )
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
+        _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
+        _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
+        _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
+        _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
+        _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+        _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
+        _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
+        _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
+
+        foreach (var hash in _scriptsSettings.LoggedScriptHashes)
+            _scriptHashes.Add(hash);
+
+        _scriptLoggingTotalScriptHashes.Set(_scriptHashes.Count);
+
+        Task.Factory.StartNew(PersistLoggedScriptHashesThread, TaskCreationOptions.LongRunning);
+    }
+
+    private void PersistLoggedScriptHashesThread()
+    {
+        while (true)
+        {
+            Task.Delay(_scriptsSettings.LoggedScriptHashesPersistInterval).Wait();
+
+            if (_scriptsSettings.LoggedScriptHashes.SequenceEqual(_scriptHashes)) continue;
+
+            _scriptsSettings.LoggedScriptHashes = [.. _scriptHashes];
+        }
+    }
 
     private static string GetCodeBlockContents(string s)
     {
@@ -306,6 +405,24 @@ public partial class ExecuteScript(
         return true;
     }
 
+    private (string result, ReturnMetadata metadata) ParseResultFromGridServer(IEnumerable<LuaValue> result)
+    {
+        if (result.Count() == 1)
+        {
+            // Legacy case, where LuaVM is not enabled.
+
+            var mockMetadata = new ReturnMetadata();
+            mockMetadata.Success = true;
+
+            return ((string)Lua.ConvertLua(result.First()), mockMetadata);
+        }
+
+        return (
+            (string)Lua.ConvertLua(result.FirstOrDefault()),
+            JsonConvert.DeserializeObject<ReturnMetadata>((string)Lua.ConvertLua(result.ElementAtOrDefault(1)))
+        );
+    }
+
     private async Task AlertForSystem(IUnifiedCommandContext context, string script, string originalScript, string scriptId, string scriptName, Exception ex)
     {
         _backtraceUtility.UploadException(ex);
@@ -335,6 +452,107 @@ public partial class ExecuteScript(
             Color.Red,
             [scriptAttachment, originalScriptAttachment]
         );
+    }
+
+    private async Task LogScriptAsync(string script, IUnifiedCommandContext context)
+    {
+        if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
+        ArgumentNullException.ThrowIfNull(context, nameof(context));
+
+        if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
+
+        string userInfo;
+        string guildInfo;
+        string channelInfo;
+
+        if (context.IsInteraction)
+        {
+            if (context.Interaction is not SocketInteraction interaction) return;
+
+            // username based off machine info
+            userInfo = context.User.ToString();
+            guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
+            channelInfo = interaction.GetChannelAsString();
+
+            _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
+        }
+        else
+        {
+            if (context.Message is not SocketUserMessage message) return;
+
+            // username based off machine info
+            userInfo = context.User.ToString();
+            guildInfo = context.Guild?.Id.ToString() ?? "DMs";
+            channelInfo = message.Channel?.ToString();
+
+            _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
+        }
+
+
+        var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
+
+        // Get a SHA256 hash of the script (hex)
+        var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
+        var content = $"""
+                **User:** {userInfo}
+                **Guild:** {guildInfo}
+                **Channel:** {channelInfo}
+                **Script Hash:** {scriptHash}
+                """;
+
+        using var client = _httpClientFactory.CreateClient();
+
+        var url = _scriptsSettings.ScriptLoggingDiscordWebhookUrl;
+
+
+        if (_scriptHashes.Contains(scriptHash))
+        {
+            _scriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
+
+            // Just log the hash
+            content += "\n\n**Script already logged**";
+
+            var existsPayload = new
+            {
+                username,
+                content
+            };
+
+            var existsJson = JsonConvert.SerializeObject(existsPayload);
+
+            await client.PostAsync(url, new StringContent(existsJson, Encoding.UTF8, "application/json"));
+
+            return;
+        }
+
+        var payload = new
+        {
+            username,
+            content = string.Empty,
+            embeds = new[]
+            {
+                new
+                {
+                    title = "User information",
+                    description = content,
+                    color = Color.Green.RawValue,
+                    timestamp = DateTime.UtcNow.ToString("o")
+                }
+            }
+        };
+
+        var multipartContent = new MultipartFormDataContent();
+
+        var json = JsonConvert.SerializeObject(payload);
+
+        multipartContent.Add(new StringContent(json, Encoding.UTF8, "application/json"), "payload_json");
+        multipartContent.Add(new StringContent(script, Encoding.UTF8, "text/plain"), $"{scriptHash}.lua", $"{scriptHash}.lua");
+
+        await client.PostAsync(url, multipartContent);
+
+        // Add the hash to the list of logged hashes
+        _scriptHashes.Add(scriptHash);
+        _scriptLoggingTotalScriptHashes.Inc();
     }
 
     /// <summary>
@@ -428,7 +646,7 @@ public partial class ExecuteScript(
 
         var originalScript = script;
 
-        await _scriptLogger.LogScriptAsync(script, context);
+        await LogScriptAsync(script, context);
 
         if (ContainsUnicode(script))
         {
@@ -456,7 +674,7 @@ public partial class ExecuteScript(
         {
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsUsingLuaVM.Inc();
 
-            script = string.Format(_luaUtility.LuaVMTemplate, script);
+            script = string.Format(_luaVM, script);
         }
 
 #if !PRE_JSON_EXECUTION
@@ -501,7 +719,7 @@ public partial class ExecuteScript(
 
                 Task.Run(() => _jobManager.CloseJob(job, true));
 
-                var (newResult, metadata) = _luaUtility.ParseResult(serverResult);
+                var (newResult, metadata) = ParseResultFromGridServer(serverResult);
 
                 await HandleResponseAsync(context, newResult, metadata);
             }
@@ -528,8 +746,7 @@ public partial class ExecuteScript(
                     {
                         const string _marker = "{0}";
 
-                        var template = _luaUtility.LuaVMTemplate;
-                        var templateLines = template.Split('\n');
+                        var templateLines = _luaVM.Split('\n');
 
                         var lineIndex = Array.FindIndex(templateLines, line => line.StartsWith(_marker));
 

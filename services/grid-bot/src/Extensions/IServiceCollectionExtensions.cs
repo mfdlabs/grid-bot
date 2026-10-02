@@ -130,11 +130,7 @@ public static class IServiceCollectionExtensions
     {
         services.AddSingleton<IBacktraceUtility, BacktraceUtility>()
             .AddSingleton<IAdminUtility, AdminUtility>()
-            .AddSingleton<IAvatarUtility, AvatarUtility>()
-            .AddSingleton<ILuaUtility, LuaUtility>()
-            .AddSingleton<IRbxUsersUtility, RbxUsersUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
-            .AddSingleton<IScriptLogger, ScriptLogger>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<ILoggerFactory, LoggerFactory>()
