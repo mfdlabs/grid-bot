@@ -132,7 +132,6 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IAdminUtility, AdminUtility>()
             .AddSingleton<ILuaUtility, LuaUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
-            .AddSingleton<IScriptLogger, ScriptLogger>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<ILoggerFactory, LoggerFactory>()
