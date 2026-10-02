@@ -4,7 +4,7 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WE_LOVE_EM_SLASH_COMMANDS</DefineConstants>
   </PropertyGroup>
@@ -30,6 +30,12 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources/LuaVMTemplate.lua" />
+    <None Remove="Resources/LuaVMTemplate.lua" />
   </ItemGroup>
 
 </Project>

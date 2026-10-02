@@ -37,9 +37,4 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
   </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Lua/LuaVMTemplate.lua" />
-    <None Remove="Lua/LuaVMTemplate.lua" />
-  </ItemGroup>
 </Project>
