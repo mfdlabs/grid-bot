@@ -1,4 +1,4 @@
-namespace Grid.Bot.Extensions;
+namespace Grid.Bot.Commands;
 
 using System.Text;
 using System.Net.Http;

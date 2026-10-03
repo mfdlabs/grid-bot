@@ -14,7 +14,6 @@ using Discord.Commands;
 using Newtonsoft.Json;
 
 using Utility;
-using Extensions;
 using ClientSettings;
 
 /// <summary>

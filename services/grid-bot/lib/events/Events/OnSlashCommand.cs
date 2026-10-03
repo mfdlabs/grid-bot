@@ -24,7 +24,7 @@ using Extensions;
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-/// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
+/// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="maintenanceSettings"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
@@ -39,7 +39,7 @@ public class OnInteraction(
     InteractionService interactionService,
     IServiceProvider services,
     IAdminUtility adminUtility,
-    ILoggerFactory loggerFactory
+    IPerUserContextLoggerFactory loggerFactory
 )
 {
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
@@ -48,7 +48,7 @@ public class OnInteraction(
     private readonly InteractionService _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+    private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
         "bot_interactions_processed_total",

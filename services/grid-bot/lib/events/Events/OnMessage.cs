@@ -27,7 +27,7 @@ using Utility;
 /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-/// <param name="loggerFactory">The <see cref="ILoggerFactory"/>.</param>
+/// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
 /// <param name="commandService">The <see cref="CommandService"/>.</param>
 /// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
@@ -44,7 +44,7 @@ public partial class OnMessage(
     CommandsSettings commandsSettings,
     MaintenanceSettings maintenanceSettings,
     IAdminUtility adminUtility,
-    ILoggerFactory loggerFactory,
+    IPerUserContextLoggerFactory loggerFactory,
     CommandService commandService,
     DiscordShardedClient discordClient,
     IServiceProvider services
@@ -60,7 +60,7 @@ public partial class OnMessage(
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+    private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     private readonly CommandService _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
     private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));

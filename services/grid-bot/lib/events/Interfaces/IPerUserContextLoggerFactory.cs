@@ -1,13 +1,13 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.Events;
 
 using Discord.WebSocket;
 
 using Logging;
 
 /// <summary>
-/// Factory for creating loggers.
+/// Factory for creating loggers for users.
 /// </summary>
-public interface ILoggerFactory
+public interface IPerUserContextLoggerFactory
 {
     /// <summary>
     /// Create a logger for the specified interaction.

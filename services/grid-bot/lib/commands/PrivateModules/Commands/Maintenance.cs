@@ -9,7 +9,6 @@ using Discord.WebSocket;
 using Discord.Commands;
 
 using Utility;
-using Extensions;
 
 /// <summary>
 /// Command handler for the maintenance commands.
