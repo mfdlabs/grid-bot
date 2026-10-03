@@ -134,7 +134,7 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
-            .AddSingleton<ILoggerFactory, LoggerFactory>()
+            .AddSingleton<IPerUserContextLoggerFactory, PerUserContextLoggerFactory>()
             .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>()
             .AddSingleton<IGridServerFileHelper, GridServerFileHelper>()
             .AddSingleton<IVaultClientFactory, VaultClientFactory>();

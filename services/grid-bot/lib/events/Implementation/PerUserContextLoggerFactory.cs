@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.Events;
 
 using System;
 
@@ -9,17 +9,17 @@ using Logging;
 using Extensions;
 
 /// <summary>
-/// Implementation of <see cref="ILoggerFactory"/>.
+/// Implementation of <see cref="IPerUserContextLoggerFactory"/>.
 /// </summary>
 /// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <exception cref="ArgumentNullException"><paramref name="discordClient"/> cannot be null.</exception>
-/// <seealso cref="ILoggerFactory"/>
+/// <seealso cref="IPerUserContextLoggerFactory"/>
 /// <seealso cref="ILogger"/>
-public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
+public class PerUserContextLoggerFactory(DiscordShardedClient discordClient) : IPerUserContextLoggerFactory
 {
     private readonly DiscordShardedClient _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
 
-    /// <inheritdoc cref="ILoggerFactory.CreateLogger(SocketInteraction)"/>
+    /// <inheritdoc cref="IPerUserContextLoggerFactory.CreateLogger(SocketInteraction)"/>
     public ILogger CreateLogger(SocketInteraction interaction)
     {
         var name = interaction.User.Username;
@@ -41,7 +41,7 @@ public class LoggerFactory(DiscordShardedClient discordClient) : ILoggerFactory
         return logger;
     }
 
-    /// <inheritdoc cref="ILoggerFactory.CreateLogger(SocketMessage)"/>
+    /// <inheritdoc cref="IPerUserContextLoggerFactory.CreateLogger(SocketMessage)"/>
     public ILogger CreateLogger(SocketMessage message)
     {
         var name = message.Author.Username;
