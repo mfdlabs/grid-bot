@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings;
 
 using System;
 using System.Collections.Generic;
@@ -75,7 +75,7 @@ public interface IClientSettingsFactory
     /// </exception>
     /// <exception cref="InvalidOperationException">The setting was not found for the specified application.</exception>
     /// <exception cref="InvalidCastException">The setting could not be cast to the specified type.</exception>
-    FilteredValue<T> GetFilteredSettingForApplication<T>(string application, string setting, FilterType filterType = FilterType.Place, bool withDependencies = true);
+    ClientSettingsFilteredValue<T> GetFilteredSettingForApplication<T>(string application, string setting, ClientSettingsFilterType filterType = ClientSettingsFilterType.Place, bool withDependencies = true);
 
     /// <summary>
     /// Import settings for the specified application.
@@ -88,10 +88,10 @@ public interface IClientSettingsFactory
     /// <summary>
     /// Sets the value of the specified setting.
     /// </summary>
-    /// <typeparam name="T">The type of the setting. Can either be a string, int, bool or <see cref="FilteredValue{T}"/></typeparam>
+    /// <typeparam name="T">The type of the setting. Can either be a string, int, bool or <see cref="ClientSettingsFilteredValue{T}"/></typeparam>
     /// <param name="application">The name of the application.</param>
     /// <param name="setting">The name of the setting.</param>
-    /// <param name="value">The value of the setting, this can be of type <see cref="FilteredValue{T}"/></param>
+    /// <param name="value">The value of the setting, this can be of type <see cref="ClientSettingsFilteredValue{T}"/></param>
     void SetSettingForApplication<T>(string application, string setting, T value);
 
     /// <summary>
@@ -106,5 +106,5 @@ public interface IClientSettingsFactory
     /// - <paramref name="setting"/> is <c>null</c> or whitespace.
     /// - <paramref name="value"/> is <c>null</c> or whitespace.
     /// </exception>
-    void SetSettingForApplication(string application, string setting, object value, SettingType settingType = SettingType.String);
+    void SetSettingForApplication(string application, string setting, object value, ClientSettingType settingType = ClientSettingType.String);
 }

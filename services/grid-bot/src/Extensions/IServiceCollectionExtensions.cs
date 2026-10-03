@@ -27,7 +27,7 @@ using Thumbnails.Client;
 
 using Events;
 using Utility;
-using Commands;
+using ClientSettings;
 using UnifiedCommands.Public;
 
 using Grid.JobManagement;

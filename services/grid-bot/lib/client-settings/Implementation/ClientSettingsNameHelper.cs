@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings;
 
 using System;
 using System.Text.RegularExpressions;
@@ -17,25 +17,25 @@ public static partial class ClientSettingsNameHelper
     /// <param name="name">The name of the setting.</param>
     /// <returns>True if the setting is a filtered setting, otherwise false.</returns>
     public static bool IsFilteredSetting(string name)
-        => name.EndsWith(FilteredValue<object>.PlaceFilterSuffix) || name.EndsWith(FilteredValue<object>.DataCenterFilterSuffix);
+        => name.EndsWith(ClientSettingsFilteredValue<object>.PlaceFilterSuffix) || name.EndsWith(ClientSettingsFilteredValue<object>.DataCenterFilterSuffix);
 
     /// <summary>
     /// Extracts the filtered setting name and type from the given name.
     /// </summary>
     /// <param name="name">The name of the setting.</param>
     /// <returns>A tuple containing the name of the setting and its type.</returns>
-    public static (string name, FilterType type) ExtractFilteredSettingName(string name)
+    public static (string name, ClientSettingsFilterType type) ExtractFilteredSettingName(string name)
     {
-        var type = FilterType.Place;
+        var type = ClientSettingsFilterType.Place;
         
-        if (name.EndsWith(FilteredValue<object>.PlaceFilterSuffix))
+        if (name.EndsWith(ClientSettingsFilteredValue<object>.PlaceFilterSuffix))
         {
-            name = name[..^FilteredValue<object>.PlaceFilterSuffix.Length];
+            name = name[..^ClientSettingsFilteredValue<object>.PlaceFilterSuffix.Length];
         }
-        else if (name.EndsWith(FilteredValue<object>.DataCenterFilterSuffix))
+        else if (name.EndsWith(ClientSettingsFilteredValue<object>.DataCenterFilterSuffix))
         {
-            type = FilterType.DataCenter;
-            name = name[..^FilteredValue<object>.DataCenterFilterSuffix.Length];
+            type = ClientSettingsFilterType.DataCenter;
+            name = name[..^ClientSettingsFilteredValue<object>.DataCenterFilterSuffix.Length];
         }
 
         return (name, type);
@@ -46,9 +46,9 @@ public static partial class ClientSettingsNameHelper
     /// </summary>
     /// <param name="name">The name of the setting.</param>
     /// <returns>The type of the setting.</returns>
-    public static SettingType GetSettingTypeFromName(string name)
+    public static ClientSettingType GetSettingTypeFromName(string name)
     {
-        if (!PrefixedSettingRegex().IsMatch(name)) return SettingType.String;
+        if (!PrefixedSettingRegex().IsMatch(name)) return ClientSettingType.String;
 
         // F = flag, I = int, S = string, L = log (int)
         // e.g:
@@ -68,9 +68,9 @@ public static partial class ClientSettingsNameHelper
 
         return prefix switch
         {
-            'F' => SettingType.Bool, // FFlag
-            'I' or 'L' => SettingType.Int, // FInt, FLog
-            _ => SettingType.String, // FString
+            'F' => ClientSettingType.Bool, // FFlag
+            'I' or 'L' => ClientSettingType.Int, // FInt, FLog
+            _ => ClientSettingType.String, // FString
         };
 
     }

@@ -1,9 +1,9 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings;
 
 /// <summary>
 /// The type of a setting.
 /// </summary>
-public enum SettingType
+public enum ClientSettingType
 {
     /// <summary>
     /// String type setting -- default.

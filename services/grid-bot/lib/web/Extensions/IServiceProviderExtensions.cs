@@ -17,6 +17,7 @@ using Prometheus;
 
 using Logging;
 using Utility;
+using ClientSettings;
 
 using Routes;
 using Middleware;

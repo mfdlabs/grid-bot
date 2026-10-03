@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings;
 
 using System;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents a filtered value.
 /// </summary>
-public struct FilteredValue<T>
+public struct ClientSettingsFilteredValue<T>
 {
     private const char _filterDelimiter = ';';
 
@@ -22,9 +22,9 @@ public struct FilteredValue<T>
     public const string DataCenterFilterSuffix = "_DataCenterFilter";
 
     /// <summary>
-    /// Construct a new instance of <see cref="FilteredValue{T}"/>
+    /// Construct a new instance of <see cref="ClientSettingsFilteredValue{T}"/>
     /// </summary>
-    public FilteredValue()
+    public ClientSettingsFilteredValue()
     {
     }
 
@@ -41,15 +41,15 @@ public struct FilteredValue<T>
     /// <summary>
     /// Gets the type of the setting.
     /// </summary>
-    public readonly SettingType Type
+    public readonly ClientSettingType Type
     {
         get
         {
             return Value switch
             {
-                bool => SettingType.Bool,
-                long => SettingType.Int,
-                _ => SettingType.String,
+                bool => ClientSettingType.Bool,
+                long => ClientSettingType.Int,
+                _ => ClientSettingType.String,
             };
         }
     }
@@ -57,7 +57,7 @@ public struct FilteredValue<T>
     /// <summary>
     /// Gets or sets the type of filter.
     /// </summary>
-    public FilterType FilterType { get; set; }
+    public ClientSettingsFilterType FilterType { get; set; }
 
     /// <summary>
     /// Gets the filtered place IDs or datacenter IDs.
@@ -65,10 +65,10 @@ public struct FilteredValue<T>
     public HashSet<long> FilteredIds { get; private set; } = [];
 
     /// <summary>
-    /// Implicit conversion of <see cref="FilteredValue{T}"/> to <typeparamref name="T"/>
+    /// Implicit conversion of <see cref="ClientSettingsFilteredValue{T}"/> to <typeparamref name="T"/>
     /// </summary>
-    /// <param name="value">The current <see cref="FilteredValue{T}"/></param>
-    public static implicit operator T(FilteredValue<T> value) => value.Value;
+    /// <param name="value">The current <see cref="ClientSettingsFilteredValue{T}"/></param>
+    public static implicit operator T(ClientSettingsFilteredValue<T> value) => value.Value;
 
     /// <summary>
     /// Converts the string representation of the filtered value to a filtered value.
@@ -76,15 +76,15 @@ public struct FilteredValue<T>
     /// <param name="name">The raw name of the setting, used to determine the type of filter.</param>
     /// <param name="value">The string value of the setting.</param>
     /// <returns>A new filtered value.</returns>
-    public static FilteredValue<T> FromString(string name, string value)
+    public static ClientSettingsFilteredValue<T> FromString(string name, string value)
     {
         if (!ClientSettingsNameHelper.IsFilteredSetting(name))
             throw new ArgumentException($"The setting name does not end with {PlaceFilterSuffix} or {DataCenterFilterSuffix}!", nameof(name));
 
         var filterType = name.EndsWith(PlaceFilterSuffix)
-            ? FilterType.Place
-            : FilterType.DataCenter;
-        var settingName = filterType == FilterType.Place
+            ? ClientSettingsFilterType.Place
+            : ClientSettingsFilterType.DataCenter;
+        var settingName = filterType == ClientSettingsFilterType.Place
             ? name[..^PlaceFilterSuffix.Length]
             : name[..^DataCenterFilterSuffix.Length];
         var settingType = ClientSettingsNameHelper.GetSettingTypeFromName(name);
@@ -96,12 +96,12 @@ public struct FilteredValue<T>
         var filteredIds = entries.Skip(1).Select(long.Parse);
         object settingValue = settingType switch
         {
-            SettingType.Bool => bool.Parse(settingValueRaw),
-            SettingType.Int => long.Parse(settingValueRaw),
+            ClientSettingType.Bool => bool.Parse(settingValueRaw),
+            ClientSettingType.Int => long.Parse(settingValueRaw),
             _ => settingValueRaw,
         };
 
-        return new FilteredValue<T>
+        return new ClientSettingsFilteredValue<T>
         {
             Name = settingName,
             FilterType = filterType,

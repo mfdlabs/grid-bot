@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 
 using Utility;
 using Extensions;
+using ClientSettings;
 
 /// <summary>
 /// Represents the command for ClientSettings.
@@ -179,7 +180,7 @@ public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, 
     /// <param name="settingType">The type of the setting.</param>
     /// <param name="settingValue">The value of the setting.</param>
     [Command("set"), Summary("Sets a client setting for the specified application.")]
-    public async Task SetAsync(string applicationName, string settingName, SettingType settingType = SettingType.String, string settingValue = "")
+    public async Task SetAsync(string applicationName, string settingName, ClientSettingType settingType = ClientSettingType.String, string settingValue = "")
     {
         if (settingValue is null)
         {
@@ -196,9 +197,9 @@ public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, 
         {
             value = settingType switch
             {
-                SettingType.String => settingValue,
-                SettingType.Int => long.Parse(settingValue),
-                SettingType.Bool => bool.Parse(settingValue),
+                ClientSettingType.String => settingValue,
+                ClientSettingType.Int => long.Parse(settingValue),
+                ClientSettingType.Bool => bool.Parse(settingValue),
                 _ => throw new InvalidOperationException($"Unknown setting type: {settingType}"),
             };
         }
