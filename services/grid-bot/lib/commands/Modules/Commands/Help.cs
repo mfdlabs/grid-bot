@@ -14,7 +14,6 @@ using Discord.Commands;
 using Text.Extensions;
 
 using Utility;
-using Extensions;
 
 /// <summary>
 /// Interaction handler for the support commands.

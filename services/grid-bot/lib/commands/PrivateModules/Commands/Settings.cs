@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -18,9 +19,6 @@ using Vault;
 using Configuration;
 
 using Utility;
-using Extensions;
-using System.Text.Json;
-
 
 /// <summary>
 /// Represents the interaction for settings.

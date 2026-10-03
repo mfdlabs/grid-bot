@@ -8,7 +8,6 @@ using Discord;
 using Discord.Commands;
 
 using Utility;
-using Extensions;
 
 /// <summary>
 /// Command handler for updating user bot roles.
