@@ -14,18 +14,13 @@
 
   <ItemGroup Label="CustomPackages">
     <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/commands/Grid.Commands.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/client/Grid.Client.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/job-management/Grid.JobManagement.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/threading/threading/Threading.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/clients/users-client/Users.Client.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
   </ItemGroup>

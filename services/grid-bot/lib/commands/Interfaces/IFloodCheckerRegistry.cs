@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.Commands;
 
 using FloodCheckers.Core;
 

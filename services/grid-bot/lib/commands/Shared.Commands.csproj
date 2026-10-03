@@ -19,6 +19,8 @@
     <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/text/text/Text.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
   </ItemGroup>
