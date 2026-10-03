@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="GridBotPackages">
-    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+    <ProjectReference Include="../utility/Grid.Bot.Utility.csproj" />
     <ProjectReference Include="../eval-runner/Grid.Bot.Eval.Runner.csproj" />
     <ProjectReference Include="../client-settings/Grid.Bot.ClientSettings.csproj" />
   </ItemGroup>

@@ -17,8 +17,8 @@ using Models;
 
 internal class Program
 {
-    private static readonly Assembly _utilityAssembly = Assembly.Load("Shared.Utility");
-    private static readonly Assembly _settingsAssembly = Assembly.Load("Shared.Settings");
+    private static readonly Assembly _utilityAssembly = Assembly.Load("Grid.Bot.Utility");
+    private static readonly Assembly _settingsAssembly = Assembly.Load("Grid.Bot.Settings");
     private static readonly Assembly _discordNetRest = Assembly.Load("Discord.Net.Rest");
 
     private static readonly ScriptOptions _ScriptOptions = 

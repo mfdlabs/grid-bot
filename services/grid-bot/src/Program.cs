@@ -46,7 +46,7 @@ public static class Program
             Console.WriteLine("[URGENT]: Unhandled global exception occurred: {0}", e.ExceptionObject);
             Console.ResetColor();
 
-            if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Shared.Settings") && AssemblyIsLoaded("Shared.Utility"))
+            if (AssemblyIsLoaded("Backtrace") && AssemblyIsLoaded("Grid.Bot.Settings") && AssemblyIsLoaded("Grid.Bot.Utility"))
                 Runner.ReportError(e.ExceptionObject as Exception);
 
             if (e.ExceptionObject is AggregateException aggregate)

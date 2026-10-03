@@ -59,7 +59,7 @@ public class OnShardReady(
     OnCommandExecuted onCommandExecutedEvent
 )
 {
-    private static readonly Assembly _commandsAssembly = Assembly.Load("Shared.Commands");
+    private static readonly Assembly _commandsAssembly = Assembly.Load("Grid.Bot.Commands");
 
     private Atomic<int> _shardCount = 0;
 
