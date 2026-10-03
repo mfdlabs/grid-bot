@@ -1,28 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Library containing implementation for Web based code in grid-bot. Port of @mfdlabs/grid-service-websrv to C#</Description>
-
+    <Description>Shared utility classes related to client-settings</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
+  
   <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../utility/Shared.Utility.csproj" />
-    <ProjectReference Include="../client-settings/Grid.Bot.ClientSettings.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">
-    <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/threading/threading/Threading.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/clients/client-settings-client/ClientSettings.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="NuGetPackages">
-    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="VaultSharp" Version="1.13.0.1" />
-
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
-
 </Project>

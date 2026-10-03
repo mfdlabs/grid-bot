@@ -10,6 +10,7 @@ using Logging;
 
 using Utility;
 using Extensions;
+using Bot.ClientSettings;
 
 /// <summary>
 /// Routes for the client settings API.

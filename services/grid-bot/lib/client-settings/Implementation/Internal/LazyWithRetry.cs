@@ -1,11 +1,11 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings.Internal;
 
 using System;
 
 /// <summary>
 /// Lazy with retry implementation
 /// </summary>
-public class LazyWithRetry<T>
+internal class LazyWithRetry<T>
 {
     private readonly TimeSpan _TimeoutBetweenRetries = TimeSpan.FromSeconds(30);
 

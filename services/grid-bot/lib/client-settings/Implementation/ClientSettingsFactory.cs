@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings;
 
 using System;
 using System.IO;
@@ -16,12 +16,12 @@ using Prometheus;
 using Logging;
 using Threading.Extensions;
 
-using Grid.Bot.Extensions;
+using Internal;
 
 // Simplify these long ass types
 using Secrets = System.Collections.Generic.IDictionary<string, object>;
 using MetaData = System.Collections.Generic.IDictionary<string, string>;
-using CachedValues = RefreshAhead<System.Collections.Generic.IDictionary<string, System.Collections.Generic.IDictionary<string, object>>>;
+using CachedValues = Internal.RefreshAhead<System.Collections.Generic.IDictionary<string, System.Collections.Generic.IDictionary<string, object>>>;
 
 /// <summary>
 /// Implementation for <see cref="IClientSettingsFactory"/> via Vault.
@@ -143,28 +143,28 @@ public class ClientSettingsFactory : IClientSettingsFactory
                     continue;
                 }
 
-                if (!Enum.TryParse<SettingType>(type, true, out var settingType))
+                if (!Enum.TryParse<ClientSettingType>(type, true, out var settingType))
                 {
                     _logger?.Verbose("Failed to parse setting type '{0}' for setting '{1}'! Defaulting to string.", type, entry.Key);
 
-                    settingType = SettingType.String;
+                    settingType = ClientSettingType.String;
                 }
 
                 switch (settingType)
                 {
-                    case SettingType.String: // bogus, but whatever
+                    case ClientSettingType.String: // bogus, but whatever
                     default:
                         settings.Add(entry.Key, str);
 
                         break;
-                    case SettingType.Bool:
+                    case ClientSettingType.Bool:
                         if (bool.TryParse(str, out var boolValue))
                             settings.Add(entry.Key, boolValue);
                         else
                             _logger?.Verbose("Failed to parse setting '{0}' as a bool!", entry.Key);
 
                         break;
-                    case SettingType.Int:
+                    case ClientSettingType.Int:
                         if (int.TryParse(str, out var intValue))
                             settings.Add(entry.Key, intValue);
                         else
@@ -179,21 +179,21 @@ public class ClientSettingsFactory : IClientSettingsFactory
             var sType = ClientSettingsNameHelper.GetSettingTypeFromName(entry.Key);
             switch (sType)
             {
-                case SettingType.Bool when !ClientSettingsNameHelper.IsFilteredSetting(entry.Key):
+                case ClientSettingType.Bool when !ClientSettingsNameHelper.IsFilteredSetting(entry.Key):
                     if (bool.TryParse(str, out var boolValue))
                         settings.Add(entry.Key, boolValue);
                     else
                         _logger?.Verbose("Failed to parse setting '{0}' as a bool!", entry.Key);
 
                     break;
-                case SettingType.Int when !ClientSettingsNameHelper.IsFilteredSetting(entry.Key):
+                case ClientSettingType.Int when !ClientSettingsNameHelper.IsFilteredSetting(entry.Key):
                     if (int.TryParse(str, out var intValue))
                         settings.Add(entry.Key, intValue);
                     else
                         _logger?.Verbose("Failed to parse setting '{0}' as an int!", entry.Key);
 
                     break;
-                case SettingType.String:
+                case ClientSettingType.String:
                 default:
                     settings.Add(entry.Key, str);
 
@@ -325,6 +325,33 @@ public class ClientSettingsFactory : IClientSettingsFactory
         }
     }
 
+    /// <summary>
+    /// Merges the current dictionary with others, left to right.
+    /// If a key exists in multiple dictionaries, the value from the last one will be used.
+    /// </summary>
+    /// <typeparam name="T">The type of the dictionary.</typeparam>
+    /// <typeparam name="K">The type of the key.</typeparam>
+    /// <typeparam name="V">The type of the value.</typeparam>
+    /// <param name="me">The current dictionary.</param>
+    /// <param name="others">The dictionaries to merge with.</param>
+    /// <returns>A new dictionary containing the merged key-value pairs.</returns>
+    public static T MergeDictionaryLeft<T, K, V>(T me, params IDictionary<K, V>[] others)
+        where T : IDictionary<K, V>, new()
+    {
+        var newMap = new T();
+
+        foreach (IDictionary<K, V> src in new List<IDictionary<K, V>> { me }.Concat(others))
+        {
+            // ^-- echk. Not quite there type-system.
+            foreach (KeyValuePair<K, V> p in src)
+            {
+                newMap[p.Key] = p.Value;
+            }
+        }
+
+        return newMap;
+    }
+
     /// <inheritdoc cref="IClientSettingsFactory.RawSettings"/>
     public IDictionary<string, Secrets> RawSettings
     {
@@ -400,7 +427,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
                     var mergedSettings = new Dictionary<string, object>(settings);
 
-                    settings = mergedSettings.MergeLeft(dependenciesToMerge.ToArray());
+                    settings = MergeDictionaryLeft(mergedSettings, dependenciesToMerge.ToArray());
                 }
             }
 
@@ -449,7 +476,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         if (string.IsNullOrWhiteSpace(setting))
             throw new ArgumentException(string.Format("'{0}' cannot be null or whitespace!", nameof(setting)), nameof(setting));
 
-        if (!_supportedTypes.Contains(typeof(T)) || typeof(T) == typeof(FilteredValue<>))
+        if (!_supportedTypes.Contains(typeof(T)) || typeof(T) == typeof(ClientSettingsFilteredValue<>))
             throw new ArgumentException(string.Format("'{0}' is not a supported type!", typeof(T).Name), nameof(T));
 
         var settings = GetSettingsForApplication(application, withDependencies) 
@@ -482,11 +509,11 @@ public class ClientSettingsFactory : IClientSettingsFactory
         }
     }
 
-    /// <inheritdoc cref="IClientSettingsFactory.GetFilteredSettingForApplication{T}(string, string, FilterType, bool)"/>
-    public FilteredValue<T> GetFilteredSettingForApplication<T>(
+    /// <inheritdoc cref="IClientSettingsFactory.GetFilteredSettingForApplication{T}(string, string, ClientSettingsFilterType, bool)"/>
+    public ClientSettingsFilteredValue<T> GetFilteredSettingForApplication<T>(
         string application, 
         string setting, 
-        FilterType filterType = FilterType.Place, 
+        ClientSettingsFilterType filterType = ClientSettingsFilterType.Place, 
         bool withDependencies = false
     ) 
     {
@@ -509,7 +536,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         try
         {
-            return FilteredValue<T>.FromString(settingName, (string)value);
+            return ClientSettingsFilteredValue<T>.FromString(settingName, (string)value);
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
         {
@@ -547,9 +574,9 @@ public class ClientSettingsFactory : IClientSettingsFactory
             if (!ClientSettingsNameHelper.PrefixedSettingRegex().IsMatch(kvp.Key))
                 metadata[kvp.Key] = (kvp.Value switch
                 {
-                    bool => SettingType.Bool,
-                    int => SettingType.Int,
-                    _ => SettingType.String
+                    bool => ClientSettingType.Bool,
+                    int => ClientSettingType.Int,
+                    _ => ClientSettingType.String
                 }).ToString();
         }
 
@@ -596,18 +623,18 @@ public class ClientSettingsFactory : IClientSettingsFactory
         WriteSettingsForApplication(application, data);
     }
 
-    /// <inheritdoc cref="IClientSettingsFactory.SetSettingForApplication(string, string, object, SettingType)"/>
-    public void SetSettingForApplication(string application, string setting, object value, SettingType settingType = SettingType.String)
+    /// <inheritdoc cref="IClientSettingsFactory.SetSettingForApplication(string, string, object, ClientSettingType)"/>
+    public void SetSettingForApplication(string application, string setting, object value, ClientSettingType settingType = ClientSettingType.String)
     {
         switch (settingType)
         {
-            case SettingType.String:
+            case ClientSettingType.String:
                 SetSettingForApplication(application, setting, value.ToString());
                 break;
-            case SettingType.Int:
+            case ClientSettingType.Int:
                 SetSettingForApplication(application, setting, Convert.ToInt64(value));
                 break;
-            case SettingType.Bool:
+            case ClientSettingType.Bool:
                 SetSettingForApplication(application, setting, Convert.ToBoolean(value));
                 break;
             default:

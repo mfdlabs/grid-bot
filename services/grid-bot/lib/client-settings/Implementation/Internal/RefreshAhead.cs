@@ -1,4 +1,4 @@
-namespace Grid.Bot.Utility;
+namespace Grid.Bot.ClientSettings.Internal;
 
 using System;
 using System.Threading;
@@ -7,7 +7,7 @@ using System.Threading;
 /// <summary>
 /// Refresh ahead cached value.
 /// </summary>
-public class RefreshAhead<T> : IDisposable
+internal class RefreshAhead<T> : IDisposable
 {
     private DateTime _LastRefresh = DateTime.MinValue;
     private bool _RunningRefresh;
