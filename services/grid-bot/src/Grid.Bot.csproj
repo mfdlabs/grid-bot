@@ -17,10 +17,10 @@
   <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../lib/grpc/Grid.Bot.Grpc.csproj" />
     <ProjectReference Include="../lib/web/Grid.Bot.Web.csproj" />
-    <ProjectReference Include="../lib/commands/Shared.Commands.csproj" />
-    <ProjectReference Include="../lib/events/Shared.Events.csproj" />
-    <ProjectReference Include="../lib/settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../lib/utility/Shared.Utility.csproj" />
+    <ProjectReference Include="../lib/commands/Grid.Bot.Commands.csproj" />
+    <ProjectReference Include="../lib/events/Grid.Bot.Events.csproj" />
+    <ProjectReference Include="../lib/settings/Grid.Bot.Settings.csproj" />
+    <ProjectReference Include="../lib/utility/Grid.Bot.Utility.csproj" />
     <ProjectReference Include="../lib/client-settings/Grid.Bot.ClientSettings.csproj" />
   </ItemGroup>
 

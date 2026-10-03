@@ -5,8 +5,8 @@
   </PropertyGroup>
   
   <ItemGroup Label="GridBotPackages">
-    <ProjectReference Include="../settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+    <ProjectReference Include="../settings/Grid.Bot.Settings.csproj" />
+    <ProjectReference Include="../utility/Grid.Bot.Utility.csproj" />
   </ItemGroup>
 
   <!-- Protobuf -->

@@ -27,11 +27,11 @@
     <Project Path="../../lib/vault/vault/Vault.csproj" />
   </Folder>
   <Folder Name="/lib/shared/">
-    <Project Path="lib/commands/Shared.Commands.csproj" />
-    <Project Path="lib/events/Shared.Events.csproj" />
+    <Project Path="lib/commands/Grid.Bot.Commands.csproj" />
+    <Project Path="lib/events/Grid.Bot.Events.csproj" />
     <Project Path="lib/grpc/Grid.Bot.Grpc.csproj" />
-    <Project Path="lib/settings/Shared.Settings.csproj" />
-    <Project Path="lib/utility/Shared.Utility.csproj" />
+    <Project Path="lib/settings/Grid.Bot.Settings.csproj" />
+    <Project Path="lib/utility/Grid.Bot.Utility.csproj" />
     <Project Path="lib/web/Grid.Bot.Web.csproj" />
     <Project Path="lib/eval-runner/Grid.Bot.Eval.Runner.csproj" />
     <Project Path="lib/client-settings/Grid.Bot.ClientSettings.csproj" />

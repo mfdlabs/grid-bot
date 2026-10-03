@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup Label="GridBotPackages">
-    <ProjectReference Include="../commands/Shared.Commands.csproj" />
-    <ProjectReference Include="../settings/Shared.Settings.csproj" />
-    <ProjectReference Include="../utility/Shared.Utility.csproj" />
+    <ProjectReference Include="../commands/Grid.Bot.Commands.csproj" />
+    <ProjectReference Include="../settings/Grid.Bot.Settings.csproj" />
+    <ProjectReference Include="../utility/Grid.Bot.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">

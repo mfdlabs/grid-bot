@@ -9,7 +9,7 @@
   </PropertyGroup>
   
   <ItemGroup Label="GridBotPackages">
-    <ProjectReference Include="../settings/Shared.Settings.csproj" />
+    <ProjectReference Include="../settings/Grid.Bot.Settings.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">

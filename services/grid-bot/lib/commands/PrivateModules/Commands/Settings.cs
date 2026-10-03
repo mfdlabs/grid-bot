@@ -48,7 +48,7 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
 
     private const string _namespace = "Grid.Bot";
-    private static readonly Assembly _settingsAssembly = Assembly.Load("Shared.Settings");
+    private static readonly Assembly _settingsAssembly = Assembly.Load("Grid.Bot.Settings");
     private static readonly Assembly _configAssembly = Assembly.Load("Configuration");
 
     [GeneratedRegex(@"^([a-zA-Z]+)Settings$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
