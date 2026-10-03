@@ -116,10 +116,11 @@ public class OnCommandExecuted(
             var detail = ex.ToString();
             if (detail.Length > EmbedBuilder.MaxDescriptionLength)
             {
-                await message.ReplyWithFileAsync(
-                    fileStream: new MemoryStream(Encoding.UTF8.GetBytes(detail)),
-                    fileName: $"{exceptionId}.txt",
-                    text: UnhandledExceptionOccurredFromCommand
+                await message.Channel.SendFileAsync(
+                    stream: new MemoryStream(Encoding.UTF8.GetBytes(detail)),
+                    filename: $"{exceptionId}.txt",
+                    text: UnhandledExceptionOccurredFromCommand,
+                    messageReference: new(message.Id)
                 );
 
                 return;
