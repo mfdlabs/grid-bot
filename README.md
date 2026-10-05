@@ -19,8 +19,7 @@ This is a monorepo containing the bot itself, a companion recovery daemon, and t
 | `lib/configuration` | Configuration plumbing shared across the bot and its components. |
 | `lib/grid` | Talks to Grid Servers, both at the SOAP/HTTP level and at the process level (native processes on Windows, containers on Linux). |
 | `lib/vault` | HashiCorp Vault integration used for pulling settings/secrets at runtime. |
-| `lib/floodcheckers` | Rate-limiting/anti-spam logic, used to stop abuse of the Render and Execute Script commands. |
-| `lib/service-discovery`, `lib/redis`, `lib/networking`, `lib/logging`, `lib/threading`, `lib/text`, `lib/random`, `lib/hashing`, `lib/file-system` | General-purpose infrastructure libraries shared across the above. |
+| `lib/networking`, `lib/logging`, `lib/threading`, `lib/text`, `lib/random`, `lib/file-system` | General-purpose infrastructure libraries shared across the above. |
 | `docs/` | The [MkDocs](https://www.mkdocs.org/)-based documentation site (`mkdocs.yml`), including legal/ToS pages. |
 | `.github/workflows/` | The component-based CI/CD pipeline (`build.yml`, `deploy.yml`, `docs.yml`), see [DevOps](#devops) below. |
 

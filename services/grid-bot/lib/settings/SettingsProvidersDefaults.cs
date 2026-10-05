@@ -14,7 +14,6 @@ internal static class SettingsProvidersDefaults
     public static string MaintenancePath => $"{EnvironmentProvider.EnvironmentName}/maintenance";
     public static string CommandsPath => $"{EnvironmentProvider.EnvironmentName}/commands";
     public static string FloodCheckerPath => $"{EnvironmentProvider.EnvironmentName}/floodcheckers";
-    public static string ConsulPath => $"{EnvironmentProvider.EnvironmentName}/consul";
     public static string ScriptsPath => $"{EnvironmentProvider.EnvironmentName}/scripts";
     public static string ClientSettingsPath => $"{EnvironmentProvider.EnvironmentName}/client-settings";
     public static string GlobalPath => $"{EnvironmentProvider.EnvironmentName}/global";

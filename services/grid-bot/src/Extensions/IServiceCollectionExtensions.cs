@@ -15,11 +15,9 @@ using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 
 using Vault;
-using Redis;
 using Random;
 using Logging;
 using Configuration;
-using ServiceDiscovery;
 
 using Events;
 using Utility;
@@ -214,46 +212,12 @@ public static class IServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds the floodcheckers Redis client to the service collection.
+    /// Adds the in-memory rate limiters to the service collection.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
-    public static IServiceCollection AddFloodCheckersRedis(this IServiceCollection services)
-    {
-        var serviceProvider = services.BuildServiceProvider();
-
-        var floodCheckerSettings = serviceProvider.GetRequiredService<FloodCheckerSettings>();
-        var consulSettings = serviceProvider.GetRequiredService<ConsulSettings>();
-        var logger = serviceProvider.GetRequiredService<ILogger>();
-
-        var consulClientProvider = new LocalConsulClientProvider(consulSettings);
-        var serviceResolver = new ConsulHttpServiceResolver(
-            consulSettings,
-            logger,
-            consulClientProvider,
-            floodCheckerSettings.ToSingleSetting(s => s.FloodCheckersConsulServiceName),
-            EnvironmentProvider.EnvironmentName,
-            floodCheckerSettings.FloodCheckersRedisUseServiceDiscovery
-        );
-
-        var redisClient = new HybridRedisClientProvider(
-            floodCheckerSettings,
-            logger,
-            serviceResolver,
-            floodCheckerSettings.ToSingleSetting(s => s.FloodCheckersRedisUseServiceDiscovery),
-            floodCheckerSettings.ToSingleSetting(s => s.FloodCheckersRedisEndpoints)
-        ).Client;
-
-        var floodCheckerRegistry = new FloodCheckerRegistry(
-            logger,
-            redisClient,
-            floodCheckerSettings
-        );
-
-        services.AddSingleton<IFloodCheckerRegistry>(floodCheckerRegistry);
-
-        return services;
-    }
+    public static IServiceCollection AddRateLimiting(this IServiceCollection services)
+        => services.AddSingleton<IRateLimiterRegistry, RateLimiterRegistry>();
 
     /// <summary>
     /// Adds all client settings related components to the service collection.

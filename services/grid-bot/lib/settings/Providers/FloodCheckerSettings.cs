@@ -2,42 +2,13 @@
 
 using System;
 
-using Redis;
-using Configuration;
-
-using IFloodCheckerSettings = FloodCheckers.Redis.ISettings;
-
 /// <summary>
-/// Settings provider for the render and script execution flood checkers.
+/// Settings provider for the render and script execution rate limiters.
 /// </summary>
-public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProviderSettings, IFloodCheckerSettings
+public class FloodCheckerSettings : BaseSettingsProvider
 {
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.FloodCheckerPath;
-
-    /// <summary>
-    /// Gets the flood checkers Redis service name in Consul
-    /// </summary>
-    public string FloodCheckersConsulServiceName => GetOrDefault(
-        nameof(FloodCheckersConsulServiceName),
-        "floodcheckers-redis"
-    );
-
-    /// <summary>
-    /// Should floodcheckers Redis use service discovery?
-    /// </summary>
-    public bool FloodCheckersRedisUseServiceDiscovery => GetOrDefault(
-        nameof(FloodCheckersRedisUseServiceDiscovery),
-        false
-    );
-
-    /// <summary>
-    /// Gets the static Redis endpoints to use for flood checkers.
-    /// </summary>
-    public RedisEndpoints FloodCheckersRedisEndpoints => GetOrDefault(
-        nameof(FloodCheckersRedisEndpoints),
-        new RedisEndpoints("127.0.0.1:6379")
-    );
 
     /// <summary>
     /// Limit for the script execution flood checker
@@ -133,18 +104,5 @@ public class FloodCheckerSettings : BaseSettingsProvider, IHybridRedisClientProv
     public bool RenderPerUserFloodCheckingEnabled => GetOrDefault(
         nameof(RenderPerUserFloodCheckingEnabled),
         false
-    );
-
-    /// <inheritdoc cref="IHybridRedisClientProviderSettings.InitialDiscoveryWaitTime"/>
-    [SettingName("FloodCheckers" + nameof(InitialDiscoveryWaitTime))]
-    public TimeSpan InitialDiscoveryWaitTime => GetOrDefault(
-        "FloodCheckers" + nameof(InitialDiscoveryWaitTime),
-        TimeSpan.FromSeconds(10)
-    );
-
-    /// <inheritdoc cref="IFloodCheckerSettings.FloodCheckerMinimumWindowPeriod"/>
-    public TimeSpan FloodCheckerMinimumWindowPeriod => GetOrDefault(
-        nameof(FloodCheckerMinimumWindowPeriod),
-        TimeSpan.FromSeconds(1)
     );
 }

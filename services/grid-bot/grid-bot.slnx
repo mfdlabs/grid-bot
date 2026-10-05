@@ -3,8 +3,6 @@
     <Project Path="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
     <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
     <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
-    <Project Path="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <Project Path="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <Project Path="../../lib/grid/client/Grid.Client.csproj" />
     <Project Path="../../lib/grid/commands/Grid.Commands.csproj" />
     <Project Path="../../lib/grid/diagnostics/Grid.Diagnostics.csproj" />
@@ -13,11 +11,8 @@
     <Project Path="../../lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <Project Path="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <Project Path="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
-    <Project Path="../../lib/hashing/hashing/Hashing.csproj" />
     <Project Path="../../lib/logging/logging/Logging.csproj" />
     <Project Path="../../lib/random/random/Random.csproj" />
-    <Project Path="../../lib/redis/redis/Redis.csproj" />
-    <Project Path="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
     <Project Path="../../lib/threading/threading/Threading.csproj" />
     <Project Path="../../lib/vault/vault/Vault.csproj" />
   </Folder>
