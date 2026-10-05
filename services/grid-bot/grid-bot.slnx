@@ -2,7 +2,6 @@
   <Folder Name="/lib/">
     <Project Path="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
     <Project Path="../../lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
-    <Project Path="../../lib/clients/users-client/Users.Client.csproj" />
     <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
     <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
     <Project Path="../../lib/file-system/file-system/FileSystem.csproj" />

@@ -22,7 +22,6 @@ using Networking;
 using Configuration;
 using ServiceDiscovery;
 
-using Users.Client;
 using Thumbnails.Client;
 
 using Events;
@@ -269,11 +268,7 @@ public static class IServiceCollectionExtensions
     {
         var serviceProvider = services.BuildServiceProvider();
 
-        var usersClientSettings = serviceProvider.GetRequiredService<UsersClientSettings>();
         var avatarSettings = serviceProvider.GetRequiredService<AvatarSettings>();
-
-        var usersClient = new UsersClient(usersClientSettings.UsersApiBaseUrl);
-        services.AddSingleton<IUsersClient>(usersClient);
 
         var thumbnailsClient = new ThumbnailsClient(avatarSettings.RbxThumbnailsUrl);
         services.AddSingleton<IThumbnailsClient>(thumbnailsClient);

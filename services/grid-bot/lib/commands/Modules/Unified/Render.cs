@@ -4,6 +4,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -17,7 +19,6 @@ using Prometheus;
 using Random;
 using Logging;
 using FileSystem;
-using Users.Client;
 using Thumbnails.Client;
 using Threading.Extensions;
 
@@ -137,7 +138,6 @@ public class Render
     private readonly IThumbnailsClient _thumbnailsClient;
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IUsersClient _usersClient;
     private readonly IFloodCheckerRegistry _floodCheckerRegistry;
     private readonly IAdminUtility _adminUtility;
 
@@ -156,7 +156,6 @@ public class Render
     /// <param name="thumbnailsClient">The <see cref="IThumbnailsClient"/>.</param>
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/>.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
-    /// <param name="usersClient">The <see cref="IUsersClient"/>.</param>
     /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
@@ -167,7 +166,6 @@ public class Render
     /// - <paramref name="thumbnailsClient"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
-    /// - <paramref name="usersClient"/> cannot be null.
     /// - <paramref name="floodCheckerRegistry"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
     /// </exception>
@@ -179,7 +177,6 @@ public class Render
         IThumbnailsClient thumbnailsClient,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
-        IUsersClient usersClient,
         IFloodCheckerRegistry floodCheckerRegistry,
         IAdminUtility adminUtility
     )
@@ -191,9 +188,21 @@ public class Render
         _thumbnailsClient = thumbnailsClient ?? throw new ArgumentNullException(nameof(thumbnailsClient));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _usersClient = usersClient ?? throw new ArgumentNullException(nameof(usersClient));
         _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+
+        if (!Uri.TryCreate(
+                _avatarSettings.UsersApiUrl + _multiGetUsersByUsernamesEndpoint,
+                UriKind.Absolute, out var multiGetUsersByUsernamesUri))
+            throw new InvalidOperationException("Invalid Users API URL for multi-get users by usernames endpoint.");
+
+        if (!Uri.TryCreate(
+                _avatarSettings.UsersApiUrl + _multiGetUsersByIdsEndpoint,
+                UriKind.Absolute, out var multiGetUsersByIdsUri))
+            throw new InvalidOperationException("Invalid Users API URL for multi-get users by IDs endpoint.");
+
+        _multiGetUsersByIdsFullUrl = multiGetUsersByIdsUri;
+        _multiGetUsersByUsernamesFullUrl = multiGetUsersByUsernamesUri;
 
         _localCachedPaths = new(avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
@@ -531,19 +540,28 @@ public class Render
 
     #region rbx-users
 
+    private const string _multiGetUsersByUsernamesEndpoint = "/v1/usernames/users";
+    private readonly Uri _multiGetUsersByUsernamesFullUrl;
+
     private async Task<long?> ResolveUserIdAsync(string username)
     {
-        var request = new MultiGetByUsernameRequest
+        var request = new
         {
-            ExcludeBannedUsers = false,
-            Usernames = [username]
+            excludeBannedUsers = false,
+            usernames = new string[1] { username }
         };
 
         try
         {
-            var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
+            using var httpClient = _httpClientFactory.CreateClient();
 
-            return response.Data.FirstOrDefault()?.Id;
+            var response = await httpClient.PostAsJsonAsync(_multiGetUsersByUsernamesFullUrl, request);
+            var responseData = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+            if (responseData.TryGetProperty("data", out var data) && data.GetArrayLength() > 0)
+                return data[0].GetProperty("id").GetInt64();
+
+            return null;
         }
         catch
         {
@@ -551,18 +569,25 @@ public class Render
         }
     }
 
+    private const string _multiGetUsersByIdsEndpoint = "/v1/users";
+    private readonly Uri _multiGetUsersByIdsFullUrl;
+
     private async Task<bool> DetermineIfUserExistsAsync(long id)
     {
+
+        var request = new
+        {
+            excludeBannedUsers = false,
+            userIds = new long[1] { id }
+        };
+
         try
         {
-            var request = new MultiGetByUserIdRequest
-            {
-                ExcludeBannedUsers = false,
-                UserIds = [id]
-            };
+            using var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.PostAsJsonAsync(_multiGetUsersByIdsFullUrl, request);
+            var responseData = await response.Content.ReadFromJsonAsync<JsonElement>();
 
-            var response = await _usersClient.MultiGetUsersByIdsAsync(request);
-            return response.Data.Count == 0;
+            return responseData.TryGetProperty("data", out var data) && data.GetArrayLength() > 0;
         }
         catch
         {
@@ -641,7 +666,7 @@ public class Render
             return;
         }
 
-        if (await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
+        if (!await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
         {
             RenderPerformanceCounters.TotalRendersAgainstBannedUsers.WithLabels(userNameOrId).Inc();
 
@@ -670,7 +695,7 @@ public class Render
 
             var (stream, fileName) = _percentageInvoker.CanInvoke(_avatarSettings.RbxThumbnailsRolloutPercent)
                 ? DoRenderByRbxThumbnails(
-                    userId, 
+                    userId,
                     thumbnailCommandType
                 )
                 : await DoRenderByRccAsync(
