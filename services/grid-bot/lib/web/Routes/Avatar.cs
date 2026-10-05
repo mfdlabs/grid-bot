@@ -8,13 +8,10 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using Logging;
 using Utility;
 using Extensions;
-
-using Threading.Extensions;
 
 using Models;
 using Models.V1;
@@ -137,8 +134,8 @@ public class Avatar
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
                 requestMessage.Headers.Add(_robloxPlaceIdHeader, placeId.ToString());
 
-                var response = httpClient.SendAsync(requestMessage).Sync();
-                var avatarModel = response.Content.ReadFromJsonAsync<AvatarModel>().Sync();
+                var response = httpClient.SendAsync(requestMessage).GetAwaiter().GetResult();
+                var avatarModel = response.Content.ReadFromJsonAsync<AvatarModel>().GetAwaiter().GetResult();
 
                 if (avatarModel == null)
                 {

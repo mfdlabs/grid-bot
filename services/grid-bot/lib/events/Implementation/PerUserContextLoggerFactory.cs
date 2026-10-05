@@ -32,7 +32,7 @@ public class PerUserContextLoggerFactory(DiscordShardedClient discordClient) : I
         logger.CustomLogPrefixes.Add(() => interaction.GetChannelAsString());
         logger.CustomLogPrefixes.Add(() => interaction.User.ToString());
 
-        var guild = interaction.GetGuild(_discordClient);
+        var guild = interaction.GetGuildAsync(_discordClient).GetAwaiter().GetResult();
 
         // Add guild id if the interaction is from a guild.
         if (guild is not null)

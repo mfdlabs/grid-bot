@@ -11,7 +11,6 @@ using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.AuthMethods.AppRole;
 
 using Logging;
-using Threading.Extensions;
 
 /// <summary>
 /// A factory that provides a Vault client.
@@ -106,9 +105,9 @@ public class VaultClientFactory : IVaultClientFactory
         return client;
     }
 
-    private static void RefreshToken(IVaultClient client)
+    private static async Task RefreshToken(VaultClient client)
     {
-        var token = client.V1.Auth.Token.LookupSelfAsync().Sync()?.Data;
+        var token = (await client.V1.Auth.Token.LookupSelfAsync().ConfigureAwait(false))?.Data;
 
         // Check if the client has a lease
         if (token?.Renewable != true)
@@ -122,7 +121,7 @@ public class VaultClientFactory : IVaultClientFactory
 
         while (true)
         {
-            client.V1.Auth.Token.RenewSelfAsync().Wait();
+            await client.V1.Auth.Token.RenewSelfAsync().ConfigureAwait(false);
 
             Thread.Sleep(TimeSpan.FromSeconds(lease.Value));
         }

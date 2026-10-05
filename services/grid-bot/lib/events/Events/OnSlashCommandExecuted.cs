@@ -51,11 +51,6 @@ public class OnInteractionExecuted(
         "command_name"
     );
 
-    private static string GetGuildId(SocketInteraction interaction, IInteractionContext context)
-    {
-        return interaction.GetGuild(context.Client)?.Id.ToString() ?? "DM";
-    }
-
     /// <summary>
     /// Invoke the handler.
     /// </summary>

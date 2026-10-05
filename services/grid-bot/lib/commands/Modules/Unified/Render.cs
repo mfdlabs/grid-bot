@@ -18,7 +18,6 @@ using Discord.Interactions;
 using Prometheus;
 
 using Logging;
-using Threading.Extensions;
 
 using Grid.Commands;
 using Grid.ProcessManagement.Core;
@@ -390,7 +389,7 @@ public class Render
         return data.Deserialize<ThumbnailResponse[]>()?.FirstOrDefault() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "Failed to deserialize the thumbnail response.");
     }
 
-    private async Task<string> DoFetchRbxThumbnail(long userId, ThumbnailCommandType thumbnailCommandType)
+    private async Task<string> DoFetchRbxThumbnailAsync(long userId, ThumbnailCommandType thumbnailCommandType)
     {
         _avatarThumbnailsLocalCacheSize.Inc();
 
@@ -438,7 +437,7 @@ public class Render
 
         var path = _localCachedPaths.GetOrAdd(
             (userId, thumbnailCommandType),
-            _ => DoFetchRbxThumbnail(userId, thumbnailCommandType).Sync()
+            _ => DoFetchRbxThumbnailAsync(userId, thumbnailCommandType).GetAwaiter().GetResult()
         );
 
         using var file = File.OpenRead(path);

@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
-    <ProjectReference Include="..\..\threading\threading\Threading.csproj" />
     <ProjectReference Include="..\core\Configuration.Core.csproj" />
     <ProjectReference Include="..\..\vault\vault\Vault.csproj" />
   </ItemGroup>

@@ -13,7 +13,6 @@
 
   <ItemGroup Label="CustomPackages">
     <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/threading/threading/Threading.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="NuGetPackages">

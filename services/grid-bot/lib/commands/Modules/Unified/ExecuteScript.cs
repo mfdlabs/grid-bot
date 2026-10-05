@@ -488,7 +488,7 @@ public partial class ExecuteScript
 
             // username based off machine info
             userInfo = context.User.ToString();
-            guildInfo = interaction.GetGuild(context.Client)?.ToString() ?? "DMs";
+            guildInfo = (await interaction.GetGuildAsync(context.Client))?.ToString() ?? "DMs";
             channelInfo = interaction.GetChannelAsString();
 
             _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
