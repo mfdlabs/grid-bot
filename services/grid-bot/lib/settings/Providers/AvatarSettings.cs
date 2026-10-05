@@ -10,11 +10,18 @@ public class AvatarSettings : BaseSettingsProvider
     /// <inheritdoc cref="Configuration.IVaultProvider.Path"/>
     public override string Path => SettingsProvidersDefaults.AvatarPath;
 
-    
     /// <summary>
     /// Gets the URL for the Avatar API.
     /// </summary>
     public string AvatarApiUrl => GetOrDefault(nameof(AvatarApiUrl), "https://avatar.roblox.com");
+
+    /// <summary>
+    /// Gets the base url for the Users ApiSite.
+    /// </summary>
+    public string UsersApiUrl => GetOrDefault(
+        nameof(UsersApiUrl),
+        "https://users.roblox.com"
+    );
 
     /// <summary>
     /// Gets the interval on which to traverse the avatar fetch cache to search for stale entries.
@@ -99,14 +106,6 @@ public class AvatarSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Gets the render dimensions.
-    /// </summary>
-    public Thumbnails.Client.Size RenderDimensions => GetOrDefault(
-        nameof(RenderDimensions),
-        Thumbnails.Client.Size._720x720
-    );
-
-    /// <summary>
     /// Gets the TTL for the local cache.
     /// </summary>
     public TimeSpan LocalCacheTtl => GetOrDefault(
@@ -117,7 +116,8 @@ public class AvatarSettings : BaseSettingsProvider
     /// <summary>
     /// A list of user IDs that should be automatically blacklisted.
     /// </summary>
-    public long[] BlacklistUserIds {
+    public long[] BlacklistUserIds
+    {
         get => GetOrDefault(
             nameof(BlacklistUserIds),
             Array.Empty<long>()

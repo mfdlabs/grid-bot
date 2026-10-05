@@ -4,21 +4,23 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Text.Json.Serialization;
 
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
+
 
 using Prometheus;
 
 using Random;
 using Logging;
 using FileSystem;
-using Users.Client;
-using Thumbnails.Client;
 using Threading.Extensions;
 
 using Grid.Commands;
@@ -28,7 +30,6 @@ using Utility;
 using Commands;
 
 using GridJob = Grid.Client.Job;
-using ThumbnailFormat = Thumbnails.Client.Format;
 
 using TextCommandSummary = Discord.Commands.SummaryAttribute;
 using InteractionGroup = Discord.Interactions.GroupAttribute;
@@ -36,6 +37,42 @@ using InteractionSummary = Discord.Interactions.SummaryAttribute;
 
 using TextCommandModuleBase = Discord.Commands.ModuleBase;
 using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
+
+/// <summary>
+/// Represents the possible states of a thumbnail response.
+/// </summary>
+public enum ThumbnailResponseState
+{
+    /// <summary>
+    /// Indicates that an error occurred while processing the thumbnail response.
+    /// </summary>
+    Error = 0,
+
+    /// <summary>
+    /// Indicates that the thumbnail response has been completed successfully.
+    /// </summary>
+    Completed = 1,
+
+    /// <summary>
+    /// Indicates that the thumbnail response is currently under review.
+    /// </summary>
+    InReview = 2,
+
+    /// <summary>
+    /// Indicates that the thumbnail response is currently pending.
+    /// </summary>
+    Pending = 3,
+
+    /// <summary>
+    /// Indicates that the thumbnail response is currently blocked.
+    /// </summary>
+    Blocked = 4,
+
+    /// <summary>
+    /// Indicates that the thumbnail response is temporarily unavailable.
+    /// </summary>
+    TemporarilyUnavailable = 5,
+}
 
 /// <summary>
 /// Exception thrown when rbx-thumbnails returns a state that is not pending or completed.
@@ -134,10 +171,8 @@ public class Render
     private readonly ILogger _logger;
     private readonly IRandom _random;
     private readonly IJobManager _jobManager;
-    private readonly IThumbnailsClient _thumbnailsClient;
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IUsersClient _usersClient;
     private readonly IFloodCheckerRegistry _floodCheckerRegistry;
     private readonly IAdminUtility _adminUtility;
 
@@ -153,10 +188,8 @@ public class Render
     /// <param name="logger">The <see cref="ILogger"/>.</param>
     /// <param name="random">The <see cref="IRandom"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
-    /// <param name="thumbnailsClient">The <see cref="IThumbnailsClient"/>.</param>
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/>.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
-    /// <param name="usersClient">The <see cref="IUsersClient"/>.</param>
     /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
@@ -164,10 +197,8 @@ public class Render
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="random"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
-    /// - <paramref name="thumbnailsClient"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
-    /// - <paramref name="usersClient"/> cannot be null.
     /// - <paramref name="floodCheckerRegistry"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
     /// </exception>
@@ -176,10 +207,8 @@ public class Render
         ILogger logger,
         IRandom random,
         IJobManager jobManager,
-        IThumbnailsClient thumbnailsClient,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
-        IUsersClient usersClient,
         IFloodCheckerRegistry floodCheckerRegistry,
         IAdminUtility adminUtility
     )
@@ -188,12 +217,23 @@ public class Render
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _random = random ?? throw new ArgumentNullException(nameof(random));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-        _thumbnailsClient = thumbnailsClient ?? throw new ArgumentNullException(nameof(thumbnailsClient));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _usersClient = usersClient ?? throw new ArgumentNullException(nameof(usersClient));
         _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+
+        if (!Uri.TryCreate(
+                _avatarSettings.UsersApiUrl + _multiGetUsersByUsernamesEndpoint,
+                UriKind.Absolute, out var multiGetUsersByUsernamesUri))
+            throw new InvalidOperationException("Invalid Users API URL for multi-get users by usernames endpoint.");
+
+        if (!Uri.TryCreate(
+                _avatarSettings.UsersApiUrl + _multiGetUsersByIdsEndpoint,
+                UriKind.Absolute, out var multiGetUsersByIdsUri))
+            throw new InvalidOperationException("Invalid Users API URL for multi-get users by IDs endpoint.");
+
+        _multiGetUsersByIdsFullUrl = multiGetUsersByIdsUri;
+        _multiGetUsersByUsernamesFullUrl = multiGetUsersByUsernamesUri;
 
         _localCachedPaths = new(avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
@@ -241,6 +281,9 @@ public class Render
 
     #region rbx-thumbnails
 
+    private const string _avatarHeadshotEndpoint = "/v1/users/avatar-headshot";
+    private const string _avatarEndpoint = "/v1/users/avatar";
+
     private void OnLocalCacheEntryRemoved(string path, RemovalReason reason)
     {
         _avatarThumbnailsLocalCacheSize.Dec();
@@ -260,6 +303,15 @@ public class Render
         }
     }
 
+    private class ThumbnailResponse
+    {
+        [JsonPropertyName("state")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ThumbnailResponseState? State { get; set; }
+
+        [JsonPropertyName("imageUrl")]
+        public string ImageUrl { get; set; }
+    }
 
     private async Task<string> PollThumbnailRequestUntilCompleteAsync(long userId, Func<Task<ThumbnailResponse>> func)
     {
@@ -319,6 +371,38 @@ public class Render
         return path;
     }
 
+    private async Task<ThumbnailResponse> DoThumbnailRequestAsync(ThumbnailCommandType commandType, long userId)
+    {
+        var baseQuery = $"format=Png&size={_avatarSettings.RenderXDimension}x{_avatarSettings.RenderYDimension}";
+        var requestUri = commandType switch
+        {
+            ThumbnailCommandType.Closeup => new UriBuilder(_avatarSettings.RbxThumbnailsUrl)
+            {
+                Path = _avatarHeadshotEndpoint,
+                Query = $"userIds={userId}&{baseQuery}"
+            }.Uri,
+            ThumbnailCommandType.Avatar_R15_Action => new UriBuilder(_avatarSettings.RbxThumbnailsUrl)
+            {
+                Path = _avatarEndpoint,
+                Query = $"userIds={userId}&{baseQuery}"
+            }.Uri,
+            _ => throw new ArgumentOutOfRangeException(nameof(commandType), commandType, "Unsupported thumbnail command type."),
+        };
+
+        using var client = _httpClientFactory.CreateClient("rbx-thumbnails");
+        var response = await client.GetAsync(requestUri).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+            throw new ThumbnailResponseException(ThumbnailResponseState.Error, $"Failed to fetch thumbnail from URL: {requestUri}");
+
+        var responseData = await response.Content.ReadFromJsonAsync<JsonElement>().ConfigureAwait(false);
+
+        if (!responseData.TryGetProperty("data", out var data) || data.GetArrayLength() == 0)
+            throw new ThumbnailResponseException(ThumbnailResponseState.Error, "The thumbnail response data was empty or missing.");
+
+        return data.Deserialize<ThumbnailResponse[]>()?.FirstOrDefault() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "Failed to deserialize the thumbnail response.");
+    }
+
     private async Task<string> DoFetchRbxThumbnail(long userId, ThumbnailCommandType thumbnailCommandType)
     {
         _avatarThumbnailsLocalCacheSize.Inc();
@@ -330,37 +414,11 @@ public class Render
             thumbnailCommandType
         );
 
-        string url = null;
-
-        switch (thumbnailCommandType)
-        {
-            case ThumbnailCommandType.Closeup:
-                url = await PollThumbnailRequestUntilCompleteAsync(
-                    userId,
-                    async () => (await _thumbnailsClient.GetAvatarHeadshotThumbnailAsync(
-                        [userId],
-                        _avatarSettings.RenderDimensions,
-                        ThumbnailFormat.Png,
-                        false
-                    ).ConfigureAwait(false))?.Data?.FirstOrDefault()
-                ).ConfigureAwait(false);
-
-                return await DownloadThumbnailFileAsync(url).ConfigureAwait(false);
-            case ThumbnailCommandType.Avatar_R15_Action:
-                url = await PollThumbnailRequestUntilCompleteAsync(
-                    userId,
-                    async () => (await _thumbnailsClient.GetAvatarThumbnailAsync(
-                        [userId],
-                        _avatarSettings.RenderDimensions,
-                        ThumbnailFormat.Png,
-                        false
-                    ).ConfigureAwait(false))?.Data?.FirstOrDefault()
-                ).ConfigureAwait(false);
-
-                return await DownloadThumbnailFileAsync(url).ConfigureAwait(false);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(thumbnailCommandType), thumbnailCommandType, null);
-        }
+        var thumbnailUrl = await PollThumbnailRequestUntilCompleteAsync(
+            userId,
+            async () => await DoThumbnailRequestAsync(thumbnailCommandType, userId).ConfigureAwait(false)
+        );
+        return await DownloadThumbnailFileAsync(thumbnailUrl).ConfigureAwait(false);
     }
 
     private (Stream, string) DoRenderByRbxThumbnails(long userId, ThumbnailCommandType thumbnailCommandType)
@@ -368,9 +426,10 @@ public class Render
         _avatarThumbnailsOptedInToRbxThumbnailsTotal.WithLabels(userId.ToString()).Inc();
 
         _logger.Warning(
-            "Trying to fetch the thumbnail for user '{0}' via rbx-thumbnails with the dimensions of {1}",
+            "Trying to fetch the thumbnail for user '{0}' via rbx-thumbnails with the dimensions of {1}x{2}",
             userId,
-            _avatarSettings.RenderDimensions
+            _avatarSettings.RenderXDimension,
+            _avatarSettings.RenderYDimension
         );
 
         _avatarThumbnailsRbxThumbnailsFetchTotal.WithLabels(userId.ToString(), thumbnailCommandType.ToString()).Inc();
@@ -531,19 +590,28 @@ public class Render
 
     #region rbx-users
 
+    private const string _multiGetUsersByUsernamesEndpoint = "/v1/usernames/users";
+    private readonly Uri _multiGetUsersByUsernamesFullUrl;
+
     private async Task<long?> ResolveUserIdAsync(string username)
     {
-        var request = new MultiGetByUsernameRequest
+        var request = new
         {
-            ExcludeBannedUsers = false,
-            Usernames = [username]
+            excludeBannedUsers = false,
+            usernames = new string[1] { username }
         };
 
         try
         {
-            var response = await _usersClient.MultiGetUsersByUsernamesAsync(request);
+            using var httpClient = _httpClientFactory.CreateClient();
 
-            return response.Data.FirstOrDefault()?.Id;
+            var response = await httpClient.PostAsJsonAsync(_multiGetUsersByUsernamesFullUrl, request);
+            var responseData = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+            if (responseData.TryGetProperty("data", out var data) && data.GetArrayLength() > 0)
+                return data[0].GetProperty("id").GetInt64();
+
+            return null;
         }
         catch
         {
@@ -551,18 +619,25 @@ public class Render
         }
     }
 
+    private const string _multiGetUsersByIdsEndpoint = "/v1/users";
+    private readonly Uri _multiGetUsersByIdsFullUrl;
+
     private async Task<bool> DetermineIfUserExistsAsync(long id)
     {
+
+        var request = new
+        {
+            excludeBannedUsers = false,
+            userIds = new long[1] { id }
+        };
+
         try
         {
-            var request = new MultiGetByUserIdRequest
-            {
-                ExcludeBannedUsers = false,
-                UserIds = [id]
-            };
+            using var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.PostAsJsonAsync(_multiGetUsersByIdsFullUrl, request);
+            var responseData = await response.Content.ReadFromJsonAsync<JsonElement>();
 
-            var response = await _usersClient.MultiGetUsersByIdsAsync(request);
-            return response.Data.Count == 0;
+            return responseData.TryGetProperty("data", out var data) && data.GetArrayLength() > 0;
         }
         catch
         {
@@ -641,7 +716,7 @@ public class Render
             return;
         }
 
-        if (await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
+        if (!await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
         {
             RenderPerformanceCounters.TotalRendersAgainstBannedUsers.WithLabels(userNameOrId).Inc();
 
@@ -670,7 +745,7 @@ public class Render
 
             var (stream, fileName) = _percentageInvoker.CanInvoke(_avatarSettings.RbxThumbnailsRolloutPercent)
                 ? DoRenderByRbxThumbnails(
-                    userId, 
+                    userId,
                     thumbnailCommandType
                 )
                 : await DoRenderByRccAsync(

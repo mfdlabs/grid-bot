@@ -19,8 +19,6 @@
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management/Grid.ProcessManagement.csproj" />
-
-    <ProjectReference Include="$(RootDirectory)lib/clients/thumbnails-client/Thumbnails.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="NuGetPackages">

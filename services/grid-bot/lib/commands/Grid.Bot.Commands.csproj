@@ -25,7 +25,6 @@
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/text/text/Text.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/clients/users-client/Users.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup Label="NuGetPackages">
