@@ -1,8 +1,11 @@
 namespace Grid.Bot.UnifiedCommands.Public;
 
 using System;
+using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
@@ -10,7 +13,6 @@ using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 
-using Networking;
 using Grid.ProcessManagement;
 
 using Grid.Bot.Commands;
@@ -27,25 +29,29 @@ using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 /// </remarks>
 /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
 /// <param name="globalSettings">The <see cref="GlobalSettings"/>.</param>
-/// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/>.</param>
 /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="gridSettings"/> cannot be null.
 /// - <paramref name="globalSettings"/> cannot be null.
-/// - <paramref name="localIpAddressProvider"/> cannot be null.
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 public class Support(
     GridSettings gridSettings,
     GlobalSettings globalSettings,
-    ILocalIpAddressProvider localIpAddressProvider,
     IGridServerFileHelper gridServerFileHelper
 )
 {
     private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
     private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
-    private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
+
+    private static string GetLocalIPv4()
+    {
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+        return host.AddressList
+            .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
+            ?.ToString() ?? "No IPv4 address found";
+    }
 
     /// <summary>
     /// Gets informational links for the bot, in a stylish embed.
@@ -69,8 +75,8 @@ public class Support(
             .AddField("Grid Bot Support Hub", _globalSettings.SupportHubGitHubUrl)
             .AddField("Grid Bot Documentation", _globalSettings.DocumentationHubUrl)
             .AddField("Machine Name", Environment.MachineName)
-            .AddField("Machine Host", _localIpAddressProvider.GetHostName())
-            .AddField("Local IP Address", _localIpAddressProvider.AddressV4)
+            .AddField("Machine Host", Dns.GetHostName())
+            .AddField("Local IP Address", GetLocalIPv4())
             .AddField("Bot Version", informationalVersion)
             .AddField("Grid Server Version", gridServerVersion)
             .Build();

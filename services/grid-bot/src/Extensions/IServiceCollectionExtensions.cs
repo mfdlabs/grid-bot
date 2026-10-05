@@ -18,7 +18,6 @@ using Vault;
 using Redis;
 using Random;
 using Logging;
-using Networking;
 using Configuration;
 using ServiceDiscovery;
 
@@ -132,7 +131,6 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IPercentageInvoker, PercentageInvoker>()
             .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<IPerUserContextLoggerFactory, PerUserContextLoggerFactory>()
-            .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>()
             .AddSingleton<IGridServerFileHelper, GridServerFileHelper>()
             .AddSingleton<IVaultClientFactory, VaultClientFactory>();
 

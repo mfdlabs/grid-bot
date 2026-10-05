@@ -13,8 +13,6 @@ using Discord;
 
 using Newtonsoft.Json;
 
-using Networking;
-
 /// <summary>
 /// Handles sending alerts to a Discord webhook.
 /// </summary>
@@ -22,25 +20,21 @@ using Networking;
 /// <remarks>
 /// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
 /// </remarks>
-/// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
 /// <param name="globalSettings">The <see cref="GlobalSettings"/> to use.</param>
 /// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/> to use.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="localIpAddressProvider"/> cannot be null.
 /// - <paramref name="httpClientFactory"/> cannot be null.
 /// - <paramref name="globalSettings"/> cannot be null.
 /// - <paramref name="discordRolesSettings"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
-    ILocalIpAddressProvider localIpAddressProvider,
     IHttpClientFactory httpClientFactory,
     GlobalSettings globalSettings,
     DiscordRolesSettings discordRolesSettings
 ) : IDiscordWebhookAlertManager
 {
-    private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
     private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
@@ -67,7 +61,7 @@ public class DiscordWebhookAlertManager(
         color ??= Color.Red;
 
         // username based off machine info
-        var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
+        var username = Environment.MachineName;
 
         var content = string.Empty;
         if (_discordRolesSettings.AlertRoleId != default(ulong))

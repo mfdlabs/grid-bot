@@ -15,7 +15,6 @@
     <Project Path="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
     <Project Path="../../lib/hashing/hashing/Hashing.csproj" />
     <Project Path="../../lib/logging/logging/Logging.csproj" />
-    <Project Path="../../lib/networking/networking/Networking.csproj" />
     <Project Path="../../lib/random/random/Random.csproj" />
     <Project Path="../../lib/redis/redis/Redis.csproj" />
     <Project Path="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
