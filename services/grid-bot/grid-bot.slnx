@@ -3,7 +3,6 @@
     <Project Path="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
     <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
     <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
-    <Project Path="../../lib/file-system/file-system/FileSystem.csproj" />
     <Project Path="../../lib/floodcheckers/core/FloodCheckers.Core.csproj" />
     <Project Path="../../lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <Project Path="../../lib/grid/client/Grid.Client.csproj" />

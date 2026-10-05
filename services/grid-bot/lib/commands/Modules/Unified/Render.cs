@@ -20,7 +20,6 @@ using Prometheus;
 
 using Random;
 using Logging;
-using FileSystem;
 using Threading.Extensions;
 
 using Grid.Commands;
@@ -294,7 +293,7 @@ public class Render
 
             try
             {
-                path.PollDeletionBlocking();
+                File.Delete(path);
             }
             catch (Exception ex)
             {

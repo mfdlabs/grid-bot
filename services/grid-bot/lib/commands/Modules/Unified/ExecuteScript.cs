@@ -31,7 +31,6 @@ using Prometheus;
 using Random;
 using Logging;
 using Networking;
-using FileSystem;
 
 using Utility;
 using Commands;
@@ -839,14 +838,7 @@ public partial class ExecuteScript
                     scriptId,
                     scriptName
                 );
-                scriptName.PollDeletion(
-                    onFailure: ex => _logger.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                    onSuccess: () => _logger.Debug(
-                        "Successfully deleted the script '{0}' at path '{1}'!",
-                            scriptId,
-                            scriptName
-                        )
-                );
+                File.Delete(scriptName);
             }
             catch (Exception ex)
             {

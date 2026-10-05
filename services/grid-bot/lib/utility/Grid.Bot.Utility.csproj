@@ -16,7 +16,6 @@
     <ProjectReference Include="$(RootDirectory)lib/grid/job-management/Grid.JobManagement.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/networking/networking/Networking.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
   </ItemGroup>
   
   <ItemGroup Label="NuGetPackages">

@@ -12,7 +12,6 @@ using Backtrace.Model;
 using Backtrace.Interfaces;
 
 using Logging;
-using FileSystem;
 
 /// <summary>
 /// Utility for interacting with Backtrace.
@@ -101,30 +100,30 @@ public class BacktraceUtility : IBacktraceUtility
     /// <inheritdoc cref="IBacktraceUtility.UploadAllLogFiles(bool)"/>
     public BacktraceResult UploadAllLogFiles(bool delete = true)
     {
-        var attachments = from file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory)
+        var logFiles = from file in Directory.EnumerateFiles(Logger.LogFileBaseDirectory)
                           // Do not include files that are in use.
                           where File.Exists(file) && !IsFileLocked(file)
                           select file;
 
-        if (!attachments.Any())
+        if (!logFiles.Any())
         {
             _logger.Warning("No log files found to upload!");
         
             return null;
         }
 
-        _logger.Information("Uploading the following log files to Backtrace: {0}", string.Join(", ", from log in attachments select Path.GetFileName(log)));
+        _logger.Information("Uploading the following log files to Backtrace: {0}", string.Join(", ", from log in logFiles select Path.GetFileName(log)));
 
-        var result = _client?.Send("Log files upload", attachmentPaths: [.. attachments]);
+        var result = _client?.Send("Log files upload", attachmentPaths: [.. logFiles]);
 
         if (delete)
-            foreach (var log in attachments)
+            foreach (var logFile in logFiles)
             {
-                if (log == _logger.FullyQualifiedFileName) continue;
+                if (logFile == _logger.FullyQualifiedFileName) continue;
                 
-                _logger.Warning("Deleting old log file: {0}", log);
+                _logger.Warning("Deleting old log file: {0}", logFile);
 
-                log.PollDeletion();
+                File.Delete(logFile);
             }
 
         return result;

@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">
-    <ProjectReference Include="$(RootDirectory)lib/file-system/file-system/FileSystem.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/commands/Grid.Commands.csproj" />
