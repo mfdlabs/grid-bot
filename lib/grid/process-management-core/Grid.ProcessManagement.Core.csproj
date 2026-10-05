@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\logging\logging\Logging.csproj" />
-    <ProjectReference Include="..\..\random\random\Random.csproj" />
     <ProjectReference Include="..\..\clients\client-settings-client\ClientSettings.Client.csproj" />
     
     <ProjectReference Include="..\client\Grid.Client.csproj" />

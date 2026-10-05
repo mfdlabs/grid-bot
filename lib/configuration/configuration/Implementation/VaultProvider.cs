@@ -16,9 +16,6 @@ using VaultSharp.Core;
 using Vault;
 using Logging;
 
-using Threading;
-using Threading.Extensions;
-
 /// <summary>
 /// Implementation for <see cref="BaseProvider"/> via Vault.
 /// </summary>
@@ -75,7 +72,7 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
     protected IDictionary<string, object> _CachedValues = new Dictionary<string, object>();
 
     private static readonly ManualResetEvent _refreshRequestEvent = new(false);
-    private static OnceFlag _refreshAheadOnceFlag = new();
+    private static int _refreshAheadOnceFlag = 0;
     private static readonly IVaultClient _client = VaultClientFactory.Singleton.GetClient();
     private static readonly ILogger _staticLogger = Logger.Singleton;
 
@@ -98,7 +95,7 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
 
     private static void TryInitializeGlobalRefreshThread()
     {
-        Call.Once(ref _refreshAheadOnceFlag, () =>
+        if (Interlocked.Exchange(ref _refreshAheadOnceFlag, 1) == 0)
         {
             new Thread(RefreshThread)
             {
@@ -107,7 +104,7 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
             }.Start();
 
             _staticLogger?.Debug("VaultProvider: Started refresh thread!");
-        });
+        }
     }
 
     /// <summary>
@@ -274,7 +271,7 @@ public abstract class VaultProvider : EnvironmentProvider, IVaultProvider
             var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(
                 mountPoint: Mount,
                 path: Path
-            ).Sync();
+            ).GetAwaiter().GetResult();
 
             var values = secret.Data.Data;
             InvokePropertyChangedForChangedValues(values);

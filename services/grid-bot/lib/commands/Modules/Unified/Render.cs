@@ -15,12 +15,9 @@ using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 
-
 using Prometheus;
 
-using Random;
 using Logging;
-using Threading.Extensions;
 
 using Grid.Commands;
 using Grid.ProcessManagement.Core;
@@ -168,9 +165,7 @@ public class Render
 
     private readonly AvatarSettings _avatarSettings;
     private readonly ILogger _logger;
-    private readonly IRandom _random;
     private readonly IJobManager _jobManager;
-    private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IRateLimiterRegistry _rateLimiterRegistry;
     private readonly IAdminUtility _adminUtility;
@@ -185,18 +180,14 @@ public class Render
     /// </summary>
     /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="random">The <see cref="IRandom"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
-    /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/>.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
     /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="avatarSettings"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="random"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
-    /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
@@ -204,9 +195,7 @@ public class Render
     public Render(
         AvatarSettings avatarSettings,
         ILogger logger,
-        IRandom random,
         IJobManager jobManager,
-        IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
         IRateLimiterRegistry rateLimiterRegistry,
         IAdminUtility adminUtility
@@ -214,9 +203,7 @@ public class Render
     {
         _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _random = random ?? throw new ArgumentNullException(nameof(random));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-        _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
@@ -402,7 +389,7 @@ public class Render
         return data.Deserialize<ThumbnailResponse[]>()?.FirstOrDefault() ?? throw new ThumbnailResponseException(ThumbnailResponseState.Error, "Failed to deserialize the thumbnail response.");
     }
 
-    private async Task<string> DoFetchRbxThumbnail(long userId, ThumbnailCommandType thumbnailCommandType)
+    private async Task<string> DoFetchRbxThumbnailAsync(long userId, ThumbnailCommandType thumbnailCommandType)
     {
         _avatarThumbnailsLocalCacheSize.Inc();
 
@@ -450,7 +437,7 @@ public class Render
 
         var path = _localCachedPaths.GetOrAdd(
             (userId, thumbnailCommandType),
-            _ => DoFetchRbxThumbnail(userId, thumbnailCommandType).Sync()
+            _ => DoFetchRbxThumbnailAsync(userId, thumbnailCommandType).GetAwaiter().GetResult()
         );
 
         using var file = File.OpenRead(path);
@@ -729,13 +716,13 @@ public class Render
 
         try
         {
-            var thumbnailCommandType = _random.Next(0, 10) < 6
-            ? ThumbnailCommandType.Avatar_R15_Action
-            : ThumbnailCommandType.Closeup;
+            var thumbnailCommandType = Random.Shared.Next(0, 10) < 6
+                ? ThumbnailCommandType.Avatar_R15_Action
+                : ThumbnailCommandType.Closeup;
 
             _avatarThumbnailsRenderedTotal.WithLabels(userId.ToString(), thumbnailCommandType.ToString()).Inc();
 
-            var (stream, fileName) = _percentageInvoker.CanInvoke(_avatarSettings.RbxThumbnailsRolloutPercent)
+            var (stream, fileName) = Random.Shared.Next() % 100 < _avatarSettings.RbxThumbnailsRolloutPercent
                 ? DoRenderByRbxThumbnails(
                     userId,
                     thumbnailCommandType

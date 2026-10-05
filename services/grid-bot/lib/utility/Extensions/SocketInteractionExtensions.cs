@@ -1,9 +1,9 @@
 namespace Grid.Bot.Extensions;
 
+using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
-
-using Threading.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="SocketInteraction" />
@@ -32,13 +32,13 @@ public static class SocketInteractionExtensions
     /// <param name="interaction"></param>
     /// <param name="client"></param>
     /// <returns></returns>
-    public static IGuild GetGuild(this SocketInteraction interaction, IDiscordClient client)
+    public static async Task<IGuild> GetGuildAsync(this SocketInteraction interaction, IDiscordClient client)
     {
         if (interaction.GuildId == null) return null;
 
         if (interaction.Channel is SocketGuildChannel guildChannel)
             return guildChannel.Guild;
 
-        return client.GetGuildAsync(interaction.GuildId.Value).SyncOrDefault();
+        return await client.GetGuildAsync(interaction.GuildId.Value).ConfigureAwait(false);
     }
 }

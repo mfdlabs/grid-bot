@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 
-using Random;
 using Logging;
 
 using Core;
@@ -27,7 +26,6 @@ public class DockerJobManager : JobManagerBase
     private readonly IGridServerDockerSettings _GridServerSettings;
     private readonly DockerClient _DockerClient;
     private readonly GridServerDockerAuthority _DockerAuthority;
-    private readonly IRandom _Random;
 
     /// <summary>
     /// Constructs a new instance of <see cref="DockerJobManager"/>
@@ -35,19 +33,16 @@ public class DockerJobManager : JobManagerBase
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="portAllocator">The <see cref="IPortAllocator"/></param>
     /// <param name="gridServerSettings">The <see cref="IGridServerDockerSettings"/></param>
-    /// <param name="random">The <see cref="IRandom"/></param>
     /// <param name="clientSettingsClient">The <see cref="IClientSettingsClient"/></param>
     /// <param name="serverInfo">The <see cref="IServerInfo"/></param>
     /// <param name="resourceAllocationTracker">The <see cref="ResourceAllocationTracker"/></param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="gridServerSettings"/> cannot be null.
-    /// - <paramref name="random"/> cannot be null.
     /// </exception>
     public DockerJobManager(
         ILogger logger,
         IPortAllocator portAllocator,
         IGridServerDockerSettings gridServerSettings,
-        IRandom random,
         IClientSettingsClient clientSettingsClient,
         IServerInfo serverInfo = null,
         ResourceAllocationTracker resourceAllocationTracker = null
@@ -66,7 +61,6 @@ public class DockerJobManager : JobManagerBase
             }
         };
 
-        _Random = random ?? throw new ArgumentNullException(nameof(random));
         _DockerClient = CreateDockerClient();
         _DockerAuthority = new GridServerDockerAuthority(Logger, _DockerClient, _GridServerSettings, serverInfo ?? ServerInfo.GetInstance());
     }
@@ -118,7 +112,7 @@ public class DockerJobManager : JobManagerBase
     {
         if (!isStartup)
         {
-            var delay = _Random.Next((int)_GridServerSettings.MaxDelayBeforeFetchingNewGridServerContainer.TotalMilliseconds);
+            var delay = Random.Shared.Next((int)_GridServerSettings.MaxDelayBeforeFetchingNewGridServerContainer.TotalMilliseconds);
             Logger.Information("OnGridServerVersionChange. Sleeping before fetching new Grid Server container. Sleep Duration (ms): {0}.", delay);
 
             Thread.Sleep(delay);

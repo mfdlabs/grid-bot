@@ -15,7 +15,6 @@ using Discord.Interactions;
 using Microsoft.Extensions.DependencyInjection;
 
 using Vault;
-using Random;
 using Logging;
 using Configuration;
 
@@ -126,8 +125,6 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IBacktraceUtility, BacktraceUtility>()
             .AddSingleton<IAdminUtility, AdminUtility>()
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
-            .AddSingleton<IPercentageInvoker, PercentageInvoker>()
-            .AddSingleton<IRandom>(RandomFactory.GetDefaultRandom())
             .AddSingleton<IPerUserContextLoggerFactory, PerUserContextLoggerFactory>()
             .AddSingleton<IGridServerFileHelper, GridServerFileHelper>()
             .AddSingleton<IVaultClientFactory, VaultClientFactory>();

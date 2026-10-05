@@ -1,14 +1,13 @@
 ﻿namespace Grid.Bot.Events;
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Discord;
 using Discord.WebSocket;
 
 using Logging;
-
-using Threading;
 
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
@@ -36,7 +35,7 @@ public class OnShardReady(
     OnInteraction onInteractionEvent
 )
 {
-    private OnceFlag _readyFlag = new();
+    private int _readyFlag = 0;
 
     private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -62,7 +61,7 @@ public class OnShardReady(
         );
 
 
-        Call.Once(ref _readyFlag, () =>
+        if (Interlocked.Exchange(ref _readyFlag, 1) == 0)
         {
             _client.MessageReceived += _onMessageEvent.Invoke;
             _client.InteractionCreated += _onInteractionEvent.Invoke;
@@ -71,7 +70,7 @@ public class OnShardReady(
 
             _client.SetStatusAsync(UserStatus.DoNotDisturb);
             _client.SetGameAsync(GetStatusText(text));
-        });
+        }
 
 
         return Task.CompletedTask;

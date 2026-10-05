@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Newtonsoft.Json;
 
 using Logging;
-using Threading.Extensions;
 
 using Models;
 
@@ -146,7 +145,7 @@ internal class Program
 
             timing.Restart();
 
-            var result = runner().Sync();
+            var result = runner().GetAwaiter().GetResult();
 
             timing.Stop();
 

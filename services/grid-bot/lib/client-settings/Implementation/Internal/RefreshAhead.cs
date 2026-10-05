@@ -2,6 +2,8 @@ namespace Grid.Bot.ClientSettings.Internal;
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
+
 
 
 /// <summary>
@@ -132,6 +134,24 @@ internal class RefreshAhead<T> : IDisposable
     /// <returns>A new instance of <see cref="RefreshAhead{T}"/>.</returns>
     public static RefreshAhead<T> ConstructAndPopulate(TimeSpan refreshInterval, Func<T, T> refreshDelegate) 
         => new(refreshDelegate(default(T)), refreshInterval, refreshDelegate);
+
+    /// <summary>
+    /// Constructs the and populates a new instance of <see cref="RefreshAhead{T}"/>.
+    /// </summary>
+    /// <param name="refreshInterval">The refresh interval.</param>
+    /// <param name="refreshDelegate">The refresh delegate.</param>
+    /// <returns>A new instance of <see cref="RefreshAhead{T}"/>.</returns>
+    public static RefreshAhead<T> ConstructAndPopulate(TimeSpan refreshInterval, Func<Task<T>> refreshDelegate) 
+        => ConstructAndPopulate(refreshInterval, _ => refreshDelegate().GetAwaiter().GetResult());
+
+    /// <summary>
+    /// Constructs the and populates a new instance of <see cref="RefreshAhead{T}"/>.
+    /// </summary>
+    /// <param name="refreshInterval">The refresh interval.</param>
+    /// <param name="refreshDelegate">The refresh delegate.</param>
+    /// <returns>A new instance of <see cref="RefreshAhead{T}"/>.</returns>
+    public static RefreshAhead<T> ConstructAndPopulate(TimeSpan refreshInterval, Func<T, Task<T>> refreshDelegate) 
+        => new(refreshDelegate(default(T)).GetAwaiter().GetResult(), refreshInterval, arg => refreshDelegate(arg).GetAwaiter().GetResult());
 
     #region IDisposable Members
 

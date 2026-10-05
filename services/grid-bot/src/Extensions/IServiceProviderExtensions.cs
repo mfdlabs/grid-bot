@@ -10,7 +10,6 @@ using Discord.Interactions;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Random;
 using Logging;
 
 using Events;
@@ -30,17 +29,14 @@ public static class IServiceProviderExtensions
     {
         var logger = services.GetRequiredService<ILogger>();
         var backtraceSettings = services.GetRequiredService<BacktraceSettings>();
-        var percentageInvoker = services.GetRequiredService<IPercentageInvoker>();
         var backtraceUtility = services.GetService<IBacktraceUtility>();
 
         if (backtraceUtility == null) return;
 
         try
         {
-            percentageInvoker.InvokeAction(
-                () => backtraceUtility.UploadAllLogFiles(true),
-                backtraceSettings.UploadLogFilesToBacktraceEnabledPercent
-            );
+            if (Random.Shared.Next() % 100 < backtraceSettings.UploadLogFilesToBacktraceEnabledPercent)
+                backtraceUtility.UploadAllLogFiles();
         }
         catch (Exception ex)
         {

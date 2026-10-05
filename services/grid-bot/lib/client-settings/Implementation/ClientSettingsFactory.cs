@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using VaultSharp;
@@ -14,7 +15,6 @@ using VaultSharp.Core;
 using Prometheus;
 
 using Logging;
-using Threading.Extensions;
 
 using Internal;
 
@@ -97,7 +97,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         _mount = settings.ClientSettingsVaultMount;
         _path = settings.ClientSettingsVaultPath ?? "/";
 
-        _settingsCacheRefreshAhead = new LazyWithRetry<CachedValues>(() => CachedValues.ConstructAndPopulate(settings.ClientSettingsRefreshInterval, DoRefresh));
+        _settingsCacheRefreshAhead = new LazyWithRetry<CachedValues>(() => CachedValues.ConstructAndPopulate(settings.ClientSettingsRefreshInterval, DoRefreshAsync));
     }
 
     private Dictionary<string, object> ParseSecrets(Secrets secrets, MetaData metadata)
@@ -204,7 +204,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         return settings;
     }
 
-    private List<(string name, Secrets data, MetaData metadata)> FetchNewData()
+    private async Task<List<(string name, Secrets data, MetaData metadata)>> FetchNewDataAsync()
     {
         var data = new List<(string name, Secrets data, MetaData metadata)>();
 
@@ -213,7 +213,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
             _logger?.Debug("Refreshing settings from vault at path '{0}/{1}'", _mount, _path);
 
             // List all the keys in the path
-            var keys = _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(mountPoint: _mount, path: _path).Sync();
+            var keys = await _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(mountPoint: _mount, path: _path).ConfigureAwait(false);
             if (keys.Data == null || keys.Data.Keys?.Count() == 0)
             {
                 _logger?.Debug("No keys found at path '{0}/{1}'", _mount, _path);
@@ -224,8 +224,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
             // For each key, read the secret
             foreach (var applicationName in keys.Data.Keys)
             {
-                var secret = _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(mountPoint: _mount, path: applicationName).Sync();
-                var metadata = _client.V1.Secrets.KeyValue.V2.ReadSecretMetadataAsync(mountPoint: _mount, path: applicationName).Sync();
+                var secret = await _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(mountPoint: _mount, path: applicationName).ConfigureAwait(false);
+                var metadata = await _client.V1.Secrets.KeyValue.V2.ReadSecretMetadataAsync(mountPoint: _mount, path: applicationName).ConfigureAwait(false);
 
                 data.Add((applicationName, secret.Data.Data, metadata.Data.CustomMetadata));
             }
@@ -295,7 +295,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         _settingsCacheRefreshAhead.LazyValue.Value[applicationName] = data;
     }
 
-    private IDictionary<string, Secrets> DoRefresh(IDictionary<string, Secrets> oldSettings)
+    private async Task<IDictionary<string, Secrets>> DoRefreshAsync(IDictionary<string, Secrets> oldSettings)
     {
         _logger?.Debug("Refreshing settings, FromVault = {0}", _settings.ClientSettingsViaVault);
 
@@ -304,7 +304,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         try
         {
             // List all the keys in the path
-            var data = FetchNewData();
+            var data = await FetchNewDataAsync().ConfigureAwait(false);
 
             // For each key, read the secret
             foreach (var (applicationName, applicationData, applicationMetaData) in data)

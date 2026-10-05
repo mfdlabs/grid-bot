@@ -2,12 +2,12 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 
 using Microsoft.Extensions.Caching.Memory;
 
-using Random;
 using Logging;
 
 /// <inheritdoc cref="IPortAllocator"/>
@@ -17,7 +17,6 @@ public class PortAllocator : IPortAllocator
     private const int ExclusiveEndPort = 47000;
     private const int MaximumAttemptsToFindPort = 1000;
 
-    private static readonly IRandom _rng = RandomFactory.GetDefaultRandom();
     private static readonly TimeSpan _portReusedForbiddenDuration = TimeSpan.FromSeconds(30);
 
     private readonly ILogger _logger;
@@ -49,7 +48,7 @@ public class PortAllocator : IPortAllocator
         {
             for (int i = 0; i < MaximumAttemptsToFindPort; i++)
             {
-                var port = _rng.Next(InclusiveStartPort, ExclusiveEndPort);
+                var port = Random.Shared.Next(InclusiveStartPort, ExclusiveEndPort);
 
                 if (IsPortInUse(port))
                 {

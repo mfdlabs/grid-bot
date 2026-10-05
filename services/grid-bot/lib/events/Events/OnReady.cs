@@ -1,6 +1,7 @@
 ﻿namespace Grid.Bot.Events;
 
 using System;
+using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -11,8 +12,6 @@ using Discord.Commands;
 using Discord.Interactions;
 
 using Logging;
-
-using Threading;
 
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
@@ -60,7 +59,7 @@ public class OnShardReady(
 {
     private static readonly Assembly _commandsAssembly = Assembly.Load("Grid.Bot.Commands");
 
-    private Atomic<int> _shardCount = 0;
+    private int _shardCount = 0;
 
     private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
@@ -85,8 +84,8 @@ public class OnShardReady(
     /// <param name="shard">The client for the shard.</param>
     public async Task Invoke(DiscordSocketClient shard)
     {
-        _shardCount++;
-    
+        Interlocked.Increment(ref _shardCount);
+
         _logger.Debug(
             "Shard '{0}' ready as '{0}#{1}'",
             shard.ShardId,
