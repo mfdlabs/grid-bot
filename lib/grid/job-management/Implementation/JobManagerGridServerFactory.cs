@@ -3,7 +3,6 @@ namespace Grid.JobManagement;
 using System;
 using System.Runtime.InteropServices;
 
-using Random;
 using Logging;
 using ClientSettings.Client;
 
@@ -49,7 +48,6 @@ public class JobManagerGridServerFactory : IJobManagerGridServerFactory
                 logger,
                 portAllocator,
                 dockerSettings,
-                RandomFactory.GetDefaultRandom(),
                 clientSettingsClient
             );
         }

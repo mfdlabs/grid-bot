@@ -12,7 +12,6 @@
     <Project Path="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <Project Path="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
     <Project Path="../../lib/logging/logging/Logging.csproj" />
-    <Project Path="../../lib/random/random/Random.csproj" />
     <Project Path="../../lib/threading/threading/Threading.csproj" />
     <Project Path="../../lib/vault/vault/Vault.csproj" />
   </Folder>

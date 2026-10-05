@@ -28,7 +28,6 @@ using Newtonsoft.Json;
 
 using Prometheus;
 
-using Random;
 using Logging;
 
 using Utility;
@@ -84,7 +83,6 @@ public partial class ExecuteScript
         public string Logs;
     }
 
-
     #region Metrics
 
     private static readonly Gauge _scriptLoggingTotalScriptHashes = Metrics.CreateGauge(
@@ -117,7 +115,6 @@ public partial class ExecuteScript
     private readonly IBacktraceUtility _backtraceUtility;
     private readonly IJobManager _jobManager;
     private readonly IAdminUtility _adminUtility;
-    private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
     private readonly IGridServerFileHelper _gridServerFileHelper;
@@ -168,7 +165,6 @@ public partial class ExecuteScript
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/> to use.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
     /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
     /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
@@ -180,7 +176,6 @@ public partial class ExecuteScript
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
-    /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
     /// - <paramref name="gridServerFileHelper"/> cannot be null.
@@ -193,7 +188,6 @@ public partial class ExecuteScript
         IBacktraceUtility backtraceUtility,
         IJobManager jobManager,
         IAdminUtility adminUtility,
-        IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
         IDiscordWebhookAlertManager discordWebhookAlertManager,
         IGridServerFileHelper gridServerFileHelper
@@ -206,7 +200,6 @@ public partial class ExecuteScript
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
         _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
@@ -483,7 +476,7 @@ public partial class ExecuteScript
         if (string.IsNullOrWhiteSpace(script)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(script));
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
-        if (!_percentageInvoker.CanInvoke(_scriptsSettings.ScriptLoggingPercentage)) return;
+        if (Random.Shared.Next() % 100 > _scriptsSettings.ScriptLoggingPercentage) return;
 
         string userInfo;
         string guildInfo;

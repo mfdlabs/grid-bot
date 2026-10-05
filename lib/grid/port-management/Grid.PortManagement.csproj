@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../logging/logging/Logging.csproj" />
-    <ProjectReference Include="../../random/random/Random.csproj" />
   </ItemGroup>
 
   <ItemGroup>

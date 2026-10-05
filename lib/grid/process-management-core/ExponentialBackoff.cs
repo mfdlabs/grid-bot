@@ -2,18 +2,14 @@
 
 using System;
 
-using Random;
-
 internal static class ExponentialBackoff
 {
     private const uint CeilingForMaxAttempts = 10;
-    private static readonly ThreadLocalRandom Random = new();
-
     public static TimeSpan Multiply(this TimeSpan multiplicand, double multiplier)
         => TimeSpan.FromTicks((long)(multiplicand.Ticks * multiplier));
 
     public static TimeSpan CalculateBackoff(uint attempt, uint maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter = Jitter.None) 
-        => CalculateBackoff(attempt, maxAttempts, baseDelay, maxDelay, jitter, () => Random.NextDouble());
+        => CalculateBackoff(attempt, maxAttempts, baseDelay, maxDelay, jitter, () => Random.Shared.NextDouble());
 
     private static TimeSpan CalculateBackoff(uint attempt, uint maxAttempts, TimeSpan baseDelay, TimeSpan maxDelay, Jitter jitter, Func<double> nextRandomDouble)
     {
