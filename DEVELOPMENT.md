@@ -851,6 +851,26 @@ Therefore, the normal PR validation sequence is:
 #!deploy: grid-bot:<generated-version>
 ```
 
+To build and deploy the generated version immediately, use:
+
+```text
+#!build-deploy: grid-bot
+```
+
+This defaults to a Release build deployed to staging. It accepts the same optional version suffix and build configuration as `#!build:`, followed by an optional CPU:RAM override:
+
+```text
+#!build-deploy: grid-bot:rc1@debug,1000:2048
+```
+
+Production must be requested explicitly:
+
+```text
+#!prod-build-deploy: grid-bot
+```
+
+Both commands require an authorized team member. The build workflow publishes the image before dispatching deployment with the generated version. Use the separate build and deploy commands when staging validation is needed between those steps.
+
 ## Staging deployment sequence
 
 ```mermaid

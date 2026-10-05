@@ -15,7 +15,7 @@ build:
 deployment:
   before:
     - id: set-maintenance-status
-      script: |
+      script: | # shell
         #!/bin/sh
 
         # Download grpcurl
@@ -151,7 +151,7 @@ deployment:
           env: false
           perms: "755"
           on_change: noop
-          data: |
+          data: | # shell
             #!/bin/sh
             set -eu
 
@@ -198,7 +198,7 @@ deployment:
           env: false
           perms: "755"
           on_change: noop
-          data: |
+          data: | # shell
             #!/bin/sh
             set -eu
 
@@ -228,7 +228,7 @@ deployment:
           env: false
           perms: "755"
           on_change: noop
-          data: |
+          data: | # shell
             #!/bin/sh
             set -eu
 
@@ -241,7 +241,7 @@ deployment:
         - destination: secrets/file.env
           env: true
           on_change: restart
-          data: |
+          data: | # shell
             MetricsBindAddress="http://{{ env "NOMAD_IP_metrics" }}:{{ env "NOMAD_PORT_metrics" }}"
             WebServerBindAddress="http://{{ env "NOMAD_IP_http" }}:{{ env "NOMAD_PORT_http" }}"
             GridBotGrpcServerEndpoint="http://{{ env "NOMAD_IP_grpc" }}:{{ env "NOMAD_PORT_grpc" }}"

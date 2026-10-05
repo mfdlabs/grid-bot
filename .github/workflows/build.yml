@@ -43,6 +43,26 @@ on:
         required: false
         type: string
 
+      deploy_after_build:
+        description: "Deploy the built components after images are published"
+        required: false
+        default: false
+        type: boolean
+
+      deploy_environment:
+        description: "Environment to deploy to after building"
+        required: false
+        default: "staging"
+        type: choice
+        options:
+          - "staging"
+          - "production"
+
+      deployment_resources:
+        description: "Nomad resources in the form component,cpu:ram"
+        required: false
+        type: string
+
 permissions:
   contents: write
   deployments: write
@@ -604,7 +624,7 @@ jobs:
   deploy:
     name: Deploy Components
     
-    if: ${{ github.event_name != 'workflow_dispatch' && !contains(github.event.head_commit.message, '#!skip-deploy!#') && github.ref == 'refs/heads/master' && needs.get-component-names.outputs.deployable-components != '' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' && !contains(github.event.head_commit.message, '#!skip-deploy!#') && github.ref == 'refs/heads/master' && needs.get-component-names.outputs.deployable-components != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_after_build == 'true') }}
 
     needs: 
       - get-component-names
@@ -624,21 +644,30 @@ jobs:
           script: |
             const components = ${{ env.COMPONENTS }};
             const deployableComponents = '${{ env.DEPLOYABLE_COMPONENTS }}';
+            const deployAfterBuild = '${{ github.event_name }}' === 'workflow_dispatch'
+              && '${{ github.event.inputs.deploy_after_build }}' === 'true';
 
             let deployableComponentsMap = '';
 
             for (const component of components) {
               const [name] = component.split(':');
 
-              if (deployableComponents.includes(name)) {
+              if (deployAfterBuild || deployableComponents.includes(name)) {
                 deployableComponentsMap += `${component},`;
               }
             }
 
             const actionInputs = {
               components: deployableComponentsMap.slice(0, -1),
-              nomad_environment: 'production'
+              nomad_environment: deployAfterBuild
+                ? '${{ github.event.inputs.deploy_environment }}'
+                : 'production'
             };
+
+            const deploymentResources = '${{ github.event.inputs.deployment_resources }}';
+            if (deployAfterBuild && deploymentResources) {
+              actionInputs.nomad_resources = deploymentResources;
+            }
 
             core.setOutput('action-inputs', JSON.stringify(actionInputs));
 
