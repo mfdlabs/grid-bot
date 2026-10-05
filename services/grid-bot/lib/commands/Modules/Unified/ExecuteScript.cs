@@ -30,8 +30,6 @@ using Prometheus;
 
 using Random;
 using Logging;
-using Networking;
-using FileSystem;
 
 using Utility;
 using Commands;
@@ -119,7 +117,6 @@ public partial class ExecuteScript
     private readonly IBacktraceUtility _backtraceUtility;
     private readonly IJobManager _jobManager;
     private readonly IAdminUtility _adminUtility;
-    private readonly ILocalIpAddressProvider _localIpAddressProvider;
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
@@ -171,7 +168,6 @@ public partial class ExecuteScript
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
-    /// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/> to use.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
     /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
@@ -184,7 +180,6 @@ public partial class ExecuteScript
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
-    /// - <paramref name="localIpAddressProvider"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
@@ -198,7 +193,6 @@ public partial class ExecuteScript
         IBacktraceUtility backtraceUtility,
         IJobManager jobManager,
         IAdminUtility adminUtility,
-        ILocalIpAddressProvider localIpAddressProvider,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
         IDiscordWebhookAlertManager discordWebhookAlertManager,
@@ -212,7 +206,6 @@ public partial class ExecuteScript
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
@@ -520,7 +513,7 @@ public partial class ExecuteScript
         }
 
 
-        var username = $"{Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
+        var username = Environment.MachineName;
 
         // Get a SHA256 hash of the script (hex)
         var scriptHash = string.Join("", SHA256.HashData(Encoding.UTF8.GetBytes(script)).Select(b => b.ToString("x2")));
@@ -839,14 +832,7 @@ public partial class ExecuteScript
                     scriptId,
                     scriptName
                 );
-                scriptName.PollDeletion(
-                    onFailure: ex => _logger.Warning("Failed to delete '{0}' because: {1}", scriptName, ex.Message),
-                    onSuccess: () => _logger.Debug(
-                        "Successfully deleted the script '{0}' at path '{1}'!",
-                            scriptId,
-                            scriptName
-                        )
-                );
+                File.Delete(scriptName);
             }
             catch (Exception ex)
             {

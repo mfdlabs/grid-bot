@@ -17,8 +17,6 @@ using Discord.Commands;
 
 using Newtonsoft.Json;
 
-using FileSystem;
-
 using Utility;
 
 using Eval.Runner.Models;
@@ -297,7 +295,7 @@ public partial class EvaluateCSharp(
         {
             if (timing.IsRunning) timing.Stop();
 
-            tempScriptFileName.PollDeletion();
+            File.Delete(tempScriptFileName);
         }
     }
 }

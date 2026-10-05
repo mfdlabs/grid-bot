@@ -2,16 +2,12 @@ namespace Grid.Bot.Commands.Public;
 
 using System;
 using System.Linq;
-using System.Reflection;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Discord;
 
 using Discord.Commands;
-
-using Text.Extensions;
 
 using Utility;
 
@@ -78,7 +74,7 @@ public class Help : ModuleBase
                 var title = module.Group;
 
                 if (module.Aliases.Skip(1).Count() > 1)
-                    title += string.Format(" - {0}", module.Aliases.Skip(1).Join(", "));
+                    title += string.Format(" - {0}", string.Join(", ", module.Aliases.Skip(1)));
 
                 builder.WithTitle(title);
 
@@ -92,7 +88,7 @@ public class Help : ModuleBase
 
                         var commandAliases = command.Aliases.Select(alias => alias.Split(' ').ElementAt(1)).Skip(1).Distinct();
                         if (commandAliases.Count() > 1)
-                            fieldName += string.Format(" - {0}", commandAliases.Join(", "));
+                            fieldName += string.Format(" - {0}", string.Join(", ", commandAliases));
 
                         field.WithName(fieldName);
 
@@ -138,7 +134,7 @@ public class Help : ModuleBase
                 var title = command.Name;
 
                 if (command.Aliases.Skip(1).Count() > 1)
-                    title += string.Format(" - {0}", command.Aliases.Skip(1).Join(", "));
+                    title += string.Format(" - {0}", string.Join(", ", command.Aliases.Skip(1)));
 
                 builder.WithTitle(title);
 

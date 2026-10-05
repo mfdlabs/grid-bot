@@ -12,7 +12,6 @@ using Discord;
 using Newtonsoft.Json;
 
 using Logging;
-using Networking;
 
 /// <summary>
 /// Handles sending alerts to a Discord webhook.
@@ -21,25 +20,21 @@ using Networking;
 /// <remarks>
 /// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
 /// </remarks>
-/// <param name="localIpAddressProvider">The <see cref="ILocalIpAddressProvider"/> to use.</param>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
 /// <param name="settings">The <see cref="ISettings"/> to use.</param>
 /// <param name="logger">The <see cref="ILogger"/> to use.</param>
 /// /// <exception cref="ArgumentNullException">
-/// - <paramref name="localIpAddressProvider"/> cannot be null.
 /// - <paramref name="httpClientFactory"/> cannot be null.
 /// - <paramref name="settings"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
-    ILocalIpAddressProvider localIpAddressProvider,
     IHttpClientFactory httpClientFactory,
     ISettings settings,
     ILogger logger
 ) : IDiscordWebhookAlertManager
 {
-    private readonly ILocalIpAddressProvider _localIpAddressProvider = localIpAddressProvider ?? throw new ArgumentNullException(nameof(localIpAddressProvider));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -53,7 +48,7 @@ public class DiscordWebhookAlertManager(
         color ??= Color.Red;
 
         // username based off machine info
-        var username = $"Grid Bot Recovery {Environment.MachineName} ({_localIpAddressProvider.AddressV4} / {_localIpAddressProvider.AddressV6})";
+        var username = $"Grid Bot Recovery {Environment.MachineName}";
 
         var content = string.Empty;
         if (_settings.AlertRoleId != default(ulong))

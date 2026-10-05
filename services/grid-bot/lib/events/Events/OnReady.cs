@@ -13,7 +13,6 @@ using Discord.Interactions;
 using Logging;
 
 using Threading;
-using Text.Extensions;
 
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
@@ -78,7 +77,7 @@ public class OnShardReady(
     private readonly OnCommandExecuted _onCommandExecutedEvent = onCommandExecutedEvent ?? throw new ArgumentNullException(nameof(onCommandExecutedEvent));
 
     private static string GetStatusText(string updateText)
-        => updateText.IsNullOrEmpty() ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
+        => string.IsNullOrEmpty(updateText) ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
 
     /// <summary>
     /// Invoe the event handler.
@@ -129,7 +128,7 @@ public class OnShardReady(
 
             _client.SetStatusAsync(_discordSettings.BotStatus);
 
-            if (!_discordSettings.BotStatusMessage.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
                 _client.SetGameAsync(
                     _discordSettings.BotStatusMessage
                 );

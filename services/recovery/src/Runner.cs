@@ -7,14 +7,12 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
 using Discord.WebSocket;
 
-using Grpc.Core;
 using Grpc.Net.Client;
 
 using Logging;
@@ -22,7 +20,6 @@ using Logging;
 using V1;
 using Events;
 using Prometheus;
-using Networking;
 
 internal static class Runner
 {
@@ -80,8 +77,7 @@ internal static class Runner
             .AddSingleton<OnInteraction>()
             .AddSingleton<OnShardReady>()
             .AddSingleton<IBotManager, BotManager>()
-            .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
-            .AddSingleton<ILocalIpAddressProvider, LocalIpAddressProvider>();
+            .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>();
 
         // Http Client Factory
         services.AddHttpClient();
