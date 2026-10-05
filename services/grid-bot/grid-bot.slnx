@@ -19,7 +19,6 @@
     <Project Path="../../lib/random/random/Random.csproj" />
     <Project Path="../../lib/redis/redis/Redis.csproj" />
     <Project Path="../../lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <Project Path="../../lib/text/text/Text.csproj" />
     <Project Path="../../lib/threading/threading/Threading.csproj" />
     <Project Path="../../lib/vault/vault/Vault.csproj" />
   </Folder>
