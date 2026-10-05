@@ -22,8 +22,6 @@ using Networking;
 using Configuration;
 using ServiceDiscovery;
 
-using Thumbnails.Client;
-
 using Events;
 using Utility;
 using Commands;
@@ -255,25 +253,6 @@ public static class IServiceCollectionExtensions
         );
 
         services.AddSingleton<IFloodCheckerRegistry>(floodCheckerRegistry);
-
-        return services;
-    }
-
-    /// <summary>
-    /// Adds the specific HTTP clients to the service collection.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-    /// <returns>The <see cref="IServiceCollection"/>.</returns>
-    public static IServiceCollection AddHttpClients(this IServiceCollection services)
-    {
-        var serviceProvider = services.BuildServiceProvider();
-
-        var avatarSettings = serviceProvider.GetRequiredService<AvatarSettings>();
-
-        var thumbnailsClient = new ThumbnailsClient(avatarSettings.RbxThumbnailsUrl);
-        services.AddSingleton<IThumbnailsClient>(thumbnailsClient);
-
-        services.AddHttpClient();
 
         return services;
     }

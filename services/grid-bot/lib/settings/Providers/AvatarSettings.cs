@@ -106,14 +106,6 @@ public class AvatarSettings : BaseSettingsProvider
     );
 
     /// <summary>
-    /// Gets the render dimensions.
-    /// </summary>
-    public Thumbnails.Client.Size RenderDimensions => GetOrDefault(
-        nameof(RenderDimensions),
-        Thumbnails.Client.Size._720x720
-    );
-
-    /// <summary>
     /// Gets the TTL for the local cache.
     /// </summary>
     public TimeSpan LocalCacheTtl => GetOrDefault(
