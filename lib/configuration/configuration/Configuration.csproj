@@ -4,7 +4,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Consul" Version="1.6.10.9" />
     <PackageReference Include="VaultSharp" Version="1.13.0.1" />
   </ItemGroup>
 

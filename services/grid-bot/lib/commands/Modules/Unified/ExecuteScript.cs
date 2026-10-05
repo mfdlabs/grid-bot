@@ -113,7 +113,7 @@ public partial class ExecuteScript
     private readonly GridSettings _gridSettings;
     private readonly ScriptsSettings _scriptsSettings;
 
-    private readonly IFloodCheckerRegistry _floodCheckerRegistry;
+    private readonly IRateLimiterRegistry _rateLimiterRegistry;
     private readonly IBacktraceUtility _backtraceUtility;
     private readonly IJobManager _jobManager;
     private readonly IAdminUtility _adminUtility;
@@ -164,7 +164,7 @@ public partial class ExecuteScript
     /// <param name="logger">The <see cref="ILogger"/>.</param>
     /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
     /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
-    /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
+    /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
@@ -176,7 +176,7 @@ public partial class ExecuteScript
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="gridSettings"/> cannot be null.
     /// - <paramref name="scriptsSettings"/> cannot be null.
-    /// - <paramref name="floodCheckerRegistry"/> cannot be null.
+    /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
@@ -189,7 +189,7 @@ public partial class ExecuteScript
         ILogger logger,
         GridSettings gridSettings,
         ScriptsSettings scriptsSettings,
-        IFloodCheckerRegistry floodCheckerRegistry,
+        IRateLimiterRegistry rateLimiterRegistry,
         IBacktraceUtility backtraceUtility,
         IJobManager jobManager,
         IAdminUtility adminUtility,
@@ -202,7 +202,7 @@ public partial class ExecuteScript
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
         _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
-        _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
+        _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
@@ -592,24 +592,17 @@ public partial class ExecuteScript
     {
         if (!_adminUtility.UserIsAdmin(context.User))
         {
-            if (_floodCheckerRegistry.ScriptExecutionFloodChecker.IsFlooded())
+            switch (_rateLimiterRegistry.TryAcquireScriptExecution(context.User.Id))
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+                case RateLimitScope.Global:
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
 
-                return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
+                    return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
+                case RateLimitScope.PerUser:
+                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+
+                    return Task.FromException(new ApplicationException("You are sending execute commands too quickly, please wait a few moments and try again."));
             }
-
-            _floodCheckerRegistry.ScriptExecutionFloodChecker.UpdateCount();
-
-            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserScriptExecutionFloodChecker(context.User.Id);
-            if (perUserFloodChecker.IsFlooded())
-            {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
-
-                return Task.FromException(new ApplicationException("You are sending execute commands too quickly, please wait a few moments and try again."));
-            }
-
-            perUserFloodChecker.UpdateCount();
         }
 
         return Task.CompletedTask;

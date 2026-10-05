@@ -55,7 +55,7 @@ internal static class Runner
 
         services.AddClientSettings();
         services.AddJobManager();
-        services.AddFloodCheckersRedis();
+        services.AddRateLimiting();
         services.AddHttpClient();
 
         services.AddUnifiedCommands();

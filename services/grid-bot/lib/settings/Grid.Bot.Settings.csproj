@@ -12,9 +12,6 @@
 
   <ItemGroup Label="CustomPackages">
     <ProjectReference Include="$(RootDirectory)lib/configuration/configuration/Configuration.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/service-discovery/service-discovery/ServiceDiscovery.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
 
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
@@ -24,6 +21,7 @@
   <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Discord.Net.Core" Version="3.17.4" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
     
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>

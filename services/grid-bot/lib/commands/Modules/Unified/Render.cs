@@ -172,7 +172,7 @@ public class Render
     private readonly IJobManager _jobManager;
     private readonly IPercentageInvoker _percentageInvoker;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IFloodCheckerRegistry _floodCheckerRegistry;
+    private readonly IRateLimiterRegistry _rateLimiterRegistry;
     private readonly IAdminUtility _adminUtility;
 
     #endregion Dependencies
@@ -189,7 +189,7 @@ public class Render
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="percentageInvoker">The <see cref="IPercentageInvoker"/>.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
-    /// <param name="floodCheckerRegistry">The <see cref="IFloodCheckerRegistry"/>.</param>
+    /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="avatarSettings"/> cannot be null.
@@ -198,7 +198,7 @@ public class Render
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="percentageInvoker"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
-    /// - <paramref name="floodCheckerRegistry"/> cannot be null.
+    /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
     /// </exception>
     public Render(
@@ -208,7 +208,7 @@ public class Render
         IJobManager jobManager,
         IPercentageInvoker percentageInvoker,
         IHttpClientFactory httpClientFactory,
-        IFloodCheckerRegistry floodCheckerRegistry,
+        IRateLimiterRegistry rateLimiterRegistry,
         IAdminUtility adminUtility
     )
     {
@@ -218,7 +218,7 @@ public class Render
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _percentageInvoker = percentageInvoker ?? throw new ArgumentNullException(nameof(percentageInvoker));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _floodCheckerRegistry = floodCheckerRegistry ?? throw new ArgumentNullException(nameof(floodCheckerRegistry));
+        _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
 
         if (!Uri.TryCreate(
@@ -659,24 +659,17 @@ public class Render
     {
         if (!_adminUtility.UserIsAdmin(context.User))
         {
-            if (_floodCheckerRegistry.RenderFloodChecker.IsFlooded())
+            switch (_rateLimiterRegistry.TryAcquireRender(context.User.Id))
             {
-                RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
+                case RateLimitScope.Global:
+                    RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
 
-                return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
+                    return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
+                case RateLimitScope.PerUser:
+                    RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+
+                    return Task.FromException(new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again."));
             }
-
-            _floodCheckerRegistry.RenderFloodChecker.UpdateCount();
-
-            var perUserFloodChecker = _floodCheckerRegistry.GetPerUserRenderFloodChecker(context.User.Id);
-            if (perUserFloodChecker.IsFlooded())
-            {
-                RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
-
-                return Task.FromException(new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again."));
-            }
-
-            perUserFloodChecker.UpdateCount();
         }
 
         return Task.CompletedTask;

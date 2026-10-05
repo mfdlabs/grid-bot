@@ -26,7 +26,6 @@
 
   <ItemGroup Label="CustomPackages">
     <ProjectReference Include="$(RootDirectory)lib/random/random/Random.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/redis/redis/Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/configuration/core/Configuration.Core.csproj" />
   </ItemGroup>
 

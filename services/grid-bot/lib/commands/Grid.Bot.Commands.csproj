@@ -16,8 +16,6 @@
   </ItemGroup>
 
   <ItemGroup Label="CustomPackages">
-    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/core/FloodCheckers.Core.csproj" />
-    <ProjectReference Include="$(RootDirectory)lib/floodcheckers/redis/FloodCheckers.Redis.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/commands/Grid.Commands.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/client/Grid.Client.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
@@ -30,7 +28,7 @@
     <PackageReference Include="Discord.Net.Interactions" Version="3.17.4" />
     <PackageReference Include="Loretta.CodeAnalysis.Lua" Version="0.2.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Polly" Version="7.2.4" />
+    <PackageReference Include="Polly.RateLimiting" Version="8.6.2" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
   </ItemGroup>
 

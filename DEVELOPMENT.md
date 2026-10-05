@@ -333,7 +333,7 @@ scripts/
 targets/
 ```
 
-The main bot references shared libraries for commands, events, settings, gRPC, web functionality, configuration, Redis, and utility behavior.
+The main bot references shared libraries for commands, events, settings, gRPC, web functionality, configuration, and utility behavior.
 
 The build configuration is defined centrally in:
 
@@ -408,9 +408,6 @@ lib/configuration/
 
 lib/grid/
   Grid Server clients, commands, process management, and diagnostics
-
-lib/floodcheckers/
-  Rate limiting and anti-spam behavior
 
 lib/vault/
   Vault integration
@@ -532,7 +529,7 @@ Local Debug testing should not be treated as proof that the feature is productio
 - Nomad scheduling.
 - Container filesystem behavior.
 - TLS certificates.
-- Redis or external service endpoints.
+- External service endpoints.
 - Discord permissions and production guild configuration.
 - Resource constraints.
 - Logging and metrics aggregation.
@@ -611,7 +608,7 @@ Staging testing should answer:
 - Do Vault and environment-variable substitutions work?
 - Does the service register its ports and health checks?
 - Does the service work through staging ingress?
-- Does the feature work with production-like Discord, Redis, HTTP, gRPC, and Grid Server dependencies?
+- Does the feature work with production-like Discord, HTTP, gRPC, and Grid Server dependencies?
 - Does deployment maintenance mode work?
 - Are metrics available?
 - Does the service recover after restart?
