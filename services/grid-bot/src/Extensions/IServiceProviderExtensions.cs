@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Logging;
@@ -83,10 +84,10 @@ public static class IServiceProviderExtensions
     /// <param name="services">The <see cref="IServiceProvider"/>.</param>
     public static void UseMetricsServer(this IServiceProvider services)
     {
-        var globalSettings = services.GetRequiredService<GlobalSettings>();
+        var globalOptions = services.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
         // Extract host and port from bind address
-        var bindAddress = globalSettings.MetricsBindAddress;
+        var bindAddress = globalOptions.MetricsBindAddress;
         var host = bindAddress.Split(':')[1].TrimStart('/');
         var port = int.Parse(bindAddress.Split(':')[2].TrimEnd('/'));
 

@@ -15,7 +15,8 @@ using Discord.Commands;
 
 using Newtonsoft.Json;
 
-using Vault;
+using Microsoft.Extensions.Options;
+
 using Configuration;
 
 using Utility;
@@ -66,11 +67,12 @@ public partial class Settings(IServiceProvider services) : ModuleBase
             .WithCurrentTimestamp()
             .WithColor(Color.Green);            
 
-        var isUsingVault = VaultClientFactory.Singleton.GetClient() != null ? "yes" : "no";
+        var globalOptions = (_services.GetService(typeof(IOptionsMonitor<GlobalOptions>)) as IOptionsMonitor<GlobalOptions>)?.CurrentValue;
+        var isUsingVault = !string.IsNullOrWhiteSpace(globalOptions?.VaultAddress) ? "yes" : "no";
         var settingsAssemblyVersion = _settingsAssembly.GetName().Version;
         var configurationAssemblyVersion = _configAssembly.GetName().Version;
 
-        var environment = Grid.Bot.EnvironmentProvider.EnvironmentName;
+        var environment = Grid.Bot.EnvironmentDataProvider.EnvironmentName;
 
         builder.AddField("Settings Version", settingsAssemblyVersion, true)
                .AddField("Configuration Version", configurationAssemblyVersion, true)

@@ -28,14 +28,14 @@ public class ClientSettingsSettings : BaseSettingsProvider
     public string ClientSettingsVaultPath => GetOrDefault(nameof(ClientSettingsVaultPath), "/");
 
     /// <summary>
-    /// Gets the Vault address for the client settings.
+    /// Gets the Vault address override for the client settings, or null to use <see cref="GlobalOptions.VaultAddress"/>.
     /// </summary>
-    public string ClientSettingsVaultAddress => GetOrDefault(nameof(ClientSettingsVaultAddress), Environment.GetEnvironmentVariable("VAULT_ADDR"));
+    public string ClientSettingsVaultAddress => GetOrDefault(nameof(ClientSettingsVaultAddress), (string)null);
 
     /// <summary>
-    /// Gets the Vault token for the client settings.
+    /// Gets the Vault credential override for the client settings, or null to use <see cref="GlobalOptions.VaultCredential"/>.
     /// </summary>
-    public string ClientSettingsVaultToken => GetOrDefault(nameof(ClientSettingsVaultToken), Environment.GetEnvironmentVariable("VAULT_TOKEN"));
+    public string ClientSettingsVaultToken => GetOrDefault(nameof(ClientSettingsVaultToken), (string)null);
 
     /// <summary>
     /// Gets the refresh interval for the client settings factory.

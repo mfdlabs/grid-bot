@@ -12,9 +12,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
-using Vault;
 using Logging;
 using Configuration;
 
@@ -28,7 +28,7 @@ using Grid.JobManagement;
 using Grid.PortManagement;
 using Grid.ProcessManagement;
 
-using EnvironmentProvider = Grid.Bot.EnvironmentProvider;
+using EnvironmentProvider = Grid.Bot.EnvironmentDataProvider;
 
 /// <summary>
 /// Extension methods for <see cref="IServiceCollection"/>.
@@ -127,7 +127,7 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IPerUserContextLoggerFactory, PerUserContextLoggerFactory>()
             .AddSingleton<IGridServerFileHelper, GridServerFileHelper>()
-            .AddSingleton<IVaultClientFactory, VaultClientFactory>();
+            .AddSingleton<IVaultFactory, VaultFactory>();
 
         return services;
     }
@@ -139,17 +139,17 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddGlobalLogger(this IServiceCollection services)
     {
-        var globalSettings = services
-            .BuildServiceProvider()
-            .GetRequiredService<GlobalSettings>();
+        services.AddSingleton<ILogger>(provider =>
+        {
+            var globalOptions = provider
+                .GetRequiredService<IOptionsMonitor<GlobalOptions>>();
 
-        var logger = new Logger(
-            name: globalSettings.DefaultLoggerName,
-            logLevelGetter: () => globalSettings.DefaultLoggerLevel,
-            logToConsole: globalSettings.DefaultLoggerLogToConsole
-        );
-
-        services.AddSingleton<ILogger>(logger);
+            return new Logger(
+                name: globalOptions.CurrentValue.DefaultLoggerName,
+                logLevelGetter: () => globalOptions.CurrentValue.DefaultLoggerLevel,
+                logToConsole: globalOptions.CurrentValue.DefaultLoggerLogToConsole
+            );
+        });
 
         return services;
     }
@@ -227,11 +227,13 @@ public static class IServiceCollectionExtensions
 
         var logger = serviceProvider.GetRequiredService<ILogger>();
         var clientSettingsSettings = serviceProvider.GetRequiredService<ClientSettingsSettings>();
-        var vaultClientFactory = serviceProvider.GetRequiredService<IVaultClientFactory>();
+        var vaultFactory = serviceProvider.GetRequiredService<IVaultFactory>();
+        var globalOptions = serviceProvider.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
         var vaultClient = clientSettingsSettings.ClientSettingsViaVault
-            ? vaultClientFactory.GetClient(clientSettingsSettings.ClientSettingsVaultAddress,
-                                         clientSettingsSettings.ClientSettingsVaultToken)
+            ? vaultFactory.CreateClient(
+                clientSettingsSettings.ClientSettingsVaultAddress ?? globalOptions.VaultAddress,
+                clientSettingsSettings.ClientSettingsVaultToken ?? globalOptions.VaultCredential)
             : null;
 
         var clientSettingsFactory = new ClientSettingsFactory(

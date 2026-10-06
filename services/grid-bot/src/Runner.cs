@@ -49,6 +49,7 @@ internal static class Runner
     {
         var services = new ServiceCollection();
 
+        services.AddAppConfiguration();
         services.AddSettingsProviders();
         services.AddGlobalLogger();
         services.AddUtilities();

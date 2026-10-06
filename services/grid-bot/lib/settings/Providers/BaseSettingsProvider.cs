@@ -10,7 +10,7 @@ using Configuration;
 public abstract class BaseSettingsProvider : VaultProvider
 {
     /// <inheritdoc cref="IVaultProvider.Mount"/>
-    public override string Mount => SettingsProvidersDefaults.MountPath;
+    public override string Mount => EnvironmentDataProvider.VaultMountPath;
 
     /// <summary>
     /// Construct a new instance of <see cref="BaseSettingsProvider"/>
