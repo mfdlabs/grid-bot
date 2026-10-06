@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord.WebSocket;
@@ -29,10 +30,11 @@ public static class IServiceProviderExtensions
     /// <param name="args">The application arguments.</param>
     public static void UseGrpcServer(this IServiceProvider services, IEnumerable<string> args)
     {
-        var grpcSettings = services.GetRequiredService<GrpcSettings>();
+        var grpcOptions = services.GetRequiredService<IOptionsMonitor<GrpcOptions>>();
+        var grpcSettings = grpcOptions.CurrentValue;
         var logger = new Logger(
             name: grpcSettings.GrpcServerLoggerName,
-            logLevelGetter: () => grpcSettings.GrpcServerLoggerLevel,
+            logLevelGetter: () => grpcOptions.CurrentValue.GrpcServerLoggerLevel,
             logToConsole: true,
             logToFileSystem: false
         );
