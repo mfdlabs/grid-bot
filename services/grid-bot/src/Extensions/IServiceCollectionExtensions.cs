@@ -161,9 +161,10 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddJobManager(this IServiceCollection services)
     {
-        var gridSettings = services
-            .BuildServiceProvider()
-            .GetRequiredService<GridSettings>();
+        var provider = services.BuildServiceProvider();
+
+        var gridOptions = provider.GetRequiredService<IOptionsMonitor<GridOptions>>();
+        var gridSettings = gridOptions.CurrentValue;
 
 #if DEBUG
         if (gridSettings.DebugUseNoopJobManager)
@@ -174,14 +175,9 @@ public static class IServiceCollectionExtensions
         }
 #endif
 
-        gridSettings.GridServerAdditionalVolumeMappings = [
-            ..gridSettings.GridServerAdditionalVolumeMappingsSetting,
-            $"{gridSettings.GridServerSharedDirectoryInternalScripts}:{gridSettings.GridServerInsideDirectoryInternalScripts}"
-        ];
-
         var logger = new Logger(
             name: gridSettings.JobManagerLoggerName,
-            logLevelGetter: () => gridSettings.JobManagerLogLevel,
+            logLevelGetter: () => gridOptions.CurrentValue.JobManagerLogLevel,
             logToConsole: gridSettings.JobManagerLogToConsole
         );
 
@@ -197,7 +193,7 @@ public static class IServiceCollectionExtensions
         var jobManagerGridServer = jobManagerFactory.GetJobManager(
             logger,
             clientSettingsClient,
-            gridSettings
+            provider.GetRequiredService<GridServerSettings>()
         );
 
         jobManagerGridServer.Start();

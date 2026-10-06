@@ -28,6 +28,8 @@ using Newtonsoft.Json;
 
 using Prometheus;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Utility;
@@ -108,7 +110,9 @@ public partial class ExecuteScript
 
     private readonly ILogger _logger;
 
-    private readonly GridSettings _gridSettings;
+    private readonly IOptionsMonitor<GridOptions> _gridOptions;
+
+    private GridOptions _gridSettings => _gridOptions.CurrentValue;
     private readonly ScriptsSettings _scriptsSettings;
 
     private readonly IRateLimiterRegistry _rateLimiterRegistry;
@@ -159,7 +163,7 @@ public partial class ExecuteScript
     /// Construct a new instance of <see cref="ExecuteScript"/>.
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
+    /// <param name="gridOptions">The <see cref="GridOptions"/>.</param>
     /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
     /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
@@ -170,7 +174,7 @@ public partial class ExecuteScript
     /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="gridSettings"/> cannot be null.
+    /// - <paramref name="gridOptions"/> cannot be null.
     /// - <paramref name="scriptsSettings"/> cannot be null.
     /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="backtraceUtility"/> cannot be null.
@@ -182,7 +186,7 @@ public partial class ExecuteScript
     /// </exception>
     public ExecuteScript(
         ILogger logger,
-        GridSettings gridSettings,
+        IOptionsMonitor<GridOptions> gridOptions,
         ScriptsSettings scriptsSettings,
         IRateLimiterRegistry rateLimiterRegistry,
         IBacktraceUtility backtraceUtility,
@@ -194,7 +198,7 @@ public partial class ExecuteScript
     )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
+        _gridOptions = gridOptions ?? throw new ArgumentNullException(nameof(gridOptions));
         _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
         _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));

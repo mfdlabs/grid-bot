@@ -2,12 +2,16 @@ namespace Grid.Bot.Extensions;
 
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
 
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Logging;
+
+using Grid.ProcessManagement;
+using Grid.ProcessManagement.Docker;
 
 /// <summary>
 /// Extension methods for registering the application configuration.
@@ -72,6 +76,12 @@ public static class AppConfigurationExtensions
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();
 
+        AddOptions<GridOptions>(GridOptions.SectionName);
+        services.AddSingleton<IValidateOptions<GridOptions>, GridOptionsValidator>();
+        services.AddSingleton<GridServerSettings>();
+        services.AddSingleton<IGridServerDockerSettings>(provider => provider.GetRequiredService<GridServerSettings>());
+        services.AddSingleton<IGridServerProcessSettings>(provider => provider.GetRequiredService<GridServerSettings>());
+
         AddOptions<GrpcOptions>(GrpcOptions.SectionName);
         services.AddSingleton<IValidateOptions<GrpcOptions>, GrpcOptionsValidator>();
 
@@ -86,15 +96,38 @@ public static class AppConfigurationExtensions
         return services;
     }
 
-    // Lists were stored as comma separated values, so accept those for any array property.
+    // Lists and dictionaries were stored as flat strings, so accept those for any matching property.
     private static void ApplyCsvLists(object options, IConfiguration environment, IConfiguration section)
     {
         foreach (var property in options.GetType().GetProperties())
         {
-            if (!property.CanWrite || !property.PropertyType.IsArray) continue;
+            if (!property.CanWrite) continue;
 
-            var csv = environment[property.Name] ?? section[property.Name];
-            if (string.IsNullOrWhiteSpace(csv)) continue;
+            var isDictionary = property.PropertyType == typeof(IDictionary<string, string>) || property.PropertyType == typeof(Dictionary<string, string>);
+            if (!property.PropertyType.IsArray && !isDictionary) continue;
+
+            var raw = environment[property.Name] ?? section[property.Name];
+            if (string.IsNullOrWhiteSpace(raw)) continue;
+
+            if (isDictionary)
+            {
+                // One key=value pair per line.
+                var dictionary = new Dictionary<string, string>();
+
+                foreach (var line in raw.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    var pair = line.Split('=');
+
+                    if (pair.Length == 2)
+                        dictionary[pair[0]] = pair[1];
+                }
+
+                property.SetValue(options, dictionary);
+
+                continue;
+            }
+
+            var csv = raw;
 
             var elementType = property.PropertyType.GetElementType();
             var converter = TypeDescriptor.GetConverter(elementType);

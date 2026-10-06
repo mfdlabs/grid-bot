@@ -29,21 +29,23 @@ using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 /// <remarks>
 /// Construct a new instance of <see cref="Support"/>.
 /// </remarks>
-/// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
+/// <param name="gridOptions">The <see cref="GridOptions"/>.</param>
 /// <param name="globalOptions">The <see cref="GlobalOptions"/>.</param>
 /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="gridSettings"/> cannot be null.
+/// - <paramref name="gridOptions"/> cannot be null.
 /// - <paramref name="globalOptions"/> cannot be null.
 /// - <paramref name="gridServerFileHelper"/> cannot be null.
 /// </exception>
 public class Support(
-    GridSettings gridSettings,
+    IOptionsMonitor<GridOptions> gridOptions,
     IOptionsMonitor<GlobalOptions> globalOptions,
     IGridServerFileHelper gridServerFileHelper
 )
 {
-    private readonly GridSettings _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
+    private readonly IOptionsMonitor<GridOptions> _gridOptions = gridOptions ?? throw new ArgumentNullException(nameof(gridOptions));
+
+    private GridOptions _gridSettings => _gridOptions.CurrentValue;
     private readonly IOptionsMonitor<GlobalOptions> _globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
