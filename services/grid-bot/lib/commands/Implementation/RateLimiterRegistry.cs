@@ -4,14 +4,18 @@ using System;
 using System.Threading;
 using System.Collections.Concurrent;
 
+using Microsoft.Extensions.Options;
+
 /// <summary>
-/// Registry for the rate limiters, limits are re-read from <see cref="FloodCheckerSettings"/> live.
+/// Registry for the rate limiters, limits are re-read from <see cref="FloodCheckerOptions"/> live.
 /// </summary>
 public class RateLimiterRegistry : IRateLimiterRegistry
 {
     private static readonly TimeSpan _sweepInterval = TimeSpan.FromMinutes(1);
 
-    private readonly FloodCheckerSettings _settings;
+    private readonly IOptionsMonitor<FloodCheckerOptions> _options;
+
+    private FloodCheckerOptions _settings => _options.CurrentValue;
 
     private readonly LiveRateLimiter _globalScriptExecution;
     private readonly LiveRateLimiter _globalRender;
@@ -24,11 +28,11 @@ public class RateLimiterRegistry : IRateLimiterRegistry
     /// <summary>
     /// Construct a new instance of <see cref="RateLimiterRegistry"/>.
     /// </summary>
-    /// <param name="settings">The <see cref="FloodCheckerSettings"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="settings"/> cannot be null.</exception>
-    public RateLimiterRegistry(FloodCheckerSettings settings)
+    /// <param name="options">The <see cref="FloodCheckerOptions"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> cannot be null.</exception>
+    public RateLimiterRegistry(IOptionsMonitor<FloodCheckerOptions> options)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
 
         _globalScriptExecution = new LiveRateLimiter(
             () => _settings.ScriptExecutionFloodCheckingEnabled,
