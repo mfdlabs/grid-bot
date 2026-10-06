@@ -61,13 +61,13 @@ public static class IServiceProviderExtensions
         builder.Logging.ClearProviders();
         builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
 
-        var avatarSettings = services.GetRequiredService<AvatarSettings>();
+        var avatarOptions = services.GetRequiredService<IOptionsMonitor<AvatarOptions>>();
         var clientSettingsSettings = services.GetRequiredService<ClientSettingsSettings>();
 
         builder.Services.AddSingleton<Logging.ILogger>(logger);
         builder.Services.AddSingleton(clientSettingsFactory);
         builder.Services.AddSingleton(clientSettingsSettings);
-        builder.Services.AddSingleton(avatarSettings);
+        builder.Services.AddSingleton(avatarOptions);
 
         builder.Services.AddHttpClient();
 

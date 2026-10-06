@@ -87,6 +87,7 @@ public static class AppConfigurationExtensions
         AddOptions<FloodCheckerOptions>(FloodCheckerOptions.SectionName);
         AddOptions<CommandsOptions>(CommandsOptions.SectionName);
         AddOptions<ScriptsOptions>(ScriptsOptions.SectionName);
+        AddOptions<AvatarOptions>(AvatarOptions.SectionName);
 
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();

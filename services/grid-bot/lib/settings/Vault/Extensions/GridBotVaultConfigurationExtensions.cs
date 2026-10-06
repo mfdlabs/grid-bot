@@ -31,6 +31,7 @@ public static class GridBotVaultConfigurationExtensions
         [DiscordOptions.SectionName] = EnvironmentDataProvider.MapPath(DiscordOptions.VaultPath),
         [GridOptions.SectionName] = EnvironmentDataProvider.MapPath(GridOptions.VaultPath),
         [ScriptsOptions.SectionName] = EnvironmentDataProvider.MapPath(ScriptsOptions.VaultPath),
+        [AvatarOptions.SectionName] = EnvironmentDataProvider.MapPath(AvatarOptions.VaultPath),
     };
 
     /// <summary>
