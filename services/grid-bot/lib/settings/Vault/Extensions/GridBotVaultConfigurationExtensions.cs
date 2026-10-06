@@ -1,6 +1,7 @@
 namespace Grid.Bot;
 
 using System;
+using System.Collections.Generic;
 
 using Microsoft.Extensions.Configuration;
 
@@ -17,6 +18,22 @@ public static class GridBotVaultConfigurationExtensions
     private static readonly TimeSpan _defaultRefreshInterval = TimeSpan.FromMinutes(10);
 
     /// <summary>
+    /// The Vault secret path for each migrated options section.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> SectionPaths { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        [GlobalOptions.SectionName] = EnvironmentDataProvider.MapPath(GlobalOptions.VaultPath),
+        [GrpcOptions.SectionName] = EnvironmentDataProvider.MapPath(GrpcOptions.VaultPath),
+        [WebOptions.SectionName] = EnvironmentDataProvider.MapPath(WebOptions.VaultPath),
+        [BacktraceOptions.SectionName] = EnvironmentDataProvider.MapPath(BacktraceOptions.VaultPath),
+        [FloodCheckerOptions.SectionName] = EnvironmentDataProvider.MapPath(FloodCheckerOptions.VaultPath),
+        [CommandsOptions.SectionName] = EnvironmentDataProvider.MapPath(CommandsOptions.VaultPath),
+        [DiscordOptions.SectionName] = EnvironmentDataProvider.MapPath(DiscordOptions.VaultPath),
+        [GridOptions.SectionName] = EnvironmentDataProvider.MapPath(GridOptions.VaultPath),
+        [ScriptsOptions.SectionName] = EnvironmentDataProvider.MapPath(ScriptsOptions.VaultPath),
+    };
+
+    /// <summary>
     /// Adds the grid-bot settings secrets from Vault, one section per migrated options class.
     /// </summary>
     /// <param name="builder">The <see cref="IConfigurationBuilder"/>.</param>
@@ -31,13 +48,7 @@ public static class GridBotVaultConfigurationExtensions
                 ? interval
                 : _defaultRefreshInterval;
 
-            source.Map(GlobalOptions.SectionName, EnvironmentDataProvider.MapPath(GlobalOptions.VaultPath));
-            source.Map(GrpcOptions.SectionName, EnvironmentDataProvider.MapPath(GrpcOptions.VaultPath));
-            source.Map(WebOptions.SectionName, EnvironmentDataProvider.MapPath(WebOptions.VaultPath));
-            source.Map(BacktraceOptions.SectionName, EnvironmentDataProvider.MapPath(BacktraceOptions.VaultPath));
-            source.Map(FloodCheckerOptions.SectionName, EnvironmentDataProvider.MapPath(FloodCheckerOptions.VaultPath));
-            source.Map(CommandsOptions.SectionName, EnvironmentDataProvider.MapPath(CommandsOptions.VaultPath));
-            source.Map(DiscordOptions.SectionName, EnvironmentDataProvider.MapPath(DiscordOptions.VaultPath));
-            source.Map(GridOptions.SectionName, EnvironmentDataProvider.MapPath(GridOptions.VaultPath));
+            foreach (var (section, path) in SectionPaths)
+                source.Map(section, path);
         });
 }

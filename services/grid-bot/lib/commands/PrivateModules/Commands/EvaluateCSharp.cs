@@ -29,23 +29,25 @@ using Eval.Runner.Models;
 /// <summary>
 /// Construct a new instance of <see cref="EvaluateCSharp"/>.
 /// </summary>
-/// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
+/// <param name="scriptsOptions">The <see cref="ScriptsOptions"/>.</param>
 /// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="scriptsSettings"/> cannot be null.
+/// - <paramref name="scriptsOptions"/> cannot be null.
 /// - <paramref name="commandsOptions"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Owner)]
 [RequireBotRole(BotRole.Owner)]
 public partial class EvaluateCSharp(
-    ScriptsSettings scriptsSettings,
+    IOptionsMonitor<ScriptsOptions> scriptsOptions,
     IOptionsMonitor<CommandsOptions> commandsOptions
 ) : ModuleBase<ShardedCommandContext>
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
-    private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
+    private readonly IOptionsMonitor<ScriptsOptions> _scriptsOptions = scriptsOptions ?? throw new ArgumentNullException(nameof(scriptsOptions));
+
+    private ScriptsOptions _scriptsSettings => _scriptsOptions.CurrentValue;
     private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
 
     private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;

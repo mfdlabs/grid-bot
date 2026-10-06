@@ -8,6 +8,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using VaultSharp;
+
 using Logging;
 
 using Grid.ProcessManagement;
@@ -22,7 +24,8 @@ public static class AppConfigurationExtensions
     /// Builds the application configuration and registers the migrated options.
     /// </summary>
     /// <remarks>
-    /// Precedence, highest first: environment variables, appsettings.json, appsettings.{environment}.json, Vault.
+    /// Precedence, highest first: environment variables, appsettings.json, appsettings.{environment}.json,
+    /// runtime writes (<see cref="ISettingsWriter"/>), Vault.
     /// Local settings always win over remote ones.
     /// Options bind from their section and then from the root, so unprefixed environment variables keep working.
     /// </remarks>
@@ -45,14 +48,19 @@ public static class AppConfigurationExtensions
         bootstrap.Bind(bootstrapOptions);
 
         var builder = new ConfigurationBuilder();
+        var runtime = new RuntimeConfigurationSource();
+
+        IVaultClient vaultClient = null;
 
         if (!string.IsNullOrWhiteSpace(bootstrapOptions.VaultAddress))
         {
-            var client = new VaultFactory(Logger.Singleton)
+            vaultClient = new VaultFactory(Logger.Singleton)
                 .CreateClient(bootstrapOptions.VaultAddress, bootstrapOptions.VaultCredential);
 
-            builder.AddGridBotVault(client, Logger.Singleton);
+            builder.AddGridBotVault(vaultClient, Logger.Singleton);
         }
+
+        builder.Add(runtime);
 
         var configuration = AddLocalSources(builder).Build();
 
@@ -60,6 +68,12 @@ public static class AppConfigurationExtensions
         var environment = new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<ISettingsWriter>(new SettingsWriter(
+            vaultClient,
+            EnvironmentDataProvider.VaultMountPath,
+            runtime.Provider,
+            Logger.Singleton
+        ));
 
         void AddOptions<T>(string section) where T : class
         {
@@ -72,6 +86,7 @@ public static class AppConfigurationExtensions
         AddOptions<BacktraceOptions>(BacktraceOptions.SectionName);
         AddOptions<FloodCheckerOptions>(FloodCheckerOptions.SectionName);
         AddOptions<CommandsOptions>(CommandsOptions.SectionName);
+        AddOptions<ScriptsOptions>(ScriptsOptions.SectionName);
 
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();
