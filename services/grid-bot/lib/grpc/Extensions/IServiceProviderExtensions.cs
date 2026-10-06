@@ -47,7 +47,7 @@ public static class IServiceProviderExtensions
         }
 
         var maintenanceSettings = services.GetRequiredService<MaintenanceSettings>();
-        var discordSettings = services.GetRequiredService<DiscordSettings>();
+        var discordOptions = services.GetRequiredService<IOptionsMonitor<DiscordOptions>>();
 
         var client = services.GetRequiredService<DiscordShardedClient>();
         
@@ -60,7 +60,7 @@ public static class IServiceProviderExtensions
 
         builder.Services.AddSingleton(client);
         builder.Services.AddSingleton(maintenanceSettings);
-        builder.Services.AddSingleton(discordSettings);
+        builder.Services.AddSingleton(discordOptions);
 
         builder.Services.AddGrpc();
 

@@ -11,6 +11,8 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 /// <summary>
@@ -19,7 +21,7 @@ using Logging;
 /// <remarks>
 /// Construct a new instance of <see cref="OnShardReady"/>.
 /// </remarks>
-/// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
+/// <param name="discordOptions">The <see cref="DiscordOptions"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
@@ -31,7 +33,7 @@ using Logging;
 /// <param name="onInteractionExecutedEvent">The <see cref="OnInteractionExecuted"/>.</param>
 /// <param name="onCommandExecutedEvent">The <see cref="OnCommandExecuted"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="discordSettings"/> cannot be null.
+/// - <paramref name="discordOptions"/> cannot be null.
 /// - <paramref name="maintenanceSettings"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
@@ -44,7 +46,7 @@ using Logging;
 /// - <paramref name="onCommandExecutedEvent"/> cannot be null.	
 /// </exception>
 public class OnShardReady(
-    DiscordSettings discordSettings,
+    IOptionsMonitor<DiscordOptions> discordOptions,
     MaintenanceSettings maintenanceSettings,
     ILogger logger,
     DiscordShardedClient client,
@@ -61,7 +63,9 @@ public class OnShardReady(
 
     private int _shardCount = 0;
 
-    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+    private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
+
+    private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -8,6 +8,8 @@ using Discord.WebSocket;
 
 using Discord.Commands;
 
+using Microsoft.Extensions.Options;
+
 using Utility;
 
 /// <summary>
@@ -17,11 +19,11 @@ using Utility;
 /// Construct a new instance of <see cref="Maintenance"/>.
 /// </remarks>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
-/// <param name="discordSettings">The <see cref="DiscordSettings"/>.</param>
+/// <param name="discordOptions">The <see cref="DiscordOptions"/>.</param>
 /// <param name="discordShardedClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="maintenanceSettings"/> cannot be null.
-/// - <paramref name="discordSettings"/> cannot be null.
+/// - <paramref name="discordOptions"/> cannot be null.
 /// - <paramref name="discordShardedClient"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Administrator)]
@@ -29,12 +31,14 @@ using Utility;
 [Group("maintenance"), Summary("Commands used for enabling and disabling maintenance mode."), Alias("maint", "m")]
 public class Maintenance(
     MaintenanceSettings maintenanceSettings,
-    DiscordSettings discordSettings,
+    IOptionsMonitor<DiscordOptions> discordOptions,
     DiscordShardedClient discordShardedClient
 ) : ModuleBase
 {
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
-    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+    private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
+
+    private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
     private readonly DiscordShardedClient _discordShardedClient = discordShardedClient ?? throw new ArgumentNullException(nameof(discordShardedClient));
 
     private static string GetStatusText(string updateText)

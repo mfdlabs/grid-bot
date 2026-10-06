@@ -64,7 +64,7 @@ public static class IServiceProviderExtensions
 
         client.ShardReady += onShardReady.Invoke;
 
-        var discordSettings = services.GetRequiredService<DiscordSettings>();
+        var discordSettings = services.GetRequiredService<IOptionsMonitor<DiscordOptions>>().CurrentValue;
 
         if (string.IsNullOrEmpty(discordSettings.BotToken))
         {
