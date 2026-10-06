@@ -27,7 +27,7 @@ public class ClientSettings
     /// <summary>
     /// Construct a new instance of <see cref="ClientSettings"/>
     /// </summary>
-    /// <param name="settings">The <see cref="WebSettings"/></param>
+    /// <param name="settings">The <see cref="ClientSettingsSettings"/></param>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="clientSettingsFactory">The <see cref="IClientSettingsFactory"/></param>
     /// <exception cref="ArgumentNullException">

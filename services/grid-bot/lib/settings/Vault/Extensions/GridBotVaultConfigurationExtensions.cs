@@ -33,5 +33,6 @@ public static class GridBotVaultConfigurationExtensions
 
             source.Map(GlobalOptions.SectionName, EnvironmentDataProvider.MapPath(GlobalOptions.VaultPath));
             source.Map(GrpcOptions.SectionName, EnvironmentDataProvider.MapPath(GrpcOptions.VaultPath));
+            source.Map(WebOptions.SectionName, EnvironmentDataProvider.MapPath(WebOptions.VaultPath));
         });
 }

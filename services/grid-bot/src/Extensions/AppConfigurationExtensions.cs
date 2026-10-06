@@ -1,6 +1,7 @@
 namespace Grid.Bot.Extensions;
 
 using System;
+using System.ComponentModel;
 
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +61,7 @@ public static class AppConfigurationExtensions
         {
             services.Configure<T>(configuration.GetSection(section));
             services.Configure<T>(environment);
+            services.PostConfigure<T>(options => ApplyCsvLists(options, environment, configuration.GetSection(section)));
         }
 
         AddOptions<GlobalOptions>(GlobalOptions.SectionName);
@@ -67,6 +69,37 @@ public static class AppConfigurationExtensions
         AddOptions<GrpcOptions>(GrpcOptions.SectionName);
         services.AddSingleton<IValidateOptions<GrpcOptions>, GrpcOptionsValidator>();
 
+        AddOptions<WebOptions>(WebOptions.SectionName);
+        services.AddSingleton<IValidateOptions<WebOptions>, WebOptionsValidator>();
+        services.PostConfigure<WebOptions>(options =>
+        {
+            if (options.WebServerAllowedProxyRanges is not { Length: > 0 })
+                options.WebServerAllowedProxyRanges = WebOptions.DefaultAllowedProxyRanges;
+        });
+
         return services;
+    }
+
+    // Lists were stored as comma separated values, so accept those for any array property.
+    private static void ApplyCsvLists(object options, IConfiguration environment, IConfiguration section)
+    {
+        foreach (var property in options.GetType().GetProperties())
+        {
+            if (!property.CanWrite || !property.PropertyType.IsArray) continue;
+
+            var csv = environment[property.Name] ?? section[property.Name];
+            if (string.IsNullOrWhiteSpace(csv)) continue;
+
+            var elementType = property.PropertyType.GetElementType();
+            var converter = TypeDescriptor.GetConverter(elementType);
+            var parts = csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var array = Array.CreateInstance(elementType, parts.Length);
+
+            for (var i = 0; i < parts.Length; i++)
+                array.SetValue(converter.ConvertFromInvariantString(parts[i]), i);
+
+            property.SetValue(options, array);
+        }
     }
 }
