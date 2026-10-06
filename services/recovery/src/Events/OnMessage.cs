@@ -13,6 +13,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Prometheus;
@@ -23,14 +25,14 @@ using Prometheus;
 /// <remarks>
 /// Construct a new instance of <see cref="OnMessage"/>.
 /// </remarks>
-/// <param name="settings">The <see cref="ISettings"/>.</param>
+/// <param name="options">The <see cref="RecoveryOptions"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="options"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// </exception>
 public partial class OnMessage(
-    ISettings settings,
+    IOptions<RecoveryOptions> options,
     ILogger logger
 )
 {
@@ -40,7 +42,7 @@ public partial class OnMessage(
     [GeneratedRegex(_allowedCommandRegex)]
     private static partial Regex GetAllowedCommandRegex();
 
-    private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly RecoveryOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(

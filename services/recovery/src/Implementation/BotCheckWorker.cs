@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using Grpc.Core;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using V1;
@@ -18,27 +20,27 @@ using V1;
 /// <param name="client">The <see cref="GridBotAPI.GridBotAPIClient"/>.</param>
 /// <param name="botManager">The <see cref="IBotManager"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
-/// <param name="settings">The <see cref="ISettings"/>.</param>
+/// <param name="options">The <see cref="RecoveryOptions"/>.</param>
 /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="botManager"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
-/// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="options"/> cannot be null.
 /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
 /// </exception>
 public class BotCheckWorker(
     GridBotAPI.GridBotAPIClient client,
     IBotManager botManager,
     ILogger logger,
-    ISettings settings,
+    IOptions<RecoveryOptions> options,
     IDiscordWebhookAlertManager discordWebhookAlertManager
 )
 {
     private readonly GridBotAPI.GridBotAPIClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly IBotManager _botManager = botManager ?? throw new ArgumentNullException(nameof(botManager));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly RecoveryOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
 
     private int _continousFailures = 0;

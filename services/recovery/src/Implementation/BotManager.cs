@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Events;
@@ -15,7 +17,7 @@ using Events;
 /// </summary>
 public class BotManager : IBotManager
 {
-    private readonly ISettings _settings;
+    private readonly RecoveryOptions _settings;
     private readonly ILogger _logger;
     private readonly DiscordShardedClient _client;
 
@@ -25,26 +27,26 @@ public class BotManager : IBotManager
     /// <summary>
     /// Construct a new instance of <see cref="BotManager"/>.
     /// </summary>
-    /// <param name="settings">The <see cref="ISettings"/>.</param>
+    /// <param name="options">The <see cref="RecoveryOptions"/>.</param>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
     /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
     /// <param name="onReady">The <see cref="OnShardReady"/>.</param>
     /// <param name="onLogMessage">The <see cref="OnLogMessage"/>.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="options"/> cannot be null.
     /// - <paramref name="client"/> cannot be null.
     /// - <paramref name="onReady"/> cannot be null.
     /// - <paramref name="onLogMessage"/> cannot be null.
     /// </exception>
     public BotManager(
-        ISettings settings,
+        IOptions<RecoveryOptions> options,
         ILogger logger,
         DiscordShardedClient client,
         OnShardReady onReady,
         OnLogMessage onLogMessage
     )
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _onReady = onReady ?? throw new ArgumentNullException(nameof(onReady));

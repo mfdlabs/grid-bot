@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 /// <summary>
@@ -15,20 +17,20 @@ using Logging;
 /// <remarks>
 /// Construct a new instance of <see cref="OnShardReady"/>.
 /// </remarks>
-/// <param name="settings">The <see cref="ISettings"/>.</param>
+/// <param name="options">The <see cref="RecoveryOptions"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="onMessageEvent">The <see cref="OnMessage"/>.</param>
 /// <param name="onInteractionEvent">The <see cref="OnInteraction"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="options"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="onMessageEvent"/> cannot be null.
 /// - <paramref name="onInteractionEvent"/> cannot be null.
 /// </exception>
 public class OnShardReady(
-    ISettings settings,
+    IOptions<RecoveryOptions> options,
     ILogger logger,
     DiscordShardedClient client,
     OnMessage onMessageEvent,
@@ -37,7 +39,7 @@ public class OnShardReady(
 {
     private int _readyFlag = 0;
 
-    private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly RecoveryOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
 

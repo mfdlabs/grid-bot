@@ -21,7 +21,8 @@ public class OnLogMessage
         name: "discord",
         logLevelGetter: () => LogLevel.Debug,
         logToConsole: true,
-        logToFileSystem: false
+        logToFileSystem: false,
+        logWithColor: true
     );
 
     private readonly Counter _totalLogMessages = Metrics.CreateCounter(

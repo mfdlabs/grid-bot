@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Logging;
@@ -17,18 +19,18 @@ using Logging;
 /// <remarks>
 /// Construct a new instance of <see cref="OnInteraction"/>.
 /// </remarks>
-/// <param name="settings">The <see cref="ISettings"/>.</param>
+/// <param name="options">The <see cref="RecoveryOptions"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="options"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// </exception>
 public class OnInteraction(
-    ISettings settings,
+    IOptions<RecoveryOptions> options,
     ILogger logger
 )
 {
-    private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly RecoveryOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
