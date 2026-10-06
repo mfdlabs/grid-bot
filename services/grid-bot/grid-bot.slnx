@@ -1,8 +1,6 @@
 <Solution>
   <Folder Name="/lib/">
     <Project Path="../../lib/clients/client-settings-client/ClientSettings.Client.csproj" />
-    <Project Path="../../lib/configuration/configuration/Configuration.csproj" />
-    <Project Path="../../lib/configuration/core/Configuration.Core.csproj" />
     <Project Path="../../lib/grid/client/Grid.Client.csproj" />
     <Project Path="../../lib/grid/commands/Grid.Commands.csproj" />
     <Project Path="../../lib/grid/diagnostics/Grid.Diagnostics.csproj" />
@@ -12,7 +10,6 @@
     <Project Path="../../lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <Project Path="../../lib/grid/process-management/Grid.ProcessManagement.csproj" />
     <Project Path="../../lib/logging/logging/Logging.csproj" />
-    <Project Path="../../lib/vault/vault/Vault.csproj" />
   </Folder>
   <Folder Name="/lib/shared/">
     <Project Path="lib/commands/Grid.Bot.Commands.csproj" />

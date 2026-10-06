@@ -16,7 +16,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Logging;
-using Configuration;
 
 using Events;
 using Utility;
@@ -35,75 +34,6 @@ using EnvironmentProvider = Grid.Bot.EnvironmentDataProvider;
 /// </summary>
 public static class IServiceCollectionExtensions
 {
-    /// <summary>
-    /// Get all settings providers in the assembly.
-    /// </summary>
-    /// <returns>The <see cref="IConfigurationProvider"/>s.</returns>
-    internal static IEnumerable<IConfigurationProvider> GetSettingsProviders()
-    {
-        var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
-        var @namespace = typeof(BaseSettingsProvider).Namespace;
-
-        var types = assembly
-            .GetTypes()
-            .Where(t => string.Equals(t.Namespace, @namespace, StringComparison.Ordinal) &&
-                        t.BaseType.Name == typeof(BaseSettingsProvider).Name)
-            .ToList(); // finicky
-
-        var singletons = new List<IConfigurationProvider>();
-
-        foreach (var t in types)
-        {
-            // Construct the singleton.
-            var constructor = t.GetConstructor(Type.EmptyTypes);
-            if (constructor == null)
-            {
-                Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
-
-                singletons.Add(null);
-
-                continue;
-            }
-
-            var singleton = constructor.Invoke(null);
-            if (singleton is not IConfigurationProvider provider)
-            {
-                Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
-
-                singletons.Add(null);
-
-                continue;
-            }
-
-            singletons.Add(provider);
-        }
-
-        return singletons.Cast<IConfigurationProvider>();
-    }
-
-    /// <summary>
-    /// Add settings classes and their interfaces to the service collection.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-    /// <returns>The <see cref="IServiceCollection"/>.</returns>
-    public static IServiceCollection AddSettingsProviders(this IServiceCollection services)
-    {
-        var providers = GetSettingsProviders();
-
-        foreach (var singleton in providers)
-        {
-            if (singleton == null) continue;
-
-            services.AddSingleton(singleton.GetType(), singleton);
-
-            // If they implement interfaces, add those too.
-            foreach (var iface in singleton.GetType().GetInterfaces())
-                services.AddSingleton(iface, singleton);
-        }
-
-        return services;
-    }
-
     /// <summary>
     /// Add the unified command service to the service collection.
     /// </summary>

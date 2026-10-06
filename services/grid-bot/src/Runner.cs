@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Prometheus;
 
 using Logging;
-using Configuration;
 
 using Web;
 using Grpc;
@@ -50,7 +49,6 @@ internal static class Runner
         var services = new ServiceCollection();
 
         services.AddAppConfiguration();
-        services.AddSettingsProviders();
         services.AddGlobalLogger();
         services.AddUtilities();
 

@@ -3,7 +3,7 @@ namespace Grid.Bot;
 using System;
 
 /// <summary>
-/// Provides the environment name for the settings provider.
+/// Provides the environment name and Vault mount for the settings.
 /// </summary>
 public static class EnvironmentDataProvider
 {
@@ -24,12 +24,12 @@ public static class EnvironmentDataProvider
         ?? _defaultVaultMount;
 
     /// <summary>
-    /// Gets the environment name for the settings provider.
+    /// Gets the environment name for the settings.
     /// </summary>
     public static string EnvironmentName => _providerEnvironmentName;
 
     /// <summary>
-    /// Gets the vault mount path for the settings provider.
+    /// Gets the vault mount path for the settings.
     /// </summary>
     public static string VaultMountPath => _providerVaultMount;
 
