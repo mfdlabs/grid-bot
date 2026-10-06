@@ -47,15 +47,7 @@ public class Settings(IServiceProvider services, ISettingsWriter settingsWriter)
 
     private const string _notFoundFormat = "The settings section with the name {0} was not found!";
 
-    private static string Format(object value) => value switch
-    {
-        null => string.Empty,
-        string text => text,
-        Array array => string.Join(',', array.Cast<object>()),
-        IDictionary<string, string> dictionary => string.Join('\n', dictionary.Select(pair => $"{pair.Key}={pair.Value}")),
-        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
-        _ => value.ToString(),
-    };
+    private static string Format(object value) => SettingsValueFormatter.Format(value);
 
     // The command-side counterpart of the legacy flat-string formats applied when binding.
     private static bool TryValidate(Type type, string value, out string error)

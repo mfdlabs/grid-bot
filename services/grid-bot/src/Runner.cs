@@ -92,19 +92,8 @@ internal static class Runner
 
         if (args.Contains("--write-local-config"))
         {
-            var providers = IServiceCollectionExtensions.GetSettingsProviders();
+            await LocalConfigSync.RunAsync(args.Contains("--dry-run"));
 
-            Logger.Singleton.LogLevel = LogLevel.Verbose;
-            Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
-
-            foreach (var provider in providers.Cast<IVaultProvider>())
-            {
-                provider.SetLogger(Logger.Singleton);
-
-                provider.ApplyCurrent();
-            }
-
-            Console.ReadKey();
             return;
         }
 

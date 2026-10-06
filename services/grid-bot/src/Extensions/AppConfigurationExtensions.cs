@@ -29,8 +29,9 @@ public static class AppConfigurationExtensions
     /// Options bind from their section and then from the root, so unprefixed environment variables keep working.
     /// </remarks>
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+    /// <param name="localOnly">When true, Vault and runtime writes are excluded and options are not validated.</param>
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
-    public static IServiceCollection AddAppConfiguration(this IServiceCollection services)
+    public static IServiceCollection AddAppConfiguration(this IServiceCollection services, bool localOnly = false)
     {
         // Later sources win, so these are added lowest precedence first.
         static IConfigurationBuilder AddLocalSources(IConfigurationBuilder builder) => builder
@@ -51,7 +52,7 @@ public static class AppConfigurationExtensions
 
         IVaultClient vaultClient = null;
 
-        if (!string.IsNullOrWhiteSpace(bootstrapOptions.VaultAddress))
+        if (!localOnly && !string.IsNullOrWhiteSpace(bootstrapOptions.VaultAddress))
         {
             vaultClient = new VaultFactory(Logger.Singleton)
                 .CreateClient(bootstrapOptions.VaultAddress, bootstrapOptions.VaultCredential);
@@ -59,7 +60,7 @@ public static class AppConfigurationExtensions
             builder.AddGridBotVault(vaultClient, Logger.Singleton);
         }
 
-        builder.Add(runtime);
+        if (!localOnly) builder.Add(runtime);
 
         var configuration = AddLocalSources(builder).Build();
 
@@ -81,6 +82,11 @@ public static class AppConfigurationExtensions
             services.PostConfigure<T>(options => ApplyCsvLists(options, environment, configuration.GetSection(section)));
         }
 
+        void AddValidator<T, TValidator>() where T : class where TValidator : class, IValidateOptions<T>
+        {
+            if (!localOnly) services.AddSingleton<IValidateOptions<T>, TValidator>();
+        }
+
         AddOptions<GlobalOptions>(GlobalOptions.SectionName);
         AddOptions<BacktraceOptions>(BacktraceOptions.SectionName);
         AddOptions<FloodCheckerOptions>(FloodCheckerOptions.SectionName);
@@ -92,19 +98,19 @@ public static class AppConfigurationExtensions
         AddOptions<DiscordRolesOptions>(DiscordRolesOptions.SectionName);
 
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
-        services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();
+        AddValidator<DiscordOptions, DiscordOptionsValidator>();
 
         AddOptions<GridOptions>(GridOptions.SectionName);
-        services.AddSingleton<IValidateOptions<GridOptions>, GridOptionsValidator>();
+        AddValidator<GridOptions, GridOptionsValidator>();
         services.AddSingleton<GridServerSettings>();
         services.AddSingleton<IGridServerDockerSettings>(provider => provider.GetRequiredService<GridServerSettings>());
         services.AddSingleton<IGridServerProcessSettings>(provider => provider.GetRequiredService<GridServerSettings>());
 
         AddOptions<GrpcOptions>(GrpcOptions.SectionName);
-        services.AddSingleton<IValidateOptions<GrpcOptions>, GrpcOptionsValidator>();
+        AddValidator<GrpcOptions, GrpcOptionsValidator>();
 
         AddOptions<WebOptions>(WebOptions.SectionName);
-        services.AddSingleton<IValidateOptions<WebOptions>, WebOptionsValidator>();
+        AddValidator<WebOptions, WebOptionsValidator>();
         services.PostConfigure<WebOptions>(options =>
         {
             if (options.WebServerAllowedProxyRanges is not { Length: > 0 })
