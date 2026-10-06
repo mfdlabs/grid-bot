@@ -91,45 +91,41 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddJobManager(this IServiceCollection services)
     {
-        var provider = services.BuildServiceProvider();
+        services.AddSingleton<IJobManagerGridServer>(provider =>
+        {
+            var gridOptions = provider.GetRequiredService<IOptionsMonitor<GridOptions>>();
+            var gridSettings = gridOptions.CurrentValue;
 
-        var gridOptions = provider.GetRequiredService<IOptionsMonitor<GridOptions>>();
-        var gridSettings = gridOptions.CurrentValue;
+            var logger = new Logger(
+                name: gridSettings.JobManagerLoggerName,
+                logLevelGetter: () => gridOptions.CurrentValue.JobManagerLogLevel,
+                logToConsole: gridSettings.JobManagerLogToConsole
+            );
+
+            var clientSettingsClient = new ClientSettingsFactoryProxyClient(provider.GetRequiredService<IClientSettingsFactory>());
+
+            var portAllocator = new PortAllocator(logger);
+            var jobManagerFactory = new JobManagerGridServerFactory();
+
+            var jobManagerGridServer = jobManagerFactory.GetJobManager(
+                logger,
+                clientSettingsClient,
+                provider.GetRequiredService<GridServerSettings>()
+            );
+
+            jobManagerGridServer.Start();
+
+            return jobManagerGridServer;
+        });
 
 #if DEBUG
-        if (gridSettings.DebugUseNoopJobManager)
-        {
-            services.AddSingleton<IJobManager, NoopJobManager>();
-
-            return services;
-        }
-#endif
-
-        var logger = new Logger(
-            name: gridSettings.JobManagerLoggerName,
-            logLevelGetter: () => gridOptions.CurrentValue.JobManagerLogLevel,
-            logToConsole: gridSettings.JobManagerLogToConsole
-        );
-
-        var clientSettingsFactory = services
-            .BuildServiceProvider()
-            .GetRequiredService<IClientSettingsFactory>();
-
-        var clientSettingsClient = new ClientSettingsFactoryProxyClient(clientSettingsFactory);
-
-        var portAllocator = new PortAllocator(logger);
-        var jobManagerFactory = new JobManagerGridServerFactory();
-
-        var jobManagerGridServer = jobManagerFactory.GetJobManager(
-            logger,
-            clientSettingsClient,
-            provider.GetRequiredService<GridServerSettings>()
-        );
-
-        jobManagerGridServer.Start();
-
-        services.AddSingleton<IJobManagerGridServer>(jobManagerGridServer);
+        services.AddSingleton<IJobManager>(provider =>
+            provider.GetRequiredService<IOptionsMonitor<GridOptions>>().CurrentValue.DebugUseNoopJobManager
+                ? new NoopJobManager()
+                : ActivatorUtilities.CreateInstance<JobManager>(provider));
+#else
         services.AddSingleton<IJobManager, JobManager>();
+#endif
 
         return services;
     }
@@ -149,27 +145,24 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddClientSettings(this IServiceCollection services)
     {
-        var serviceProvider = services.BuildServiceProvider();
+        services.AddSingleton<IClientSettingsFactory>(provider =>
+        {
+            var clientSettingsOptions = provider.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
+            var clientSettingsSettings = clientSettingsOptions.CurrentValue;
+            var globalOptions = provider.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
-        var logger = serviceProvider.GetRequiredService<ILogger>();
-        var clientSettingsOptions = serviceProvider.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
-        var clientSettingsSettings = clientSettingsOptions.CurrentValue;
-        var vaultFactory = serviceProvider.GetRequiredService<IVaultFactory>();
-        var globalOptions = serviceProvider.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
+            var vaultClient = clientSettingsSettings.ClientSettingsViaVault
+                ? provider.GetRequiredService<IVaultFactory>().CreateClient(
+                    clientSettingsSettings.ClientSettingsVaultAddress ?? globalOptions.VaultAddress,
+                    clientSettingsSettings.ClientSettingsVaultToken ?? globalOptions.VaultCredential)
+                : null;
 
-        var vaultClient = clientSettingsSettings.ClientSettingsViaVault
-            ? vaultFactory.CreateClient(
-                clientSettingsSettings.ClientSettingsVaultAddress ?? globalOptions.VaultAddress,
-                clientSettingsSettings.ClientSettingsVaultToken ?? globalOptions.VaultCredential)
-            : null;
-
-        var clientSettingsFactory = new ClientSettingsFactory(
-            vaultClient,
-            logger,
-            clientSettingsOptions
-        );
-
-        services.AddSingleton<IClientSettingsFactory>(clientSettingsFactory);
+            return new ClientSettingsFactory(
+                vaultClient,
+                provider.GetRequiredService<ILogger>(),
+                clientSettingsOptions
+            );
+        });
 
         return services;
     }

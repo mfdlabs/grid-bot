@@ -108,6 +108,9 @@ internal static class Runner
 
         services.UploadAllLogFilesToBacktrace();
 
+        // Resolve now so the job manager starts before the bot connects.
+        services.GetRequiredService<Commands.IJobManager>();
+
         services.UseGrpcServer(args);
         services.UseWebServer(args);
         services.UseMetricsServer();
