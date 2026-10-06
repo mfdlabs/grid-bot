@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 using Prometheus;
 
+using Microsoft.Extensions.Options;
+
 using Backtrace;
 using Backtrace.Model;
 using Backtrace.Interfaces;
@@ -30,17 +32,19 @@ public class BacktraceUtility : IBacktraceUtility
     /// Construct a new instance of <see cref="BacktraceUtility"/>.
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="backtraceSettings">The <see cref="BacktraceSettings"/>.</param>
+    /// <param name="backtraceOptions">The <see cref="BacktraceOptions"/>.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="backtraceSettings"/> cannot be null.
+    /// - <paramref name="backtraceOptions"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
     /// </exception>
-    public BacktraceUtility(ILogger logger, BacktraceSettings backtraceSettings)
+    public BacktraceUtility(ILogger logger, IOptionsMonitor<BacktraceOptions> backtraceOptions)
     {
-        if (backtraceSettings == null)
-            throw new ArgumentNullException(nameof(backtraceSettings));
+        if (backtraceOptions == null)
+            throw new ArgumentNullException(nameof(backtraceOptions));
             
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        var backtraceSettings = backtraceOptions.CurrentValue;
 
         if (!string.IsNullOrEmpty(backtraceSettings.BacktraceUrl))
         {

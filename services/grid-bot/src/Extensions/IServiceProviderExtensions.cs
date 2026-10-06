@@ -29,14 +29,14 @@ public static class IServiceProviderExtensions
     public static void UploadAllLogFilesToBacktrace(this IServiceProvider services)
     {
         var logger = services.GetRequiredService<ILogger>();
-        var backtraceSettings = services.GetRequiredService<BacktraceSettings>();
+        var backtraceOptions = services.GetRequiredService<IOptionsMonitor<BacktraceOptions>>();
         var backtraceUtility = services.GetService<IBacktraceUtility>();
 
         if (backtraceUtility == null) return;
 
         try
         {
-            if (Random.Shared.Next() % 100 < backtraceSettings.UploadLogFilesToBacktraceEnabledPercent)
+            if (Random.Shared.Next() % 100 < backtraceOptions.CurrentValue.UploadLogFilesToBacktraceEnabledPercent)
                 backtraceUtility.UploadAllLogFiles();
         }
         catch (Exception ex)
