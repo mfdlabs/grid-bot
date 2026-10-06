@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Prometheus;
@@ -35,10 +36,11 @@ public static class IServiceProviderExtensions
     /// <param name="args">The application arguments.</param>
     public static void UseWebServer(this IServiceProvider services, IEnumerable<string> args)
     {
-        var webSettings = services.GetRequiredService<WebSettings>();
+        var webOptions = services.GetRequiredService<IOptionsMonitor<WebOptions>>();
+        var webSettings = webOptions.CurrentValue;
         var logger = new Logger(
             name: webSettings.WebServerLoggerName,
-            logLevelGetter: () => webSettings.WebServerLoggerLevel,
+            logLevelGetter: () => webOptions.CurrentValue.WebServerLoggerLevel,
             logToConsole: true,
             logToFileSystem: true
         );
@@ -59,14 +61,13 @@ public static class IServiceProviderExtensions
         builder.Logging.ClearProviders();
         builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
 
-        var avatarSettings = services.GetRequiredService<AvatarSettings>();
-        var clientSettingsSettings = services.GetRequiredService<ClientSettingsSettings>();
+        var avatarOptions = services.GetRequiredService<IOptionsMonitor<AvatarOptions>>();
+        var clientSettingsOptions = services.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
 
         builder.Services.AddSingleton<Logging.ILogger>(logger);
-        builder.Services.AddSingleton(webSettings);
         builder.Services.AddSingleton(clientSettingsFactory);
-        builder.Services.AddSingleton(clientSettingsSettings);
-        builder.Services.AddSingleton(avatarSettings);
+        builder.Services.AddSingleton(clientSettingsOptions);
+        builder.Services.AddSingleton(avatarOptions);
 
         builder.Services.AddHttpClient();
 

@@ -3,6 +3,7 @@ namespace Grid.Bot.Commands;
 using System;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord.Commands;
@@ -29,7 +30,7 @@ public class LockDownCommandAttribute(BotRole botRole = BotRole.Administrator) :
     /// <inheritdoc cref="PreconditionAttribute.CheckPermissionsAsync(ICommandContext, CommandInfo, IServiceProvider)"/>
     public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo commandInfo, IServiceProvider services)
     {
-        var commandsSettings = services.GetRequiredService<CommandsSettings>();
+        var commandsSettings = services.GetRequiredService<IOptionsMonitor<CommandsOptions>>().CurrentValue;
         if (!commandsSettings.EnableLockdownCommands)
             return Task.FromResult(PreconditionResult.FromSuccess());
 

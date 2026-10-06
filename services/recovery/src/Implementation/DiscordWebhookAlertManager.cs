@@ -9,6 +9,8 @@ using System.Collections.Generic;
 
 using Discord;
 
+using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 using Logging;
@@ -21,22 +23,22 @@ using Logging;
 /// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
 /// </remarks>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
-/// <param name="settings">The <see cref="ISettings"/> to use.</param>
+/// <param name="options">The <see cref="RecoveryOptions"/> to use.</param>
 /// <param name="logger">The <see cref="ILogger"/> to use.</param>
 /// /// <exception cref="ArgumentNullException">
 /// - <paramref name="httpClientFactory"/> cannot be null.
-/// - <paramref name="settings"/> cannot be null.
+/// - <paramref name="options"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
     IHttpClientFactory httpClientFactory,
-    ISettings settings,
+    IOptions<RecoveryOptions> options,
     ILogger logger
 ) : IDiscordWebhookAlertManager
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ISettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly RecoveryOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>

@@ -17,6 +17,8 @@ using Discord.Interactions;
 
 using Prometheus;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Grid.Commands;
@@ -163,7 +165,10 @@ public class Render
 
     #region Dependencies
 
-    private readonly AvatarSettings _avatarSettings;
+    private readonly IOptionsMonitor<AvatarOptions> _avatarOptions;
+    private readonly ISettingsWriter _settingsWriter;
+
+    private AvatarOptions _avatarSettings => _avatarOptions.CurrentValue;
     private readonly ILogger _logger;
     private readonly IJobManager _jobManager;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -178,35 +183,39 @@ public class Render
     /// <summary>
     /// Construct a new instance of <see cref="Render"/>.
     /// </summary>
-    /// <param name="avatarSettings">The <see cref="AvatarSettings"/>.</param>
+    /// <param name="avatarOptions">The <see cref="AvatarOptions"/>.</param>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
     /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
+    /// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="avatarSettings"/> cannot be null.
+    /// - <paramref name="avatarOptions"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="adminUtility"/> cannot be null.
+    /// - <paramref name="settingsWriter"/> cannot be null.
     /// </exception>
     public Render(
-        AvatarSettings avatarSettings,
+        IOptionsMonitor<AvatarOptions> avatarOptions,
         ILogger logger,
         IJobManager jobManager,
         IHttpClientFactory httpClientFactory,
         IRateLimiterRegistry rateLimiterRegistry,
-        IAdminUtility adminUtility
+        IAdminUtility adminUtility,
+        ISettingsWriter settingsWriter
     )
     {
-        _avatarSettings = avatarSettings ?? throw new ArgumentNullException(nameof(avatarSettings));
+        _avatarOptions = avatarOptions ?? throw new ArgumentNullException(nameof(avatarOptions));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
+        _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
 
         if (!Uri.TryCreate(
                 _avatarSettings.UsersApiUrl + _multiGetUsersByUsernamesEndpoint,
@@ -221,17 +230,17 @@ public class Render
         _multiGetUsersByIdsFullUrl = multiGetUsersByIdsUri;
         _multiGetUsersByUsernamesFullUrl = multiGetUsersByUsernamesUri;
 
-        _localCachedPaths = new(avatarSettings.LocalCacheTtl);
+        _localCachedPaths = new(_avatarSettings.LocalCacheTtl);
         _localCachedPaths.EntryRemoved += OnLocalCacheEntryRemoved;
 
-        foreach (var id in avatarSettings.BlacklistUserIds)
+        foreach (var id in _avatarSettings.BlacklistUserIds)
             _idsNotToUse.Add(id);
 
         _avatarThumbnailsRbxThumbnailsRolloutPercent.Set(_avatarSettings.RbxThumbnailsRolloutPercent);
         _avatarThumbnailsIdsNotToUseTotal.Set(_idsNotToUse.Count);
 
         if (!_idsNotToUse.IsEmpty)
-            _logger.Warning("Blacklisted user IDs: {0}", string.Join(", ", avatarSettings.BlacklistUserIds));
+            _logger.Warning("Blacklisted user IDs: {0}", string.Join(", ", _avatarSettings.BlacklistUserIds));
 
         Task.Factory.StartNew(PersistBlacklistedIdsThread, TaskCreationOptions.LongRunning);
     }
@@ -257,7 +266,18 @@ public class Render
                 string.Join(", ", removedIds)
             );
 
-            _avatarSettings.BlacklistUserIds = [.. _idsNotToUse];
+            try
+            {
+                _settingsWriter.SetAsync(
+                    AvatarOptions.SectionName,
+                    nameof(AvatarOptions.BlacklistUserIds),
+                    string.Join(',', _idsNotToUse)
+                ).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Failed to persist blacklisted user IDs: {0}", ex.Message);
+            }
 
             _avatarThumbnailsIdsNotToUseTotal.Inc();
         }

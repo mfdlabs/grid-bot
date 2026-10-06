@@ -5,8 +5,11 @@ namespace Grid.Bot.Grpc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Prometheus;
+
+using Microsoft.Extensions.Options;
 
 using Discord;
 using Discord.WebSocket;
@@ -22,22 +25,30 @@ using V1;
 /// Initializes a new instance of the <see cref="GridBotGrpcServer"/> class.
 /// </remarks>
 /// <param name="client">The <see cref="DiscordShardedClient"/> instance.</param>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/> instance.</param>
-/// <param name="discordSettings">The <see cref="DiscordSettings"/> instance.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/> instance.</param>
+/// <param name="discordOptions">The <see cref="DiscordOptions"/> instance.</param>
+/// <param name="settingsWriter">The <see cref="ISettingsWriter"/> instance.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="client"/> cannot be null.
-/// - <paramref name="maintenanceSettings"/> cannot be null.
-/// - <paramref name="discordSettings"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
+/// - <paramref name="discordOptions"/> cannot be null.
+/// - <paramref name="settingsWriter"/> cannot be null.
 /// </exception>
 public class GridBotGrpcServer(
     DiscordShardedClient client, 
-    MaintenanceSettings maintenanceSettings,
-    DiscordSettings discordSettings
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
+    IOptionsMonitor<DiscordOptions> discordOptions,
+    ISettingsWriter settingsWriter
 ) : GridBotAPI.GridBotAPIBase
 {
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
-    private readonly DiscordSettings _discordSettings = discordSettings ?? throw new ArgumentNullException(nameof(discordSettings));
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+    private readonly ISettingsWriter _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
+    private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
+
+    private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
 
     private static readonly Counter _grpcServerRequestCounter = Metrics.CreateCounter(
         "grpc_health_check_requests_total",
@@ -79,17 +90,19 @@ public class GridBotGrpcServer(
     }
 
     /// <inheritdoc cref="GridBotAPI.GridBotAPIBase.SetStatus(SetStatusRequest, ServerCallContext)"/>
-    public override Task<Empty> SetStatus(SetStatusRequest request, ServerCallContext context)
+    public override async Task<Empty> SetStatus(SetStatusRequest request, ServerCallContext context)
     {
         _grpcServerSetStatusRequestCounter.Inc();
 
-        using (_maintenanceSettings.BeginTransaction())
+        var values = new Dictionary<string, string>
         {
-            _maintenanceSettings.MaintenanceEnabled = request.MaintenanceEnabled;
+            [nameof(MaintenanceOptions.MaintenanceEnabled)] = request.MaintenanceEnabled ? "true" : "false"
+        };
 
-            if (!string.IsNullOrEmpty(request.MaintenanceMessage) && !_maintenanceSettings.MaintenanceStatus.Equals(request.MaintenanceMessage, StringComparison.InvariantCulture))
-                _maintenanceSettings.MaintenanceStatus = request.MaintenanceMessage;
-        }
+        if (!string.IsNullOrEmpty(request.MaintenanceMessage) && !_maintenanceSettings.MaintenanceStatus.Equals(request.MaintenanceMessage, StringComparison.InvariantCulture))
+            values[nameof(MaintenanceOptions.MaintenanceStatus)] = request.MaintenanceMessage;
+
+        await _settingsWriter.SetAsync(MaintenanceOptions.SectionName, values);
 
         if (_maintenanceSettings.MaintenanceEnabled)
         {
@@ -103,6 +116,6 @@ public class GridBotGrpcServer(
                 _client.SetGameAsync(_discordSettings.BotStatusMessage);
         }
 
-        return Task.FromResult(new Empty());
+        return new Empty();
     }
 }

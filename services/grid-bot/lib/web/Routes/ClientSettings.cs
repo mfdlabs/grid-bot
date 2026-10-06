@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 using Logging;
 
@@ -20,24 +21,25 @@ public class ClientSettings
     private const string _applicationNameQueryParameter = "applicationName";
     private const string _invalidAppNameError = "The application name is invalid."; // also used for denied access.
 
-    private readonly ClientSettingsSettings _settings;
+    private readonly IOptionsMonitor<ClientSettingsOptions> _options;
+    private ClientSettingsOptions _settings => _options.CurrentValue;
     private readonly ILogger _logger;
     private readonly IClientSettingsFactory _clientSettingsFactory;
 
     /// <summary>
     /// Construct a new instance of <see cref="ClientSettings"/>
     /// </summary>
-    /// <param name="settings">The <see cref="WebSettings"/></param>
+    /// <param name="options">The <see cref="ClientSettingsOptions"/></param>
     /// <param name="logger">The <see cref="ILogger"/></param>
     /// <param name="clientSettingsFactory">The <see cref="IClientSettingsFactory"/></param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="options"/> cannot be null.
     /// - <paramref name="logger"/> cannot be null.
     /// - <paramref name="clientSettingsFactory"/> cannot be null.
     /// </exception>
-    public ClientSettings(ClientSettingsSettings settings, ILogger logger, IClientSettingsFactory clientSettingsFactory)
+    public ClientSettings(IOptionsMonitor<ClientSettingsOptions> options, ILogger logger, IClientSettingsFactory clientSettingsFactory)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _clientSettingsFactory = clientSettingsFactory ?? throw new ArgumentNullException(nameof(clientSettingsFactory));
     }

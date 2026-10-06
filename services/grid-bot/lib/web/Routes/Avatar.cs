@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 
@@ -54,7 +55,9 @@ public class Avatar
     private const string _getAvatarFetchUrlFormat = $"{{0}}/v1/users/{{1}}/avatar";
 
     private readonly ILogger _logger;
-    private readonly AvatarSettings _settings;
+    private readonly IOptionsMonitor<AvatarOptions> _options;
+
+    private AvatarOptions _settings => _options.CurrentValue;
     private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly ExpirableDictionary<string, AvatarFetchModel> _avatarFetchCache;
@@ -63,12 +66,12 @@ public class Avatar
     /// Construct a new instance of <see cref="Avatar" />
     /// </summary>
     /// <param name="logger">The <see cref="ILogger" /></param>
-    /// <param name="settings">The <see cref="AvatarSettings" /></param>
+    /// <param name="options">The <see cref="AvatarOptions" /></param>
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory" /></param>
-    public Avatar(ILogger logger, AvatarSettings settings, IHttpClientFactory httpClientFactory)
+    public Avatar(ILogger logger, IOptionsMonitor<AvatarOptions> options, IHttpClientFactory httpClientFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     
         _avatarFetchCache = new(_settings.AvatarFetchCacheEntryTtl, _settings.AvatarFetchCacheTraversalInterval);

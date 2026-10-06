@@ -403,14 +403,8 @@ services/recovery/
 lib/clients/
   HTTP clients for external Roblox APIs
 
-lib/configuration/
-  Shared configuration infrastructure
-
 lib/grid/
   Grid Server clients, commands, process management, and diagnostics
-
-lib/vault/
-  Vault integration
 
 proto/
   gRPC protocol definitions

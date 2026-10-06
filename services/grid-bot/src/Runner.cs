@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Prometheus;
 
 using Logging;
-using Configuration;
 
 using Web;
 using Grpc;
@@ -49,7 +48,7 @@ internal static class Runner
     {
         var services = new ServiceCollection();
 
-        services.AddSettingsProviders();
+        services.AddAppConfiguration();
         services.AddGlobalLogger();
         services.AddUtilities();
 
@@ -91,19 +90,8 @@ internal static class Runner
 
         if (args.Contains("--write-local-config"))
         {
-            var providers = IServiceCollectionExtensions.GetSettingsProviders();
+            await LocalConfigSync.RunAsync(args.Contains("--dry-run"));
 
-            Logger.Singleton.LogLevel = LogLevel.Verbose;
-            Logger.Singleton.Information("Applying local configuration to Vault and exiting!");
-
-            foreach (var provider in providers.Cast<IVaultProvider>())
-            {
-                provider.SetLogger(Logger.Singleton);
-
-                provider.ApplyCurrent();
-            }
-
-            Console.ReadKey();
             return;
         }
 
@@ -119,6 +107,9 @@ internal static class Runner
 #endif
 
         services.UploadAllLogFilesToBacktrace();
+
+        // Resolve now so the job manager starts before the bot connects.
+        services.GetRequiredService<Commands.IJobManager>();
 
         services.UseGrpcServer(args);
         services.UseWebServer(args);

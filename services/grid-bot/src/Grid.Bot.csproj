@@ -24,12 +24,10 @@
     <ProjectReference Include="../lib/client-settings/Grid.Bot.ClientSettings.csproj" />
   </ItemGroup>
 
-  <ItemGroup Label="CustomPackages">
-    <ProjectReference Include="$(RootDirectory)lib/configuration/core/Configuration.Core.csproj" />
-  </ItemGroup>
-
   <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
 
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
     <PackageReference Include="Discord.Net.Commands" Version="3.17.4" />
@@ -66,6 +64,9 @@
 
   <ItemGroup>
     <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

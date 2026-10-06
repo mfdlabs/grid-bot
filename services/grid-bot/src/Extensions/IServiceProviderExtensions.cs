@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 using Logging;
@@ -28,14 +29,14 @@ public static class IServiceProviderExtensions
     public static void UploadAllLogFilesToBacktrace(this IServiceProvider services)
     {
         var logger = services.GetRequiredService<ILogger>();
-        var backtraceSettings = services.GetRequiredService<BacktraceSettings>();
+        var backtraceOptions = services.GetRequiredService<IOptionsMonitor<BacktraceOptions>>();
         var backtraceUtility = services.GetService<IBacktraceUtility>();
 
         if (backtraceUtility == null) return;
 
         try
         {
-            if (Random.Shared.Next() % 100 < backtraceSettings.UploadLogFilesToBacktraceEnabledPercent)
+            if (Random.Shared.Next() % 100 < backtraceOptions.CurrentValue.UploadLogFilesToBacktraceEnabledPercent)
                 backtraceUtility.UploadAllLogFiles();
         }
         catch (Exception ex)
@@ -63,7 +64,7 @@ public static class IServiceProviderExtensions
 
         client.ShardReady += onShardReady.Invoke;
 
-        var discordSettings = services.GetRequiredService<DiscordSettings>();
+        var discordSettings = services.GetRequiredService<IOptionsMonitor<DiscordOptions>>().CurrentValue;
 
         if (string.IsNullOrEmpty(discordSettings.BotToken))
         {
@@ -83,10 +84,10 @@ public static class IServiceProviderExtensions
     /// <param name="services">The <see cref="IServiceProvider"/>.</param>
     public static void UseMetricsServer(this IServiceProvider services)
     {
-        var globalSettings = services.GetRequiredService<GlobalSettings>();
+        var globalOptions = services.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
         // Extract host and port from bind address
-        var bindAddress = globalSettings.MetricsBindAddress;
+        var bindAddress = globalOptions.MetricsBindAddress;
         var host = bindAddress.Split(':')[1].TrimStart('/');
         var port = int.Parse(bindAddress.Split(':')[2].TrimEnd('/'));
 

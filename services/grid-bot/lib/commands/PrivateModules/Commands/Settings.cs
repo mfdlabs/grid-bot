@@ -4,58 +4,138 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Reflection;
+using System.ComponentModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 using Discord;
 using Discord.Commands;
 
 using Newtonsoft.Json;
 
-using Vault;
-using Configuration;
+using Microsoft.Extensions.Options;
 
 using Utility;
+
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using IConfigurationRoot = Microsoft.Extensions.Configuration.IConfigurationRoot;
 
 /// <summary>
 /// Represents the interaction for settings.
 /// </summary>
+/// <remarks>
+/// Construct a new instance of <see cref="Settings"/>.
+/// </remarks>
+/// <param name="services">The <see cref="IServiceProvider"/>.</param>
+/// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="services"/> cannot be null.
+/// - <paramref name="settingsWriter"/> cannot be null.
+/// </exception>
 [LockDownCommand(BotRole.Owner)]
 [RequireBotRole(BotRole.Owner)]
 [Group("settings"), Summary("Commands used for managing app settings.")]
-public partial class Settings(IServiceProvider services) : ModuleBase
+public class Settings(IServiceProvider services, ISettingsWriter settingsWriter) : ModuleBase
 {
-    private class ProviderStringConverter : BaseProvider
+    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+    private readonly ISettingsWriter _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
+
+    private static readonly Assembly _settingsAssembly = typeof(SettingsSections).Assembly;
+    private static readonly Assembly _configAssembly = typeof(IConfiguration).Assembly;
+
+    private const string _notFoundFormat = "The settings section with the name {0} was not found!";
+
+    private static string Format(object value) => SettingsValueFormatter.Format(value);
+
+    // The command-side counterpart of the legacy flat-string formats applied when binding.
+    private static bool TryValidate(Type type, string value, out string error)
     {
-        public static ProviderStringConverter Singleton = new();
+        error = null;
 
-        public object ConvertToPub(string value, Type type) => ConvertTo(value, type);
-        public string ConvertFromPub(object value, Type type) => ConvertFrom(value, type);
+        var target = Nullable.GetUnderlyingType(type) ?? type;
 
-        protected override bool GetRawValue(string key, out string value)
+        try
         {
-            throw new NotImplementedException();
+            if (target == typeof(string)) return true;
+
+            if (target.IsArray)
+            {
+                var converter = TypeDescriptor.GetConverter(target.GetElementType());
+
+                foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    converter.ConvertFromInvariantString(part);
+
+                return true;
+            }
+
+            if (target == typeof(Dictionary<string, string>) || target == typeof(IDictionary<string, string>))
+            {
+                if (value.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).All(line => line.Split('=').Length == 2))
+                    return true;
+
+                error = "Dictionaries must be one key=value pair per line.";
+
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(value) && Nullable.GetUnderlyingType(type) != null) return true;
+
+            TypeDescriptor.GetConverter(target).ConvertFromInvariantString(value);
+
+            return true;
         }
-        protected override void SetRawValue<T>(string key, T value)
+        catch (Exception ex)
         {
-            throw new NotImplementedException();
+            error = ex.InnerException?.Message ?? ex.Message;
+
+            return false;
         }
     }
 
-    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+    private object ReadOptions(SettingsSection section, out string error)
+    {
+        error = null;
 
-    private const string _namespace = "Grid.Bot";
-    private static readonly Assembly _settingsAssembly = Assembly.Load("Grid.Bot.Settings");
-    private static readonly Assembly _configAssembly = Assembly.Load("Configuration");
+        try
+        {
+            var monitorType = typeof(IOptionsMonitor<>).MakeGenericType(section.OptionsType);
+            var monitor = _services.GetService(monitorType);
 
-    [GeneratedRegex(@"^([a-zA-Z]+)Settings$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private partial Regex GetProviderNameRegex();
+            return monitorType.GetProperty(nameof(IOptionsMonitor<object>.CurrentValue)).GetValue(monitor);
+        }
+        catch (Exception ex)
+        {
+            error = (ex is TargetInvocationException { InnerException: not null } wrapped ? wrapped.InnerException : ex).Message;
+
+            return null;
+        }
+    }
+
+    private bool TryReload(out string error)
+    {
+        error = null;
+
+        try
+        {
+            (_services.GetService(typeof(IConfiguration)) as IConfigurationRoot)?.Reload();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+
+            return false;
+        }
+    }
+
+    private static PropertyInfo FindProperty(SettingsSection section, string settingName)
+        => section.OptionsType.GetProperty(settingName, BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public);
 
     /// <summary>
-    /// Gets a list of settings providers that can be modified.
+    /// Gets information about settings such as environment and versions.
     /// </summary>
     [Command("info"), Summary("Gets information about settings such as environment and versions.")]
     public async Task GetInformationAsync()
@@ -66,11 +146,12 @@ public partial class Settings(IServiceProvider services) : ModuleBase
             .WithCurrentTimestamp()
             .WithColor(Color.Green);            
 
-        var isUsingVault = VaultClientFactory.Singleton.GetClient() != null ? "yes" : "no";
+        var globalOptions = (_services.GetService(typeof(IOptionsMonitor<GlobalOptions>)) as IOptionsMonitor<GlobalOptions>)?.CurrentValue;
+        var isUsingVault = !string.IsNullOrWhiteSpace(globalOptions?.VaultAddress) ? "yes" : "no";
         var settingsAssemblyVersion = _settingsAssembly.GetName().Version;
         var configurationAssemblyVersion = _configAssembly.GetName().Version;
 
-        var environment = Grid.Bot.EnvironmentProvider.EnvironmentName;
+        var environment = Grid.Bot.EnvironmentDataProvider.EnvironmentName;
 
         builder.AddField("Settings Version", settingsAssemblyVersion, true)
                .AddField("Configuration Version", configurationAssemblyVersion, true)
@@ -81,121 +162,106 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     }
 
     /// <summary>
-    /// Gets a list of settings providers that can be modified.
+    /// Gets a list of settings sections that can be modified.
     /// </summary>
-    [Command("providers"), Summary("Lists the names of all available providers.")]
+    [Command("providers"), Summary("Lists the names of all available settings sections."), Alias("sections")]
     public async Task ListProvidersAsync()
     {
-        var providerTypes = _settingsAssembly.GetTypes().Where(type => type.BaseType == typeof(BaseSettingsProvider));
-        
         var builder = new EmbedBuilder()
-            .WithTitle("Providers list")
+            .WithTitle("Settings sections")
             .WithAuthor(Context.User)
             .WithCurrentTimestamp()
-            .WithColor(Color.Green);            
-
-        var desc = "```\n";
-
-        foreach (var provider in providerTypes)
-            desc += $"{GetProviderNameRegex().Match(provider.Name).Groups[1]}\n";
-
-        desc += "```";
-
-        builder.WithDescription(desc);
+            .WithColor(Color.Green)
+            .WithDescription($"```\n{string.Join('\n', SettingsSections.All.Select(section => section.Name))}\n```");
 
         await this.ReplyWithReferenceAsync(embed: builder.Build());
     }
 
-        
     /// <summary>
-    /// Gets the settings for the specified provider.
+    /// Gets the settings for the specified section.
     /// </summary>
-    /// <param name="provider">The name of the provider.</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
-    [Command("all"), Summary("Gets all settings for the specified provider."), Alias("list")]
+    /// <param name="provider">The name of the section.</param>
+    /// <param name="refresh">Should the configuration be reloaded beforehand?</param>
+    [Command("all"), Summary("Gets all settings for the specified section."), Alias("list")]
     public async Task GetAllAsync(string provider, bool refresh = true)
     {
-        using var _ = Context.Channel.EnterTypingState();
+        using var typing = Context.Channel.EnterTypingState();
 
-        var fullName = $"{provider}settings";
-
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        if (!SettingsSections.TryGet(provider, out var section))
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-        
+            await this.ReplyWithReferenceAsync(string.Format(_notFoundFormat, provider));
+
             return;
         }
 
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
+        if (refresh && !TryReload(out var reloadError))
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
+            await this.ReplyWithReferenceAsync($"Failed to reload the configuration: {reloadError}");
+
             return;
         }
 
-        if (refresh) instance.Refresh();
+        var options = ReadOptions(section, out var error);
+        if (options == null)
+        {
+            await this.ReplyWithReferenceAsync($"The {section.Name} settings are not valid: {error}");
 
-        /* FIXME: This is stupid, update 1.1.0 on Configuration should convert these on each refresh instead of placing a JE dict in cache. */
+            return;
+        }
 
-        var values = new Dictionary<string, string>();
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(options, Formatting.Indented)));
 
-        foreach (var kvp in instance.GetRawValues())
-            if (kvp.Value is JsonElement element)
-                values.Add(kvp.Key, element.GetString());
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(values, Formatting.Indented)));
-
-        await this.ReplyWithFileAsync(stream, $"{provider}.json", "Here are the settings for the specified provider.");
+        await this.ReplyWithFileAsync(stream, $"{section.Name}.json", "Here are the settings for the specified section.");
     }
 
     /// <summary>
     /// Get the value of the specified setting.
     /// </summary>
-    /// <param name="provider">The name of the provider</param>
+    /// <param name="provider">The name of the section</param>
     /// <param name="settingName">The name of the setting</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
+    /// <param name="refresh">Should the configuration be reloaded beforehand?</param>
     [Command("get"), Summary("Get the value of the specified setting.")]
     public async Task GetSettingAsync(string provider, string settingName, bool refresh = true)
     {
-        using var _ = Context.Channel.EnterTypingState();
+        using var typing = Context.Channel.EnterTypingState();
 
-        var fullName = $"{provider}settings";
-
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        if (!SettingsSections.TryGet(provider, out var section))
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-        
+            await this.ReplyWithReferenceAsync(string.Format(_notFoundFormat, provider));
+
             return;
         }
 
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
-            return;
-        }
-
-        var property = type.GetProperty(settingName, BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public);
+        var property = FindProperty(section, settingName);
         if (property == null)
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} does not define the setting {settingName}!");
-    
+            await this.ReplyWithReferenceAsync($"The settings section with the name {section.Name} does not define the setting {settingName}!");
+
             return;
         }
 
-        if (refresh) instance.Refresh();
+        if (refresh && !TryReload(out var reloadError))
+        {
+            await this.ReplyWithReferenceAsync($"Failed to reload the configuration: {reloadError}");
 
-        var value = property.GetMethod.Invoke(instance, []);
-        if (value is not string) value = JsonConvert.SerializeObject(value);
-        if (string.IsNullOrEmpty(value as string)) value = "(empty)";
+            return;
+        }
+
+        var options = ReadOptions(section, out var error);
+        if (options == null)
+        {
+            await this.ReplyWithReferenceAsync($"The {section.Name} settings are not valid: {error}");
+
+            return;
+        }
+
+        var value = property.GetValue(options);
+        var text = value is string stringValue ? stringValue : JsonConvert.SerializeObject(value);
+        if (string.IsNullOrEmpty(text)) text = "(empty)";
 
         var embed = new EmbedBuilder()
-            .WithTitle($"{type.Name}.{property.Name} ({property.PropertyType.Name})")
-            .WithDescription($"```{value}```")
+            .WithTitle($"{section.Name}.{property.Name} ({property.PropertyType.Name})")
+            .WithDescription($"```{text}```")
             .WithAuthor(Context.User)
             .WithCurrentTimestamp()
             .WithColor(Color.Green)
@@ -207,113 +273,86 @@ public partial class Settings(IServiceProvider services) : ModuleBase
     /// <summary>
     /// Sets the specified setting to the specified value.
     /// </summary>
-    /// <param name="provider">The name of the provider</param>
+    /// <param name="provider">The name of the section</param>
     /// <param name="settingName">The name of the setting</param>
-    /// <param name="newValue">The new value of the setting</param>
-    /// <param name="refresh">Should the prvoider be refreshed beforehand?</param>
+    /// <param name="newValue">The new value of the setting. Lists are comma separated.</param>
+    /// <param name="refresh">Should the configuration be reloaded beforehand?</param>
     [Command("set"), Summary("Sets the specified setting to the specified value.")]
     public async Task SetSettingAsync(string provider, string settingName, string newValue = "", bool refresh = true)
     {
-        using var _ = Context.Channel.EnterTypingState();
+        using var typing = Context.Channel.EnterTypingState();
 
-        var fullName = $"{provider}settings";
-
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
+        if (!SettingsSections.TryGet(provider, out var section))
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-        
+            await this.ReplyWithReferenceAsync(string.Format(_notFoundFormat, provider));
+
             return;
         }
 
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
+        var property = FindProperty(section, settingName);
+        if (property == null || !property.CanWrite)
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
+            await this.ReplyWithReferenceAsync($"The settings section with the name {section.Name} does not define a writable setting {settingName}!");
+
             return;
         }
 
-        var property = type.GetProperty(settingName, BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public);
-        if (property == null)
+        if (!TryValidate(property.PropertyType, newValue, out var validationError))
         {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} does not define the setting {settingName}!");
-    
+            await this.ReplyWithReferenceAsync($"The value is not valid for {property.Name} ({property.PropertyType.Name}): {validationError}");
+
             return;
         }
 
-        if (refresh) instance.Refresh();
+        if (refresh && !TryReload(out var reloadError))
+        {
+            await this.ReplyWithReferenceAsync($"Failed to reload the configuration: {reloadError}");
 
-        var value = property.GetMethod.Invoke(instance, []);
-        var converted = ProviderStringConverter.Singleton.ConvertToPub(newValue, property.PropertyType);
+            return;
+        }
 
-        if (value.Equals(converted))
+        var before = Format(property.GetValue(ReadOptions(section, out _)));
+
+        if (before == newValue)
         {
             await this.ReplyWithReferenceAsync("The value is identical to the current value, not changing!");
 
             return;
         }
 
-        var attribute = property.GetCustomAttribute<SettingNameAttribute>();
-        var name = attribute?.Name ?? property.Name;
+        await _settingsWriter.SetAsync(section.Name, property.Name, newValue);
 
-        var genericSet = type.GetMethod("Set", BindingFlags.Instance | BindingFlags.Public).MakeGenericMethod([ property.PropertyType ]);
-
-        genericSet.Invoke(instance, [name, converted]);
-
-        if (value is not string) value = JsonConvert.SerializeObject(value);
-        if (string.IsNullOrEmpty(value as string)) value = "(empty)";
+        var after = Format(property.GetValue(ReadOptions(section, out _)));
 
         var embed = new EmbedBuilder()
-            .WithTitle($"{type.Name}.{property.Name} ({property.PropertyType.Name})")
-            .AddField("Before", $"```{value}```")
-            .AddField("After", $"```{newValue}```")
+            .WithTitle($"{section.Name}.{property.Name} ({property.PropertyType.Name})")
+            .AddField("Before", $"```{(string.IsNullOrEmpty(before) ? "(empty)" : before)}```")
+            .AddField("After", $"```{(string.IsNullOrEmpty(after) ? "(empty)" : after)}```")
             .WithAuthor(Context.User)
             .WithCurrentTimestamp()
-            .WithColor(Color.Green)
-            .Build();
+            .WithColor(after == newValue ? Color.Green : Color.Orange);
 
-        await this.ReplyWithReferenceAsync(embed: embed);
+        if (after != newValue)
+            embed.WithDescription("The effective value differs from what was written. An environment variable or appsettings file likely overrides it.");
+
+        await this.ReplyWithReferenceAsync(embed: embed.Build());
     }
-    
+
     /// <summary>
-    /// Refreshes the specified provider or all registered providers.
+    /// Reloads the configuration.
     /// </summary>
-    /// <param name="provider">The name of the provider.</param>
-    [Command("refresh"), Summary("Refreshes the specified provider or all registered providers.")]
-    public async Task RefreshAsync(string provider = "")
+    [Command("refresh"), Summary("Reloads the configuration from all sources.")]
+    public async Task RefreshAsync()
     {
-        using var _ = Context.Channel.EnterTypingState();
+        using var typing = Context.Channel.EnterTypingState();
 
-        if (string.IsNullOrEmpty(provider))
+        if (!TryReload(out var error))
         {
-            VaultProvider.RefreshAllProviders();
-
-            await this.ReplyWithReferenceAsync("Refreshed all registered providers!");
+            await this.ReplyWithReferenceAsync($"Failed to reload the configuration: {error}");
 
             return;
         }
 
-        var fullName = $"{provider}settings";
-
-        var type = _settingsAssembly.GetType($"{_namespace}.{fullName}", false, true);
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-        
-            return;
-        }
-
-        var instance = _services.GetService(type) as BaseSettingsProvider;
-        if (type == null)
-        {
-            await this.ReplyWithReferenceAsync($"The settings provider with the name {provider} was not found!");
-    
-            return;
-        }
-
-        instance.Refresh();
-
-        await this.ReplyWithReferenceAsync($"Successfully refreshed the {provider} settings provider!");
+        await this.ReplyWithReferenceAsync("Reloaded the configuration!");
     }
 }

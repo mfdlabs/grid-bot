@@ -8,6 +8,8 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Utility;
@@ -19,14 +21,14 @@ using Extensions;
 /// <remarks>
 /// Construct a new instance of <see cref="OnInteraction"/>.
 /// </remarks>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="interactionService"/> cannot be null.
 /// - <paramref name="services"/> cannot be null.
@@ -34,7 +36,7 @@ using Extensions;
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// </exception>
 public class OnInteraction(
-    MaintenanceSettings maintenanceSettings,
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
     DiscordShardedClient client,
     InteractionService interactionService,
     IServiceProvider services,
@@ -42,7 +44,9 @@ public class OnInteraction(
     IPerUserContextLoggerFactory loggerFactory
 )
 {
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
 
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly InteractionService _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));

@@ -266,6 +266,7 @@ public class Logger : ILogger
     private static readonly object _noopSingletonLock = new();
 
     private static bool? _hasTerminal;
+    private static bool? _termHasColor;
 
     private static List<Func<string>> _globalLogPrefixes = new();
 
@@ -341,6 +342,45 @@ public class Logger : ILogger
         catch
         {
             return _hasTerminal ??= false;
+        }
+    }
+
+    private static bool _terminalHasColor()
+    {
+        if (_termHasColor.HasValue) return _termHasColor.Value;
+
+        return _termHasColor
+            ??= (!Environment.GetEnvironmentVariable("TERM")?.Equals("dumb", StringComparison.OrdinalIgnoreCase) ?? true)
+            && TputHasColors();
+
+        static bool TputHasColors()
+        {
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "tput",
+                        Arguments = "colors",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        ErrorDialog = false,
+                    }
+                };
+
+                process.Start();
+                process.WaitForExit();
+
+                var output = process.StandardOutput.ReadToEnd();
+                return int.TryParse(output, out var colors) && colors > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 
@@ -659,7 +699,8 @@ public class Logger : ILogger
     {
         if (this._disposed) throw new ObjectDisposedException(this.GetType().Name);
 
-        if (Logger.ConcurrentLoggingEnabled) {
+        if (Logger.ConcurrentLoggingEnabled)
+        {
             Task.Factory.StartNew(() =>
             {
                 try { this._writeLog(logLevel, color, messageGetter); }
@@ -845,8 +886,13 @@ public class Logger : ILogger
             if (Logger._loggers.Any(logger => logger.Name == name))
                 throw new InvalidOperationException($"A logger with the name of '{name}' already exists.");
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            logWithColor = false; // Color is not allowed on other targets as it cause a lot of issues on Windows
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && logWithColor)
+        {
+            // Toggle logWithColor off depending on whether or not ANSI codes are supported in the current term session
+            // Query tput if avail, otherwise fallback to checking istty and TERM != "dumb"
+
+            logWithColor = Logger._terminalAvailable() && Logger._terminalHasColor();
+        }
 
         lock (Logger._loggers)
             Logger._loggers.Add(this);

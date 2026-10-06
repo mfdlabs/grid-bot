@@ -9,6 +9,8 @@ using Discord;
 
 using Discord.Commands;
 
+using Microsoft.Extensions.Options;
+
 using Utility;
 
 /// <summary>
@@ -17,7 +19,9 @@ using Utility;
 public class Help : ModuleBase
 {
     private readonly IAdminUtility _adminUtility;
-    private readonly CommandsSettings _commandsSettings;
+    private readonly IOptionsMonitor<CommandsOptions> _commandsOptions;
+
+    private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;
 
     private readonly HashSet<(string[] aliases, Embed embed, BotRole role)> _aliasesToEmbeds = new();
 
@@ -26,27 +30,27 @@ public class Help : ModuleBase
     /// </summary>
     /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
     /// <param name="commandService">The <see cref="CommandService"/>.</param>
-    /// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
+    /// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="adminUtility"/> cannot be null.
     /// - <paramref name="commandService"/> cannot be null.
-    /// - <paramref name="commandsSettings"/> cannot be null.
+    /// - <paramref name="commandsOptions"/> cannot be null.
     /// </exception>
     public Help(
         IAdminUtility adminUtility,
         CommandService commandService,
-        CommandsSettings commandsSettings
+        IOptionsMonitor<CommandsOptions> commandsOptions
     )
     {
         ArgumentNullException.ThrowIfNull(commandService, nameof(commandService));
         _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
-        _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
+        _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
 
-        SetupCache(commandService, commandsSettings);
+        SetupCache(commandService, commandsOptions.CurrentValue);
     }
 
 
-    private void SetupCache(CommandService commandService, CommandsSettings commandsSettings)
+    private void SetupCache(CommandService commandService, CommandsOptions commandsSettings)
     {
         foreach (var module in commandService.Modules)
         {

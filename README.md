@@ -16,9 +16,7 @@ This is a monorepo containing the bot itself, a companion recovery daemon, and t
 | `services/grid-bot` | The main Grid Bot daemon, Discord gateway client, command handling, rendering/execution pipeline, Dockerfile. |
 | `services/recovery` | `grid-bot-recovery`, a decentralized sidecar daemon that periodically health-checks the bot over RPC and can restart/report on it independently of the main deployment. |
 | `lib/clients` | HTTP clients for talking to Roblox APIs. |
-| `lib/configuration` | Configuration plumbing shared across the bot and its components. |
 | `lib/grid` | Talks to Grid Servers, both at the SOAP/HTTP level and at the process level (native processes on Windows, containers on Linux). |
-| `lib/vault` | HashiCorp Vault integration used for pulling settings/secrets at runtime. |
 | `lib/networking`, `lib/logging`, `lib/threading`, `lib/text`, `lib/random`, `lib/file-system` | General-purpose infrastructure libraries shared across the above. |
 | `docs/` | The [MkDocs](https://www.mkdocs.org/)-based documentation site (`mkdocs.yml`), including legal/ToS pages. |
 | `.github/workflows/` | The component-based CI/CD pipeline (`build.yml`, `deploy.yml`, `docs.yml`), see [DevOps](#devops) below. |
@@ -188,7 +186,7 @@ If you are using this method you will have to define the following environment v
 
 - VAULT_ADDR - The address to the Vault server, this is optional and if not using this the [environment](#environment) will be forced.
 - VAULT_TOKEN or VAULT_CREDENTIAL - The token or credential to use, if using approle, the format is as follows: `{roleName|roleId}:{secretId}`
-- VAULT_MOUNT - Optional, if not set it defaults to `grid-bot-settings`, but allows you to override the mount point for settings (see [SettingsProvidersDefaults.cs](./services/grid-bot/lib/settings/SettingsProvidersDefaults.cs))
+- VAULT_MOUNT - Optional, if not set it defaults to `grid-bot-settings`, but allows you to override the mount point for settings (see [EnvironmentDataProvider.cs](./services/grid-bot/lib/settings/EnvironmentDataProvider.cs))
 
 These all supply a path that is dependent on an environment variable called ENVIRONMENT, which defaults to development.
 e.g, grid-bot-settings/development/discord/debug, would contain the settings for the DiscordProvider for the development environment:

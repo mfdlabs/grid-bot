@@ -14,6 +14,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Utility;
@@ -24,16 +26,16 @@ using Utility;
 /// <remarks>
 /// Initializes a new instance of the <see cref="OnMessage"/> class.
 /// </remarks>
-/// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
 /// <param name="commandService">The <see cref="CommandService"/>.</param>
 /// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="commandsSettings"/> cannot be null.
-/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="commandsOptions"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// - <paramref name="commandService"/> cannot be null.
@@ -41,8 +43,8 @@ using Utility;
 /// - <paramref name="services"/> cannot be null.
 /// </exception>
 public partial class OnMessage(
-    CommandsSettings commandsSettings,
-    MaintenanceSettings maintenanceSettings,
+    IOptionsMonitor<CommandsOptions> commandsOptions,
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
     IAdminUtility adminUtility,
     IPerUserContextLoggerFactory loggerFactory,
     CommandService commandService,
@@ -56,8 +58,12 @@ public partial class OnMessage(
     [GeneratedRegex(_allowedCommandRegex, RegexOptions.Singleline)]
     private static partial Regex GetAllowedCommandRegex();
 
-    private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
+
+    private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
 
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));

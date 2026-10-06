@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="CustomPackages">
-    <ProjectReference Include="$(RootDirectory)lib/configuration/configuration/Configuration.csproj" />
+    <ProjectReference Include="$(RootDirectory)lib/logging/logging/Logging.csproj" />
 
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-docker/Grid.ProcessManagement.Docker.csproj" />
     <ProjectReference Include="$(RootDirectory)lib/grid/process-management-core/Grid.ProcessManagement.Core.csproj" />
@@ -20,10 +20,12 @@
 
   <ItemGroup Label="NuGetPackages">
     <PackageReference Include="Discord.Net.Core" Version="3.17.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="VaultSharp" Version="1.13.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.17.4" />
     <PackageReference Include="prometheus-net" Version="8.0.1" />
     
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

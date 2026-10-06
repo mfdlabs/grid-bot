@@ -12,11 +12,10 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 
-using Vault;
 using Logging;
-using Configuration;
 
 using Events;
 using Utility;
@@ -28,82 +27,13 @@ using Grid.JobManagement;
 using Grid.PortManagement;
 using Grid.ProcessManagement;
 
-using EnvironmentProvider = Grid.Bot.EnvironmentProvider;
+using EnvironmentProvider = Grid.Bot.EnvironmentDataProvider;
 
 /// <summary>
 /// Extension methods for <see cref="IServiceCollection"/>.
 /// </summary>
 public static class IServiceCollectionExtensions
 {
-    /// <summary>
-    /// Get all settings providers in the assembly.
-    /// </summary>
-    /// <returns>The <see cref="IConfigurationProvider"/>s.</returns>
-    internal static IEnumerable<IConfigurationProvider> GetSettingsProviders()
-    {
-        var assembly = Assembly.GetAssembly(typeof(BaseSettingsProvider));
-        var @namespace = typeof(BaseSettingsProvider).Namespace;
-
-        var types = assembly
-            .GetTypes()
-            .Where(t => string.Equals(t.Namespace, @namespace, StringComparison.Ordinal) &&
-                        t.BaseType.Name == typeof(BaseSettingsProvider).Name)
-            .ToList(); // finicky
-
-        var singletons = new List<IConfigurationProvider>();
-
-        foreach (var t in types)
-        {
-            // Construct the singleton.
-            var constructor = t.GetConstructor(Type.EmptyTypes);
-            if (constructor == null)
-            {
-                Console.Error.WriteLine("Provider {0} did not expose a public constructor!", t.FullName);
-
-                singletons.Add(null);
-
-                continue;
-            }
-
-            var singleton = constructor.Invoke(null);
-            if (singleton is not IConfigurationProvider provider)
-            {
-                Console.Error.WriteLine("Provider {0} did not construct a singleton!", t.FullName);
-
-                singletons.Add(null);
-
-                continue;
-            }
-
-            singletons.Add(provider);
-        }
-
-        return singletons.Cast<IConfigurationProvider>();
-    }
-
-    /// <summary>
-    /// Add settings classes and their interfaces to the service collection.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-    /// <returns>The <see cref="IServiceCollection"/>.</returns>
-    public static IServiceCollection AddSettingsProviders(this IServiceCollection services)
-    {
-        var providers = GetSettingsProviders();
-
-        foreach (var singleton in providers)
-        {
-            if (singleton == null) continue;
-
-            services.AddSingleton(singleton.GetType(), singleton);
-
-            // If they implement interfaces, add those too.
-            foreach (var iface in singleton.GetType().GetInterfaces())
-                services.AddSingleton(iface, singleton);
-        }
-
-        return services;
-    }
-
     /// <summary>
     /// Add the unified command service to the service collection.
     /// </summary>
@@ -127,7 +57,7 @@ public static class IServiceCollectionExtensions
             .AddSingleton<IDiscordWebhookAlertManager, DiscordWebhookAlertManager>()
             .AddSingleton<IPerUserContextLoggerFactory, PerUserContextLoggerFactory>()
             .AddSingleton<IGridServerFileHelper, GridServerFileHelper>()
-            .AddSingleton<IVaultClientFactory, VaultClientFactory>();
+            .AddSingleton<IVaultFactory, VaultFactory>();
 
         return services;
     }
@@ -139,17 +69,17 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddGlobalLogger(this IServiceCollection services)
     {
-        var globalSettings = services
-            .BuildServiceProvider()
-            .GetRequiredService<GlobalSettings>();
+        services.AddSingleton<ILogger>(provider =>
+        {
+            var globalOptions = provider
+                .GetRequiredService<IOptionsMonitor<GlobalOptions>>();
 
-        var logger = new Logger(
-            name: globalSettings.DefaultLoggerName,
-            logLevelGetter: () => globalSettings.DefaultLoggerLevel,
-            logToConsole: globalSettings.DefaultLoggerLogToConsole
-        );
-
-        services.AddSingleton<ILogger>(logger);
+            return new Logger(
+                name: globalOptions.CurrentValue.DefaultLoggerName,
+                logLevelGetter: () => globalOptions.CurrentValue.DefaultLoggerLevel,
+                logToConsole: globalOptions.CurrentValue.DefaultLoggerLogToConsole
+            );
+        });
 
         return services;
     }
@@ -161,49 +91,41 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddJobManager(this IServiceCollection services)
     {
-        var gridSettings = services
-            .BuildServiceProvider()
-            .GetRequiredService<GridSettings>();
+        services.AddSingleton<IJobManagerGridServer>(provider =>
+        {
+            var gridOptions = provider.GetRequiredService<IOptionsMonitor<GridOptions>>();
+            var gridSettings = gridOptions.CurrentValue;
+
+            var logger = new Logger(
+                name: gridSettings.JobManagerLoggerName,
+                logLevelGetter: () => gridOptions.CurrentValue.JobManagerLogLevel,
+                logToConsole: gridSettings.JobManagerLogToConsole
+            );
+
+            var clientSettingsClient = new ClientSettingsFactoryProxyClient(provider.GetRequiredService<IClientSettingsFactory>());
+
+            var portAllocator = new PortAllocator(logger);
+            var jobManagerFactory = new JobManagerGridServerFactory();
+
+            var jobManagerGridServer = jobManagerFactory.GetJobManager(
+                logger,
+                clientSettingsClient,
+                provider.GetRequiredService<GridServerSettings>()
+            );
+
+            jobManagerGridServer.Start();
+
+            return jobManagerGridServer;
+        });
 
 #if DEBUG
-        if (gridSettings.DebugUseNoopJobManager)
-        {
-            services.AddSingleton<IJobManager, NoopJobManager>();
-
-            return services;
-        }
-#endif
-
-        gridSettings.GridServerAdditionalVolumeMappings = [
-            ..gridSettings.GridServerAdditionalVolumeMappingsSetting,
-            $"{gridSettings.GridServerSharedDirectoryInternalScripts}:{gridSettings.GridServerInsideDirectoryInternalScripts}"
-        ];
-
-        var logger = new Logger(
-            name: gridSettings.JobManagerLoggerName,
-            logLevelGetter: () => gridSettings.JobManagerLogLevel,
-            logToConsole: gridSettings.JobManagerLogToConsole
-        );
-
-        var clientSettingsFactory = services
-            .BuildServiceProvider()
-            .GetRequiredService<IClientSettingsFactory>();
-
-        var clientSettingsClient = new ClientSettingsFactoryProxyClient(clientSettingsFactory);
-
-        var portAllocator = new PortAllocator(logger);
-        var jobManagerFactory = new JobManagerGridServerFactory();
-
-        var jobManagerGridServer = jobManagerFactory.GetJobManager(
-            logger,
-            clientSettingsClient,
-            gridSettings
-        );
-
-        jobManagerGridServer.Start();
-
-        services.AddSingleton<IJobManagerGridServer>(jobManagerGridServer);
+        services.AddSingleton<IJobManager>(provider =>
+            provider.GetRequiredService<IOptionsMonitor<GridOptions>>().CurrentValue.DebugUseNoopJobManager
+                ? new NoopJobManager()
+                : ActivatorUtilities.CreateInstance<JobManager>(provider));
+#else
         services.AddSingleton<IJobManager, JobManager>();
+#endif
 
         return services;
     }
@@ -223,24 +145,24 @@ public static class IServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddClientSettings(this IServiceCollection services)
     {
-        var serviceProvider = services.BuildServiceProvider();
+        services.AddSingleton<IClientSettingsFactory>(provider =>
+        {
+            var clientSettingsOptions = provider.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
+            var clientSettingsSettings = clientSettingsOptions.CurrentValue;
+            var globalOptions = provider.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
-        var logger = serviceProvider.GetRequiredService<ILogger>();
-        var clientSettingsSettings = serviceProvider.GetRequiredService<ClientSettingsSettings>();
-        var vaultClientFactory = serviceProvider.GetRequiredService<IVaultClientFactory>();
+            var vaultClient = clientSettingsSettings.ClientSettingsViaVault
+                ? provider.GetRequiredService<IVaultFactory>().CreateClient(
+                    clientSettingsSettings.ClientSettingsVaultAddress ?? globalOptions.VaultAddress,
+                    clientSettingsSettings.ClientSettingsVaultToken ?? globalOptions.VaultCredential)
+                : null;
 
-        var vaultClient = clientSettingsSettings.ClientSettingsViaVault
-            ? vaultClientFactory.GetClient(clientSettingsSettings.ClientSettingsVaultAddress,
-                                         clientSettingsSettings.ClientSettingsVaultToken)
-            : null;
-
-        var clientSettingsFactory = new ClientSettingsFactory(
-            vaultClient,
-            logger,
-            clientSettingsSettings
-        );
-
-        services.AddSingleton<IClientSettingsFactory>(clientSettingsFactory);
+            return new ClientSettingsFactory(
+                vaultClient,
+                provider.GetRequiredService<ILogger>(),
+                clientSettingsOptions
+            );
+        });
 
         return services;
     }

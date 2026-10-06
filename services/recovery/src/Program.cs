@@ -9,17 +9,6 @@ using System.Linq;
 /// </summary>
 public static class Program
 {
-    private static bool AssemblyIsLoaded(string name)
-    {
-        try
-        {
-            return AppDomain.CurrentDomain.Load(name) != null;
-        }
-        // We assume this means that it's already loaded into another evidence
-        catch (FileLoadException) { return true; }
-        catch (Exception) { return false; }
-    }
-
     /// <summary>
     /// Main method.
     /// </summary>

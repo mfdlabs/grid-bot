@@ -10,6 +10,8 @@ using Discord.WebSocket;
 
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Logging;
@@ -25,21 +27,23 @@ using Extensions;
 /// </remarks>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="backtraceUtility">The <see cref="BacktraceUtility"/>.</param>
-/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
+/// <param name="discordRolesOptions">The <see cref="DiscordRolesOptions"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="backtraceUtility"/> cannot be null.
-/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// - <paramref name="discordRolesOptions"/> cannot be null.
 /// </exception>
 public class OnInteractionExecuted(
     ILogger logger,
     IBacktraceUtility backtraceUtility,
-    DiscordRolesSettings discordRolesSettings
+    IOptionsMonitor<DiscordRolesOptions> discordRolesOptions
 )
 {
     private const string UnhandledExceptionOccurredFromCommand = "An error occured with the command:";
 
-    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+    private readonly IOptionsMonitor<DiscordRolesOptions> _discordRolesOptions = discordRolesOptions ?? throw new ArgumentNullException(nameof(discordRolesOptions));
+
+    private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));

@@ -13,6 +13,8 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Discord.Interactions;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Logging;
@@ -24,7 +26,9 @@ using Utility;
 /// </summary>
 public class OnLogMessage
 {
-    private readonly DiscordSettings _settings;
+    private readonly IOptionsMonitor<DiscordOptions> _options;
+
+    private DiscordOptions _settings => _options.CurrentValue;
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
     private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager;
@@ -60,25 +64,25 @@ public class OnLogMessage
     /// <summary>
     /// Construct a new instance of <see cref="OnLogMessage"/>.
     /// </summary>
-    /// <param name="settings">The <see cref="DiscordSettings"/>.</param>
+    /// <param name="options">The <see cref="DiscordOptions"/>.</param>
     /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="settings"/> cannot be null.
+    /// - <paramref name="options"/> cannot be null.
     /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// </exception>
-    public OnLogMessage(DiscordSettings settings, IDiscordWebhookAlertManager discordWebhookAlertManager, IBacktraceUtility backtraceUtility)
+    public OnLogMessage(IOptionsMonitor<DiscordOptions> options, IDiscordWebhookAlertManager discordWebhookAlertManager, IBacktraceUtility backtraceUtility)
 #else
     /// <summary>
     /// Construct a new instance of <see cref="OnLogMessage"/>.
     /// </summary>
-    /// <param name="settings">The <see cref="DiscordSettings"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="settings"/> cannot be null.</exception>
-    public OnLogMessage(DiscordSettings settings)
+    /// <param name="options">The <see cref="DiscordOptions"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> cannot be null.</exception>
+    public OnLogMessage(IOptionsMonitor<DiscordOptions> options)
 #endif
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
 
 #if DEBUG || DEBUG_LOGGING_IN_PROD
         _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));

@@ -13,6 +13,8 @@ using Discord;
 
 using Newtonsoft.Json;
 
+using Microsoft.Extensions.Options;
+
 /// <summary>
 /// Handles sending alerts to a Discord webhook.
 /// </summary>
@@ -21,23 +23,25 @@ using Newtonsoft.Json;
 /// Creates a new instance of the <see cref="DiscordWebhookAlertManager"/> class.
 /// </remarks>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
-/// <param name="globalSettings">The <see cref="GlobalSettings"/> to use.</param>
-/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/> to use.</param>
+/// <param name="globalOptions">The <see cref="GlobalOptions"/> to use.</param>
+/// <param name="discordRolesOptions">The <see cref="DiscordRolesOptions"/> to use.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="httpClientFactory"/> cannot be null.
-/// - <paramref name="globalSettings"/> cannot be null.
-/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// - <paramref name="globalOptions"/> cannot be null.
+/// - <paramref name="discordRolesOptions"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
     IHttpClientFactory httpClientFactory,
-    GlobalSettings globalSettings,
-    DiscordRolesSettings discordRolesSettings
+    IOptionsMonitor<GlobalOptions> globalOptions,
+    IOptionsMonitor<DiscordRolesOptions> discordRolesOptions
 ) : IDiscordWebhookAlertManager
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly GlobalSettings _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
-    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+    private readonly IOptionsMonitor<GlobalOptions> _globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
+    private readonly IOptionsMonitor<DiscordRolesOptions> _discordRolesOptions = discordRolesOptions ?? throw new ArgumentNullException(nameof(discordRolesOptions));
+
+    private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
     private static readonly Counter _discordWebhookAlertCounter = Metrics.CreateCounter(
         "discord_webhook_alert_total",
@@ -54,7 +58,7 @@ public class DiscordWebhookAlertManager(
         if (string.IsNullOrWhiteSpace(topic)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(topic));
         if (string.IsNullOrWhiteSpace(message)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(message));
 
-        if (!_globalSettings.DiscordWebhookAlertingEnabled) return;
+        if (!_globalOptions.CurrentValue.DiscordWebhookAlertingEnabled) return;
 
         _discordWebhookAlertCounter.Inc();
 
@@ -68,7 +72,7 @@ public class DiscordWebhookAlertManager(
             content = $"<@&{_discordRolesSettings.AlertRoleId}>";
 
         using var client = _httpClientFactory.CreateClient();
-        var url = _globalSettings.DiscordWebhookUrl;
+        var url = _globalOptions.CurrentValue.DiscordWebhookUrl;
         var payload = new
         {
             username,

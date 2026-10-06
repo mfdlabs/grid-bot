@@ -1,13 +1,14 @@
 ﻿namespace Grid.Bot;
 
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Discord;
@@ -38,14 +39,32 @@ internal static class Runner
     private static ServiceProvider InitializeServices()
     {
         var services = new ServiceCollection();
-        var settings = new Settings();
 
-        services.AddSingleton<ISettings>(settings);
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var settings = configuration.Get<RecoveryOptions>() ?? new RecoveryOptions();
+
+        services.AddSingleton<IValidateOptions<RecoveryOptions>, RecoveryOptionsValidator>();
+        services.AddOptions<RecoveryOptions>()
+            .Bind(configuration)
+            .PostConfigure(o =>
+            {
+                // Backwards compat: a single comma separated value instead of an indexed list.
+                var csv = configuration[nameof(RecoveryOptions.PreviousPhaseCommands)];
+
+                if (!string.IsNullOrWhiteSpace(csv))
+                    o.PreviousPhaseCommands = csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            });
 
         var logger = new Logger(
             name: settings.DefaultLoggerName,
             logLevelGetter: () => settings.DefaultLoggerLevel,
-            logToConsole: true
+            logToConsole: true,
+            logWithColor: true
         );
 
         services.AddSingleton<ILogger>(logger);
@@ -55,7 +74,6 @@ internal static class Runner
         logger.Information($"Starting Grid.Bot.Recovery, Version = {informationalVersion}");
 
 #if DEBUG
-
         Logger.GlobalLogPrefixes.Add(() => informationalVersion);
 #endif
 
@@ -88,7 +106,7 @@ internal static class Runner
         return services.BuildServiceProvider();
     }
 
-    private static GridBotAPI.GridBotAPIClient GetGridBotClient(ISettings settings)
+    private static GridBotAPI.GridBotAPIClient GetGridBotClient(RecoveryOptions settings)
     {
         if (settings.StandaloneMode)
             return null;
@@ -115,17 +133,33 @@ internal static class Runner
         return new GridBotAPI.GridBotAPIClient(channel);
     }
 
+    private static RecoveryOptions GetValidatedOptions(IServiceProvider services, ILogger logger)
+    {
+        try
+        {
+            return services.GetRequiredService<IOptions<RecoveryOptions>>().Value;
+        }
+        catch (OptionsValidationException e)
+        {
+            Logger.ConcurrentLoggingEnabled = false; // To ensure all log points are flushed before exiting
+
+            foreach (var failure in e.Failures)
+                logger.Error("Invalid configuration: {0}", failure);
+
+            Environment.Exit(1);
+            throw;
+        }
+    }
+
     private static async Task InvokeAsync(IEnumerable<string> args)
     {
         var services = InitializeServices();
         var logger = services.GetRequiredService<ILogger>();
-        var settings = services.GetRequiredService<ISettings>();
-
+        var settings = GetValidatedOptions(services, logger);
 
 #if DEBUG
         logger.Warning(_debugMode);
 #endif
-
 
         try
         {

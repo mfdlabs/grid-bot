@@ -13,6 +13,8 @@ using Discord.Commands;
 
 using Newtonsoft.Json;
 
+using Microsoft.Extensions.Options;
+
 using Utility;
 using ClientSettings;
 
@@ -23,18 +25,27 @@ using ClientSettings;
 /// Construct a new instance of <see cref="ClientSettingsModule"/>.
 /// </remarks>
 /// <param name="clientSettingsFactory">The <see cref="IClientSettingsFactory"/>.</param>
-/// <param name="clientSettingsSettings">The <see cref="ClientSettingsSettings"/>.</param>
+/// <param name="clientSettingsOptions">The <see cref="ClientSettingsOptions"/>.</param>
+/// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="clientSettingsFactory"/> cannot be null.
-/// - <paramref name="clientSettingsSettings"/> cannot be null.
+/// - <paramref name="clientSettingsOptions"/> cannot be null.
+/// - <paramref name="settingsWriter"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
 [Group("clientsettings"), Summary("Commands used for managing client settings."), Alias("cs", "client_settings")]
-public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, ClientSettingsSettings clientSettingsSettings) : ModuleBase
+public class ClientSettingsModule(
+    IClientSettingsFactory clientSettingsFactory,
+    IOptionsMonitor<ClientSettingsOptions> clientSettingsOptions,
+    ISettingsWriter settingsWriter
+) : ModuleBase
 {
     private readonly IClientSettingsFactory _clientSettingsFactory = clientSettingsFactory ?? throw new ArgumentNullException(nameof(clientSettingsFactory));
-    private readonly ClientSettingsSettings _clientSettingsSettings = clientSettingsSettings ?? throw new ArgumentNullException(nameof(clientSettingsSettings));
+    private readonly IOptionsMonitor<ClientSettingsOptions> _clientSettingsOptions = clientSettingsOptions ?? throw new ArgumentNullException(nameof(clientSettingsOptions));
+    private readonly ISettingsWriter _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
+
+    private ClientSettingsOptions _clientSettingsSettings => _clientSettingsOptions.CurrentValue;
 
     /// <summary>
     /// Gets the client settings for the specified application.
@@ -101,8 +112,16 @@ public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, 
 
         if (!string.IsNullOrWhiteSpace(parsedDependencies))
         {
-            _clientSettingsSettings.ClientSettingsApplicationDependencies[applicationName] = parsedDependencies;
-            _clientSettingsSettings.ApplyCurrent();
+            var dependencyMap = new Dictionary<string, string>(_clientSettingsSettings.ClientSettingsApplicationDependencies)
+            {
+                [applicationName] = parsedDependencies
+            };
+
+            await _settingsWriter.SetAsync(
+                ClientSettingsOptions.SectionName,
+                nameof(ClientSettingsOptions.ClientSettingsApplicationDependencies),
+                string.Join('\n', dependencyMap.Select(pair => $"{pair.Key}={pair.Value}"))
+            );
         }
 
         if (isAllowedFromApi)
@@ -112,7 +131,12 @@ public class ClientSettingsModule(IClientSettingsFactory clientSettingsFactory, 
             if (!currentPermissibleReadApplications.Contains(applicationName))
             {
                 currentPermissibleReadApplications.Add(applicationName);
-                _clientSettingsSettings.PermissibleReadApplications = [.. currentPermissibleReadApplications];
+
+                await _settingsWriter.SetAsync(
+                    ClientSettingsOptions.SectionName,
+                    nameof(ClientSettingsOptions.PermissibleReadApplications),
+                    string.Join(',', currentPermissibleReadApplications)
+                );
             }
         }
 

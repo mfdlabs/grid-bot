@@ -28,6 +28,8 @@ using Newtonsoft.Json;
 
 using Prometheus;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Utility;
@@ -108,8 +110,13 @@ public partial class ExecuteScript
 
     private readonly ILogger _logger;
 
-    private readonly GridSettings _gridSettings;
-    private readonly ScriptsSettings _scriptsSettings;
+    private readonly IOptionsMonitor<GridOptions> _gridOptions;
+
+    private GridOptions _gridSettings => _gridOptions.CurrentValue;
+    private readonly IOptionsMonitor<ScriptsOptions> _scriptsOptions;
+    private readonly ISettingsWriter _settingsWriter;
+
+    private ScriptsOptions _scriptsSettings => _scriptsOptions.CurrentValue;
 
     private readonly IRateLimiterRegistry _rateLimiterRegistry;
     private readonly IBacktraceUtility _backtraceUtility;
@@ -159,8 +166,8 @@ public partial class ExecuteScript
     /// Construct a new instance of <see cref="ExecuteScript"/>.
     /// </summary>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="gridSettings">The <see cref="GridSettings"/>.</param>
-    /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
+    /// <param name="gridOptions">The <see cref="GridOptions"/>.</param>
+    /// <param name="scriptsOptions">The <see cref="ScriptsOptions"/>.</param>
     /// <param name="rateLimiterRegistry">The <see cref="IRateLimiterRegistry"/>.</param>
     /// <param name="backtraceUtility">The <see cref="IBacktraceUtility"/>.</param>
     /// <param name="jobManager">The <see cref="IJobManager"/>.</param>
@@ -168,10 +175,11 @@ public partial class ExecuteScript
     /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
     /// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
     /// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
+    /// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
     /// <exception cref="ArgumentNullException">
     /// - <paramref name="logger"/> cannot be null.
-    /// - <paramref name="gridSettings"/> cannot be null.
-    /// - <paramref name="scriptsSettings"/> cannot be null.
+    /// - <paramref name="gridOptions"/> cannot be null.
+    /// - <paramref name="scriptsOptions"/> cannot be null.
     /// - <paramref name="rateLimiterRegistry"/> cannot be null.
     /// - <paramref name="backtraceUtility"/> cannot be null.
     /// - <paramref name="jobManager"/> cannot be null.
@@ -179,23 +187,25 @@ public partial class ExecuteScript
     /// - <paramref name="httpClientFactory"/> cannot be null.
     /// - <paramref name="discordWebhookAlertManager"/> cannot be null.
     /// - <paramref name="gridServerFileHelper"/> cannot be null.
+    /// - <paramref name="settingsWriter"/> cannot be null.
     /// </exception>
     public ExecuteScript(
         ILogger logger,
-        GridSettings gridSettings,
-        ScriptsSettings scriptsSettings,
+        IOptionsMonitor<GridOptions> gridOptions,
+        IOptionsMonitor<ScriptsOptions> scriptsOptions,
         IRateLimiterRegistry rateLimiterRegistry,
         IBacktraceUtility backtraceUtility,
         IJobManager jobManager,
         IAdminUtility adminUtility,
         IHttpClientFactory httpClientFactory,
         IDiscordWebhookAlertManager discordWebhookAlertManager,
-        IGridServerFileHelper gridServerFileHelper
+        IGridServerFileHelper gridServerFileHelper,
+        ISettingsWriter settingsWriter
     )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _gridSettings = gridSettings ?? throw new ArgumentNullException(nameof(gridSettings));
-        _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
+        _gridOptions = gridOptions ?? throw new ArgumentNullException(nameof(gridOptions));
+        _scriptsOptions = scriptsOptions ?? throw new ArgumentNullException(nameof(scriptsOptions));
         _rateLimiterRegistry = rateLimiterRegistry ?? throw new ArgumentNullException(nameof(rateLimiterRegistry));
         _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
@@ -203,6 +213,7 @@ public partial class ExecuteScript
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
         _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
+        _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
 
         foreach (var hash in _scriptsSettings.LoggedScriptHashes)
             _scriptHashes.Add(hash);
@@ -220,7 +231,18 @@ public partial class ExecuteScript
 
             if (_scriptsSettings.LoggedScriptHashes.SequenceEqual(_scriptHashes)) continue;
 
-            _scriptsSettings.LoggedScriptHashes = [.. _scriptHashes];
+            try
+            {
+                _settingsWriter.SetAsync(
+                    ScriptsOptions.SectionName,
+                    nameof(ScriptsOptions.LoggedScriptHashes),
+                    string.Join(',', _scriptHashes)
+                ).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Failed to persist logged script hashes: {0}", ex.Message);
+            }
         }
     }
 
