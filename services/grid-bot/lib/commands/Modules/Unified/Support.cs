@@ -5,8 +5,8 @@ using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
-using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
 using Discord;
@@ -25,6 +25,7 @@ using InteractionGroup = Discord.Interactions.GroupAttribute;
 
 using TextCommandModuleBase = Discord.Commands.ModuleBase;
 using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
+
 
 /// <remarks>
 /// Construct a new instance of <see cref="Support"/>.
@@ -49,12 +50,28 @@ public class Support(
     private readonly IOptionsMonitor<GlobalOptions> _globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
     private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
 
-    private static string GetLocalIPv4()
+    private static bool GetAddressByInterface(NetworkInterfaceType interfaceType, out string ip)
+        => !string.IsNullOrEmpty(
+            ip = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(item => item.NetworkInterfaceType == interfaceType &&
+                            item.OperationalStatus == OperationalStatus.Up)
+            .Select(item => item.GetIPProperties().UnicastAddresses)
+            .Select(item => item.FirstOrDefault()?.Address)
+            .FirstOrDefault()?
+            .ToString()
+        );
+
+    private static string GetLocalAddress()
     {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        return host.AddressList
-            .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
-            ?.ToString() ?? "No IPv4 address found";
+        if (GetAddressByInterface(NetworkInterfaceType.Wireless80211, out var ip))
+            return ip;
+
+        if (GetAddressByInterface(NetworkInterfaceType.Ethernet, out ip))
+            return ip;
+
+        GetAddressByInterface(NetworkInterfaceType.Loopback, out ip);
+
+        return ip;
     }
 
     /// <summary>
@@ -80,7 +97,7 @@ public class Support(
             .AddField("Grid Bot Documentation", _globalOptions.CurrentValue.DocumentationHubUrl)
             .AddField("Machine Name", Environment.MachineName)
             .AddField("Machine Host", Dns.GetHostName())
-            .AddField("Local IP Address", GetLocalIPv4())
+            .AddField("Local IP Address", GetLocalAddress())
             .AddField("Bot Version", informationalVersion)
             .AddField("Grid Server Version", gridServerVersion)
             .Build();
