@@ -14,6 +14,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
+using Microsoft.Extensions.Options;
+
 using Prometheus;
 
 using Utility;
@@ -24,7 +26,7 @@ using Utility;
 /// <remarks>
 /// Initializes a new instance of the <see cref="OnMessage"/> class.
 /// </remarks>
-/// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
+/// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
 /// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
@@ -32,7 +34,7 @@ using Utility;
 /// <param name="discordClient">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="commandsSettings"/> cannot be null.
+/// - <paramref name="commandsOptions"/> cannot be null.
 /// - <paramref name="maintenanceSettings"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
@@ -41,7 +43,7 @@ using Utility;
 /// - <paramref name="services"/> cannot be null.
 /// </exception>
 public partial class OnMessage(
-    CommandsSettings commandsSettings,
+    IOptionsMonitor<CommandsOptions> commandsOptions,
     MaintenanceSettings maintenanceSettings,
     IAdminUtility adminUtility,
     IPerUserContextLoggerFactory loggerFactory,
@@ -56,7 +58,9 @@ public partial class OnMessage(
     [GeneratedRegex(_allowedCommandRegex, RegexOptions.Singleline)]
     private static partial Regex GetAllowedCommandRegex();
 
-    private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
+    private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
+
+    private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;
     private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
 
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));

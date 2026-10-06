@@ -17,6 +17,8 @@ using Discord.Commands;
 
 using Newtonsoft.Json;
 
+using Microsoft.Extensions.Options;
+
 using Utility;
 
 using Eval.Runner.Models;
@@ -28,23 +30,25 @@ using Eval.Runner.Models;
 /// Construct a new instance of <see cref="EvaluateCSharp"/>.
 /// </summary>
 /// <param name="scriptsSettings">The <see cref="ScriptsSettings"/>.</param>
-/// <param name="commandsSettings">The <see cref="CommandsSettings"/>.</param>
+/// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="scriptsSettings"/> cannot be null.
-/// - <paramref name="commandsSettings"/> cannot be null.
+/// - <paramref name="commandsOptions"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Owner)]
 [RequireBotRole(BotRole.Owner)]
 public partial class EvaluateCSharp(
     ScriptsSettings scriptsSettings,
-    CommandsSettings commandsSettings
+    IOptionsMonitor<CommandsOptions> commandsOptions
 ) : ModuleBase<ShardedCommandContext>
 {
     private const int _maxErrorLength = EmbedBuilder.MaxDescriptionLength - 8;
     private const int _maxResultLength = EmbedFieldBuilder.MaxFieldValueLength - 8;
 
     private readonly ScriptsSettings _scriptsSettings = scriptsSettings ?? throw new ArgumentNullException(nameof(scriptsSettings));
-    private readonly CommandsSettings _commandsSettings = commandsSettings ?? throw new ArgumentNullException(nameof(commandsSettings));
+    private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
+
+    private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;
 
     private static readonly TimeSpan _scriptExecutionTimeout = TimeSpan.FromSeconds(10);
 
@@ -186,7 +190,7 @@ public partial class EvaluateCSharp(
     {
         if (!_commandsSettings.EvaluateCSharpCommandEnabled)
             throw new ApplicationException(
-                $"The EvaluateCSharp command is currently disabled. Please enable via {nameof(CommandsSettings.EvaluateCSharpCommandEnabled)}."
+                $"The EvaluateCSharp command is currently disabled. Please enable via {nameof(CommandsOptions.EvaluateCSharpCommandEnabled)}."
             );
 
         await base.BeforeExecuteAsync(command);

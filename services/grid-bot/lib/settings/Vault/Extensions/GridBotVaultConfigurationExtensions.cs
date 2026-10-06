@@ -36,5 +36,6 @@ public static class GridBotVaultConfigurationExtensions
             source.Map(WebOptions.SectionName, EnvironmentDataProvider.MapPath(WebOptions.VaultPath));
             source.Map(BacktraceOptions.SectionName, EnvironmentDataProvider.MapPath(BacktraceOptions.VaultPath));
             source.Map(FloodCheckerOptions.SectionName, EnvironmentDataProvider.MapPath(FloodCheckerOptions.VaultPath));
+            source.Map(CommandsOptions.SectionName, EnvironmentDataProvider.MapPath(CommandsOptions.VaultPath));
         });
 }

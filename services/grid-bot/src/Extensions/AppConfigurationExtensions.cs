@@ -67,6 +67,7 @@ public static class AppConfigurationExtensions
         AddOptions<GlobalOptions>(GlobalOptions.SectionName);
         AddOptions<BacktraceOptions>(BacktraceOptions.SectionName);
         AddOptions<FloodCheckerOptions>(FloodCheckerOptions.SectionName);
+        AddOptions<CommandsOptions>(CommandsOptions.SectionName);
 
         AddOptions<GrpcOptions>(GrpcOptions.SectionName);
         services.AddSingleton<IValidateOptions<GrpcOptions>, GrpcOptionsValidator>();
