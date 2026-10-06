@@ -19,28 +19,28 @@ public interface IAdminUtility
     /// Is the <see cref="IUser"/> the owner?.
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>
-    /// <returns>Returns true if the user's id matches the <see cref="DiscordRolesSettings.BotOwnerId"/></returns>
+    /// <returns>Returns true if the user's id matches the <see cref="DiscordRolesOptions.BotOwnerId"/></returns>
     bool UserIsOwner(IUser user);
 
     /// <summary>
     /// Is the <see cref="IUser"/> an admin?
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>
-    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.AdminUserIds"/></returns>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesOptions.AdminUserIds"/></returns>
     bool UserIsAdmin(IUser user);
 
     /// <summary>
     /// Is the <see cref="IUser"/> a higher privilaged user?
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>
-    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.HigherPrivilagedUserIds"/></returns>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesOptions.HigherPrivilagedUserIds"/></returns>
     bool UserIsPrivilaged(IUser user);
 
     /// <summary>
     /// Is the <see cref="IUser"/> blacklisted?
     /// </summary>
     /// <param name="user">The <see cref="IUser"/></param>
-    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesSettings.BlacklistedUserIds"/></returns>
+    /// <returns>Returns true if the user's id is in the <see cref="DiscordRolesOptions.BlacklistedUserIds"/></returns>
     bool UserIsBlacklisted(IUser user);
 
     /// <summary>

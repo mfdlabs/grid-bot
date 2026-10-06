@@ -89,6 +89,7 @@ public static class AppConfigurationExtensions
         AddOptions<AvatarOptions>(AvatarOptions.SectionName);
         AddOptions<ClientSettingsOptions>(ClientSettingsOptions.SectionName);
         AddOptions<MaintenanceOptions>(MaintenanceOptions.SectionName);
+        AddOptions<DiscordRolesOptions>(DiscordRolesOptions.SectionName);
 
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();

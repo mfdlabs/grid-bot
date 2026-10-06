@@ -24,22 +24,24 @@ using Microsoft.Extensions.Options;
 /// </remarks>
 /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/> to use.</param>
 /// <param name="globalOptions">The <see cref="GlobalOptions"/> to use.</param>
-/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/> to use.</param>
+/// <param name="discordRolesOptions">The <see cref="DiscordRolesOptions"/> to use.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="httpClientFactory"/> cannot be null.
 /// - <paramref name="globalOptions"/> cannot be null.
-/// - <paramref name="discordRolesSettings"/> cannot be null.
+/// - <paramref name="discordRolesOptions"/> cannot be null.
 /// </exception>
 /// <seealso cref="DiscordWebhookAlertManager"/>
 public class DiscordWebhookAlertManager(
     IHttpClientFactory httpClientFactory,
     IOptionsMonitor<GlobalOptions> globalOptions,
-    DiscordRolesSettings discordRolesSettings
+    IOptionsMonitor<DiscordRolesOptions> discordRolesOptions
 ) : IDiscordWebhookAlertManager
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly IOptionsMonitor<GlobalOptions> _globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
-    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+    private readonly IOptionsMonitor<DiscordRolesOptions> _discordRolesOptions = discordRolesOptions ?? throw new ArgumentNullException(nameof(discordRolesOptions));
+
+    private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
     private static readonly Counter _discordWebhookAlertCounter = Metrics.CreateCounter(
         "discord_webhook_alert_total",

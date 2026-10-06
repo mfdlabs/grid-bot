@@ -2,10 +2,13 @@
 
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using Prometheus;
 
 using Discord;
+
+using Microsoft.Extensions.Options;
 
 /// <summary>
 /// Utility class for administration.
@@ -13,11 +16,18 @@ using Discord;
 /// <remarks>
 /// Construct a new instance of <see cref="AdminUtility"/>.
 /// </remarks>
-/// <param name="discordRolesSettings">The <see cref="DiscordRolesSettings"/>.</param>
-/// <exception cref="ArgumentNullException"><paramref name="discordRolesSettings"/> cannot be null.</exception>
-public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUtility
+/// <param name="discordRolesOptions">The <see cref="DiscordRolesOptions"/>.</param>
+/// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
+/// <exception cref="ArgumentNullException">
+/// - <paramref name="discordRolesOptions"/> cannot be null.
+/// - <paramref name="settingsWriter"/> cannot be null.
+/// </exception>
+public class AdminUtility(IOptionsMonitor<DiscordRolesOptions> discordRolesOptions, ISettingsWriter settingsWriter) : IAdminUtility
 {
-    private readonly DiscordRolesSettings _discordRolesSettings = discordRolesSettings ?? throw new ArgumentNullException(nameof(discordRolesSettings));
+    private readonly IOptionsMonitor<DiscordRolesOptions> _discordRolesOptions = discordRolesOptions ?? throw new ArgumentNullException(nameof(discordRolesOptions));
+    private readonly ISettingsWriter _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
+
+    private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
     private static readonly Counter _usersBlacklistedCounter = Metrics.CreateCounter("admin_users_blacklisted_total", "Total number of users blacklisted.");
     private static readonly Counter _usersUnblacklistedCounter = Metrics.CreateCounter("admin_users_unblacklisted_total", "Total number of users unblacklisted.");
@@ -25,6 +35,10 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
     private static readonly Counter _adminUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_total", "Total number of users demoted from admin.");
     private static readonly Counter _privilegedUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_privilaged_total", "Total number of users demoted from privilaged.");
     private static readonly Counter _usersPromotedCounter = Metrics.CreateCounter("admin_users_promoted_total", "Total number of users promoted to admin.");
+
+    // IAdminUtility is synchronous, and each write must be visible before the next role check.
+    private void WriteIds(string key, IEnumerable<ulong> ids)
+        => _settingsWriter.SetAsync(DiscordRolesOptions.SectionName, key, string.Join(',', ids)).GetAwaiter().GetResult();
 
     /// <inheritdoc cref="IAdminUtility.IsInRole(IUser, BotRole)"/>
     public bool IsInRole(IUser user, BotRole botRole = BotRole.Default)
@@ -67,7 +81,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             adminUserIds.Remove(user.Id);
 
-            _discordRolesSettings.AdminUserIds = adminUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.AdminUserIds), adminUserIds);
         }
 
         if (!UserIsPrivilaged(user))
@@ -79,7 +93,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             higherPrivilagedUserIds.Add(user.Id);
 
-            _discordRolesSettings.HigherPrivilagedUserIds = higherPrivilagedUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.HigherPrivilagedUserIds), higherPrivilagedUserIds);
         }
     }
 
@@ -95,7 +109,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             adminUserIds.Remove(user.Id);
 
-            _discordRolesSettings.AdminUserIds = adminUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.AdminUserIds), adminUserIds);
         }
 
         if (UserIsPrivilaged(user))
@@ -107,7 +121,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             higherPrivilagedUserIds.Remove(user.Id);
 
-            _discordRolesSettings.HigherPrivilagedUserIds = higherPrivilagedUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.HigherPrivilagedUserIds), higherPrivilagedUserIds);
         }
     }
 
@@ -123,7 +137,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             blacklistedUserIds.Add(user.Id);
 
-            _discordRolesSettings.BlacklistedUserIds = blacklistedUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.BlacklistedUserIds), blacklistedUserIds);
         }
     }
 
@@ -139,7 +153,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             blacklistedUserIds.Remove(user.Id);
 
-            _discordRolesSettings.BlacklistedUserIds = blacklistedUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.BlacklistedUserIds), blacklistedUserIds);
         }
     }
 
@@ -155,7 +169,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             higherPrivilagedUserIds.Remove(user.Id);
 
-            _discordRolesSettings.HigherPrivilagedUserIds = higherPrivilagedUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.HigherPrivilagedUserIds), higherPrivilagedUserIds);
         }
 
         if (!UserIsAdmin(user))
@@ -167,7 +181,7 @@ public class AdminUtility(DiscordRolesSettings discordRolesSettings) : IAdminUti
 
             adminUserIds.Add(user.Id);
 
-            _discordRolesSettings.AdminUserIds = adminUserIds.ToArray();
+            WriteIds(nameof(DiscordRolesOptions.AdminUserIds), adminUserIds);
         }
     }
 }
