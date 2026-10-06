@@ -22,7 +22,7 @@ using Logging;
 /// Construct a new instance of <see cref="OnShardReady"/>.
 /// </remarks>
 /// <param name="discordOptions">The <see cref="DiscordOptions"/>.</param>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
@@ -34,7 +34,7 @@ using Logging;
 /// <param name="onCommandExecutedEvent">The <see cref="OnCommandExecuted"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="discordOptions"/> cannot be null.
-/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="interactionService"/> cannot be null.
@@ -47,7 +47,7 @@ using Logging;
 /// </exception>
 public class OnShardReady(
     IOptionsMonitor<DiscordOptions> discordOptions,
-    MaintenanceSettings maintenanceSettings,
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
     ILogger logger,
     DiscordShardedClient client,
     InteractionService interactionService,
@@ -66,7 +66,9 @@ public class OnShardReady(
     private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
 
     private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));

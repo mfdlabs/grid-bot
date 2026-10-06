@@ -27,12 +27,23 @@ public class RuntimeConfigurationProvider : ConfigurationProvider
     private readonly object _lock = new();
 
     /// <inheritdoc cref="ConfigurationProvider.Set(string, string)"/>
-    public override void Set(string key, string value)
+    public override void Set(string key, string value) => SetMany([new(key, value)]);
+
+    /// <summary>
+    /// Sets several values and raises a single reload.
+    /// </summary>
+    /// <param name="values">The keys and values.</param>
+    public void SetMany(IEnumerable<KeyValuePair<string, string>> values)
     {
         lock (_lock)
         {
             // Copy on write so readers never see a partially updated dictionary.
-            Data = new Dictionary<string, string>(Data, StringComparer.OrdinalIgnoreCase) { [key] = value };
+            var data = new Dictionary<string, string>(Data, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (key, value) in values)
+                data[key] = value;
+
+            Data = data;
         }
 
         OnReload();

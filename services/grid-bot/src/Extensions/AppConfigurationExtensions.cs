@@ -24,8 +24,7 @@ public static class AppConfigurationExtensions
     /// Builds the application configuration and registers the migrated options.
     /// </summary>
     /// <remarks>
-    /// Precedence, highest first: environment variables, appsettings.json, appsettings.{environment}.json,
-    /// runtime writes (<see cref="ISettingsWriter"/>), Vault.
+    /// Precedence, highest first: environment variables, appsettings.json, appsettings.{environment}.json, Vault.
     /// Local settings always win over remote ones.
     /// Options bind from their section and then from the root, so unprefixed environment variables keep working.
     /// </remarks>
@@ -89,6 +88,7 @@ public static class AppConfigurationExtensions
         AddOptions<ScriptsOptions>(ScriptsOptions.SectionName);
         AddOptions<AvatarOptions>(AvatarOptions.SectionName);
         AddOptions<ClientSettingsOptions>(ClientSettingsOptions.SectionName);
+        AddOptions<MaintenanceOptions>(MaintenanceOptions.SectionName);
 
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         services.AddSingleton<IValidateOptions<DiscordOptions>, DiscordOptionsValidator>();

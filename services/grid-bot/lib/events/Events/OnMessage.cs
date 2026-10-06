@@ -27,7 +27,7 @@ using Utility;
 /// Initializes a new instance of the <see cref="OnMessage"/> class.
 /// </remarks>
 /// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
 /// <param name="commandService">The <see cref="CommandService"/>.</param>
@@ -35,7 +35,7 @@ using Utility;
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="commandsOptions"/> cannot be null.
-/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
 /// - <paramref name="commandService"/> cannot be null.
@@ -44,7 +44,7 @@ using Utility;
 /// </exception>
 public partial class OnMessage(
     IOptionsMonitor<CommandsOptions> commandsOptions,
-    MaintenanceSettings maintenanceSettings,
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
     IAdminUtility adminUtility,
     IPerUserContextLoggerFactory loggerFactory,
     CommandService commandService,
@@ -61,7 +61,9 @@ public partial class OnMessage(
     private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
 
     private CommandsOptions _commandsSettings => _commandsOptions.CurrentValue;
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
 
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));

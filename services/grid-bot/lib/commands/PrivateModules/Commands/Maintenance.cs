@@ -2,6 +2,7 @@ namespace Grid.Bot.Commands.Private;
 
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Discord;
 using Discord.WebSocket;
@@ -18,24 +19,30 @@ using Utility;
 /// <remarks>
 /// Construct a new instance of <see cref="Maintenance"/>.
 /// </remarks>
-/// <param name="maintenanceSettings">The <see cref="MaintenanceSettings"/>.</param>
+/// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
 /// <param name="discordOptions">The <see cref="DiscordOptions"/>.</param>
 /// <param name="discordShardedClient">The <see cref="DiscordShardedClient"/>.</param>
+/// <param name="settingsWriter">The <see cref="ISettingsWriter"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="maintenanceSettings"/> cannot be null.
+/// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="discordOptions"/> cannot be null.
 /// - <paramref name="discordShardedClient"/> cannot be null.
+/// - <paramref name="settingsWriter"/> cannot be null.
 /// </exception>
 [LockDownCommand(BotRole.Administrator)]
 [RequireBotRole(BotRole.Administrator)]
 [Group("maintenance"), Summary("Commands used for enabling and disabling maintenance mode."), Alias("maint", "m")]
 public class Maintenance(
-    MaintenanceSettings maintenanceSettings,
+    IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
     IOptionsMonitor<DiscordOptions> discordOptions,
-    DiscordShardedClient discordShardedClient
+    DiscordShardedClient discordShardedClient,
+    ISettingsWriter settingsWriter
 ) : ModuleBase
 {
-    private readonly MaintenanceSettings _maintenanceSettings = maintenanceSettings ?? throw new ArgumentNullException(nameof(maintenanceSettings));
+    private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
+    private readonly ISettingsWriter _settingsWriter = settingsWriter ?? throw new ArgumentNullException(nameof(settingsWriter));
+
+    private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
     private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
 
     private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
@@ -68,16 +75,18 @@ public class Maintenance(
         if (string.IsNullOrEmpty(statusText))
             statusText = _maintenanceSettings.MaintenanceStatus;
 
-        using (_maintenanceSettings.BeginTransaction())
+        var values = new Dictionary<string, string>
         {
-            _maintenanceSettings.MaintenanceEnabled = true;
+            [nameof(MaintenanceOptions.MaintenanceEnabled)] = "true"
+        };
 
-            _discordShardedClient.SetStatusAsync(UserStatus.DoNotDisturb);
-            _discordShardedClient.SetGameAsync(GetStatusText(statusText));
+        if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
+            values[nameof(MaintenanceOptions.MaintenanceStatus)] = statusText;
 
-            if (!string.IsNullOrEmpty(statusText) && !_maintenanceSettings.MaintenanceStatus.Equals(statusText, StringComparison.InvariantCulture))
-                _maintenanceSettings.MaintenanceStatus = statusText;
-        }
+        await _settingsWriter.SetAsync(MaintenanceOptions.SectionName, values);
+
+        _discordShardedClient.SetStatusAsync(UserStatus.DoNotDisturb);
+        _discordShardedClient.SetGameAsync(GetStatusText(statusText));
 
         await this.ReplyWithReferenceAsync($"Successfully enabled the maintenance status with the optional message of '{(string.IsNullOrEmpty(statusText) ? "No Message" : statusText)}'!");
     }
@@ -95,15 +104,12 @@ public class Maintenance(
             return;
         }
 
-        using (_maintenanceSettings.BeginTransaction())
-        {
-            _maintenanceSettings.MaintenanceEnabled = false;
+        await _settingsWriter.SetAsync(MaintenanceOptions.SectionName, nameof(MaintenanceOptions.MaintenanceEnabled), "false");
 
-            _discordShardedClient.SetStatusAsync(_discordSettings.BotStatus);
+        _discordShardedClient.SetStatusAsync(_discordSettings.BotStatus);
 
-            if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
-                _discordShardedClient.SetGameAsync(_discordSettings.BotStatusMessage);
-        }
+        if (!string.IsNullOrEmpty(_discordSettings.BotStatusMessage))
+            _discordShardedClient.SetGameAsync(_discordSettings.BotStatusMessage);
 
         await this.ReplyWithReferenceAsync("Successfully disabled the maintenance status!");
     }
@@ -133,8 +139,7 @@ public class Maintenance(
             return;
         }
 
-        _maintenanceSettings.MaintenanceStatus = statusText;
-        _maintenanceSettings.ApplyCurrent();
+        await _settingsWriter.SetAsync(MaintenanceOptions.SectionName, nameof(MaintenanceOptions.MaintenanceStatus), statusText);
 
         _discordShardedClient.SetGameAsync(GetStatusText(statusText));
 

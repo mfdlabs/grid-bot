@@ -46,7 +46,8 @@ public static class IServiceProviderExtensions
             return;
         }
 
-        var maintenanceSettings = services.GetRequiredService<MaintenanceSettings>();
+        var maintenanceOptions = services.GetRequiredService<IOptionsMonitor<MaintenanceOptions>>();
+        var settingsWriter = services.GetRequiredService<ISettingsWriter>();
         var discordOptions = services.GetRequiredService<IOptionsMonitor<DiscordOptions>>();
 
         var client = services.GetRequiredService<DiscordShardedClient>();
@@ -59,7 +60,8 @@ public static class IServiceProviderExtensions
         builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
 
         builder.Services.AddSingleton(client);
-        builder.Services.AddSingleton(maintenanceSettings);
+        builder.Services.AddSingleton(maintenanceOptions);
+        builder.Services.AddSingleton(settingsWriter);
         builder.Services.AddSingleton(discordOptions);
 
         builder.Services.AddGrpc();

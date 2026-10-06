@@ -1,6 +1,7 @@
 namespace Grid.Bot;
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -21,4 +22,13 @@ public interface ISettingsWriter
     /// <returns>A task that completes when the value has been persisted.</returns>
     /// <exception cref="ArgumentException">The section is not mapped to a Vault path.</exception>
     Task SetAsync(string section, string key, string value);
+
+    /// <summary>
+    /// Sets several keys within <paramref name="section"/> as a single write.
+    /// </summary>
+    /// <param name="section">The options section.</param>
+    /// <param name="values">The setting names and values.</param>
+    /// <returns>A task that completes when the values have been persisted.</returns>
+    /// <exception cref="ArgumentException">The section is not mapped to a Vault path.</exception>
+    Task SetAsync(string section, IReadOnlyDictionary<string, string> values);
 }
