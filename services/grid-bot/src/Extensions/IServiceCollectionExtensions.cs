@@ -222,7 +222,8 @@ public static class IServiceCollectionExtensions
         var serviceProvider = services.BuildServiceProvider();
 
         var logger = serviceProvider.GetRequiredService<ILogger>();
-        var clientSettingsSettings = serviceProvider.GetRequiredService<ClientSettingsSettings>();
+        var clientSettingsOptions = serviceProvider.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
+        var clientSettingsSettings = clientSettingsOptions.CurrentValue;
         var vaultFactory = serviceProvider.GetRequiredService<IVaultFactory>();
         var globalOptions = serviceProvider.GetRequiredService<IOptionsMonitor<GlobalOptions>>().CurrentValue;
 
@@ -235,7 +236,7 @@ public static class IServiceCollectionExtensions
         var clientSettingsFactory = new ClientSettingsFactory(
             vaultClient,
             logger,
-            clientSettingsSettings
+            clientSettingsOptions
         );
 
         services.AddSingleton<IClientSettingsFactory>(clientSettingsFactory);

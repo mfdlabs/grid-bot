@@ -14,6 +14,8 @@ using VaultSharp.Core;
 
 using Prometheus;
 
+using Microsoft.Extensions.Options;
+
 using Logging;
 
 using Internal;
@@ -31,7 +33,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
 {
     private const string _metadataJsonKeyPrefix = "$$";
 
-    private readonly ClientSettingsSettings _settings;
+    private readonly IOptionsMonitor<ClientSettingsOptions> _options;
     private readonly IVaultClient _client;
     private readonly ILogger _logger;
     private readonly LazyWithRetry<CachedValues> _settingsCacheRefreshAhead;
@@ -59,40 +61,44 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
     private readonly ReaderWriterLockSlim _settingsCacheLock = new();
 
+    private ClientSettingsOptions _settings => _options.CurrentValue;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ClientSettingsFactory"/>
     /// class.
     /// </summary>
     /// <param name="client">The <see cref="IVaultClient"/>.</param>
     /// <param name="logger">The <see cref="ILogger"/>.</param>
-    /// <param name="settings">The <see cref="ClientSettingsSettings"/>.</param>
+    /// <param name="options">The <see cref="ClientSettingsOptions"/>.</param>
     /// <exception cref="ArgumentNullException">
-    /// - <paramref name="client"/> is <see langword="null"/>, only when <see cref="ClientSettingsSettings.ClientSettingsViaVault"/> is <see langword="true"/>.
+    /// - <paramref name="client"/> is <see langword="null"/>, only when <see cref="ClientSettingsOptions.ClientSettingsViaVault"/> is <see langword="true"/>.
     /// - <paramref name="logger"/> is <see langword="null"/>.
-    /// - <paramref name="settings"/> is <see langword="null"/>.
+    /// - <paramref name="options"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="ArgumentException"><see cref="ClientSettingsSettings.ClientSettingsVaultMount"/> is <see
+    /// <exception cref="ArgumentException"><see cref="ClientSettingsOptions.ClientSettingsVaultMount"/> is <see
     /// langword="null"/> or whitespace.</exception> <exception
-    /// cref="ArgumentOutOfRangeException"><see cref="ClientSettingsSettings.ClientSettingsRefreshInterval"/> is
+    /// cref="ArgumentOutOfRangeException"><see cref="ClientSettingsOptions.ClientSettingsRefreshInterval"/> is
     /// less than <see cref="TimeSpan.Zero"/>.</exception>
     public ClientSettingsFactory(
       IVaultClient client,
       ILogger logger,
-      ClientSettingsSettings settings
+      IOptionsMonitor<ClientSettingsOptions> options
     )
     {
         _client = client;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
 
-        if (_settings.ClientSettingsViaVault && _client == null)
+        var settings = _settings;
+
+        if (settings.ClientSettingsViaVault && _client == null)
             throw new ArgumentNullException(nameof(client), "Client cannot be null when using Vault.");
 
         if (string.IsNullOrWhiteSpace(settings.ClientSettingsVaultMount))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(settings.ClientSettingsVaultMount));
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(ClientSettingsOptions.ClientSettingsVaultMount));
 
         if (settings.ClientSettingsRefreshInterval < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(settings.ClientSettingsRefreshInterval), settings.ClientSettingsRefreshInterval, "Value cannot be less than zero.");
+            throw new ArgumentOutOfRangeException(nameof(ClientSettingsOptions.ClientSettingsRefreshInterval), settings.ClientSettingsRefreshInterval, "Value cannot be less than zero.");
 
         _mount = settings.ClientSettingsVaultMount;
         _path = settings.ClientSettingsVaultPath ?? "/";

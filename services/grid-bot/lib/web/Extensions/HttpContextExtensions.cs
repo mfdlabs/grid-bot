@@ -29,9 +29,9 @@ public static class HttpContextExtensions
     /// Determines if the request has a valid API key in it.
     /// </summary>
     /// <param name="request">The <see cref="HttpRequest" /></param>
-    /// <param name="settings">The <see cref="ClientSettingsSettings" /></param>
+    /// <param name="settings">The <see cref="ClientSettingsOptions" /></param>
     /// <returns>[true] if the request has a valid API key, otherwise false.</returns>
-    public static bool HasValidApiKey(this HttpRequest request, ClientSettingsSettings settings)
+    public static bool HasValidApiKey(this HttpRequest request, ClientSettingsOptions settings)
     {
         if (settings.ClientSettingsApiKeys.Length == 0) return true;
         if (!request.Headers.TryGetValue(_apiKeyHeaderName, out var apiKeyHeaderValues)) return false;

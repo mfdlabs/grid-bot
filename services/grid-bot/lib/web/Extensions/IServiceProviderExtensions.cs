@@ -62,11 +62,11 @@ public static class IServiceProviderExtensions
         builder.Logging.AddProvider(new MicrosoftLoggerProvider(logger));
 
         var avatarOptions = services.GetRequiredService<IOptionsMonitor<AvatarOptions>>();
-        var clientSettingsSettings = services.GetRequiredService<ClientSettingsSettings>();
+        var clientSettingsOptions = services.GetRequiredService<IOptionsMonitor<ClientSettingsOptions>>();
 
         builder.Services.AddSingleton<Logging.ILogger>(logger);
         builder.Services.AddSingleton(clientSettingsFactory);
-        builder.Services.AddSingleton(clientSettingsSettings);
+        builder.Services.AddSingleton(clientSettingsOptions);
         builder.Services.AddSingleton(avatarOptions);
 
         builder.Services.AddHttpClient();
