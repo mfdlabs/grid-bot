@@ -3,7 +3,9 @@
 using System;
 using System.Threading;
 using System.Reflection;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Discord;
 using Discord.WebSocket;
@@ -15,6 +17,8 @@ using Microsoft.Extensions.Options;
 
 using Logging;
 
+using Utility;
+
 /// <summary>
 /// Event handler to be invoked when a shard is ready,
 /// </summary>
@@ -23,6 +27,7 @@ using Logging;
 /// </remarks>
 /// <param name="discordOptions">The <see cref="DiscordOptions"/>.</param>
 /// <param name="maintenanceOptions">The <see cref="MaintenanceOptions"/>.</param>
+/// <param name="discordWebhookAlertManager">The <see cref="IDiscordWebhookAlertManager"/>.</param>
 /// <param name="logger">The <see cref="ILogger"/>.</param>
 /// <param name="client">The <see cref="DiscordShardedClient"/>.</param>
 /// <param name="interactionService">The <see cref="InteractionService"/>.</param>
@@ -35,6 +40,7 @@ using Logging;
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="discordOptions"/> cannot be null.
 /// - <paramref name="maintenanceOptions"/> cannot be null.
+/// - <paramref name="discordWebhookAlertManager"/> cannot be null.
 /// - <paramref name="logger"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
 /// - <paramref name="interactionService"/> cannot be null.
@@ -48,6 +54,7 @@ using Logging;
 public class OnShardReady(
     IOptionsMonitor<DiscordOptions> discordOptions,
     IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
+    IDiscordWebhookAlertManager discordWebhookAlertManager,
     ILogger logger,
     DiscordShardedClient client,
     InteractionService interactionService,
@@ -62,6 +69,7 @@ public class OnShardReady(
     private static readonly Assembly _commandsAssembly = Assembly.Load("Grid.Bot.Commands");
 
     private int _shardCount = 0;
+    private Stopwatch _startupSw;
 
     private readonly IOptionsMonitor<DiscordOptions> _discordOptions = discordOptions ?? throw new ArgumentNullException(nameof(discordOptions));
 
@@ -70,6 +78,7 @@ public class OnShardReady(
 
     private MaintenanceOptions _maintenanceSettings => _maintenanceOptions.CurrentValue;
 
+    private readonly IDiscordWebhookAlertManager _discordWebhookAlertManager = discordWebhookAlertManager ?? throw new ArgumentNullException(nameof(discordWebhookAlertManager));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DiscordShardedClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly InteractionService _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
@@ -84,6 +93,15 @@ public class OnShardReady(
     private static string GetStatusText(string updateText)
         => string.IsNullOrEmpty(updateText) ? "Maintenance is enabled" : $"Maintenance is enabled: {updateText}";
 
+    private static string FormatTimeSpan(TimeSpan span)
+    {
+        var parts = new List<string>();
+        if (span.Minutes > 0) parts.Add($"{span.Minutes}min");
+        if (span.Seconds > 0) parts.Add($"{span.Seconds}s");
+        if (span.Milliseconds > 0) parts.Add($"{span.Milliseconds}ms");
+        return string.Join(" ", parts);
+    }
+
     /// <summary>
     /// Invoe the event handler.
     /// </summary>
@@ -92,15 +110,35 @@ public class OnShardReady(
     {
         Interlocked.Increment(ref _shardCount);
 
+        if (_shardCount == 1 && _startupSw == null)
+        {
+            _startupSw = Stopwatch.StartNew();
+
+            if (_discordSettings.AlertLogStartups)
+                await _discordWebhookAlertManager.SendAlertAsync(
+                    topic: $"Startup ({EnvironmentDataProvider.EnvironmentName})",
+                    message: $"Start up has begun for '{_client.CurrentUser}' with {_client.Shards.Count} shards...",
+                    color: Color.LightOrange
+                ).ConfigureAwait(false);
+        }
+
         _logger.Debug(
-            "Shard '{0}' ready as '{0}#{1}'",
+            "Shard '{0}' ready as '{0}'",
             shard.ShardId,
-            _client.CurrentUser.Username,
-            _client.CurrentUser.Discriminator
+            _client.CurrentUser.ToString()
         );
 
         if (_shardCount == _client.Shards.Count)
         {
+            _startupSw.Stop();
+
+            if (_discordSettings.AlertLogFinalShardReady)
+                await _discordWebhookAlertManager.SendAlertAsync(
+                    topic: $"Startup ({EnvironmentDataProvider.EnvironmentName})",
+                    message: $"Final shard for '{_client.CurrentUser}' is ready, took {FormatTimeSpan(_startupSw.Elapsed)} to startup {_client.Shards.Count} shards!",
+                    color: Color.Green
+                ).ConfigureAwait(false);
+
             await _interactionService.AddModulesAsync(_commandsAssembly, _services);
             await _commandService.AddModulesAsync(_commandsAssembly, _services);
 

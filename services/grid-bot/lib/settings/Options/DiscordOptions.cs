@@ -56,6 +56,16 @@ public class DiscordOptions
 #endif
 
     /// <summary>
+    /// Gets or sets a value indicating whether startup events are logged to alert manager.
+    /// </summary>
+    public bool AlertLogStartups { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the final shard ready event is logged to alert manager.
+    /// </summary>
+    public bool AlertLogFinalShardReady { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets a value indicating whether Discord internals are logged.
     /// </summary>
     public bool ShouldLogDiscordInternals { get; set; } = true;
