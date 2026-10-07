@@ -4,18 +4,14 @@ using System;
 using System.Net;
 using System.Linq;
 using System.Reflection;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
 
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 
 using Microsoft.Extensions.Options;
-
-using Grid.ProcessManagement;
 
 using Grid.Bot.Commands;
 
@@ -30,25 +26,19 @@ using InteractionModuleBase = Discord.Interactions.InteractionModuleBase;
 /// <remarks>
 /// Construct a new instance of <see cref="Support"/>.
 /// </remarks>
-/// <param name="gridOptions">The <see cref="GridOptions"/>.</param>
 /// <param name="globalOptions">The <see cref="GlobalOptions"/>.</param>
-/// <param name="gridServerFileHelper">The <see cref="IGridServerFileHelper"/>.</param>
+/// <param name="jobManager">The <see cref="IJobManager"/>.</param>
 /// <exception cref="ArgumentNullException">
-/// - <paramref name="gridOptions"/> cannot be null.
 /// - <paramref name="globalOptions"/> cannot be null.
-/// - <paramref name="gridServerFileHelper"/> cannot be null.
+/// - <paramref name="jobManager"/> cannot be null.
 /// </exception>
 public class Support(
-    IOptionsMonitor<GridOptions> gridOptions,
     IOptionsMonitor<GlobalOptions> globalOptions,
-    IGridServerFileHelper gridServerFileHelper
+    IJobManager jobManager
 )
 {
-    private readonly IOptionsMonitor<GridOptions> _gridOptions = gridOptions ?? throw new ArgumentNullException(nameof(gridOptions));
-
-    private GridOptions _gridSettings => _gridOptions.CurrentValue;
     private readonly IOptionsMonitor<GlobalOptions> _globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
-    private readonly IGridServerFileHelper _gridServerFileHelper = gridServerFileHelper ?? throw new ArgumentNullException(nameof(gridServerFileHelper));
+    private readonly IJobManager _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
 
     private static bool GetAddressByInterface(NetworkInterfaceType interfaceType, out string ip)
         => !string.IsNullOrEmpty(
@@ -82,10 +72,6 @@ public class Support(
         var entryAssembly = Assembly.GetEntryAssembly();
         var informationalVersion = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
-        var gridServerVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? FileVersionInfo.GetVersionInfo(_gridServerFileHelper.GetFullyQualifiedGridServerPath()).FileVersion
-            : _gridSettings.GridServerImageTag;
-
         var embed = new EmbedBuilder()
             .WithTitle("Grid Bot")
             .WithDescription("Grid Bot is a Discord bot that provides a variety of features for interacting with Roblox Grid Servers, such as thumbnailing and Luau execution.")
@@ -99,7 +85,7 @@ public class Support(
             .AddField("Machine Host", Dns.GetHostName())
             .AddField("Local IP Address", GetLocalAddress())
             .AddField("Bot Version", informationalVersion)
-            .AddField("Grid Server Version", gridServerVersion)
+            .AddField("Grid Server Version", _jobManager.GetVersion())
             .Build();
 
         await context.RespondAsync(embed: embed).ConfigureAwait(false);
