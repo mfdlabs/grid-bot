@@ -19,6 +19,7 @@ using Microsoft.Extensions.Options;
 
 using Prometheus;
 using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Utility;
 
@@ -252,6 +253,16 @@ public partial class OnMessage(
             var stopwatch = Stopwatch.StartNew();
             var outcome = MetricOutcomes.Exception;
 
+            using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.Command);
+            if (activity is not null)
+            {
+                activity.SetTag(GridBotTelemetry.Tags.CommandName, metricCommandName);
+                activity.SetTag(GridBotTelemetry.Tags.CommandType, "text");
+                activity.SetTag(GridBotTelemetry.Tags.DiscordUserId, message.Author.Id);
+                activity.SetTag(GridBotTelemetry.Tags.DiscordChannelId, message.Channel?.Id);
+                activity.SetTag(GridBotTelemetry.Tags.DiscordGuildId, GetGuildId(message));
+            }
+
             try
             {
                 var context = new ShardedCommandContext(_discordClient, message);
@@ -263,6 +274,8 @@ public partial class OnMessage(
             }
             finally
             {
+                activity.SetOutcome(outcome);
+
                 GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, outcome).Inc();
                 GridBotMetrics.Commands.Duration
                     .WithLabels(metricCommandName, outcome)

@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 
 using Prometheus;
 using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Microsoft.Extensions.Options;
 
@@ -627,6 +628,7 @@ public partial class ExecuteScript
         var stopwatch = Stopwatch.StartNew();
 
         using var inFlight = GridBotMetrics.Scripts.InFlight.TrackInProgress();
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.Script);
 
         try
         {
@@ -640,6 +642,8 @@ public partial class ExecuteScript
         }
         finally
         {
+            activity.SetOutcome(record.Outcome);
+
             GridBotMetrics.Scripts.Executions.WithLabels(record.Outcome).Inc();
             GridBotMetrics.Scripts.Duration.WithLabels(record.Outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }
@@ -702,7 +706,7 @@ public partial class ExecuteScript
 
         var originalScript = script;
 
-        await LogScriptAsync(script, context);
+        await GridBotTelemetry.RunAsync(GridBotTelemetry.Spans.ScriptLog, () => LogScriptAsync(script, context));
 
         if (ContainsUnicode(script))
         {
@@ -773,7 +777,11 @@ public partial class ExecuteScript
                 File.WriteAllText(scriptName, script, Encoding.ASCII);
 #endif
 
-                var serverResult = soap.BatchJobEx(gridJob, gserverCommand);
+                var serverResult = GridBotTelemetry.Run(
+                    GridBotTelemetry.Spans.GridSoapExecute,
+                    () => soap.BatchJobEx(gridJob, gserverCommand),
+                    ActivityKind.Client
+                );
 
                 Task.Run(() => _jobManager.CloseJob(job, true));
 

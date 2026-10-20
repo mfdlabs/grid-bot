@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Client;
 
 using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using JobManagement;
 using ProcessManagement.Core;
@@ -150,6 +151,9 @@ public class JobManager : IJobManager
         var stopwatch = Stopwatch.StartNew();
         var outcome = MetricOutcomes.Exception;
 
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.GridJobAcquire);
+        activity?.SetTag(GridBotTelemetry.Tags.GridJobId, job.Id);
+
         try
         {
             var result = _jobManager.NewJob(job, expirationInSeconds, waitForReadyInstance, addToActiveJobs);
@@ -157,6 +161,8 @@ public class JobManager : IJobManager
             if (result.rejectionReason is { } reason)
             {
                 outcome = MetricOutcomes.Rejected;
+
+                activity?.SetTag(GridBotTelemetry.Tags.GridJobRejectionReason, reason.ToString());
 
                 GridBotMetrics.GridJobs.Rejections.WithLabels(reason.ToString()).Inc();
             }
@@ -169,6 +175,8 @@ public class JobManager : IJobManager
         }
         finally
         {
+            activity.SetOutcome(outcome);
+
             GridBotMetrics.GridJobs.AcquireDuration.WithLabels(outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }
     }

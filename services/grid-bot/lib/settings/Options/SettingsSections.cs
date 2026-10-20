@@ -31,6 +31,7 @@ public static class SettingsSections
         new(ClientSettingsOptions.SectionName, typeof(ClientSettingsOptions)),
         new(MaintenanceOptions.SectionName, typeof(MaintenanceOptions)),
         new(DiscordRolesOptions.SectionName, typeof(DiscordRolesOptions)),
+        new(TelemetryOptions.SectionName, typeof(TelemetryOptions)),
     }.ToDictionary(section => section.Name, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>

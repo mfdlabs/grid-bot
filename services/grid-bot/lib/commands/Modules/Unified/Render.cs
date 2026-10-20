@@ -18,6 +18,7 @@ using Discord.Interactions;
 
 using Prometheus;
 using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Microsoft.Extensions.Options;
 
@@ -513,13 +514,17 @@ public class Render
             using (soap)
             {
 
-                var result = await soap.BatchJobExAsync(
-                    new GridJob()
-                    {
-                        id = Guid.NewGuid().ToString(),
-                        expirationInSeconds = _avatarSettings.RenderJobTimeout.TotalSeconds
-                    },
-                    renderScript
+                var result = await GridBotTelemetry.RunAsync(
+                    GridBotTelemetry.Spans.GridSoapExecute,
+                    () => soap.BatchJobExAsync(
+                        new GridJob()
+                        {
+                            id = Guid.NewGuid().ToString(),
+                            expirationInSeconds = _avatarSettings.RenderJobTimeout.TotalSeconds
+                        },
+                        renderScript
+                    ),
+                    ActivityKind.Client
                 ).ConfigureAwait(false);
 
                 Task.Run(() => _jobManager.CloseJob(job, true));
@@ -648,6 +653,7 @@ public class Render
         var stopwatch = Stopwatch.StartNew();
 
         using var inFlight = GridBotMetrics.Renders.InFlight.TrackInProgress();
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.Render);
 
         try
         {
@@ -661,6 +667,8 @@ public class Render
         }
         finally
         {
+            activity.SetOutcome(record.Outcome);
+
             GridBotMetrics.Renders.Executions.WithLabels(record.Outcome).Inc();
             GridBotMetrics.Renders.Duration.WithLabels(record.Outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }

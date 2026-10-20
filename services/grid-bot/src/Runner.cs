@@ -100,6 +100,7 @@ internal static class Runner
         var logger = services.GetRequiredService<ILogger>();
         LogStartupInfo(logger);
 
+        services.UseTracing();
 #if DEBUG
         logger.Warning(_debugMode);
 #endif

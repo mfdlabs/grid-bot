@@ -149,10 +149,10 @@ public class OnInteraction(
 
         logger.Debug("Executing command '{0}'.", commandName);
 
-        InteractionExecutionTracker.Start(interaction, interaction.Type.ToString(), metricCommandName);
-
         Task.Run(async () =>
         {
+            InteractionExecutionTracker.Start(interaction, interaction.Type.ToString(), metricCommandName);
+
             // This only times the dispatch, interactions run asynchronously. Kept for dashboard compatibility,
             // gridbot_interaction_duration_seconds measures the actual execution.
             using var _ = _interactionProcessingTime
@@ -162,13 +162,13 @@ public class OnInteraction(
                 )
                 .NewTimer();
 
-            var context = new ShardedInteractionContext(
-                _client,
-                interaction
-            );
-
             try
             {
+                var context = new ShardedInteractionContext(
+                    _client,
+                    interaction
+                );
+
                 var result = await _interactionService.ExecuteCommandAsync(
                     context,
                     _services

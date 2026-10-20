@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared tracing definitions for Grid.Bot.</Description>
+  </PropertyGroup>
+
+  <ItemGroup Label="GridBotPackages">
+    <ProjectReference Include="../metrics/Grid.Bot.Metrics.csproj" />
+  </ItemGroup>
+</Project>

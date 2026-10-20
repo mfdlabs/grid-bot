@@ -15,6 +15,7 @@ using VaultSharp.Core;
 
 using Prometheus;
 using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Microsoft.Extensions.Options;
 
@@ -300,6 +301,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
         var stopwatch = Stopwatch.StartNew();
         var outcome = MetricOutcomes.Exception;
 
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.ClientSettingsRefresh);
+
         try
         {
             // List all the keys in the path
@@ -326,6 +329,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
         }
         finally
         {
+            activity.SetOutcome(outcome);
+
             GridBotMetrics.ClientSettings.RefreshDuration.WithLabels(outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }
     }

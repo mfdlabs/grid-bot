@@ -10,6 +10,7 @@
   
   <ItemGroup Label="GridBotPackages">
     <ProjectReference Include="../metrics/Grid.Bot.Metrics.csproj" />
+    <ProjectReference Include="../telemetry/Grid.Bot.Telemetry.csproj" />
     <ProjectReference Include="../settings/Grid.Bot.Settings.csproj" />
   </ItemGroup>
 
