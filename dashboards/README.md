@@ -11,6 +11,7 @@ they use are documented in
 | `grid-bot-scripts-renders.json` | Script execution and avatar rendering, including rbx-thumbnails. |
 | `grid-bot-grid.json` | Grid jobs and instances, client settings, and the Discord gateway per shard. |
 | `grid-bot-http.json` | The web server per endpoint, and the gRPC API. |
+| `grid-bot-traces.json` | Traces of command and interaction executions per environment, failed and timed out executions, and a single trace by ID. Needs Grafana 13 and a Jaeger data source, see [Traces dashboard](#traces-dashboard). |
 | `alerts/grid-bot.rules.yml` | Alerting rules. |
 | `alerts/grid-bot.rules.test.yml` | Unit tests for the alerting rules. |
 
@@ -38,6 +39,21 @@ Restarts are shown as annotations, and the dashboards refresh every 30 seconds.
 
 To change a dashboard, edit it in Grafana and export it with **Export for
 sharing externally** turned off, then replace the file here. Keep the `uid`.
+
+## Traces dashboard
+
+`grid-bot-traces.json` uses the Grafana dashboard v2 schema
+(`apiVersion: dashboard.grafana.app/v2`), because it shows the single trace
+panel only while a trace ID is set. That needs the show/hide rules of dynamic
+dashboards, which are on by default in Grafana 13 and have no equivalent in the
+classic schema. Grafana provisions it from the same directory as the others, as
+long as the file stays in the Kubernetes resource format, so do not replace it
+with a classic export. Export it with the **V2 Resource** model instead.
+
+It filters Jaeger by the `deployment.environment.name` resource attribute, using
+the dashboard's `Environment` value. Select a trace ID in a table to open the
+trace on the dashboard, or enter one in the `Trace ID` variable. Until one is
+set, a hint is shown instead of the trace panel.
 
 ## Linking latency to traces
 
