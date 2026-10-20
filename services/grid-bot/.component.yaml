@@ -240,11 +240,17 @@ deployment:
             #!/bin/sh
             set -eu
 
+            echo "[pre-script] Ensuring data directories exist for grid-bot..."
+
             mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/app-data
             mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/rcc-logs
             mkdir -p /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/scripts
 
             cp /all/scripts/* /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/scripts/ -r
+
+            NUM_COPIED_SCRIPTS=$(find /_/data/grid-bot/${{ env.NOMAD_ENVIRONMENT }}/rcc/scripts/ -name "*.lua" | wc -l)
+
+            echo "[pre-script] Data directories ensured for grid-bot, copied $NUM_COPIED_SCRIPTS scripts."
 
         - destination: secrets/file.env
           env: true
