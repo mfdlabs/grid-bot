@@ -13,6 +13,7 @@ they use are documented in
 | `grid-bot-http.json` | The web server per endpoint, and the gRPC API. |
 | `grid-bot-alerts.json` | Firing and pending alerts per environment, how long they have been active, alert history, and which dashboard to use for each alert. |
 | `grid-bot-traces.json` | Traces of command and interaction executions per environment, failed and timed out executions, and a single trace by ID. Needs Grafana 13 and a Jaeger data source, see [Traces dashboard](#traces-dashboard). |
+| `grid-bot-logs.json` | OTLP logs per environment, filterable by level, logger name, trace ID, and text. Needs a Loki data source, see [Logs dashboard](#logs-dashboard). |
 | `alerts/grid-bot.rules.yml` | Alerting rules. |
 | `alerts/grid-bot.rules.test.yml` | Unit tests for the alerting rules. |
 
@@ -27,6 +28,10 @@ They need no hard coded identifiers:
 
 - **Data source:** the `Data source` variable lists your Prometheus data
   sources.
+- **Loki data source:** the Logs dashboard lists Grafana Loki data sources.
+  Provision one with UID `loki` and URL `https://loki.wck02.vmminfra.dev`,
+  or point it at your own Loki endpoint. The local observability Compose setup
+  provisions Loki, Prometheus, and Jaeger data sources automatically.
 - **Environment:** the `Environment` variable lists the values of the
   `environment` label on `gridbot_build_info`. The bot adds that label to every
   metric it exposes, including the runtime ones, so every query filters on it
@@ -55,6 +60,24 @@ It filters Jaeger by the `deployment.environment.name` resource attribute, using
 the dashboard's `Environment` value. Select a trace ID in a table to open the
 trace on the dashboard, or enter one in the `Trace ID` variable. Until one is
 set, a hint is shown instead of the trace panel.
+
+## Logs dashboard
+
+`grid-bot-logs.json` uses the classic Grafana dashboard schema and a Loki data
+source. Its `Environment` variable queries the `deployment_environment_name`
+OTLP resource label. The logger filter matches the `logger_name` structured
+metadata field, the level filter matches `severity_text`, and the trace filter
+matches `trace_id`, the session filter matches `session_id` (one value per run of the app). Loki normalizes dots in OTLP attribute names to
+underscores. Resource attributes such as `service.name` and
+`deployment.environment.name` are indexed labels by default; log attributes
+such as `severity_text`, `logger.name`, and `trace_id` remain structured
+metadata.
+
+Both the Logs and Traces dashboards have a direct link to the other. The trace
+ID filter is passed along with the environment and time range. The Logs
+dashboard's data source picker requires a Loki data source provisioned in
+Grafana; dashboard provisioning does not create data sources. The local
+observability Compose setup provisions the Loki data source automatically.
 
 ## Linking latency to traces
 
@@ -89,6 +112,11 @@ needs three things:
        type: jaeger
        access: proxy
        url: https://jaeger.wck02.vmminfra.dev
+     - name: Loki
+       uid: loki
+       type: loki
+       access: proxy
+       url: https://loki.wck02.vmminfra.dev
    ```
 
 3. **Tracing enabled** in the bot, see

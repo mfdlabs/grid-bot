@@ -194,6 +194,14 @@ deployment:
 
             echo "[pre-script] cacert.pem written successfully."
 
+            # Let the .NET process trust certificates issued by Vault (e.g. the Traefik OTLP route) on top of the system authorities.
+            DOTNET_CACERT="/tmp/dotnet-cacert.pem"
+            cat /etc/ssl/certs/ca-certificates.crt > "$DOTNET_CACERT"
+            printf '%s\n' "$CHAIN" >> "$DOTNET_CACERT"
+            export SSL_CERT_FILE="$DOTNET_CACERT"
+
+            echo "[pre-script] SSL_CERT_FILE set to $DOTNET_CACERT."
+
         - destination: local/scripts/01-generate-client-settings-token.sh
           env: false
           perms: "755"

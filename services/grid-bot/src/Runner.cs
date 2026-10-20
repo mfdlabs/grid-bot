@@ -83,7 +83,7 @@ internal static class Runner
         logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
     
         GridBotMetrics.Build.Info
-            .WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o"))
+            .WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o"), LogExportExtensions.SessionId)
             .Set(1);
     }
 
@@ -102,6 +102,8 @@ internal static class Runner
         _services = services;
 
         var logger = services.GetRequiredService<ILogger>();
+
+        services.UseLogExport();
         LogStartupInfo(logger);
 
         services.UseTracing();

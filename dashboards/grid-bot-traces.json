@@ -33,6 +33,13 @@
         "targetBlank": false,
         "tooltip": "",
         "url": ""
+      },
+      {
+        "type": "link",
+        "title": "Logs for this trace",
+        "url": "/d/grid-bot-logs?${__url_time_range}&var-environment=${environment}&var-trace_id=${trace_id}",
+        "icon": "external link",
+        "targetBlank": false
       }
     ],
     "annotations": [
