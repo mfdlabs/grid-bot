@@ -44,8 +44,8 @@ public class DiscordWebhookAlertManager(
 
     private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
-    private static readonly Counter _discordWebhookAlertCounter = GridBotMetrics.DiscordAlerts.AlertsSent;
-    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = GridBotMetrics.DiscordAlerts.AlertsWithAttachmentsSent;
+    private static readonly Counter _discordWebhookAlertCounter = GridBotMetrics.DiscordAlerts.Sent;
+    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = GridBotMetrics.DiscordAlerts.SentWithAttachments;
 
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>
     public async Task SendAlertAsync(string topic, string message, Color? color, IEnumerable<FileAttachment> attachments = null)

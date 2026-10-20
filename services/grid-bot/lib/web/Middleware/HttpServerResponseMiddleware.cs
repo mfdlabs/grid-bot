@@ -45,10 +45,7 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
         ArgumentNullException.ThrowIfNull(context);
 
         var latencyStopwatch = Stopwatch.StartNew();
-        var (controller, action) = GetControllerAndAction(context);
-        var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
-            string.Format("{0}.{1}", controller, action)
-            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
+        var endpoint = GetEndpointLabel(context);
 
         try
         {

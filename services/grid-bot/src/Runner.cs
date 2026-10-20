@@ -32,6 +32,9 @@ internal static class Runner
 
     public static void Invoke(string[] args)
     {
+        // This has to come before anything that creates a metric.
+        GridBotMetrics.SetEnvironment(EnvironmentDataProvider.EnvironmentName);
+
         InvokeAsync(args).Wait();
 
         Environment.Exit(0);
@@ -78,7 +81,7 @@ internal static class Runner
 
         logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
     
-        GridBotMetrics.Build.Information
+        GridBotMetrics.Build.Info
             .WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o"))
             .Set(1);
     }

@@ -369,7 +369,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         {
             _settingsCacheLock.EnterReadLock();
 
-            _settingsReadCounter.WithLabels(_mount, _path).Inc();
+            _settingsReadCounter.WithLabels("all").Inc();
 
             try
             {

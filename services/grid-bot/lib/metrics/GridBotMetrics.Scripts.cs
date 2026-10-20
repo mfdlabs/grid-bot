@@ -15,9 +15,6 @@ public static partial class GridBotMetrics
         /// <summary>
         /// Counts script executions, labeled by outcome.
         /// </summary>
-        /// <remarks>
-        /// Replaces <see cref="ByUser"/>, which has an unbounded user label.
-        /// </remarks>
         public static readonly Counter Executions = Prometheus.Metrics.CreateCounter(
             "gridbot_script_executions_total",
             "The total number of script executions by outcome.",
@@ -25,7 +22,7 @@ public static partial class GridBotMetrics
         );
 
         /// <summary>
-        /// Measures script execution duration in seconds, labeled by outcome.
+        /// Measures how long a script execution request takes to handle in seconds, labeled by outcome.
         /// </summary>
         public static readonly Histogram Duration = Prometheus.Metrics.CreateHistogram(
             "gridbot_script_execution_duration_seconds",
@@ -46,153 +43,108 @@ public static partial class GridBotMetrics
         );
 
         /// <summary>
-        /// Total number of script hashes logged ever
+        /// Measures how long scripts ran for in seconds, as reported by the script runtime.
         /// </summary>
-        public static readonly Gauge LoggedScriptHashes = Prometheus.Metrics.CreateGauge(
-            "script_logging_script_hashes_total",
-            "Total number of script hashes logged ever"
+        public static readonly Histogram RunDuration = Prometheus.Metrics.CreateHistogram(
+            "gridbot_script_run_duration_seconds",
+            "The time scripts ran for, as reported by the script runtime.",
+            new HistogramConfiguration
+            {
+                Buckets = MetricBuckets.Execution,
+            }
         );
+
         /// <summary>
-        /// Total number of scripts logged
+        /// Counts script syntax errors, labeled by where the error was found.
         /// </summary>
-        public static readonly Counter Logged = Prometheus.Metrics.CreateCounter(
-            "script_logging_scripts_logged_total",
-            "Total number of scripts logged",
-            "source"
-        );
-        /// <summary>
-        /// Total number of existing scripts logged
-        /// </summary>
-        public static readonly Counter ExistingScriptsLogged = Prometheus.Metrics.CreateCounter(
-            "script_logging_existing_scripts_logged_total",
-            "Total number of existing scripts logged",
-            "script_hash"
-        );
-        /// <summary>
-        /// The total number of script executions blocked by the global flood checker.
-        /// </summary>
-        public static readonly Counter BlockedByGlobalFloodChecker = Prometheus.Metrics.CreateCounter(
-            "script_executions_blocked_by_global_flood_checker_total",
-            "The total number of script executions blocked by the global flood checker."
-        );
-        /// <summary>
-        /// The total number of script executions blocked by the per user flood checker.
-        /// </summary>
-        public static readonly Counter BlockedByPerUserFloodChecker = Prometheus.Metrics.CreateCounter(
-            "script_executions_blocked_by_per_user_flood_checker_total",
-            "The total number of script executions blocked by the per user flood checker.",
-            "user_id"
-        );
-        /// <summary>
-        /// The total number of script executions with syntax errors.
-        /// </summary>
-        public static readonly Counter WithSyntaxErrors = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_syntax_errors_total",
-            "The total number of script executions with syntax errors.",
+        public static readonly Counter SyntaxErrors = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_syntax_errors_total",
+            "The total number of script syntax errors by context.",
             "context"
         );
+
         /// <summary>
-        /// The total number of script executions from files.
+        /// Counts scripts that were not accepted, labeled by reason (see <see cref="MetricLabelValues.ScriptRejectedInput"/>).
+        /// </summary>
+        public static readonly Counter RejectedInputs = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_rejected_inputs_total",
+            "The total number of scripts that were not accepted by reason.",
+            "reason"
+        );
+
+        /// <summary>
+        /// Counts script executions that read the script from a file.
         /// </summary>
         public static readonly Counter FromFiles = Prometheus.Metrics.CreateCounter(
-            "script_executions_from_files_total",
-            "The total number of script executions from files.",
-            "file_name",
-            "file_size"
+            "gridbot_script_executions_from_files_total",
+            "The total number of script executions that read the script from a file."
         );
+
         /// <summary>
-        /// The total number of script executions with no content.
-        /// </summary>
-        public static readonly Counter WithNoContent = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_no_content_total",
-            "The total number of script executions with no content."
-        );
-        /// <summary>
-        /// The total number of script executions with unicode.
-        /// </summary>
-        public static readonly Counter WithUnicode = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_unicode_total",
-            "The total number of script executions with unicode."
-        );
-        /// <summary>
-        /// The total number of script executions by user.
-        /// </summary>
-        public static readonly Counter ByUser = Prometheus.Metrics.CreateCounter(
-            "script_executions_by_user_total",
-            "The total number of script executions by user.",
-            "user_id"
-        );
-        /// <summary>
-        /// The total number of script executions with result exceeding max size.
-        /// </summary>
-        public static readonly Counter WithResultsExceedingMaxSize = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_results_exceeding_max_size_total",
-            "The total number of script executions with result exceeding max size.",
-            "total_size"
-        );
-        /// <summary>
-        /// The total number of script executions with results via file.
-        /// </summary>
-        public static readonly Counter WithResultsViaFiles = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_results_via_file_total",
-            "The total number of script executions with results via file."
-        );
-        /// <summary>
-        /// The total number of successful script executions.
-        /// </summary>
-        public static readonly Counter Successful = Prometheus.Metrics.CreateCounter(
-            "script_executions_success_total",
-            "The total number of successful script executions."
-        );
-        /// <summary>
-        /// The total number of script executions failed due to Lua error.
-        /// </summary>
-        public static readonly Counter FailedDueToLuaError = Prometheus.Metrics.CreateCounter(
-            "script_executions_failed_due_to_lua_error_total",
-            "The total number of script executions failed due to Lua error."
-        );
-        /// <summary>
-        /// The average execution time of script executions in seconds.
-        /// </summary>
-        public static readonly Histogram ExecutionTime = Prometheus.Metrics.CreateHistogram(
-            "script_execution_average_execution_time_seconds",
-            "The average execution time of script executions in seconds."
-        );
-        /// <summary>
-        /// The total number of script executions using Lua VM.
+        /// Counts script executions that use the Lua virtual machine.
         /// </summary>
         public static readonly Counter UsingLuaVm = Prometheus.Metrics.CreateCounter(
-            "script_executions_using_lua_vm_total",
-            "The total number of script executions using Lua VM."
+            "gridbot_script_lua_vm_executions_total",
+            "The total number of script executions that use the Lua virtual machine."
         );
+
         /// <summary>
-        /// The total number of script executions with non JSON serializable results.
+        /// Counts script results that were unusable, labeled by reason (see <see cref="MetricLabelValues.ScriptResultError"/>).
         /// </summary>
-        public static readonly Counter WithNonJsonSerializableResults = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_non_json_serializable_results_total",
-            "The total number of script executions with non JSON serializable results."
+        public static readonly Counter ResultErrors = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_result_errors_total",
+            "The total number of unusable script results by reason.",
+            "reason"
         );
+
         /// <summary>
-        /// The total number of script executions with non ASCII results.
+        /// Counts script results that exceeded the maximum size.
         /// </summary>
-        public static readonly Counter WithNonAsciiResults = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_non_ascii_results_total",
-            "The total number of script executions with non ASCII results."
+        public static readonly Counter OversizedResults = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_oversized_results_total",
+            "The total number of script results that exceeded the maximum size."
         );
+
         /// <summary>
-        /// The total number of script executions that timed out.
+        /// Counts script results delivered as a file.
         /// </summary>
-        public static readonly Counter TimedOut = Prometheus.Metrics.CreateCounter(
-            "script_executions_timed_out_total",
-            "The total number of script executions that timed out."
+        public static readonly Counter ResultsViaFile = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_results_via_file_total",
+            "The total number of script results delivered as a file."
         );
+
         /// <summary>
-        /// The total number of script executions with unexpected exceptions.
+        /// Counts script executions that failed with an unexpected exception, labeled by exception type.
         /// </summary>
-        public static readonly Counter WithUnexpectedExceptions = Prometheus.Metrics.CreateCounter(
-            "script_executions_with_unexpected_exceptions_total",
-            "The total number of script executions with unexpected exceptions.",
+        public static readonly Counter UnexpectedExceptions = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_unexpected_exceptions_total",
+            "The total number of script executions that failed with an unexpected exception by type.",
             "exception_type"
+        );
+
+        /// <summary>
+        /// Reports the number of distinct script hashes logged.
+        /// </summary>
+        public static readonly Gauge LoggedHashes = Prometheus.Metrics.CreateGauge(
+            "gridbot_script_logged_hashes",
+            "The number of distinct script hashes logged."
+        );
+
+        /// <summary>
+        /// Counts scripts logged, labeled by whether they came from a command or an interaction.
+        /// </summary>
+        public static readonly Counter Logged = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_logged_total",
+            "The total number of scripts logged by source.",
+            "source"
+        );
+
+        /// <summary>
+        /// Counts scripts that were already logged.
+        /// </summary>
+        public static readonly Counter LoggedDuplicates = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_logged_duplicates_total",
+            "The total number of scripts that were already logged."
         );
     }
 }

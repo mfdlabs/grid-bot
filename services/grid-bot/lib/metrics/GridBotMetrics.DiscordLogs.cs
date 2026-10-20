@@ -13,19 +13,20 @@ public static partial class GridBotMetrics
     public static class DiscordLogs
     {
         /// <summary>
-        /// The total number of log messages.
+        /// Counts Discord log messages, labeled by severity.
         /// </summary>
         public static readonly Counter Messages = Prometheus.Metrics.CreateCounter(
-            "bot_discord_log_messages_total",
-            "The total number of log messages.",
-            "log_severity"
+            "gridbot_discord_log_messages_total",
+            "The total number of Discord log messages by severity.",
+            "severity"
         );
+
         /// <summary>
-        /// The total number of serializer errors.
+        /// Counts serializer errors reported by the Discord client library.
         /// </summary>
         public static readonly Counter SerializerErrors = Prometheus.Metrics.CreateCounter(
-            "bot_discord_serializer_errors_total",
-            "The total number of serializer errors."
+            "gridbot_discord_serializer_errors_total",
+            "The total number of Discord serializer errors."
         );
     }
 }

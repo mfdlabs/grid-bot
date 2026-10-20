@@ -51,8 +51,8 @@ public class GridBotGrpcServer(
 
     private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
 
-    private static readonly Counter _grpcServerRequestCounter = GridBotMetrics.Grpc.HealthCheckRequests;
-    private static readonly Counter _grpcServerSetStatusRequestCounter = GridBotMetrics.Grpc.SetStatusRequests;
+    private static readonly Counter.Child _grpcServerRequestCounter = GridBotMetrics.Grpc.Requests.WithLabels(MetricLabelValues.GrpcMethod.CheckHealth);
+    private static readonly Counter.Child _grpcServerSetStatusRequestCounter = GridBotMetrics.Grpc.Requests.WithLabels(MetricLabelValues.GrpcMethod.SetStatus);
 
 
     private static string GetStatusText(string updateText)

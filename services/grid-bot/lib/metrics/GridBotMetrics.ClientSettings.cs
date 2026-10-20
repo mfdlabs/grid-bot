@@ -8,10 +8,37 @@ using Prometheus;
 public static partial class GridBotMetrics
 {
     /// <summary>
-    /// Metrics for client-settings reads, writes, and refreshes.
+    /// Metrics for the client-settings service.
     /// </summary>
     public static class ClientSettings
     {
+        /// <summary>
+        /// Counts client-settings refreshes, labeled by application.
+        /// </summary>
+        public static readonly Counter Refreshes = Prometheus.Metrics.CreateCounter(
+            "gridbot_client_settings_refreshes_total",
+            "The total number of client-settings refreshes by application.",
+            "application"
+        );
+
+        /// <summary>
+        /// Counts client-settings writes, labeled by application.
+        /// </summary>
+        public static readonly Counter Writes = Prometheus.Metrics.CreateCounter(
+            "gridbot_client_settings_writes_total",
+            "The total number of client-settings writes by application.",
+            "application"
+        );
+
+        /// <summary>
+        /// Counts client-settings reads, labeled by application. Reads of every application are labeled <c>all</c>.
+        /// </summary>
+        public static readonly Counter Reads = Prometheus.Metrics.CreateCounter(
+            "gridbot_client_settings_reads_total",
+            "The total number of client-settings reads by application.",
+            "application"
+        );
+
         /// <summary>
         /// Measures client-settings refresh duration in seconds, labeled by outcome.
         /// </summary>
@@ -23,31 +50,6 @@ public static partial class GridBotMetrics
                 LabelNames = ["outcome"],
                 Buckets = MetricBuckets.Fast,
             }
-        );
-
-        /// <summary>
-        /// Number of times the client settings have been refreshed.
-        /// </summary>
-        public static readonly Counter Refreshes = Prometheus.Metrics.CreateCounter(
-            "rbx_client_settings_refresh_total",
-            "Number of times the client settings have been refreshed.",
-            "application"
-        );
-        /// <summary>
-        /// Number of times the client settings have been written.
-        /// </summary>
-        public static readonly Counter Writes = Prometheus.Metrics.CreateCounter(
-            "rbx_client_settings_write_total",
-            "Number of times the client settings have been written.",
-            "application"
-        );
-        /// <summary>
-        /// Number of times the client settings have been read.
-        /// </summary>
-        public static readonly Counter Reads = Prometheus.Metrics.CreateCounter(
-            "rbx_client_settings_read_total",
-            "Number of times the client settings have been read.",
-            "application"
         );
     }
 }

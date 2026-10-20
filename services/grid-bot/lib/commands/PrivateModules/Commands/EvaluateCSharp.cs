@@ -19,6 +19,8 @@ using Newtonsoft.Json;
 
 using Microsoft.Extensions.Options;
 
+using Grid.Bot.Metrics;
+
 using Utility;
 
 using Eval.Runner.Models;
@@ -233,7 +235,7 @@ public partial class EvaluateCSharp(
                 return;
             }
 
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsFromFiles.WithLabels(file.Filename, file.Size.ToString()).Inc();
+            GridBotMetrics.Scripts.FromFiles.Inc();
 
             script = await file.GetAttachmentContentsAscii();
         }

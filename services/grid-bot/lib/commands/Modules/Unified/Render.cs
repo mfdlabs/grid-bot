@@ -104,15 +104,15 @@ public class Render
     #region Metrics
 
     private static readonly Gauge _avatarThumbnailsRbxThumbnailsRolloutPercent = GridBotMetrics.Renders.RbxThumbnailsRolloutPercent;
-    private static readonly Gauge _avatarThumbnailsIdsNotToUseTotal = GridBotMetrics.Renders.IdsNotToUse;
+    private static readonly Gauge _avatarThumbnailsIdsNotToUseTotal = GridBotMetrics.Renders.BlockedIds;
     private static readonly Gauge _avatarThumbnailsLocalCacheSize = GridBotMetrics.Renders.LocalCacheSize;
     private static readonly Counter _avatarThumbnailsRbxThumbnailsStatusTotal = GridBotMetrics.Renders.RbxThumbnailsStatuses;
     private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchTotal = GridBotMetrics.Renders.RbxThumbnailsFetches;
-    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal = GridBotMetrics.Renders.RbxThumbnailsFetchesWithBlacklistedId;
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal = GridBotMetrics.Renders.RbxThumbnailsBlockedIdFetches;
     private static readonly Counter _avatarThumbnailsRenderedTotal = GridBotMetrics.Renders.ThumbnailsRendered;
-    private static readonly Counter _avatarThumbnailsOptedInToRbxThumbnailsTotal = GridBotMetrics.Renders.ViaRbxThumbnails;
-    private static readonly Counter _avatarThumbnailsOptedOutOfRbxThumbnailsTotal = GridBotMetrics.Renders.ViaGridServer;
-    private static readonly Counter _avatarThumbnailsLegacyRejectedTotal = GridBotMetrics.Renders.LegacyRejected;
+    private static readonly Counter.Child _avatarThumbnailsOptedInToRbxThumbnailsTotal = GridBotMetrics.Renders.Backend.WithLabels(MetricLabelValues.RenderBackend.RbxThumbnails);
+    private static readonly Counter.Child _avatarThumbnailsOptedOutOfRbxThumbnailsTotal = GridBotMetrics.Renders.Backend.WithLabels(MetricLabelValues.RenderBackend.GridServer);
+    private static readonly Counter _avatarThumbnailsLegacyRejectedTotal = GridBotMetrics.Renders.LegacyRejections;
     private static readonly Counter _avatarThumbnailsLegacyErrorTotal = GridBotMetrics.Renders.LegacyErrors;
 
     #endregion Metrics
@@ -383,7 +383,7 @@ public class Render
 
     private (Stream, string) DoRenderByRbxThumbnails(long userId, ThumbnailCommandType thumbnailCommandType)
     {
-        _avatarThumbnailsOptedInToRbxThumbnailsTotal.WithLabels(userId.ToString()).Inc();
+        _avatarThumbnailsOptedInToRbxThumbnailsTotal.Inc();
 
         _logger.Warning(
             "Trying to fetch the thumbnail for user '{0}' via rbx-thumbnails with the dimensions of {1}x{2}",
@@ -392,14 +392,14 @@ public class Render
             _avatarSettings.RenderYDimension
         );
 
-        _avatarThumbnailsRbxThumbnailsFetchTotal.WithLabels(userId.ToString(), thumbnailCommandType.ToString()).Inc();
+        _avatarThumbnailsRbxThumbnailsFetchTotal.WithLabels(thumbnailCommandType.ToString()).Inc();
 
         if (userId == 0)
             throw new ArgumentException("The user ID cannot be 0.", nameof(userId));
 
         if (_idsNotToUse.Contains(userId))
         {
-            _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal.WithLabels(userId.ToString()).Inc();
+            _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal.Inc();
 
             throw new ThumbnailResponseException(ThumbnailResponseState.Blocked, "The user ID is blacklisted.");
         }
@@ -482,7 +482,7 @@ public class Render
             url
         );
 
-        _avatarThumbnailsOptedOutOfRbxThumbnailsTotal.WithLabels(userId.ToString(), placeId.ToString(), thumbnailCommandType.ToString(), sizeX.ToString(), sizeY.ToString()).Inc();
+        _avatarThumbnailsOptedOutOfRbxThumbnailsTotal.Inc();
 
         var settings = new ThumbnailSettings(thumbnailCommandType, [.. GetThumbnailCommandArguments(url, sizeX, sizeY)]);
 
@@ -504,7 +504,7 @@ public class Render
 
             if (rejectionReason != null)
             {
-                _avatarThumbnailsLegacyRejectedTotal.WithLabels(userId.ToString(), rejectionReason.ToString()).Inc();
+                _avatarThumbnailsLegacyRejectedTotal.WithLabels(rejectionReason.ToString()).Inc();
 
                 _logger.Error("The job was rejected: {0}", rejectionReason);
 
@@ -533,7 +533,7 @@ public class Render
                 if (first != null)
                     return (new MemoryStream(Convert.FromBase64String(first.value)), GetFileNameForRccThumbnail(userId, placeId, settings));
 
-                _avatarThumbnailsLegacyErrorTotal.WithLabels(userId.ToString()).Inc();
+                _avatarThumbnailsLegacyErrorTotal.Inc();
 
                 _logger.Error("The first return argument for the render was null, this may be an issue with the grid server.");
 
@@ -544,7 +544,7 @@ public class Render
         {
             Task.Run(() => _jobManager.CloseJob(job, false));
             _logger.Error(ex);
-            _avatarThumbnailsLegacyErrorTotal.WithLabels(userId.ToString()).Inc();
+            _avatarThumbnailsLegacyErrorTotal.Inc();
 
             return (null, null);
         }
@@ -627,12 +627,12 @@ public class Render
             switch (_rateLimiterRegistry.TryAcquireRender(context.User.Id))
             {
                 case RateLimitScope.Global:
-                    RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
+                    GridBotMetrics.Requests.FloodCheckRejections.WithLabels(MetricLabelValues.Feature.Render, MetricLabelValues.FloodScope.Global).Inc();
                     GridBotMetrics.Renders.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
                 case RateLimitScope.PerUser:
-                    RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+                    GridBotMetrics.Requests.FloodCheckRejections.WithLabels(MetricLabelValues.Feature.Render, MetricLabelValues.FloodScope.PerUser).Inc();
                     GridBotMetrics.Renders.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again."));
@@ -684,11 +684,9 @@ public class Render
 
     private async Task RenderCoreAsync(IUnifiedCommandContext context, string userNameOrId, RenderRecord record)
     {
-        RenderPerformanceCounters.TotalRenders.WithLabels(userNameOrId).Inc();
-
         if (!long.TryParse(userNameOrId, out var userId))
         {
-            RenderPerformanceCounters.TotalRendersViaUsername.Inc();
+            GridBotMetrics.Renders.UsernameLookups.Inc();
 
             var id = await ResolveUserIdAsync(userNameOrId).ConfigureAwait(false);
             if (id == null)
@@ -703,7 +701,7 @@ public class Render
 
         if (userId < 1)
         {
-            RenderPerformanceCounters.TotalRendersWithInvalidIds.Inc();
+            GridBotMetrics.Renders.InvalidInputs.WithLabels(MetricLabelValues.RenderInvalidInput.InvalidId).Inc();
 
             await context.RespondAsync("The ID must be greater than 0.").ConfigureAwait(false);
 
@@ -712,7 +710,7 @@ public class Render
 
         if (!await DetermineIfUserExistsAsync(userId).ConfigureAwait(false))
         {
-            RenderPerformanceCounters.TotalRendersAgainstBannedUsers.WithLabels(userNameOrId).Inc();
+            GridBotMetrics.Renders.InvalidInputs.WithLabels(MetricLabelValues.RenderInvalidInput.BannedUser).Inc();
 
             _logger.Warning("The input user ID of {0} was linked to a banned user account.", userId);
             await context.RespondAsync($"The user '{userNameOrId}' is banned or does not exist.").ConfigureAwait(false);
@@ -735,7 +733,7 @@ public class Render
                 ? ThumbnailCommandType.Avatar_R15_Action
                 : ThumbnailCommandType.Closeup;
 
-            _avatarThumbnailsRenderedTotal.WithLabels(userId.ToString(), thumbnailCommandType.ToString()).Inc();
+            _avatarThumbnailsRenderedTotal.WithLabels(thumbnailCommandType.ToString()).Inc();
 
             var (stream, fileName) = Random.Shared.Next() % 100 < _avatarSettings.RbxThumbnailsRolloutPercent
                 ? DoRenderByRbxThumbnails(
@@ -754,8 +752,6 @@ public class Render
             {
                 record.Outcome = MetricOutcomes.Exception;
 
-                RenderPerformanceCounters.TotalRendersWithErrors.Inc();
-
                 await context.RespondAsync("An error occurred while rendering the character.").ConfigureAwait(false);
 
                 return;
@@ -773,7 +769,7 @@ public class Render
         {
             record.Outcome = MetricOutcomes.Exception;
 
-            RenderPerformanceCounters.TotalRendersWithRbxThumbnailsErrors.WithLabels(e.State.ToString()).Inc();
+            GridBotMetrics.Renders.RbxThumbnailsErrors.WithLabels(e.State.ToString()).Inc();
 
             _logger.Warning("The thumbnail service responded with the following state: {0}, message: {1}", e.State, e.Message);
 
@@ -791,8 +787,6 @@ public class Render
         catch (Exception e)
         {
             record.Outcome = MetricOutcomes.Exception;
-
-            RenderPerformanceCounters.TotalRendersWithErrors.Inc();
 
             _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", userNameOrId, e);
 

@@ -34,7 +34,7 @@ public class OnInteraction(
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
-        "grid_interactions_processed_total",
+        "gridbot_recovery_interactions_processed_total",
         "The total number of interactions processed.",
         "interaction_type"
     );

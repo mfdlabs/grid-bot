@@ -13,18 +13,19 @@ public static partial class GridBotMetrics
     public static class DiscordAlerts
     {
         /// <summary>
-        /// Total number of alerts sent to Discord
+        /// Counts alerts sent to Discord.
         /// </summary>
-        public static readonly Counter AlertsSent = Prometheus.Metrics.CreateCounter(
-            "discord_webhook_alert_total",
-            "Total number of alerts sent to Discord"
+        public static readonly Counter Sent = Prometheus.Metrics.CreateCounter(
+            "gridbot_discord_webhook_alerts_total",
+            "The total number of alerts sent to Discord."
         );
+
         /// <summary>
-        /// Total number of alerts sent to Discord with attachments
+        /// Counts alerts sent to Discord with attachments. A subset of <see cref="Sent"/>.
         /// </summary>
-        public static readonly Counter AlertsWithAttachmentsSent = Prometheus.Metrics.CreateCounter(
-            "discord_webhook_alerts_with_attachments_total",
-            "Total number of alerts sent to Discord with attachments"
+        public static readonly Counter SentWithAttachments = Prometheus.Metrics.CreateCounter(
+            "gridbot_discord_webhook_alerts_with_attachments_total",
+            "The total number of alerts sent to Discord with attachments."
         );
     }
 }

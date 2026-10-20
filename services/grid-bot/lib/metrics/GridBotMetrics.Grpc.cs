@@ -13,18 +13,12 @@ public static partial class GridBotMetrics
     public static class Grpc
     {
         /// <summary>
-        /// Total number of gRPC health check requests
+        /// Counts gRPC requests, labeled by method (see <see cref="MetricLabelValues.GrpcMethod"/>).
         /// </summary>
-        public static readonly Counter HealthCheckRequests = Prometheus.Metrics.CreateCounter(
-            "grpc_health_check_requests_total",
-            "Total number of gRPC health check requests"
-        );
-        /// <summary>
-        /// Total number of gRPC set status requests
-        /// </summary>
-        public static readonly Counter SetStatusRequests = Prometheus.Metrics.CreateCounter(
-            "grpc_set_status_requests_total",
-            "Total number of gRPC set status requests"
+        public static readonly Counter Requests = Prometheus.Metrics.CreateCounter(
+            "gridbot_grpc_requests_total",
+            "The total number of gRPC requests by method.",
+            "method"
         );
     }
 }

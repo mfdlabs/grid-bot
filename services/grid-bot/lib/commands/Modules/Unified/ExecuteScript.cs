@@ -89,9 +89,9 @@ public partial class ExecuteScript
 
     #region Metrics
 
-    private static readonly Gauge _scriptLoggingTotalScriptHashes = GridBotMetrics.Scripts.LoggedScriptHashes;
+    private static readonly Gauge _scriptLoggingTotalScriptHashes = GridBotMetrics.Scripts.LoggedHashes;
     private static readonly Counter _scriptLoggingTotalScriptsLogged = GridBotMetrics.Scripts.Logged;
-    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = GridBotMetrics.Scripts.ExistingScriptsLogged;
+    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = GridBotMetrics.Scripts.LoggedDuplicates;
 
     #endregion
 
@@ -263,7 +263,7 @@ public partial class ExecuteScript
         // Check if the input matches grid syntax error
         if (GridSyntaxErrorRegex().IsMatch(input))
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("grid-server-syntax-error:metadata").Inc();
+            GridBotMetrics.Scripts.SyntaxErrors.WithLabels("grid_server_metadata").Inc();
 
             var match = GridSyntaxErrorRegex().Match(input);
             var line = match.Groups[1].Value;
@@ -281,12 +281,12 @@ public partial class ExecuteScript
 
             if (input.Length / 1000 > maxSize)
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
+                GridBotMetrics.Scripts.OversizedResults.Inc();
 
                 return ($"The output cannot be larger than {maxSize} KiB", null);
             }
 
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
+            GridBotMetrics.Scripts.ResultsViaFile.Inc();
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -307,12 +307,12 @@ public partial class ExecuteScript
 
             if (input.Length / 1000 > maxSize)
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsExceedingMaxSize.WithLabels(input.Length.ToString()).Inc();
+                GridBotMetrics.Scripts.OversizedResults.Inc();
 
                 return ($"The result cannot be larger than {maxSize} KiB", null);
             }
 
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithResultsViaFiles.Inc();
+            GridBotMetrics.Scripts.ResultsViaFile.Inc();
 
             return (fileName, new MemoryStream(Encoding.UTF8.GetBytes(input)));
         }
@@ -336,14 +336,10 @@ public partial class ExecuteScript
 
         if (metadata.Success)
         {
-            ScriptExecutionPerformanceCounters.TotalSuccessfulScriptExecutions.Inc();
-
             builder.WithColor(Color.Green);
         }
         else
         {
-            ScriptExecutionPerformanceCounters.TotalFailedScriptExecutionsDueToLuaError.Inc();
-
             builder.WithColor(Color.Red);
         }
 
@@ -369,7 +365,7 @@ public partial class ExecuteScript
 
         builder.AddField("Execution Time", $"{metadata.ExecutionTime:f5}s");
 
-        ScriptExecutionPerformanceCounters.ScriptExecutionAverageExecutionTime.Observe(metadata.ExecutionTime);
+        GridBotMetrics.Scripts.RunDuration.Observe(metadata.ExecutionTime);
 
         var attachments = new List<FileAttachment>();
         if (outputFile != null)
@@ -407,7 +403,7 @@ public partial class ExecuteScript
 
         if (errors.Any())
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("pre-parser-syntax-error").Inc();
+            GridBotMetrics.Scripts.SyntaxErrors.WithLabels("pre_parser").Inc();
 
             var errorString = string.Join("\n", errors.Select(err => err.ToString()));
 
@@ -537,7 +533,7 @@ public partial class ExecuteScript
 
         if (_scriptHashes.Contains(scriptHash))
         {
-            _scriptLoggingTotalExistingScriptsLogged.WithLabels(scriptHash).Inc();
+            _scriptLoggingTotalExistingScriptsLogged.Inc();
 
             // Just log the hash
             content += "\n\n**Script already logged**";
@@ -601,12 +597,12 @@ public partial class ExecuteScript
             switch (_rateLimiterRegistry.TryAcquireScriptExecution(context.User.Id))
             {
                 case RateLimitScope.Global:
-                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+                    GridBotMetrics.Requests.FloodCheckRejections.WithLabels(MetricLabelValues.Feature.Script, MetricLabelValues.FloodScope.Global).Inc();
                     GridBotMetrics.Scripts.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
                 case RateLimitScope.PerUser:
-                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+                    GridBotMetrics.Requests.FloodCheckRejections.WithLabels(MetricLabelValues.Feature.Script, MetricLabelValues.FloodScope.PerUser).Inc();
                     GridBotMetrics.Scripts.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("You are sending execute commands too quickly, please wait a few moments and try again."));
@@ -659,8 +655,6 @@ public partial class ExecuteScript
 
     private async Task DoExecuteScriptCoreAsync(IUnifiedCommandContext context, IAttachment file, string script, ExecutionRecord record)
     {
-        ScriptExecutionPerformanceCounters.TotalScriptExecutionsByUser.WithLabels(context.User.Id.ToString()).Inc();
-
         if (string.IsNullOrWhiteSpace(script))
         {
             if (file is null)
@@ -686,7 +680,7 @@ public partial class ExecuteScript
                 return;
             }
 
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsFromFiles.WithLabels(file.Filename, file.Size.ToString()).Inc();
+            GridBotMetrics.Scripts.FromFiles.Inc();
 
             script = await file.GetAttachmentContentsAscii();
         }
@@ -695,7 +689,7 @@ public partial class ExecuteScript
 
         if (string.IsNullOrEmpty(script))
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNoContent.Inc();
+            GridBotMetrics.Scripts.RejectedInputs.WithLabels(MetricLabelValues.ScriptRejectedInput.NoContent).Inc();
 
             await LuaErrorAsync(context, "There must be content within a code block!");
 
@@ -710,7 +704,7 @@ public partial class ExecuteScript
 
         if (ContainsUnicode(script))
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnicode.Inc();
+            GridBotMetrics.Scripts.RejectedInputs.WithLabels(MetricLabelValues.ScriptRejectedInput.Unicode).Inc();
 
             await LuaErrorAsync(context, "Scripts can only contain ASCII characters!");
 
@@ -732,7 +726,7 @@ public partial class ExecuteScript
 
         if (_scriptsSettings.LuaVMEnabled) // Disable if pre-luau, or wait for the file to be updated to support pre-luau
         {
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsUsingLuaVM.Inc();
+            GridBotMetrics.Scripts.UsingLuaVm.Inc();
 
             script = string.Format(_luaVM, script);
         }
@@ -803,7 +797,7 @@ public partial class ExecuteScript
                 var message = ex.Message;
                 if (GridSyntaxErrorRegex().IsMatch(message))
                 {
-                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithSyntaxErrors.WithLabels("grid-server-syntax-error:fault").Inc();
+                    GridBotMetrics.Scripts.SyntaxErrors.WithLabels("grid_server_fault").Inc();
 
                     var match = GridSyntaxErrorRegex().Match(message);
                     var line = match.Groups[1].Value;
@@ -829,7 +823,7 @@ public partial class ExecuteScript
 
                 if (message.Contains(_ErrorConvertingToJson))
                 {
-                    ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonJsonSerializableResults.Inc();
+                    GridBotMetrics.Scripts.ResultErrors.WithLabels(MetricLabelValues.ScriptResultError.NonJsonSerializable).Inc();
 
                     await LuaErrorAsync(context, "The script returned a value that could not be converted to JSON.");
 
@@ -841,7 +835,7 @@ public partial class ExecuteScript
             // Catch this and alert the user (only in the case of ex is CommunicationException, ex.InnerException is InvalidOperationException and ex.InnerException.InnerException is XmlException)
             if (ex is CommunicationException && ex.InnerException is InvalidOperationException && ex.InnerException.InnerException is XmlException)
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithNonAsciiResults.Inc();
+                GridBotMetrics.Scripts.ResultErrors.WithLabels(MetricLabelValues.ScriptResultError.NonAscii).Inc();
 
                 await LuaErrorAsync(context, "The script returned invalid ASCII characters.");
 
@@ -850,8 +844,6 @@ public partial class ExecuteScript
 
             if (ex is TimeoutException)
             {
-                ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
-
                 record.Outcome = MetricOutcomes.Timeout;
 
                 await HandleResponseAsync(context, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
@@ -859,7 +851,7 @@ public partial class ExecuteScript
                 return;
             }
 
-            ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();
+            GridBotMetrics.Scripts.UnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();
 
             record.Outcome = MetricOutcomes.Exception;
 

@@ -24,7 +24,7 @@ public class BacktraceUtility : IBacktraceUtility
     private readonly ILogger _logger;
     private readonly BacktraceClient _client;
 
-    private static readonly Counter _uploadExceptionCounter = GridBotMetrics.Backtrace.ExceptionsUploaded;
+    private static readonly Counter _uploadExceptionCounter = GridBotMetrics.Backtrace.Uploads;
 
     /// <summary>
     /// Construct a new instance of <see cref="BacktraceUtility"/>.

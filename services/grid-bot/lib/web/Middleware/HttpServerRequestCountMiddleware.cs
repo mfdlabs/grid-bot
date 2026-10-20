@@ -33,10 +33,7 @@ public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
     /// <returns>An awaitable <see cref="Task"/></returns>
     public async Task Invoke(HttpContext context)
     {
-        var (controller, action) = GetControllerAndAction(context);
-        var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
-            string.Format("{0}.{1}", controller, action)
-            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
+        var endpoint = GetEndpointLabel(context);
 
         _HttpRequestCounter.WithLabels(context.Request.Method, endpoint).Inc();
 

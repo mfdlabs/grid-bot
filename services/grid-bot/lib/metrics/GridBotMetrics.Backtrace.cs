@@ -13,11 +13,11 @@ public static partial class GridBotMetrics
     public static class Backtrace
     {
         /// <summary>
-        /// Total number of exceptions uploaded to Backtrace
+        /// Counts exceptions uploaded to Backtrace.
         /// </summary>
-        public static readonly Counter ExceptionsUploaded = Prometheus.Metrics.CreateCounter(
-            "backtrace_exception_upload_total",
-            "Total number of exceptions uploaded to Backtrace"
+        public static readonly Counter Uploads = Prometheus.Metrics.CreateCounter(
+            "gridbot_backtrace_uploads_total",
+            "The total number of exceptions uploaded to Backtrace."
         );
     }
 }

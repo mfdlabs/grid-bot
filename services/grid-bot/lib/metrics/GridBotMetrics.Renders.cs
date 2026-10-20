@@ -43,156 +43,114 @@ public static partial class GridBotMetrics
         );
 
         /// <summary>
-        /// The percentage of users that are using the rbx-thumbnails rollout.
+        /// Counts render requests made with a username rather than an ID.
         /// </summary>
-        public static readonly Gauge RbxThumbnailsRolloutPercent = Prometheus.Metrics.CreateGauge(
-            "avatar_thumbnails_rbx_thumbnails_rollout_percent",
-            "The percentage of users that are using the rbx-thumbnails rollout."
+        public static readonly Counter UsernameLookups = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_username_lookups_total",
+            "The total number of render requests made with a username."
         );
+
         /// <summary>
-        /// The total number of IDs that are not to be used.
+        /// Counts render requests that were not accepted, labeled by reason (see <see cref="MetricLabelValues.RenderInvalidInput"/>).
         /// </summary>
-        public static readonly Gauge IdsNotToUse = Prometheus.Metrics.CreateGauge(
-            "avatar_thumbnails_ids_not_to_use_total",
-            "The total number of IDs that are not to be used."
+        public static readonly Counter InvalidInputs = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_invalid_inputs_total",
+            "The total number of render requests that were not accepted by reason.",
+            "reason"
         );
+
         /// <summary>
-        /// The size of the local cache.
-        /// </summary>
-        public static readonly Gauge LocalCacheSize = Prometheus.Metrics.CreateGauge(
-            "avatar_thumbnails_local_cache_size",
-            "The size of the local cache."
-        );
-        /// <summary>
-        /// The total number of statuses returned from rbx-thumbnails.
-        /// </summary>
-        public static readonly Counter RbxThumbnailsStatuses = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_rbx_thumbnails_status_total",
-            "The total number of statuses returned from rbx-thumbnails.",
-            "status"
-        );
-        /// <summary>
-        /// The total number of fetches from rbx-thumbnails.
-        /// </summary>
-        public static readonly Counter RbxThumbnailsFetches = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_rbx_thumbnails_fetch_total",
-            "The total number of fetches from rbx-thumbnails.",
-            "user_id",
-            "command_type"
-        );
-        /// <summary>
-        /// The total number of times a blacklisted ID was used.
-        /// </summary>
-        public static readonly Counter RbxThumbnailsFetchesWithBlacklistedId = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_rbx_thumbnails_fetch_blacklisted_id_used_total",
-            "The total number of times a blacklisted ID was used.",
-            "user_id"
-        );
-        /// <summary>
-        /// The total number of rendered thumbnails.
+        /// Counts thumbnails rendered, labeled by command type.
         /// </summary>
         public static readonly Counter ThumbnailsRendered = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_rendered_total",
-            "The total number of rendered thumbnails.",
-            "user_id",
+            "gridbot_render_thumbnails_rendered_total",
+            "The total number of thumbnails rendered by command type.",
             "command_type"
         );
+
         /// <summary>
-        /// The total number of users that were rendered via rbx-thumbnails.
+        /// Counts renders, labeled by the backend that produced them (see <see cref="MetricLabelValues.RenderBackend"/>).
         /// </summary>
-        public static readonly Counter ViaRbxThumbnails = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_via_rbx_thumbnails_total",
-            "The total number of users that were rendered via rbx-thumbnails.",
-            "user_id"
+        public static readonly Counter Backend = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_backend_total",
+            "The total number of renders by the backend that produced them.",
+            "backend"
         );
+
         /// <summary>
-        /// The total number of users that were rendered via the old method.
+        /// Counts statuses returned by rbx-thumbnails, labeled by status.
         /// </summary>
-        public static readonly Counter ViaGridServer = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_via_grid_server_total",
-            "The total number of users that were rendered via the old method.",
-            "user_id",
-            "place_id",
-            "command_type",
-            "dimension_x",
-            "dimension_y"
+        public static readonly Counter RbxThumbnailsStatuses = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_rbx_thumbnails_statuses_total",
+            "The total number of statuses returned by rbx-thumbnails by status.",
+            "status"
         );
+
         /// <summary>
-        /// The total number of legacy rejections.
+        /// Counts errors from rbx-thumbnails, labeled by the state it returned.
         /// </summary>
-        public static readonly Counter LegacyRejected = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_legacy_rejected_total",
-            "The total number of legacy rejections.",
-            "user_id",
-            "rejection_reason"
+        public static readonly Counter RbxThumbnailsErrors = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_rbx_thumbnails_errors_total",
+            "The total number of rbx-thumbnails errors by state.",
+            "state"
         );
+
         /// <summary>
-        /// The total number of legacy errors.
+        /// Counts fetches from rbx-thumbnails, labeled by command type.
+        /// </summary>
+        public static readonly Counter RbxThumbnailsFetches = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_rbx_thumbnails_fetches_total",
+            "The total number of fetches from rbx-thumbnails by command type.",
+            "command_type"
+        );
+
+        /// <summary>
+        /// Counts rbx-thumbnails fetches that used an identifier known not to render.
+        /// </summary>
+        public static readonly Counter RbxThumbnailsBlockedIdFetches = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_rbx_thumbnails_blocked_id_fetches_total",
+            "The total number of rbx-thumbnails fetches that used an identifier known not to render."
+        );
+
+        /// <summary>
+        /// Reports the percentage of users included in the rbx-thumbnails rollout.
+        /// </summary>
+        public static readonly Gauge RbxThumbnailsRolloutPercent = Prometheus.Metrics.CreateGauge(
+            "gridbot_render_rbx_thumbnails_rollout_percent",
+            "The percentage of users included in the rbx-thumbnails rollout."
+        );
+
+        /// <summary>
+        /// Counts requests rejected by the Grid server renderer, labeled by rejection reason.
+        /// </summary>
+        public static readonly Counter LegacyRejections = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_legacy_rejections_total",
+            "The total number of renders rejected by the Grid server renderer by reason.",
+            "reason"
+        );
+
+        /// <summary>
+        /// Counts errors from the Grid server renderer.
         /// </summary>
         public static readonly Counter LegacyErrors = Prometheus.Metrics.CreateCounter(
-            "avatar_thumbnails_legacy_error_total",
-            "The total number of legacy errors.",
-            "user_id"
+            "gridbot_render_legacy_errors_total",
+            "The total number of errors from the Grid server renderer."
         );
+
         /// <summary>
-        /// The total number of renders blocked by the global flood checker.
+        /// Reports the number of identifiers excluded from rendering.
         /// </summary>
-        public static readonly Counter BlockedByGlobalFloodChecker = Prometheus.Metrics.CreateCounter(
-            "renders_blocked_by_global_flood_checker_total",
-            "The total number of renders blocked by the global flood checker."
+        public static readonly Gauge BlockedIds = Prometheus.Metrics.CreateGauge(
+            "gridbot_render_blocked_ids",
+            "The number of identifiers excluded from rendering."
         );
+
         /// <summary>
-        /// The total number of renders blocked by the per user flood checker.
+        /// Reports the current local thumbnail cache size.
         /// </summary>
-        public static readonly Counter BlockedByPerUserFloodChecker = Prometheus.Metrics.CreateCounter(
-            "renders_blocked_by_per_user_flood_checker_total",
-            "The total number of renders blocked by the per user flood checker.",
-            "user_id"
-        );
-        /// <summary>
-        /// The total number of renders.
-        /// </summary>
-        public static readonly Counter Total = Prometheus.Metrics.CreateCounter(
-            "renders_total",
-            "The total number of renders.",
-            "user_name_or_id"
-        );
-        /// <summary>
-        /// The total number of renders via username.
-        /// </summary>
-        public static readonly Counter ViaUsername = Prometheus.Metrics.CreateCounter(
-            "renders_via_username_total",
-            "The total number of renders via username."
-        );
-        /// <summary>
-        /// The total number of renders with invalid IDs.
-        /// </summary>
-        public static readonly Counter WithInvalidIds = Prometheus.Metrics.CreateCounter(
-            "renders_with_invalid_ids_total",
-            "The total number of renders with invalid IDs."
-        );
-        /// <summary>
-        /// The total number of renders against banned users.
-        /// </summary>
-        public static readonly Counter AgainstBannedUsers = Prometheus.Metrics.CreateCounter(
-            "renders_against_banned_users_total",
-            "The total number of renders against banned users.",
-            "user_name_or_id"
-        );
-        /// <summary>
-        /// The total number of renders with errors.
-        /// </summary>
-        public static readonly Counter WithErrors = Prometheus.Metrics.CreateCounter(
-            "renders_with_errors_total",
-            "The total number of renders with errors."
-        );
-        /// <summary>
-        /// The total number of renders with rbx-thumbnails errors.
-        /// </summary>
-        public static readonly Counter WithRbxThumbnailsErrors = Prometheus.Metrics.CreateCounter(
-            "renders_with_rbx_thumbnails_errors_total",
-            "The total number of renders with rbx-thumbnails errors.",
-            "state"
+        public static readonly Gauge LocalCacheSize = Prometheus.Metrics.CreateGauge(
+            "gridbot_render_local_cache_size",
+            "The number of entries in the local thumbnail cache."
         );
     }
 }

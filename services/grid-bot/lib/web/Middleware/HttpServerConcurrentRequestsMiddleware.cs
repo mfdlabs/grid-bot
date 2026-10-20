@@ -14,7 +14,7 @@ using Grid.Bot.Metrics;
 public sealed class HttpServerConcurrentRequestsMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IGauge _ConcurentRequestsGauge = GridBotMetrics.HttpServer.ConcurrentRequests;
+    private readonly IGauge _ConcurentRequestsGauge = GridBotMetrics.HttpServer.InFlight;
 
     /// <summary>
     /// Construct a new instance of <see cref="HttpServerConcurrentRequestsMiddleware"/>

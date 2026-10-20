@@ -13,11 +13,11 @@ public static partial class GridBotMetrics
     public static class Build
     {
         /// <summary>
-        /// Grid.Bot build information
+        /// Identifies the running build by version, Git hash, branch, and build timestamp. The value is always 1.
         /// </summary>
-        public static readonly Gauge Information = Prometheus.Metrics.CreateGauge(
-            "grid_bot_build_info",
-            "Grid.Bot build information",
+        public static readonly Gauge Info = Prometheus.Metrics.CreateGauge(
+            "gridbot_build_info",
+            "Grid.Bot build information.",
             "version",
             "git_hash",
             "git_branch",

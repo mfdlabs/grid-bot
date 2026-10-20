@@ -78,11 +78,6 @@ public partial class OnMessage(
     private readonly HashSet<string> _commandAliases = []; // Used to filter out commands that are not meant for the bot.
 
     private readonly Counter _totalMessagesProcessed = GridBotMetrics.Messages.Processed;
-    private readonly Counter _totalCommandsProcessed = GridBotMetrics.Messages.CommandsProcessed;
-    private readonly Counter _totalMessagesFailedDueToMaintenance = GridBotMetrics.Messages.FailedDueToMaintenance;
-    private readonly Counter _totalBlacklistedUserAttemptedMessages = GridBotMetrics.Messages.BlacklistedUserAttempts;
-    private readonly Counter _totalUsersBypassedMaintenance = GridBotMetrics.Messages.UsersBypassingMaintenance;
-    private readonly Histogram _commandProcessingTime = GridBotMetrics.Messages.CommandProcessingTime;
 
     /// <summary>
     /// Initialize the event handler.
@@ -146,10 +141,6 @@ public partial class OnMessage(
         var userIsPrivilaged = _adminUtility.UserIsPrivilaged(message.Author);
         var userIsBlacklisted = _adminUtility.UserIsBlacklisted(message.Author);
 
-        _totalCommandsProcessed.WithLabels(
-            commandName
-        ).Inc();
-
         // Aliases are matched case-insensitively, normalize so each command has a single series.
         var metricCommandName = commandName.ToLowerInvariant();
 
@@ -170,7 +161,7 @@ public partial class OnMessage(
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalMessagesFailedDueToMaintenance.Inc();
+                GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Message, MetricLabelValues.RejectionReason.Maintenance).Inc();
                 GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning(
@@ -193,20 +184,12 @@ public partial class OnMessage(
                 return;
             }
 
-            _totalUsersBypassedMaintenance.WithLabels(
-                message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
-                GetGuildId(message)
-            ).Inc();
+            GridBotMetrics.Requests.MaintenanceBypasses.WithLabels(MetricLabelValues.Source.Message).Inc();
         }
 
         if (userIsBlacklisted)
         {
-            _totalBlacklistedUserAttemptedMessages.WithLabels(
-                message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
-                GetGuildId(message)
-            ).Inc();
+            GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Message, MetricLabelValues.RejectionReason.Blacklisted).Inc();
             GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
@@ -247,7 +230,6 @@ public partial class OnMessage(
 
         Task.Run(async () =>
         {
-            using var _ = _commandProcessingTime.WithLabels(commandName).NewTimer();
             using var inFlight = GridBotMetrics.Commands.InFlight.TrackInProgress();
 
             var stopwatch = Stopwatch.StartNew();

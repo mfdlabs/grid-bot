@@ -42,15 +42,5 @@ public static partial class GridBotMetrics
             "gridbot_commands_in_flight",
             "The number of text commands currently executing."
         );
-
-        /// <summary>
-        /// The total number of commands failed.
-        /// </summary>
-        public static readonly Counter Failed = Prometheus.Metrics.CreateCounter(
-            "bot_commands_failed_total",
-            "The total number of commands failed.",
-            "message_type",
-            "command"
-        );
     }
 }

@@ -55,12 +55,6 @@ public class OnInteraction(
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    private readonly Counter _totalInteractionsProcessed = GridBotMetrics.Interactions.Processed;
-    private readonly Counter _totalInteractionsFailedDueToMaintenance = GridBotMetrics.Interactions.FailedDueToMaintenance;
-    private readonly Counter _totalBlacklistedUserAttemptedInteractions = GridBotMetrics.Interactions.BlacklistedUserAttempts;
-    private readonly Counter _totalUsersBypassedMaintenance = GridBotMetrics.Interactions.UsersBypassingMaintenance;
-    private readonly Histogram _interactionProcessingTime = GridBotMetrics.Interactions.ProcessingTime;
-
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
@@ -85,11 +79,6 @@ public class OnInteraction(
                 break;
         }
 
-        _totalInteractionsProcessed.WithLabels(
-            interaction.Type.ToString(),
-            commandName
-        ).Inc();
-
         await interaction.DeferAsync();
 
         using var logger = _loggerFactory.CreateLogger(interaction);
@@ -102,7 +91,7 @@ public class OnInteraction(
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalInteractionsFailedDueToMaintenance.Inc();
+                GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Interaction, MetricLabelValues.RejectionReason.Maintenance).Inc();
                 GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning("Maintenance enabled user tried to use the bot.");
@@ -128,14 +117,12 @@ public class OnInteraction(
                 return;
             }
 
-            _totalUsersBypassedMaintenance.WithLabels(interaction.User.Id.ToString()).Inc();
+            GridBotMetrics.Requests.MaintenanceBypasses.WithLabels(MetricLabelValues.Source.Interaction).Inc();
         }
 
         if (userIsBlacklisted)
         {
-            _totalBlacklistedUserAttemptedInteractions.WithLabels(
-                interaction.User.Id.ToString()
-            ).Inc();
+            GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Interaction, MetricLabelValues.RejectionReason.Blacklisted).Inc();
             GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
@@ -152,15 +139,6 @@ public class OnInteraction(
         Task.Run(async () =>
         {
             InteractionExecutionTracker.Start(interaction, interaction.Type.ToString(), metricCommandName);
-
-            // This only times the dispatch, interactions run asynchronously. Kept for dashboard compatibility,
-            // gridbot_interaction_duration_seconds measures the actual execution.
-            using var _ = _interactionProcessingTime
-                .WithLabels(
-                    interaction.Type.ToString(),
-                    commandName
-                )
-                .NewTimer();
 
             try
             {
