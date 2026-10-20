@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Microsoft.Extensions.Options;
 
@@ -50,15 +51,8 @@ public class GridBotGrpcServer(
 
     private DiscordOptions _discordSettings => _discordOptions.CurrentValue;
 
-    private static readonly Counter _grpcServerRequestCounter = Metrics.CreateCounter(
-        "grpc_health_check_requests_total",
-        "Total number of gRPC health check requests"
-    );
-
-    private static readonly Counter _grpcServerSetStatusRequestCounter = Metrics.CreateCounter(
-        "grpc_set_status_requests_total",
-        "Total number of gRPC set status requests"
-    );
+    private static readonly Counter _grpcServerRequestCounter = GridBotMetrics.Grpc.HealthCheckRequests;
+    private static readonly Counter _grpcServerSetStatusRequestCounter = GridBotMetrics.Grpc.SetStatusRequests;
 
 
     private static string GetStatusText(string updateText)

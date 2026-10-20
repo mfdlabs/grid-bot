@@ -27,6 +27,7 @@ using Loretta.CodeAnalysis.Lua;
 using Newtonsoft.Json;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Microsoft.Extensions.Options;
 
@@ -87,20 +88,9 @@ public partial class ExecuteScript
 
     #region Metrics
 
-    private static readonly Gauge _scriptLoggingTotalScriptHashes = Metrics.CreateGauge(
-        "script_logging_script_hashes_total",
-        "Total number of script hashes logged ever"
-    );
-    private static readonly Counter _scriptLoggingTotalScriptsLogged = Metrics.CreateCounter(
-        "script_logging_scripts_logged_total",
-        "Total number of scripts logged",
-        "source" // from command or interaction
-    );
-    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = Metrics.CreateCounter(
-        "script_logging_existing_scripts_logged_total",
-        "Total number of existing scripts logged",
-        "script_hash"
-    );
+    private static readonly Gauge _scriptLoggingTotalScriptHashes = GridBotMetrics.Scripts.LoggedScriptHashes;
+    private static readonly Counter _scriptLoggingTotalScriptsLogged = GridBotMetrics.Scripts.Logged;
+    private static readonly Counter _scriptLoggingTotalExistingScriptsLogged = GridBotMetrics.Scripts.ExistingScriptsLogged;
 
     #endregion
 

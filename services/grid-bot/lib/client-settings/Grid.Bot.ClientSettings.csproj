@@ -5,6 +5,7 @@
   </PropertyGroup>
   
   <ItemGroup Label="GridBotPackages">
+    <ProjectReference Include="../metrics/Grid.Bot.Metrics.csproj" />
     <ProjectReference Include="../settings/Grid.Bot.Settings.csproj" />
   </ItemGroup>
 

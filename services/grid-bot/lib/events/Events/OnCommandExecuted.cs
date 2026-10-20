@@ -13,6 +13,7 @@ using Discord.Commands;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Logging;
 
@@ -49,12 +50,7 @@ public class OnCommandExecuted(
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
 
-    private readonly Counter _totalCommandsFailed = Metrics.CreateCounter(
-        "bot_commands_failed_total",
-        "The total number of commands failed.",
-        "message_type",
-        "command"
-    );
+    private readonly Counter _totalCommandsFailed = GridBotMetrics.Commands.Failed;
 
     /// <summary>
     /// Invoke the handler.

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Microsoft.Extensions.Options;
 
@@ -23,10 +24,7 @@ public class BacktraceUtility : IBacktraceUtility
     private readonly ILogger _logger;
     private readonly BacktraceClient _client;
 
-    private static readonly Counter _uploadExceptionCounter = Metrics.CreateCounter(
-        "backtrace_exception_upload_total",
-        "Total number of exceptions uploaded to Backtrace"
-    );
+    private static readonly Counter _uploadExceptionCounter = GridBotMetrics.Backtrace.ExceptionsUploaded;
 
     /// <summary>
     /// Construct a new instance of <see cref="BacktraceUtility"/>.

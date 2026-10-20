@@ -17,6 +17,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Utility;
 
@@ -74,43 +75,12 @@ public partial class OnMessage(
 
     private readonly HashSet<string> _commandAliases = []; // Used to filter out commands that are not meant for the bot.
 
-    private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
-        "bot_messages_processed_total",
-        "The total number of messages processed."
-    );
-
-    private readonly Counter _totalCommandsProcessed = Metrics.CreateCounter(
-        "bot_commands_processed_total",
-        "The total number of commands processed.",
-        "command_name"
-    );
-
-    private readonly Counter _totalMessagesFailedDueToMaintenance = Metrics.CreateCounter(
-        "bot_messages_failed_due_to_maintenance_total",
-        "The total number of messages failed due to maintenance."
-    );
-
-    private readonly Counter _totalBlacklistedUserAttemptedMessages = Metrics.CreateCounter(
-        "bot_blacklisted_user_attempted_messages_total",
-        "The total number of messages attempted by blacklisted users.",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
-    );
-
-    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
-        "bot_users_bypassed_maintenance_total",
-        "The total number of users that bypassed maintenance.",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
-    );
-
-    private readonly Histogram _commandProcessingTime = Metrics.CreateHistogram(
-        "bot_command_processing_time_seconds",
-        "The time it takes to process an command.",
-        "command_name"
-    );
+    private readonly Counter _totalMessagesProcessed = GridBotMetrics.Messages.Processed;
+    private readonly Counter _totalCommandsProcessed = GridBotMetrics.Messages.CommandsProcessed;
+    private readonly Counter _totalMessagesFailedDueToMaintenance = GridBotMetrics.Messages.FailedDueToMaintenance;
+    private readonly Counter _totalBlacklistedUserAttemptedMessages = GridBotMetrics.Messages.BlacklistedUserAttempts;
+    private readonly Counter _totalUsersBypassedMaintenance = GridBotMetrics.Messages.UsersBypassingMaintenance;
+    private readonly Histogram _commandProcessingTime = GridBotMetrics.Messages.CommandProcessingTime;
 
     /// <summary>
     /// Initialize the event handler.

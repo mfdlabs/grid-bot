@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Prometheus;
+using Grid.Bot.Metrics;
 
 using Logging;
 
@@ -78,11 +78,9 @@ internal static class Runner
 
         logger.Information($"Starting Grid.Bot, Version = {informationalVersion}, BuildTimeStamp = {buildTimeStamp}, GitHash = {gitHash}, GitBranch = {gitBranch}");
     
-        Metrics.CreateGauge(
-            "grid_bot_build_info",
-            "Grid.Bot build information",
-            "version", "git_hash", "git_branch", "build_timestamp"
-        ).WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o")).Set(1);
+        GridBotMetrics.Build.Information
+            .WithLabels(informationalVersion, gitHash, gitBranch, buildTimeStamp.ToString("o"))
+            .Set(1);
     }
 
     private static async Task InvokeAsync(IEnumerable<string> args)

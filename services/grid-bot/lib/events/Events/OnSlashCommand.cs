@@ -11,6 +11,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Utility;
 using Extensions;
@@ -54,36 +55,11 @@ public class OnInteraction(
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
-        "bot_interactions_processed_total",
-        "The total number of interactions processed.",
-        "interaction_type",
-        "command_name"
-    );
-
-    private readonly Counter _totalInteractionsFailedDueToMaintenance = Metrics.CreateCounter(
-        "bot_interactions_failed_due_to_maintenance_total",
-        "The total number of interactions failed due to maintenance."
-    );
-
-    private readonly Counter _totalBlacklistedUserAttemptedInteractions = Metrics.CreateCounter(
-        "bot_blacklisted_user_attempted_interactions_total",
-        "The total number of interactions attempted by blacklisted users.",
-        "interaction_user_id"
-    );
-
-    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
-        "bot_users_bypassed_maintenance_total",
-        "The total number of users that bypassed maintenance.",
-        "interaction_user_id"
-    );
-
-    private readonly Histogram _interactionProcessingTime = Metrics.CreateHistogram(
-        "bot_interaction_processing_time_seconds",
-        "The time it takes to process an interaction.",
-        "interaction_type",
-        "command_name"
-    );
+    private readonly Counter _totalInteractionsProcessed = GridBotMetrics.Interactions.Processed;
+    private readonly Counter _totalInteractionsFailedDueToMaintenance = GridBotMetrics.Interactions.FailedDueToMaintenance;
+    private readonly Counter _totalBlacklistedUserAttemptedInteractions = GridBotMetrics.Interactions.BlacklistedUserAttempts;
+    private readonly Counter _totalUsersBypassedMaintenance = GridBotMetrics.Interactions.UsersBypassingMaintenance;
+    private readonly Histogram _interactionProcessingTime = GridBotMetrics.Interactions.ProcessingTime;
 
     /// <summary>
     /// Invoke the event handler.
@@ -150,9 +126,7 @@ public class OnInteraction(
                 return;
             }
 
-            _totalUsersBypassedMaintenance.WithLabels(
-                interaction.User.Id.ToString()
-            ).Inc();
+            _totalUsersBypassedMaintenance.WithLabels(interaction.User.Id.ToString()).Inc();
         }
 
         if (userIsBlacklisted)

@@ -16,6 +16,7 @@ using Discord.Commands;
 using Discord.Interactions;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Microsoft.Extensions.Options;
 
@@ -100,66 +101,17 @@ public class Render
 
     #region Metrics
 
-    private static readonly Gauge _avatarThumbnailsRbxThumbnailsRolloutPercent = Metrics.CreateGauge(
-        "avatar_thumbnails_rbx_thumbnails_rollout_percent",
-        "The percentage of users that are using the rbx-thumbnails rollout."
-    );
-    private static readonly Gauge _avatarThumbnailsIdsNotToUseTotal = Metrics.CreateGauge(
-        "avatar_thumbnails_ids_not_to_use_total",
-        "The total number of IDs that are not to be used."
-    );
-    private static readonly Gauge _avatarThumbnailsLocalCacheSize = Metrics.CreateGauge(
-        "avatar_thumbnails_local_cache_size",
-        "The size of the local cache."
-    );
-
-    private static readonly Counter _avatarThumbnailsRbxThumbnailsStatusTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_rbx_thumbnails_status_total",
-        "The total number of statuses returned from rbx-thumbnails.",
-        "status"
-    );
-    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_rbx_thumbnails_fetch_total",
-        "The total number of fetches from rbx-thumbnails.",
-        "user_id",
-        "command_type"
-    );
-    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_rbx_thumbnails_fetch_blacklisted_id_used_total",
-        "The total number of times a blacklisted ID was used.",
-        "user_id"
-    );
-    private static readonly Counter _avatarThumbnailsRenderedTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_rendered_total",
-        "The total number of rendered thumbnails.",
-        "user_id",
-        "command_type"
-    );
-    private static readonly Counter _avatarThumbnailsOptedInToRbxThumbnailsTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_via_rbx_thumbnails_total",
-        "The total number of users that were rendered via rbx-thumbnails.",
-        "user_id"
-    );
-    private static readonly Counter _avatarThumbnailsOptedOutOfRbxThumbnailsTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_via_grid_server_total",
-        "The total number of users that were rendered via the old method.",
-        "user_id",
-        "place_id",
-        "command_type",
-        "dimension_x",
-        "dimension_y"
-    );
-    private static readonly Counter _avatarThumbnailsLegacyRejectedTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_legacy_rejected_total",
-        "The total number of legacy rejections.",
-        "user_id",
-        "rejection_reason"
-    );
-    private static readonly Counter _avatarThumbnailsLegacyErrorTotal = Metrics.CreateCounter(
-        "avatar_thumbnails_legacy_error_total",
-        "The total number of legacy errors.",
-        "user_id"
-    );
+    private static readonly Gauge _avatarThumbnailsRbxThumbnailsRolloutPercent = GridBotMetrics.Renders.RbxThumbnailsRolloutPercent;
+    private static readonly Gauge _avatarThumbnailsIdsNotToUseTotal = GridBotMetrics.Renders.IdsNotToUse;
+    private static readonly Gauge _avatarThumbnailsLocalCacheSize = GridBotMetrics.Renders.LocalCacheSize;
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsStatusTotal = GridBotMetrics.Renders.RbxThumbnailsStatuses;
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchTotal = GridBotMetrics.Renders.RbxThumbnailsFetches;
+    private static readonly Counter _avatarThumbnailsRbxThumbnailsFetchBlacklistedIdUsedTotal = GridBotMetrics.Renders.RbxThumbnailsFetchesWithBlacklistedId;
+    private static readonly Counter _avatarThumbnailsRenderedTotal = GridBotMetrics.Renders.ThumbnailsRendered;
+    private static readonly Counter _avatarThumbnailsOptedInToRbxThumbnailsTotal = GridBotMetrics.Renders.ViaRbxThumbnails;
+    private static readonly Counter _avatarThumbnailsOptedOutOfRbxThumbnailsTotal = GridBotMetrics.Renders.ViaGridServer;
+    private static readonly Counter _avatarThumbnailsLegacyRejectedTotal = GridBotMetrics.Renders.LegacyRejected;
+    private static readonly Counter _avatarThumbnailsLegacyErrorTotal = GridBotMetrics.Renders.LegacyErrors;
 
     #endregion Metrics
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 /// <summary>
 /// Middleware to handle the response
@@ -18,19 +19,8 @@ public sealed class HttpServerResponseMiddleware : HttpServerMiddlewareBase
 {
     private readonly RequestDelegate _next;
 
-    private readonly Counter _HttpResponseCounter = Metrics.CreateCounter(
-        "http_server_response_total",
-        "Total number of http responses",
-        "method",
-        "endpoint",
-        "status_code"
-    );
-    private readonly Histogram _RequestDurationHistogram= Metrics.CreateHistogram(
-        "http_server_request_duration_seconds",
-        "Duration in seconds each request takes",
-        "method",
-        "endpoint"
-    );
+    private readonly Counter _HttpResponseCounter = GridBotMetrics.HttpServer.Responses;
+    private readonly Histogram _RequestDurationHistogram = GridBotMetrics.HttpServer.RequestDuration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HttpServerResponseMiddleware" /> class.

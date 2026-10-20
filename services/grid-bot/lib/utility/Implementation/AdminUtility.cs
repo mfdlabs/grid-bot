@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Discord;
 
@@ -29,12 +30,12 @@ public class AdminUtility(IOptionsMonitor<DiscordRolesOptions> discordRolesOptio
 
     private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
-    private static readonly Counter _usersBlacklistedCounter = Metrics.CreateCounter("admin_users_blacklisted_total", "Total number of users blacklisted.");
-    private static readonly Counter _usersUnblacklistedCounter = Metrics.CreateCounter("admin_users_unblacklisted_total", "Total number of users unblacklisted.");
-    private static readonly Counter _usersPrivilagedCounter = Metrics.CreateCounter("admin_users_privilaged_total", "Total number of users with privilaged access.");
-    private static readonly Counter _adminUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_total", "Total number of users demoted from admin.");
-    private static readonly Counter _privilegedUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_privilaged_total", "Total number of users demoted from privilaged.");
-    private static readonly Counter _usersPromotedCounter = Metrics.CreateCounter("admin_users_promoted_total", "Total number of users promoted to admin.");
+    private static readonly Counter _usersBlacklistedCounter = GridBotMetrics.Admin.UsersBlacklisted;
+    private static readonly Counter _usersUnblacklistedCounter = GridBotMetrics.Admin.UsersUnblacklisted;
+    private static readonly Counter _usersPrivilagedCounter = GridBotMetrics.Admin.UsersPrivilaged;
+    private static readonly Counter _adminUsersDemotedCounter = GridBotMetrics.Admin.AdminUsersDemoted;
+    private static readonly Counter _privilegedUsersDemotedCounter = GridBotMetrics.Admin.PrivilegedUsersDemoted;
+    private static readonly Counter _usersPromotedCounter = GridBotMetrics.Admin.UsersPromoted;
 
     // IAdminUtility is synchronous, and each write must be visible before the next role check.
     private void WriteIds(string key, IEnumerable<ulong> ids)

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Discord;
 
@@ -43,14 +44,8 @@ public class DiscordWebhookAlertManager(
 
     private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
-    private static readonly Counter _discordWebhookAlertCounter = Metrics.CreateCounter(
-        "discord_webhook_alert_total",
-        "Total number of alerts sent to Discord"
-    );
-    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = Metrics.CreateCounter(
-        "discord_webhook_alerts_with_attachments_total",
-        "Total number of alerts sent to Discord with attachments"
-    );
+    private static readonly Counter _discordWebhookAlertCounter = GridBotMetrics.DiscordAlerts.AlertsSent;
+    private static readonly Counter _discordWebhookAlertsWithAttachmentsCounter = GridBotMetrics.DiscordAlerts.AlertsWithAttachmentsSent;
 
     /// <inheritdoc cref="IDiscordWebhookAlertManager.SendAlertAsync(string, string, Color?, IEnumerable{FileAttachment})"/>
     public async Task SendAlertAsync(string topic, string message, Color? color, IEnumerable<FileAttachment> attachments = null)

@@ -12,6 +12,7 @@
     <Project Path="../../lib/logging/logging/Logging.csproj" />
   </Folder>
   <Folder Name="/lib/shared/">
+    <Project Path="lib/metrics/Grid.Bot.Metrics.csproj" />
     <Project Path="lib/commands/Grid.Bot.Commands.csproj" />
     <Project Path="lib/events/Grid.Bot.Events.csproj" />
     <Project Path="lib/grpc/Grid.Bot.Grpc.csproj" />
