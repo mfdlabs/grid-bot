@@ -21,9 +21,14 @@ public static class GatewayMetricsHandlers
     /// <returns>A completed <see cref="Task"/>.</returns>
     public static Task OnShardLatencyUpdated(int oldLatency, int newLatency, DiscordSocketClient shard)
     {
+        var shardId = shard.ShardId.ToString();
+
         GridBotMetrics.DiscordGateway.Latency
-            .WithLabels(shard.ShardId.ToString())
+            .WithLabels(shardId)
             .Set(newLatency / 1000d);
+
+        // Create the shard's disconnect series at zero, so its first disconnect is counted by increase().
+        GridBotMetrics.DiscordGateway.Disconnects.WithLabels(shardId);
 
         return Task.CompletedTask;
     }

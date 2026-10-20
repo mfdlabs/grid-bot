@@ -98,6 +98,10 @@ public class JobManager : IJobManager
     {
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
 
+        // Create each rejection reason's series at zero, so the first rejection is counted by increase().
+        foreach (var reason in Enum.GetValues<JobRejectionReason>())
+            GridBotMetrics.GridJobs.Rejections.WithLabels(reason.ToString());
+
         // The instance gauges are read from the job manager when Prometheus scrapes, rather than tracked on every change.
         Prometheus.Metrics.DefaultRegistry.AddBeforeCollectCallback(UpdateGauges);
     }

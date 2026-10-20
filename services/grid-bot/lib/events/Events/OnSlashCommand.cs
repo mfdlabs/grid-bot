@@ -56,6 +56,34 @@ public class OnInteraction(
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     /// <summary>
+    /// Creates each registered command's metric series at zero, so the first execution of a command is counted by increase().
+    /// </summary>
+    /// <remarks>Call this once the commands have been added to the <see cref="InteractionService"/>.</remarks>
+    public void Initialize()
+    {
+        var type = InteractionType.ApplicationCommand.ToString();
+        var names = new HashSet<string>();
+
+        // An interaction reports the name of the top level command, which is the outermost group for a subcommand.
+        foreach (var command in _interactionService.SlashCommands)
+        {
+            var name = command.Name;
+
+            for (var module = command.Module; module is not null; module = module.Parent)
+                if (module.IsSlashGroup)
+                    name = module.SlashGroupName;
+
+            names.Add(name);
+        }
+
+        foreach (var command in _interactionService.ContextCommands)
+            names.Add(command.Name);
+
+        foreach (var name in names)
+            foreach (var outcome in MetricOutcomes.All)
+                GridBotMetrics.Interactions.Executions.WithLabels(type, name, outcome);
+    }
+    /// <summary>
     /// Invoke the event handler.
     /// </summary>
     /// <param name="interaction">The <see cref="SocketInteraction"/>.</param>

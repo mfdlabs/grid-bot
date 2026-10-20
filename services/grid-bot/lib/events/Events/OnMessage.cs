@@ -101,6 +101,11 @@ public partial class OnMessage(
                 .Select(x => x.ToLowerInvariant())
                 .Select(x => x.Split(' ').First())
         );
+
+        // Create each command's series at zero, so the first execution of a command is counted by increase().
+        foreach (var alias in _commandAliases)
+            foreach (var outcome in MetricOutcomes.All)
+                GridBotMetrics.Commands.Executions.WithLabels(alias, outcome);
     }
 
     private static string GetGuildId(SocketMessage message)

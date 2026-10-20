@@ -34,4 +34,9 @@ public static class MetricOutcomes
     /// The requested command could not be found.
     /// </summary>
     public const string NotFound = "not_found";
+
+    /// <summary>
+    /// Every outcome.
+    /// </summary>
+    public static readonly string[] All = [Success, UserError, Timeout, Exception, Rejected, NotFound];
 }

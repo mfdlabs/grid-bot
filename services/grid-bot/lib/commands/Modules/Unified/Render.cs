@@ -117,6 +117,24 @@ public class Render
 
     #endregion Metrics
 
+    /// <summary>
+    /// Creates the render metric series whose labels come from enums at zero, so the first occurrence of each is counted by increase().
+    /// </summary>
+    /// <remarks>Call this at startup, after the metrics environment has been set.</remarks>
+    public static void InitializeSeries()
+    {
+        foreach (var state in Enum.GetNames<ThumbnailResponseState>())
+        {
+            GridBotMetrics.Renders.RbxThumbnailsStatuses.WithLabels(state);
+            GridBotMetrics.Renders.RbxThumbnailsErrors.WithLabels(state);
+        }
+
+        foreach (var commandType in new[] { ThumbnailCommandType.Avatar_R15_Action, ThumbnailCommandType.Closeup })
+        {
+            GridBotMetrics.Renders.RbxThumbnailsFetches.WithLabels(commandType.ToString());
+            GridBotMetrics.Renders.ThumbnailsRendered.WithLabels(commandType.ToString());
+        }
+    }
     #region Dependencies
 
     private readonly IOptionsMonitor<AvatarOptions> _avatarOptions;

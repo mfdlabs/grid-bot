@@ -34,6 +34,7 @@ internal static class Runner
     {
         // This has to come before anything that creates a metric.
         GridBotMetrics.SetEnvironment(EnvironmentDataProvider.EnvironmentName);
+        GridBotMetrics.InitializeSeries();
 
         InvokeAsync(args).Wait();
 
@@ -104,6 +105,8 @@ internal static class Runner
         LogStartupInfo(logger);
 
         services.UseTracing();
+
+        UnifiedCommands.Public.Render.InitializeSeries();
 #if DEBUG
         logger.Warning(_debugMode);
 #endif

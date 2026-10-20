@@ -226,6 +226,33 @@ Changes beyond renaming:
 - Client-settings reads of every application were previously recorded with the
   wrong number of labels and would have thrown. They are now labeled `all`.
 
+## Series that start at zero
+
+A series that is only created by its first increment is first scraped with a
+value of 1. Prometheus has no earlier sample to compare it with, so
+`increase()` and `rate()` report 0 for that first event, and a panel can show 0
+while the counter reads 1. This hides the first occurrence of rare events such
+as a timeout, and every event on a quiet environment.
+
+To avoid that, series are created with a value of zero at startup wherever the
+label values are known:
+
+- `GridBotMetrics.InitializeSeries` creates every metric and every series whose
+  labels are a fixed set, such as every `outcome` and every rejection reason.
+- Each registered command's `gridbot_command_executions_total` and
+  `gridbot_interaction_executions_total` series are created when the commands
+  are registered.
+- Job rejection reasons, thumbnail states and command types come from their
+  enums, and a shard's disconnect series is created when its latency is first
+  reported.
+
+Series whose label values are not known up front still have the gap for their
+first event: `application` on the client-settings counters, `exception_type`,
+the HTTP `endpoint` and `status_code`, and the per-command duration histograms,
+which would otherwise be thousands of series.
+
+When adding a metric with a fixed label set, add it to `InitializeSeries`.
+
 ## Not covered
 
 Port allocation (the allocator lives in the shared `lib/grid` libraries, which

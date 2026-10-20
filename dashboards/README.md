@@ -47,7 +47,12 @@ needs three things:
 1. **Prometheus** must be started with `--enable-feature=exemplar-storage` and
    scrape the bot using the OpenMetrics format, which is negotiated
    automatically when it is supported.
-2. **A Jaeger data source**, and the Prometheus data source pointed at it:
+2. **A Jaeger data source**, and the Prometheus data source pointed at it. Grafana's
+   Jaeger data source uses Jaeger's older HTTP API (`/api/services` and
+   `/api/traces`), which Jaeger removed in 2.21.0. Against 2.21.0 or later the
+   data source test fails with `request failed: 404 Not Found`, so run Jaeger
+   **2.20.0 or earlier** for as long as Grafana depends on that API. The Jaeger
+   UI itself is not affected.
 
    ```yaml
    apiVersion: 1
@@ -94,6 +99,20 @@ because of production, and several instances of one environment are combined.
 | `GridBotInFlightNeverIdle` | warning | An in-flight gauge has not been zero for 30 minutes, which means stuck work or work that is not being counted as finished. |
 
 The thresholds are starting points. Tune them against real traffic.
+
+The rules file also defines a recording rule, `gridbot:executions:rate5m`, with one
+series per kind of execution (`type` is `command`, `interaction`, `script` or
+`render`). The error rate alert is built on it.
+
+## Writing queries
+
+Do not select several metric families with one `{__name__=~"a|b"}` selector inside
+`rate()` or `increase()`. Those functions drop the metric name, so families whose
+series have the same labels, such as the script and render executions, collide and
+the query fails with `vector cannot contain metrics with the same labelset`.
+`promtool` does not report this because it only parses the query. Aggregate each
+family on its own, tag it with `label_replace(..., "type", "<family>", "", "")`,
+join the branches with `or`, and sum the result, as the overview dashboard does.
 
 Check and test the rules with `promtool`:
 

@@ -263,7 +263,7 @@ public partial class ExecuteScript
         // Check if the input matches grid syntax error
         if (GridSyntaxErrorRegex().IsMatch(input))
         {
-            GridBotMetrics.Scripts.SyntaxErrors.WithLabels("grid_server_metadata").Inc();
+            GridBotMetrics.Scripts.SyntaxErrors.WithLabels(MetricLabelValues.SyntaxErrorContext.GridServerMetadata).Inc();
 
             var match = GridSyntaxErrorRegex().Match(input);
             var line = match.Groups[1].Value;
@@ -403,7 +403,7 @@ public partial class ExecuteScript
 
         if (errors.Any())
         {
-            GridBotMetrics.Scripts.SyntaxErrors.WithLabels("pre_parser").Inc();
+            GridBotMetrics.Scripts.SyntaxErrors.WithLabels(MetricLabelValues.SyntaxErrorContext.PreParser).Inc();
 
             var errorString = string.Join("\n", errors.Select(err => err.ToString()));
 
@@ -500,7 +500,7 @@ public partial class ExecuteScript
             guildInfo = (await interaction.GetGuildAsync(context.Client))?.ToString() ?? "DMs";
             channelInfo = interaction.GetChannelAsString();
 
-            _scriptLoggingTotalScriptsLogged.WithLabels("interaction").Inc();
+            _scriptLoggingTotalScriptsLogged.WithLabels(MetricLabelValues.LogSource.Interaction).Inc();
         }
         else
         {
@@ -511,7 +511,7 @@ public partial class ExecuteScript
             guildInfo = context.Guild?.Id.ToString() ?? "DMs";
             channelInfo = message.Channel?.ToString();
 
-            _scriptLoggingTotalScriptsLogged.WithLabels("command").Inc();
+            _scriptLoggingTotalScriptsLogged.WithLabels(MetricLabelValues.LogSource.Command).Inc();
         }
 
 
@@ -797,7 +797,7 @@ public partial class ExecuteScript
                 var message = ex.Message;
                 if (GridSyntaxErrorRegex().IsMatch(message))
                 {
-                    GridBotMetrics.Scripts.SyntaxErrors.WithLabels("grid_server_fault").Inc();
+                    GridBotMetrics.Scripts.SyntaxErrors.WithLabels(MetricLabelValues.SyntaxErrorContext.GridServerFault).Inc();
 
                     var match = GridSyntaxErrorRegex().Match(message);
                     var line = match.Groups[1].Value;

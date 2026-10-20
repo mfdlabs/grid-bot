@@ -6,15 +6,35 @@
 groups:
   - name: grid-bot
     rules:
+      # One series per family, so the alerts below can combine them. Selecting several families with one
+      # {__name__=~"..."} selector fails: rate() drops the name, and the script and render families have identical
+      # labels, which Prometheus rejects as duplicate series.
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_command_executions_total[5m]))
+        labels:
+          type: command
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_interaction_executions_total[5m]))
+        labels:
+          type: interaction
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_script_executions_total[5m]))
+        labels:
+          type: script
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_render_executions_total[5m]))
+        labels:
+          type: render
+
       - alert: GridBotHighErrorRate
         expr: |
           (
-              sum by (environment) (rate({__name__=~"gridbot_(command|interaction|script|render)_executions_total",outcome=~"exception|timeout"}[5m]))
+              sum by (environment) (gridbot:executions:rate5m{outcome=~"exception|timeout"})
             /
-              sum by (environment) (rate({__name__=~"gridbot_(command|interaction|script|render)_executions_total",outcome!="rejected"}[5m]))
+              sum by (environment) (gridbot:executions:rate5m{outcome!="rejected"})
           ) > 0.05
           and
-          sum by (environment) (rate({__name__=~"gridbot_(command|interaction|script|render)_executions_total",outcome!="rejected"}[5m])) > 0.02
+          sum by (environment) (gridbot:executions:rate5m{outcome!="rejected"}) > 0.02
         for: 10m
         labels:
           severity: warning
@@ -27,7 +47,11 @@ groups:
       - alert: GridBotCommandLatencyHigh
         expr: |
           histogram_quantile(0.95,
-            sum by (environment, le) (rate({__name__=~"gridbot_(command|interaction)_duration_seconds_bucket",outcome!="rejected"}[5m]))
+            sum by (environment, le) (
+                label_replace(sum by (environment, le) (rate(gridbot_command_duration_seconds_bucket{outcome!="rejected"}[5m])), "type", "command", "", "")
+              or
+                label_replace(sum by (environment, le) (rate(gridbot_interaction_duration_seconds_bucket{outcome!="rejected"}[5m])), "type", "interaction", "", "")
+            )
           ) > 10
         for: 10m
         labels:

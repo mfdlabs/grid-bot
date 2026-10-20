@@ -7,13 +7,22 @@ rule_files:
 evaluation_interval: 1m
 
 tests:
-  # 10% of executions are timeouts for long enough to alert.
+  # 10% of executions are timeouts for long enough to alert. The script and render series have identical labels,
+  # which used to make the rule fail with duplicate series.
   - interval: 1m
     input_series:
       - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="success"}'
         values: "0+54x30"
       - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="timeout"}'
         values: "0+6x30"
+      - series: 'gridbot_script_executions_total{environment="staging",outcome="success"}'
+        values: "0+27x30"
+      - series: 'gridbot_script_executions_total{environment="staging",outcome="timeout"}'
+        values: "0+3x30"
+      - series: 'gridbot_render_executions_total{environment="staging",outcome="success"}'
+        values: "0+27x30"
+      - series: 'gridbot_render_executions_total{environment="staging",outcome="timeout"}'
+        values: "0+3x30"
     alert_rule_test:
       - eval_time: 25m
         alertname: GridBotHighErrorRate
@@ -105,6 +114,32 @@ tests:
             exp_annotations:
               summary: "staging: script executions in flight has not been zero for 30 minutes"
               description: "Work is either stuck or is not being counted as finished."
+
+  # Slow commands and slow interactions are combined for the latency alert.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="10"}'
+        values: "0x40"
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="30"}'
+        values: "0+60x40"
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="+Inf"}'
+        values: "0+60x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="10"}'
+        values: "0x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="30"}'
+        values: "0+60x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="+Inf"}'
+        values: "0+60x40"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: GridBotCommandLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+            exp_annotations:
+              summary: "staging: p95 command latency is above 10s"
+              description: "The p95 time from dispatch to completion is 29s."
 
   - interval: 1m
     input_series:

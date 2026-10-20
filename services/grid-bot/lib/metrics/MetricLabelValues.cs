@@ -187,4 +187,41 @@ public static class MetricLabelValues
         /// </summary>
         public const string SetStatus = "set_status";
     }
+
+    /// <summary>
+    /// Where a script syntax error was found.
+    /// </summary>
+    public static class SyntaxErrorContext
+    {
+        /// <summary>
+        /// The Grid server reported it in the script's metadata.
+        /// </summary>
+        public const string GridServerMetadata = "grid_server_metadata";
+
+        /// <summary>
+        /// The Grid server raised it as a fault.
+        /// </summary>
+        public const string GridServerFault = "grid_server_fault";
+
+        /// <summary>
+        /// The bot's own parser found it before the script was sent.
+        /// </summary>
+        public const string PreParser = "pre_parser";
+    }
+
+    /// <summary>
+    /// What a logged script came from.
+    /// </summary>
+    public static class LogSource
+    {
+        /// <summary>
+        /// A text command.
+        /// </summary>
+        public const string Command = "command";
+
+        /// <summary>
+        /// An interaction.
+        /// </summary>
+        public const string Interaction = "interaction";
+    }
 }
