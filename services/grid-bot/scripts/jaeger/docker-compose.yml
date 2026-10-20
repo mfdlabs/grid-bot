@@ -1,0 +1,19 @@
+name: grid-bot-observability
+
+services:
+  jaeger:
+    image: jaegertracing/jaeger:2.20.0
+    user: "0:0"
+    command:
+      - --config
+      - /etc/jaeger/config.yaml
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+    volumes:
+      - ./config.yaml:/etc/jaeger/config.yaml:ro
+      - jaeger-data:/badger
+
+volumes:
+  jaeger-data:

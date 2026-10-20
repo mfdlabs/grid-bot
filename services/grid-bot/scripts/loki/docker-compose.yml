@@ -1,0 +1,15 @@
+name: grid-bot-observability
+
+services:
+  loki:
+    image: grafana/loki:3.5.5
+    command:
+      - -config.file=/etc/loki/loki.yaml
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+
+volumes:
+  loki-data:

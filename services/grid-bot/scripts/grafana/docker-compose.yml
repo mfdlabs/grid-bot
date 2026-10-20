@@ -1,0 +1,17 @@
+name: grid-bot-observability
+
+services:
+  grafana:
+    image: grafana/grafana:13.2.4
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../../../../dashboards:/var/lib/grafana/dashboards:ro
+      - ./provisioning:/etc/grafana/provisioning:ro
+
+volumes:
+  grafana-data:

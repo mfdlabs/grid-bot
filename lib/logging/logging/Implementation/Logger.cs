@@ -746,6 +746,18 @@ public class Logger : ILogger
     {
         this._writeLogToConsole(logLevel, color, messageGetter);
         this._writeLogToFileSystem(logLevel, messageGetter);
+        this._notifyLogWritten(logLevel, messageGetter);
+    }
+
+    private void _notifyLogWritten(LogLevel logLevel, Func<string> messageGetter)
+    {
+        var handlers = Logger.LogWritten;
+
+        if (handlers == null) return;
+
+        // A misbehaving subscriber must never break logging, and logging from here could recurse.
+        try { handlers(logLevel, this._name, messageGetter()); }
+        catch { }
     }
 
     private bool _checkLogLevel(LogLevel logLevel) => this._logLevelGetter() >= logLevel;
@@ -964,6 +976,15 @@ public class Logger : ILogger
     /// Gets the global log prefixes.
     /// </summary>
     public static List<Func<string>> GlobalLogPrefixes => Logger._globalLogPrefixes;
+
+    /// <summary>
+    /// Occurs after a log message has been written by any logger, with the log level, the logger name, and the message.
+    /// </summary>
+    /// <remarks>
+    /// Subscribers run on the logging path, so they must be fast and must not block.
+    /// Exceptions thrown by a subscriber are swallowed.
+    /// </remarks>
+    public static event Action<LogLevel, string, string> LogWritten;
 
 
     ////////////////////////////////////////////////////////////////////////////////

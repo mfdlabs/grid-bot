@@ -102,6 +102,8 @@ internal static class Runner
         _services = services;
 
         var logger = services.GetRequiredService<ILogger>();
+
+        services.UseLogExport();
         LogStartupInfo(logger);
 
         services.UseTracing();

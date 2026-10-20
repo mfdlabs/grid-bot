@@ -75,8 +75,91 @@ When tracing is enabled, log lines written inside a trace get a
 `[trace_id=<id>]` prefix. Outside of a trace there is no prefix. This lets you
 jump from a log line to its trace.
 
-For Grafana Loki, add a derived field to the data source with the matcher
-`trace_id=(\w+)` that links to the Tempo or Jaeger data source.
+### Exporting logs to Loki
+
+Log export is **off by default**. When enabled, every line written through
+`Logger` is also exported over OTLP, so it can be stored in Grafana Loki and
+explored on a dashboard. The console and log file output are unchanged.
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `LoggingEnabled` | `false` | Turns on log export. |
+| `LoggingOtlpEndpoint` | `http://localhost:4317` | Where logs are sent. For `HttpProtobuf` this must include the signal path, which is `<loki>/otlp/v1/logs` for Loki. |
+| `LoggingOtlpProtocol` | `Grpc` | `Grpc` or `HttpProtobuf`. Loki accepts `HttpProtobuf` only. |
+| `LoggingOtlpHeaders` | | Comma separated `key=value` headers sent on each export, for example an auth token or `X-Scope-OrgID=<tenant>`. Keep this in Vault. |
+| `LoggingMinimumLevel` | `Information` | The most verbose level that is exported: `Error`, `Warning`, `Information`, `Debug`, or `Verbose`. |
+| `LoggingServiceName` | `grid-bot` | The `service.name` reported with logs. |
+
+For example, to export to a local Loki:
+
+```
+LoggingEnabled=true
+LoggingOtlpEndpoint=http://localhost:3100/otlp/v1/logs
+LoggingOtlpProtocol=HttpProtobuf
+```
+
+Start Loki, Prometheus, Jaeger, and Grafana from the repository root, using the
+Compose files in the scripts directories:
+
+```sh
+docker compose -f services/grid-bot/scripts/loki/docker-compose.yml up -d
+docker compose -f services/grid-bot/scripts/prometheus/docker-compose.yml up -d
+docker compose -f services/grid-bot/scripts/jaeger/docker-compose.yml up -d
+docker compose -f services/grid-bot/scripts/grafana/docker-compose.yml up -d
+```
+
+All four files use the same Compose project and network, so Grafana can reach
+the data sources by their service names. Data persists in named volumes.
+Prometheus scrapes the bot's default metrics address at
+`host.docker.internal:8081`; on Linux, the Compose file provides that host
+alias. The Grafana UI is at `http://localhost:3000`, Prometheus at
+`http://localhost:9090`, and Jaeger at `http://localhost:16686`. These web UIs
+are bound to localhost. Jaeger accepts OTLP/gRPC on `localhost:4317` and
+OTLP/HTTP on `localhost:4318`.
+
+Configure the bot with these local settings:
+
+```sh
+TracingEnabled=true
+TracingOtlpEndpoint=http://localhost:4317
+TracingOtlpProtocol=Grpc
+LoggingEnabled=true
+LoggingOtlpEndpoint=http://localhost:3100/otlp/v1/logs
+LoggingOtlpProtocol=HttpProtobuf
+```
+
+The Grafana provisioning files set up Prometheus, Jaeger, and Loki data sources
+and load the dashboards from `dashboards/`. The default Grafana login is
+`admin` / `admin`; change the password on first login.
+
+Stop all four services from the repository root:
+
+```sh
+docker compose -f services/grid-bot/scripts/grafana/docker-compose.yml down
+docker compose -f services/grid-bot/scripts/jaeger/docker-compose.yml down
+docker compose -f services/grid-bot/scripts/prometheus/docker-compose.yml down
+docker compose -f services/grid-bot/scripts/loki/docker-compose.yml down
+```
+
+For the Nomad-hosted Loki service, use
+`https://loki.wck02.vmminfra.dev/otlp/v1/logs` as the endpoint.
+
+Each exported record has the resource attributes `service.name` and
+`deployment.environment.name`, the level as its severity, and a `logger.name`
+attribute with the name of the logger that wrote the line. Use `logger.name` to
+group or filter logs. Records written inside a trace also carry its `trace_id`
+and `span_id`, which needs tracing to be enabled so that there is a trace to
+carry.
+
+Loki indexes the service and environment resource attributes by default. The
+level, logger name, and `trace_id` are log attributes and remain structured
+metadata, which keeps them queryable without adding index labels. Never turn
+user, guild, or channel identifiers into labels.
+
+Logs are batched and flushed when the process exits.
+
+The Logs dashboard links to the Traces dashboard using the `trace_id`
+structured metadata field.
 
 ## Exemplars
 

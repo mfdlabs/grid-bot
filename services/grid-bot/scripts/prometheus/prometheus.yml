@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /rules/grid-bot.rules.yml
+
+scrape_configs:
+  - job_name: grid-bot
+    scrape_interval: 5s
+    scrape_protocols:
+      - OpenMetricsText1.0.0
+      - PrometheusText0.0.4
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8081
