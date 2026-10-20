@@ -13,6 +13,39 @@ public static partial class GridBotMetrics
     public static class Scripts
     {
         /// <summary>
+        /// Counts script executions, labeled by outcome.
+        /// </summary>
+        /// <remarks>
+        /// Replaces <see cref="ByUser"/>, which has an unbounded user label.
+        /// </remarks>
+        public static readonly Counter Executions = Prometheus.Metrics.CreateCounter(
+            "gridbot_script_executions_total",
+            "The total number of script executions by outcome.",
+            "outcome"
+        );
+
+        /// <summary>
+        /// Measures script execution duration in seconds, labeled by outcome.
+        /// </summary>
+        public static readonly Histogram Duration = Prometheus.Metrics.CreateHistogram(
+            "gridbot_script_execution_duration_seconds",
+            "The time it takes to handle a script execution request, labeled by outcome.",
+            new HistogramConfiguration
+            {
+                LabelNames = ["outcome"],
+                Buckets = MetricBuckets.Execution,
+            }
+        );
+
+        /// <summary>
+        /// Tracks the number of script executions currently being handled.
+        /// </summary>
+        public static readonly Gauge InFlight = Prometheus.Metrics.CreateGauge(
+            "gridbot_script_executions_in_flight",
+            "The number of script executions currently being handled."
+        );
+
+        /// <summary>
         /// Total number of script hashes logged ever
         /// </summary>
         public static readonly Gauge LoggedScriptHashes = Prometheus.Metrics.CreateGauge(

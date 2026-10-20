@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -296,6 +297,9 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         var settings = new Dictionary<string, Secrets>();
 
+        var stopwatch = Stopwatch.StartNew();
+        var outcome = MetricOutcomes.Exception;
+
         try
         {
             // List all the keys in the path
@@ -310,6 +314,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
                 settings.Add(applicationName, parsedSecrets);
             }
 
+            outcome = MetricOutcomes.Success;
+
             return settings;
         }
         catch (VaultApiException ex)
@@ -317,6 +323,10 @@ public class ClientSettingsFactory : IClientSettingsFactory
             _logger?.Error(ex);
 
             return settings;
+        }
+        finally
+        {
+            GridBotMetrics.ClientSettings.RefreshDuration.WithLabels(outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }
     }
 

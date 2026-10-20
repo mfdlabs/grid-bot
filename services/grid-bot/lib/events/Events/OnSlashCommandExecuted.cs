@@ -62,6 +62,8 @@ public class OnInteractionExecuted(
         if (context.Interaction is not SocketInteraction interaction)
             return;
 
+        InteractionExecutionTracker.Complete(interaction, OutcomeClassifier.FromInteractionResult(result));
+
         if (!result.IsSuccess)
         {
             if (result.Error == InteractionCommandError.UnknownCommand) return;

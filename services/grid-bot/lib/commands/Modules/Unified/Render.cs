@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -622,10 +623,12 @@ public class Render
             {
                 case RateLimitScope.Global:
                     RenderPerformanceCounters.TotalRendersBlockedByGlobalFloodChecker.Inc();
+                    GridBotMetrics.Renders.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
                 case RateLimitScope.PerUser:
                     RenderPerformanceCounters.TotalRendersBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+                    GridBotMetrics.Renders.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("You are sending render commands too quickly, please wait a few moments and try again."));
             }
@@ -640,6 +643,38 @@ public class Render
     /// <param name="userNameOrId">The ID of the Roblox user.</param>
     /// <param name="context">The context of the unified command.</param>
     public async Task RenderAsync(IUnifiedCommandContext context, string userNameOrId)
+    {
+        var record = new RenderRecord();
+        var stopwatch = Stopwatch.StartNew();
+
+        using var inFlight = GridBotMetrics.Renders.InFlight.TrackInProgress();
+
+        try
+        {
+            await RenderCoreAsync(context, userNameOrId, record).ConfigureAwait(false);
+        }
+        catch
+        {
+            record.Outcome = MetricOutcomes.Exception;
+
+            throw;
+        }
+        finally
+        {
+            GridBotMetrics.Renders.Executions.WithLabels(record.Outcome).Inc();
+            GridBotMetrics.Renders.Duration.WithLabels(record.Outcome).Observe(stopwatch.Elapsed.TotalSeconds);
+        }
+    }
+
+    /// <summary>
+    /// Holds the outcome of a render for metrics. Returns that happen before rendering starts are user errors.
+    /// </summary>
+    private sealed class RenderRecord
+    {
+        public string Outcome { get; set; } = MetricOutcomes.UserError;
+    }
+
+    private async Task RenderCoreAsync(IUnifiedCommandContext context, string userNameOrId, RenderRecord record)
     {
         RenderPerformanceCounters.TotalRenders.WithLabels(userNameOrId).Inc();
 
@@ -709,6 +744,8 @@ public class Render
 
             if (stream == null)
             {
+                record.Outcome = MetricOutcomes.Exception;
+
                 RenderPerformanceCounters.TotalRendersWithErrors.Inc();
 
                 await context.RespondAsync("An error occurred while rendering the character.").ConfigureAwait(false);
@@ -722,9 +759,12 @@ public class Render
                     fileName
                 ).ConfigureAwait(false);
 
+            record.Outcome = MetricOutcomes.Success;
         }
         catch (ThumbnailResponseException e)
         {
+            record.Outcome = MetricOutcomes.Exception;
+
             RenderPerformanceCounters.TotalRendersWithRbxThumbnailsErrors.WithLabels(e.State.ToString()).Inc();
 
             _logger.Warning("The thumbnail service responded with the following state: {0}, message: {1}", e.State, e.Message);
@@ -742,6 +782,8 @@ public class Render
         }
         catch (Exception e)
         {
+            record.Outcome = MetricOutcomes.Exception;
+
             RenderPerformanceCounters.TotalRendersWithErrors.Inc();
 
             _logger.Error("An error occurred while rendering the character for the user '{0}': {1}", userNameOrId, e);

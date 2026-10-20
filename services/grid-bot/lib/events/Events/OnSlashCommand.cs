@@ -70,17 +70,18 @@ public class OnInteraction(
         if (interaction.User.IsBot) return;
 
         var commandName = interaction.Id.ToString();
+        var metricCommandName = "unknown"; // Only registered command names are safe to use as a label.
 
         switch (interaction)
         {
             case SocketSlashCommand slashCommand:
-                commandName = slashCommand.CommandName;
+                commandName = metricCommandName = slashCommand.CommandName;
                 break;
             case SocketUserCommand userCommand:
-                commandName = userCommand.CommandName;
+                commandName = metricCommandName = userCommand.CommandName;
                 break;
             case SocketMessageCommand messageCommand:
-                commandName = messageCommand.CommandName;
+                commandName = metricCommandName = messageCommand.CommandName;
                 break;
         }
 
@@ -102,6 +103,7 @@ public class OnInteraction(
             if (!userIsAdmin && !userIsPrivilaged)
             {
                 _totalInteractionsFailedDueToMaintenance.Inc();
+                GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning("Maintenance enabled user tried to use the bot.");
 
@@ -134,6 +136,7 @@ public class OnInteraction(
             _totalBlacklistedUserAttemptedInteractions.WithLabels(
                 interaction.User.Id.ToString()
             ).Inc();
+            GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
 
@@ -146,8 +149,12 @@ public class OnInteraction(
 
         logger.Debug("Executing command '{0}'.", commandName);
 
+        InteractionExecutionTracker.Start(interaction, interaction.Type.ToString(), metricCommandName);
+
         Task.Run(async () =>
         {
+            // This only times the dispatch, interactions run asynchronously. Kept for dashboard compatibility,
+            // gridbot_interaction_duration_seconds measures the actual execution.
             using var _ = _interactionProcessingTime
                 .WithLabels(
                     interaction.Type.ToString(),
@@ -160,10 +167,23 @@ public class OnInteraction(
                 interaction
             );
 
-            await _interactionService.ExecuteCommandAsync(
-                context,
-                _services
-            ).ConfigureAwait(false);
+            try
+            {
+                var result = await _interactionService.ExecuteCommandAsync(
+                    context,
+                    _services
+                ).ConfigureAwait(false);
+
+                // Successful results complete when the interaction-executed event fires.
+                if (!result.IsSuccess)
+                    InteractionExecutionTracker.Complete(interaction, OutcomeClassifier.FromInteractionResult(result));
+            }
+            catch
+            {
+                InteractionExecutionTracker.Complete(interaction, MetricOutcomes.Exception);
+
+                throw;
+            }
         });
     }
 }

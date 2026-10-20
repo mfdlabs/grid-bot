@@ -13,6 +13,19 @@ public static partial class GridBotMetrics
     public static class ClientSettings
     {
         /// <summary>
+        /// Measures client-settings refresh duration in seconds, labeled by outcome.
+        /// </summary>
+        public static readonly Histogram RefreshDuration = Prometheus.Metrics.CreateHistogram(
+            "gridbot_client_settings_refresh_duration_seconds",
+            "The time it takes to refresh the client settings, labeled by outcome.",
+            new HistogramConfiguration
+            {
+                LabelNames = ["outcome"],
+                Buckets = MetricBuckets.Fast,
+            }
+        );
+
+        /// <summary>
         /// Number of times the client settings have been refreshed.
         /// </summary>
         public static readonly Counter Refreshes = Prometheus.Metrics.CreateCounter(

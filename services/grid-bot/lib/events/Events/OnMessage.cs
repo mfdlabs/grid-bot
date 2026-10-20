@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -148,6 +149,9 @@ public partial class OnMessage(
             commandName
         ).Inc();
 
+        // Aliases are matched case-insensitively, normalize so each command has a single series.
+        var metricCommandName = commandName.ToLowerInvariant();
+
 #if DEBUG
 
         var entryAssembly = Assembly.GetEntryAssembly();
@@ -166,6 +170,7 @@ public partial class OnMessage(
             if (!userIsAdmin && !userIsPrivilaged)
             {
                 _totalMessagesFailedDueToMaintenance.Inc();
+                GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning(
                     "User tried to use the command '{0}', but maintenance is enabled.",
@@ -201,6 +206,7 @@ public partial class OnMessage(
                 message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
                 GetGuildId(message)
             ).Inc();
+            GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
 
@@ -241,11 +247,27 @@ public partial class OnMessage(
         Task.Run(async () =>
         {
             using var _ = _commandProcessingTime.WithLabels(commandName).NewTimer();
+            using var inFlight = GridBotMetrics.Commands.InFlight.TrackInProgress();
 
-            var context = new ShardedCommandContext(_discordClient, message);
-            using var __ = context.Channel.EnterTypingState();
+            var stopwatch = Stopwatch.StartNew();
+            var outcome = MetricOutcomes.Exception;
 
-            await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+            try
+            {
+                var context = new ShardedCommandContext(_discordClient, message);
+                using var __ = context.Channel.EnterTypingState();
+
+                var result = await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+
+                outcome = OutcomeClassifier.FromCommandResult(result);
+            }
+            finally
+            {
+                GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, outcome).Inc();
+                GridBotMetrics.Commands.Duration
+                    .WithLabels(metricCommandName, outcome)
+                    .Observe(stopwatch.Elapsed.TotalSeconds);
+            }
         });
     }
 }

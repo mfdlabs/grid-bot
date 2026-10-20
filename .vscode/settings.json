@@ -1,5 +1,6 @@
 {
   "[csharp]": {
     "editor.tabSize": 4
-  }
+  },
+  "dotnet.defaultSolution": "services/grid-bot/grid-bot.slnx"
 }

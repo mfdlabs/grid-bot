@@ -601,10 +601,12 @@ public partial class ExecuteScript
             {
                 case RateLimitScope.Global:
                     ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByGlobalFloodChecker.Inc();
+                    GridBotMetrics.Scripts.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("Too many people are using this command at once, please wait a few moments and try again."));
                 case RateLimitScope.PerUser:
                     ScriptExecutionPerformanceCounters.TotalScriptExecutionsBlockedByPerUserFloodChecker.WithLabels(context.User.Id.ToString()).Inc();
+                    GridBotMetrics.Scripts.Executions.WithLabels(MetricOutcomes.Rejected).Inc();
 
                     return Task.FromException(new ApplicationException("You are sending execute commands too quickly, please wait a few moments and try again."));
             }
@@ -620,6 +622,38 @@ public partial class ExecuteScript
     /// <param name="file">The file attachment containing the script, if any.</param>
     /// <param name="script">The script to execute.</param>
     public async Task DoExecuteScriptAsync(IUnifiedCommandContext context, IAttachment file = null, string script = "")
+    {
+        var record = new ExecutionRecord();
+        var stopwatch = Stopwatch.StartNew();
+
+        using var inFlight = GridBotMetrics.Scripts.InFlight.TrackInProgress();
+
+        try
+        {
+            await DoExecuteScriptCoreAsync(context, file, script, record).ConfigureAwait(false);
+        }
+        catch
+        {
+            record.Outcome = MetricOutcomes.Exception;
+
+            throw;
+        }
+        finally
+        {
+            GridBotMetrics.Scripts.Executions.WithLabels(record.Outcome).Inc();
+            GridBotMetrics.Scripts.Duration.WithLabels(record.Outcome).Observe(stopwatch.Elapsed.TotalSeconds);
+        }
+    }
+
+    /// <summary>
+    /// Holds the outcome of a script execution for metrics. Returns that happen before the script runs are user errors.
+    /// </summary>
+    private sealed class ExecutionRecord
+    {
+        public string Outcome { get; set; } = MetricOutcomes.UserError;
+    }
+
+    private async Task DoExecuteScriptCoreAsync(IUnifiedCommandContext context, IAttachment file, string script, ExecutionRecord record)
     {
         ScriptExecutionPerformanceCounters.TotalScriptExecutionsByUser.WithLabels(context.User.Id.ToString()).Inc();
 
@@ -723,6 +757,8 @@ public partial class ExecuteScript
 
             if (rejectionReason != null)
             {
+                record.Outcome = MetricOutcomes.Rejected;
+
                 _logger.Error("The job was rejected: {0}", rejectionReason);
 
                 await context.RespondAsync("Internal error, please try again later.").ConfigureAwait(false);
@@ -742,6 +778,8 @@ public partial class ExecuteScript
                 Task.Run(() => _jobManager.CloseJob(job, true));
 
                 var (newResult, metadata) = ParseResultFromGridServer(serverResult);
+
+                record.Outcome = metadata.Success ? MetricOutcomes.Success : MetricOutcomes.UserError;
 
                 await HandleResponseAsync(context, newResult, metadata);
             }
@@ -806,12 +844,16 @@ public partial class ExecuteScript
             {
                 ScriptExecutionPerformanceCounters.TotalScriptExecutionsThatTimedOut.Inc();
 
+                record.Outcome = MetricOutcomes.Timeout;
+
                 await HandleResponseAsync(context, null, new() { ErrorMessage = "script exceeded timeout", ExecutionTime = sw.Elapsed.TotalSeconds, Success = false });
 
                 return;
             }
 
             ScriptExecutionPerformanceCounters.TotalScriptExecutionsWithUnexpectedExceptions.WithLabels(ex.GetType().ToString()).Inc();
+
+            record.Outcome = MetricOutcomes.Exception;
 
             if (ex is not Discord.Net.HttpException)
                 await AlertForSystem(context, script, originalScript, scriptId, scriptName, ex);

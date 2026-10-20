@@ -13,6 +13,36 @@ public static partial class GridBotMetrics
     public static class Renders
     {
         /// <summary>
+        /// Counts render requests, labeled by outcome.
+        /// </summary>
+        public static readonly Counter Executions = Prometheus.Metrics.CreateCounter(
+            "gridbot_render_executions_total",
+            "The total number of render requests by outcome.",
+            "outcome"
+        );
+
+        /// <summary>
+        /// Measures render request duration in seconds, labeled by outcome.
+        /// </summary>
+        public static readonly Histogram Duration = Prometheus.Metrics.CreateHistogram(
+            "gridbot_render_duration_seconds",
+            "The time it takes to handle a render request, labeled by outcome.",
+            new HistogramConfiguration
+            {
+                LabelNames = ["outcome"],
+                Buckets = MetricBuckets.Execution,
+            }
+        );
+
+        /// <summary>
+        /// Tracks the number of render requests currently being handled.
+        /// </summary>
+        public static readonly Gauge InFlight = Prometheus.Metrics.CreateGauge(
+            "gridbot_renders_in_flight",
+            "The number of render requests currently being handled."
+        );
+
+        /// <summary>
         /// The percentage of users that are using the rbx-thumbnails rollout.
         /// </summary>
         public static readonly Gauge RbxThumbnailsRolloutPercent = Prometheus.Metrics.CreateGauge(
