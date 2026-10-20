@@ -11,6 +11,7 @@ they use are documented in
 | `grid-bot-scripts-renders.json` | Script execution and avatar rendering, including rbx-thumbnails. |
 | `grid-bot-grid.json` | Grid jobs and instances, client settings, and the Discord gateway per shard. |
 | `grid-bot-http.json` | The web server per endpoint, and the gRPC API. |
+| `grid-bot-alerts.json` | Firing and pending alerts per environment, how long they have been active, alert history, and which dashboard to use for each alert. |
 | `grid-bot-traces.json` | Traces of command and interaction executions per environment, failed and timed out executions, and a single trace by ID. Needs Grafana 13 and a Jaeger data source, see [Traces dashboard](#traces-dashboard). |
 | `alerts/grid-bot.rules.yml` | Alerting rules. |
 | `alerts/grid-bot.rules.test.yml` | Unit tests for the alerting rules. |
