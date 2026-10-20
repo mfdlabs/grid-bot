@@ -1,6 +1,7 @@
 ﻿namespace Grid.Bot.Events;
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -28,6 +29,7 @@ using Extensions;
 /// <param name="services">The <see cref="IServiceProvider"/>.</param>
 /// <param name="adminUtility">The <see cref="IAdminUtility"/>.</param>
 /// <param name="loggerFactory">The <see cref="IPerUserContextLoggerFactory"/>.</param>
+/// <param name="commandsOptions">The <see cref="CommandsOptions"/>.</param>
 /// <exception cref="ArgumentNullException">
 /// - <paramref name="maintenanceOptions"/> cannot be null.
 /// - <paramref name="client"/> cannot be null.
@@ -35,6 +37,7 @@ using Extensions;
 /// - <paramref name="services"/> cannot be null.
 /// - <paramref name="adminUtility"/> cannot be null.
 /// - <paramref name="loggerFactory"/> cannot be null.
+/// - <paramref name="commandsOptions"/> cannot be null.
 /// </exception>
 public class OnInteraction(
     IOptionsMonitor<MaintenanceOptions> maintenanceOptions,
@@ -42,7 +45,8 @@ public class OnInteraction(
     InteractionService interactionService,
     IServiceProvider services,
     IAdminUtility adminUtility,
-    IPerUserContextLoggerFactory loggerFactory
+    IPerUserContextLoggerFactory loggerFactory,
+    IOptionsMonitor<CommandsOptions> commandsOptions
 )
 {
     private readonly IOptionsMonitor<MaintenanceOptions> _maintenanceOptions = maintenanceOptions ?? throw new ArgumentNullException(nameof(maintenanceOptions));
@@ -54,6 +58,7 @@ public class OnInteraction(
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+    private readonly IOptionsMonitor<CommandsOptions> _commandsOptions = commandsOptions ?? throw new ArgumentNullException(nameof(commandsOptions));
 
     /// <summary>
     /// Creates each registered command's metric series at zero, so the first execution of a command is counted by increase().
@@ -175,14 +180,36 @@ public class OnInteraction(
                     interaction
                 );
 
-                var result = await _interactionService.ExecuteCommandAsync(
+                var execution = _interactionService.ExecuteCommandAsync(
                     context,
                     _services
-                ).ConfigureAwait(false);
+                );
+
+                var timeout = _commandsOptions.CurrentValue.CommandExecutionTimeout;
+
+                // The command cannot be cancelled, so it is abandoned once the ceiling is hit.
+                var result = await execution.WaitAsync(timeout > TimeSpan.Zero ? timeout : Timeout.InfiniteTimeSpan).ConfigureAwait(false);
 
                 // Successful results complete when the interaction-executed event fires.
                 if (!result.IsSuccess)
                     InteractionExecutionTracker.Complete(interaction, OutcomeClassifier.FromInteractionResult(result));
+            }
+            catch (TimeoutException)
+            {
+                InteractionExecutionTracker.Complete(interaction, MetricOutcomes.Timeout);
+
+                using var timeoutLogger = _loggerFactory.CreateLogger(interaction);
+
+                timeoutLogger.Warning("Command '{0}' exceeded the execution timeout of {1} and was abandoned.", commandName, _commandsOptions.CurrentValue.CommandExecutionTimeout);
+
+                try
+                {
+                    await interaction.FollowupAsync("The command took too long to complete and has been timed out.");
+                }
+                catch (Exception ex)
+                {
+                    timeoutLogger.Error("Failed to notify the user of the command timeout because: {0}", ex);
+                }
             }
             catch
             {

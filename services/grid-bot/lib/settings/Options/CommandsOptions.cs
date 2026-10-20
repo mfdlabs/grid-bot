@@ -1,5 +1,7 @@
 namespace Grid.Bot;
 
+using System;
+
 /// <summary>
 /// Options for all commands related settings.
 /// </summary>
@@ -59,6 +61,16 @@ public class CommandsOptions
     /// This is only applicable when <see cref="EnableTextCommands"/> is false.
     /// </remarks>
     public bool ShouldWarnWhenCommandsAreDisabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the absolute maximum time a text or interaction command may run for.
+    /// </summary>
+    /// <remarks>
+    /// Once exceeded, the user is told the command timed out and the command is no longer tracked.
+    /// Set to zero or less to disable the ceiling. Should be below 15 minutes, after which Discord
+    /// invalidates the interaction token.
+    /// </remarks>
+    public TimeSpan CommandExecutionTimeout { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>
     /// Gets or sets the feature gate for the EvaluateCSharp command.

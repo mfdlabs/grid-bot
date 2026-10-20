@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -255,9 +256,31 @@ public partial class OnMessage(
                 var context = new ShardedCommandContext(_discordClient, message);
                 using var __ = context.Channel.EnterTypingState();
 
-                var result = await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+                var execution = _commandService.ExecuteAsync(context, argPos, _services);
+
+                var timeout = _commandsSettings.CommandExecutionTimeout;
+
+                // The command cannot be cancelled, so it is abandoned once the ceiling is hit.
+                var result = await execution.WaitAsync(timeout > TimeSpan.Zero ? timeout : Timeout.InfiniteTimeSpan).ConfigureAwait(false);
 
                 outcome = OutcomeClassifier.FromCommandResult(result);
+            }
+            catch (TimeoutException)
+            {
+                outcome = MetricOutcomes.Timeout;
+
+                using var timeoutLogger = _loggerFactory.CreateLogger(message);
+
+                timeoutLogger.Warning("Command '{0}' exceeded the execution timeout of {1} and was abandoned.", metricCommandName, _commandsSettings.CommandExecutionTimeout);
+
+                try
+                {
+                    await message.ReplyAsync("The command took too long to complete and has been timed out.");
+                }
+                catch (Exception ex)
+                {
+                    timeoutLogger.Error("Failed to notify the user of the command timeout because: {0}", ex);
+                }
             }
             finally
             {
