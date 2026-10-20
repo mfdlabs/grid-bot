@@ -158,7 +158,8 @@ Prometheus scrapes.
 ### Histogram buckets
 
 The duration histograms use the explicit buckets in `MetricBuckets`. Histogram
-observations made inside a trace carry that trace's ID as an exemplar.
+observations and counter increments made inside a trace carry that trace's ID
+as an exemplar.
 
 ## Migrating from the old names
 

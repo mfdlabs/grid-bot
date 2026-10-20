@@ -80,10 +80,10 @@ For Grafana Loki, add a derived field to the data source with the matcher
 
 ## Exemplars
 
-Histogram observations made inside a trace carry that trace's ID as an
-exemplar, so a latency spike on a panel can link to a trace. Exemplars are only
-exposed when Prometheus scrapes using the OpenMetrics format, and Prometheus
-must be started with `--enable-feature=exemplar-storage`.
+Histogram observations and counter increments made inside a trace carry that
+trace's ID as an exemplar, so a latency spike on a panel can link to a trace.
+Exemplars are only exposed when Prometheus scrapes using the OpenMetrics format,
+and Prometheus must be started with `--enable-feature=exemplar-storage`.
 
 ## Adding a span
 
