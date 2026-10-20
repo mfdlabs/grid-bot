@@ -152,6 +152,7 @@ public class OnShardReady(
 #endif
 
             _onMessageEvent.Initialize();
+            _onInteractionEvent.Initialize();
 
             _client.MessageReceived += _onMessageEvent.Invoke;
             _client.InteractionCreated += _onInteractionEvent.Invoke;

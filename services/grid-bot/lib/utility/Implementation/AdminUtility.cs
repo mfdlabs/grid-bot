@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Discord;
 
@@ -29,12 +30,12 @@ public class AdminUtility(IOptionsMonitor<DiscordRolesOptions> discordRolesOptio
 
     private DiscordRolesOptions _discordRolesSettings => _discordRolesOptions.CurrentValue;
 
-    private static readonly Counter _usersBlacklistedCounter = Metrics.CreateCounter("admin_users_blacklisted_total", "Total number of users blacklisted.");
-    private static readonly Counter _usersUnblacklistedCounter = Metrics.CreateCounter("admin_users_unblacklisted_total", "Total number of users unblacklisted.");
-    private static readonly Counter _usersPrivilagedCounter = Metrics.CreateCounter("admin_users_privilaged_total", "Total number of users with privilaged access.");
-    private static readonly Counter _adminUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_total", "Total number of users demoted from admin.");
-    private static readonly Counter _privilegedUsersDemotedCounter = Metrics.CreateCounter("admin_users_demoted_privilaged_total", "Total number of users demoted from privilaged.");
-    private static readonly Counter _usersPromotedCounter = Metrics.CreateCounter("admin_users_promoted_total", "Total number of users promoted to admin.");
+    private static readonly Counter.Child _usersBlacklistedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.Blacklisted);
+    private static readonly Counter.Child _usersUnblacklistedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.Unblacklisted);
+    private static readonly Counter.Child _usersPrivilagedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.Privileged);
+    private static readonly Counter.Child _adminUsersDemotedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.AdminDemoted);
+    private static readonly Counter.Child _privilegedUsersDemotedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.PrivilegedDemoted);
+    private static readonly Counter.Child _usersPromotedCounter = GridBotMetrics.Admin.RoleChanges.WithLabels(MetricLabelValues.RoleChange.Promoted);
 
     // IAdminUtility is synchronous, and each write must be visible before the next role check.
     private void WriteIds(string key, IEnumerable<ulong> ids)

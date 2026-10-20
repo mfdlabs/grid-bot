@@ -1,0 +1,162 @@
+# Unit tests for grid-bot.rules.yml. Run with:
+#   promtool test rules grid-bot.rules.test.yml
+
+rule_files:
+  - grid-bot.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # 10% of executions are timeouts for long enough to alert. The script and render series have identical labels,
+  # which used to make the rule fail with duplicate series.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="success"}'
+        values: "0+54x30"
+      - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="timeout"}'
+        values: "0+6x30"
+      - series: 'gridbot_script_executions_total{environment="staging",outcome="success"}'
+        values: "0+27x30"
+      - series: 'gridbot_script_executions_total{environment="staging",outcome="timeout"}'
+        values: "0+3x30"
+      - series: 'gridbot_render_executions_total{environment="staging",outcome="success"}'
+        values: "0+27x30"
+      - series: 'gridbot_render_executions_total{environment="staging",outcome="timeout"}'
+        values: "0+3x30"
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: GridBotHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+            exp_annotations:
+              summary: "staging: more than 5% of executions are failing"
+              description: "Exceptions and timeouts are 10% of executions over the last 5 minutes. Lua errors in a user's script are user errors and are not counted."
+
+  # The same ratio on almost no traffic does not alert, and neither do rejected requests.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="success"}'
+        values: "0+0.1x30"
+      - series: 'gridbot_command_executions_total{environment="staging",command_name="render",outcome="exception"}'
+        values: "0+0.1x30"
+      - series: 'gridbot_command_executions_total{environment="production",command_name="render",outcome="success"}'
+        values: "0+60x30"
+      - series: 'gridbot_command_executions_total{environment="production",command_name="render",outcome="rejected"}'
+        values: "0+600x30"
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: GridBotHighErrorRate
+        exp_alerts: []
+
+  # Only the environment with the problem alerts, whatever the scrape target is called.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_grid_ready_instances{environment="staging",service="staging-grid-bot"}'
+        values: "0x30"
+      - series: 'gridbot_grid_ready_instances{environment="production",service="production-grid-bot"}'
+        values: "2x30"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: GridBotNoReadyGridInstances
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              environment: staging
+            exp_annotations:
+              summary: "staging: no Grid instance is ready to take a job"
+              description: "Scripts and renders will be rejected until an instance is ready."
+
+  # Two scrape targets for one environment are summed rather than alerting separately.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_grid_ready_instances{environment="staging",instance="node-a"}'
+        values: "0x30"
+      - series: 'gridbot_grid_ready_instances{environment="staging",instance="node-b"}'
+        values: "1x30"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: GridBotNoReadyGridInstances
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_discord_gateway_disconnects_total{environment="staging",shard_id="1"}'
+        values: "0+1x20"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: GridBotGatewayDisconnecting
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+              shard_id: "1"
+            exp_annotations:
+              summary: "staging: shard 1 keeps disconnecting from Discord"
+              description: "10 disconnects in the last 10 minutes."
+
+  # A gauge that sticks above zero alerts and names the gauge, one that returns to zero does not.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_script_executions_in_flight{environment="staging"}'
+        values: "2x60"
+      - series: 'gridbot_renders_in_flight{environment="staging"}'
+        values: "0 3 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: GridBotInFlightNeverIdle
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+              gauge: script executions
+            exp_annotations:
+              summary: "staging: script executions in flight has not been zero for 30 minutes"
+              description: "Work is either stuck or is not being counted as finished."
+
+  # Slow commands and slow interactions are combined for the latency alert.
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="10"}'
+        values: "0x40"
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="30"}'
+        values: "0+60x40"
+      - series: 'gridbot_command_duration_seconds_bucket{environment="staging",command_name="render",outcome="success",le="+Inf"}'
+        values: "0+60x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="10"}'
+        values: "0x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="30"}'
+        values: "0+60x40"
+      - series: 'gridbot_interaction_duration_seconds_bucket{environment="staging",interaction_type="ApplicationCommand",command_name="render",outcome="success",le="+Inf"}'
+        values: "0+60x40"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: GridBotCommandLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+            exp_annotations:
+              summary: "staging: p95 command latency is above 10s"
+              description: "The p95 time from dispatch to completion is 29s."
+
+  - interval: 1m
+    input_series:
+      - series: 'gridbot_client_settings_refresh_duration_seconds_count{environment="staging",outcome="success"}'
+        values: "0+1x30"
+      - series: 'gridbot_client_settings_refresh_duration_seconds_count{environment="staging",outcome="exception"}'
+        values: "0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: GridBotClientSettingsRefreshFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              environment: staging
+            exp_annotations:
+              summary: "staging: client settings refreshes are failing"
+              description: "The settings are served from the last successful refresh until this recovers."
+      - eval_time: 40m
+        alertname: GridBotClientSettingsRefreshFailing
+        exp_alerts: []

@@ -13,6 +13,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Logging;
 
@@ -48,13 +49,6 @@ public class OnInteractionExecuted(
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IBacktraceUtility _backtraceUtility = backtraceUtility ?? throw new ArgumentNullException(nameof(backtraceUtility));
 
-    private readonly Counter _totalInteractionsFailed = Metrics.CreateCounter(
-        "bot_interactions_failed_total",
-        "The total number of interactions failed.",
-        "interaction_type",
-        "command_name"
-    );
-
     /// <summary>
     /// Invoke the handler.
     /// </summary>
@@ -66,14 +60,11 @@ public class OnInteractionExecuted(
         if (context.Interaction is not SocketInteraction interaction)
             return;
 
+        InteractionExecutionTracker.Complete(interaction, OutcomeClassifier.FromInteractionResult(result));
+
         if (!result.IsSuccess)
         {
             if (result.Error == InteractionCommandError.UnknownCommand) return;
-
-            _totalInteractionsFailed.WithLabels(
-                interaction.Type.ToString(),
-                command.Name
-            ).Inc();
 
             if (result is not ExecuteResult executeResult)
             {

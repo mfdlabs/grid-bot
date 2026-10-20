@@ -1,0 +1,137 @@
+# Prometheus alerting rules for the Grid Bot.
+#
+# Each rule is evaluated per `environment`, a label the bot adds to every metric, so an alert for staging does not
+# fire because of production. Thresholds are starting points, tune them against real traffic.
+
+groups:
+  - name: grid-bot
+    rules:
+      # One series per family, so the alerts below can combine them. Selecting several families with one
+      # {__name__=~"..."} selector fails: rate() drops the name, and the script and render families have identical
+      # labels, which Prometheus rejects as duplicate series.
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_command_executions_total[5m]))
+        labels:
+          type: command
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_interaction_executions_total[5m]))
+        labels:
+          type: interaction
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_script_executions_total[5m]))
+        labels:
+          type: script
+      - record: gridbot:executions:rate5m
+        expr: sum by (environment, outcome) (rate(gridbot_render_executions_total[5m]))
+        labels:
+          type: render
+
+      - alert: GridBotHighErrorRate
+        expr: |
+          (
+              sum by (environment) (gridbot:executions:rate5m{outcome=~"exception|timeout"})
+            /
+              sum by (environment) (gridbot:executions:rate5m{outcome!="rejected"})
+          ) > 0.05
+          and
+          sum by (environment) (gridbot:executions:rate5m{outcome!="rejected"}) > 0.02
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: more than 5% of executions are failing"
+          description: >-
+            Exceptions and timeouts are {{ $value | humanizePercentage }} of executions over the last 5 minutes.
+            Lua errors in a user's script are user errors and are not counted.
+
+      - alert: GridBotCommandLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum by (environment, le) (
+                label_replace(sum by (environment, le) (rate(gridbot_command_duration_seconds_bucket{outcome!="rejected"}[5m])), "type", "command", "", "")
+              or
+                label_replace(sum by (environment, le) (rate(gridbot_interaction_duration_seconds_bucket{outcome!="rejected"}[5m])), "type", "interaction", "", "")
+            )
+          ) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: p95 command latency is above 10s"
+          description: "The p95 time from dispatch to completion is {{ $value | humanizeDuration }}."
+
+      - alert: GridBotNoReadyGridInstances
+        expr: sum by (environment) (gridbot_grid_ready_instances) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.environment }}: no Grid instance is ready to take a job"
+          description: "Scripts and renders will be rejected until an instance is ready."
+
+      - alert: GridBotGridJobsRejected
+        expr: sum by (environment, reason) (increase(gridbot_grid_job_rejections_total[10m])) > 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: Grid jobs are being rejected ({{ $labels.reason }})"
+          description: "{{ $value }} jobs were rejected in the last 10 minutes."
+
+      - alert: GridBotGatewayDisconnecting
+        expr: sum by (environment, shard_id) (increase(gridbot_discord_gateway_disconnects_total[10m])) > 3
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: shard {{ $labels.shard_id }} keeps disconnecting from Discord"
+          description: "{{ $value }} disconnects in the last 10 minutes."
+
+      - alert: GridBotGatewayLatencyHigh
+        expr: max by (environment) (gridbot_discord_gateway_latency_seconds) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: Discord gateway latency is above 1s"
+          description: "The worst shard latency is {{ $value | humanizeDuration }}."
+
+      - alert: GridBotHttp5xxRate
+        expr: |
+          (
+              sum by (environment) (rate(gridbot_http_server_responses_total{status_code=~"5.."}[5m]))
+            /
+              sum by (environment) (rate(gridbot_http_server_responses_total[5m]))
+          ) > 0.05
+          and
+          sum by (environment) (rate(gridbot_http_server_responses_total[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: more than 5% of HTTP responses are 5xx"
+          description: "{{ $value | humanizePercentage }} of responses over the last 5 minutes."
+
+      - alert: GridBotClientSettingsRefreshFailing
+        expr: sum by (environment) (increase(gridbot_client_settings_refresh_duration_seconds_count{outcome!="success"}[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: client settings refreshes are failing"
+          description: "The settings are served from the last successful refresh until this recovers."
+
+      # An in flight gauge that never returns to zero means work is not being finished or is not being tracked
+      # to completion, so this catches stuck jobs and bookkeeping leaks.
+      - alert: GridBotInFlightNeverIdle
+        expr: |
+          label_replace(min_over_time(gridbot_commands_in_flight[30m]), "gauge", "commands", "", "") > 0
+          or
+          label_replace(min_over_time(gridbot_interactions_in_flight[30m]), "gauge", "interactions", "", "") > 0
+          or
+          label_replace(min_over_time(gridbot_script_executions_in_flight[30m]), "gauge", "script executions", "", "") > 0
+          or
+          label_replace(min_over_time(gridbot_renders_in_flight[30m]), "gauge", "renders", "", "") > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.environment }}: {{ $labels.gauge }} in flight has not been zero for 30 minutes"
+          description: "Work is either stuck or is not being counted as finished."

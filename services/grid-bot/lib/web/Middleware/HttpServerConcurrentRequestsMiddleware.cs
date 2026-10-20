@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 /// <summary>
 /// Middleware for counting concurrent requests.
@@ -13,7 +14,7 @@ using Prometheus;
 public sealed class HttpServerConcurrentRequestsMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IGauge _ConcurentRequestsGauge = Metrics.CreateGauge("http_server_concurrent_requests_total", "The number of concurrent requests being processed by the server.");
+    private readonly IGauge _ConcurentRequestsGauge = GridBotMetrics.HttpServer.InFlight;
 
     /// <summary>
     /// Construct a new instance of <see cref="HttpServerConcurrentRequestsMiddleware"/>

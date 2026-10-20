@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ using VaultSharp;
 using VaultSharp.Core;
 
 using Prometheus;
+using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Microsoft.Extensions.Options;
 
@@ -43,21 +46,9 @@ public class ClientSettingsFactory : IClientSettingsFactory
     private readonly string _mount;
     private readonly string _path;
 
-    private readonly Counter _settingsRefreshCounter = Metrics.CreateCounter(
-        "rbx_client_settings_refresh_total",
-        "Number of times the client settings have been refreshed.",
-        "application"
-    );
-    private readonly Counter _settingsWriteCounter = Metrics.CreateCounter(
-        "rbx_client_settings_write_total",
-        "Number of times the client settings have been written.",
-        "application"
-    );
-    private readonly Counter _settingsReadCounter = Metrics.CreateCounter(
-        "rbx_client_settings_read_total",
-        "Number of times the client settings have been read.",
-        "application"
-    );
+    private readonly Counter _settingsRefreshCounter = GridBotMetrics.ClientSettings.Refreshes;
+    private readonly Counter _settingsWriteCounter = GridBotMetrics.ClientSettings.Writes;
+    private readonly Counter _settingsReadCounter = GridBotMetrics.ClientSettings.Reads;
 
     private readonly ReaderWriterLockSlim _settingsCacheLock = new();
 
@@ -307,6 +298,11 @@ public class ClientSettingsFactory : IClientSettingsFactory
 
         var settings = new Dictionary<string, Secrets>();
 
+        var stopwatch = Stopwatch.StartNew();
+        var outcome = MetricOutcomes.Exception;
+
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.ClientSettingsRefresh);
+
         try
         {
             // List all the keys in the path
@@ -321,6 +317,8 @@ public class ClientSettingsFactory : IClientSettingsFactory
                 settings.Add(applicationName, parsedSecrets);
             }
 
+            outcome = MetricOutcomes.Success;
+
             return settings;
         }
         catch (VaultApiException ex)
@@ -328,6 +326,12 @@ public class ClientSettingsFactory : IClientSettingsFactory
             _logger?.Error(ex);
 
             return settings;
+        }
+        finally
+        {
+            activity.SetOutcome(outcome);
+
+            GridBotMetrics.ClientSettings.RefreshDuration.WithLabels(outcome).Observe(stopwatch.Elapsed.TotalSeconds);
         }
     }
 
@@ -365,7 +369,7 @@ public class ClientSettingsFactory : IClientSettingsFactory
         {
             _settingsCacheLock.EnterReadLock();
 
-            _settingsReadCounter.WithLabels(_mount, _path).Inc();
+            _settingsReadCounter.WithLabels("all").Inc();
 
             try
             {

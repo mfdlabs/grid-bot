@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared Prometheus metric definitions for Grid.Bot.</Description>
+  </PropertyGroup>
+
+  <ItemGroup Label="NuGetPackages">
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
+  </ItemGroup>
+</Project>

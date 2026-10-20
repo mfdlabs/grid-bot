@@ -16,6 +16,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Logging;
 
@@ -37,16 +38,8 @@ public class OnLogMessage
 
     private readonly Logger _logger;
 
-    private readonly Counter _totalLogMessages = Metrics.CreateCounter(
-        "bot_discord_log_messages_total",
-        "The total number of log messages.",
-        "log_severity"
-    );
-
-    private readonly Counter _totalSerializerErrors = Metrics.CreateCounter(
-        "bot_discord_serializer_errors_total",
-        "The total number of serializer errors."
-    );
+    private readonly Counter _totalLogMessages = GridBotMetrics.DiscordLogs.Messages;
+    private readonly Counter _totalSerializerErrors = GridBotMetrics.DiscordLogs.SerializerErrors;
 
     private const string _serializerErrorMessage = "Serializer Error";
 

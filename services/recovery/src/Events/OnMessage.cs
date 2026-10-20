@@ -46,7 +46,7 @@ public partial class OnMessage(
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
-        "grid_messages_processed_total",
+        "gridbot_recovery_messages_processed_total",
         "The total number of messages processed."
     );
 

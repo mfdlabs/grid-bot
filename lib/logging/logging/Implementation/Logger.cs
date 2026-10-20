@@ -492,7 +492,13 @@ public class Logger : ILogger
         var sb = new StringBuilder();
 
         foreach (var prefix in prefixes)
-            sb.Append($"[{prefix()}]");
+        {
+            var value = prefix();
+
+            // Prefixes that resolve to nothing, such as a trace id outside of a trace, are omitted.
+            if (!string.IsNullOrEmpty(value))
+                sb.Append($"[{value}]");
+        }
 
         return sb.ToString();
     }
@@ -558,7 +564,12 @@ public class Logger : ILogger
         var sb = new StringBuilder();
 
         foreach (var prefix in prefixes)
-            sb.Append(Logger._getColorSection(prefix()));
+        {
+            var value = prefix();
+
+            if (!string.IsNullOrEmpty(value))
+                sb.Append(Logger._getColorSection(value));
+        }
 
         return sb.ToString();
     }

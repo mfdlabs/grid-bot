@@ -2,6 +2,7 @@ namespace Grid.Bot.Web.Routes;
 
 using System;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -19,8 +20,6 @@ using Models.V1;
 using Models.V2;
 
 using BodyColorsModelV1 = Grid.Bot.Web.Models.V1.BodyColorsModel;
-using System.Net.Http.Json;
-
 
 /// <summary>
 /// Routes for the avatar API.
@@ -28,14 +27,6 @@ using System.Net.Http.Json;
 public class Avatar
 {
     private const string _avatarFetchCacheKeyFormat = "avatar_fetch:{0}:{1}";
-
-    private const string _avatarFetchBodyColorsMapKey = "bodyColors";
-    private const string _avatarFetchBodyColorsMapHeadColorKey = "headColorId";
-    private const string _avatarFetchBodyColorsMapTorsoColorKey = "torsoColorId";
-    private const string _avatarFetchBodyColorsMapRightArmColorKey = "rightArmColorId";
-    private const string _avatarFetchBodyColorsMapLeftArmColorKey = "leftArmColorId";
-    private const string _avatarFetchBodyColorsMapRightLegColorKey = "rightLegColorId";
-    private const string _avatarFetchBodyColorsMapLeftLegColorKey = "leftLegColorId";
 
     private const int _gearAssetTypeId = 19;
     private static readonly int[] _animationAssetTypeIds = [
@@ -77,6 +68,9 @@ public class Avatar
         _avatarFetchCache = new(_settings.AvatarFetchCacheEntryTtl, _settings.AvatarFetchCacheTraversalInterval);
     }
 
+    private static bool IsGear(AssetModel asset) => asset.AssetType.Id == _gearAssetTypeId;
+    private static bool IsAnimation(AssetModel asset) => Array.Exists(_animationAssetTypeIds, id => id == asset.AssetType.Id);
+
     private static AvatarFetchModel ConvertToAvatarFetchModel(AvatarModel avatarModel)
     {
         var model = new AvatarFetchModel
@@ -90,7 +84,7 @@ public class Avatar
         var equippedGearVersionIds = new List<long>();
 
         foreach (var asset in avatarModel.Assets)
-            if (asset.AssetType.Id == _gearAssetTypeId)
+            if (IsGear(asset))
                 equippedGearVersionIds.Add(asset.CurrentVersionId);
 
         model.EquippedGearVersionIds = [.. equippedGearVersionIds];
@@ -98,7 +92,7 @@ public class Avatar
         // Extract animation assets from avatarModel.Assets
         var animationAssetIds = new Dictionary<string, long>();
         foreach (var asset in avatarModel.Assets)
-            if (Array.Exists(_animationAssetTypeIds, id => id == asset.AssetType.Id))
+            if (IsAnimation(asset))
                 animationAssetIds[asset.AssetType.Name] = asset.Id;
 
         model.AnimationAssetIds = animationAssetIds;
@@ -107,7 +101,7 @@ public class Avatar
         var otherAssetIdAndTypeIds = new List<AssetIdAndTypeModel>();
 
         foreach (var asset in avatarModel.Assets)
-            if (asset.AssetType.Id != _gearAssetTypeId && !Array.Exists(_animationAssetTypeIds, id => id == asset.AssetType.Id))
+            if (!IsGear(asset) && !IsAnimation(asset))
                 otherAssetIdAndTypeIds.Add(new AssetIdAndTypeModel
                 {
                     AssetId = asset.Id,

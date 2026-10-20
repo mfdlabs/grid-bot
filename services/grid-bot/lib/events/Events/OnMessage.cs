@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -17,6 +18,8 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using Utility;
 
@@ -74,43 +77,7 @@ public partial class OnMessage(
 
     private readonly HashSet<string> _commandAliases = []; // Used to filter out commands that are not meant for the bot.
 
-    private readonly Counter _totalMessagesProcessed = Metrics.CreateCounter(
-        "bot_messages_processed_total",
-        "The total number of messages processed."
-    );
-
-    private readonly Counter _totalCommandsProcessed = Metrics.CreateCounter(
-        "bot_commands_processed_total",
-        "The total number of commands processed.",
-        "command_name"
-    );
-
-    private readonly Counter _totalMessagesFailedDueToMaintenance = Metrics.CreateCounter(
-        "bot_messages_failed_due_to_maintenance_total",
-        "The total number of messages failed due to maintenance."
-    );
-
-    private readonly Counter _totalBlacklistedUserAttemptedMessages = Metrics.CreateCounter(
-        "bot_blacklisted_user_attempted_messages_total",
-        "The total number of messages attempted by blacklisted users.",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
-    );
-
-    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
-        "bot_users_bypassed_maintenance_total",
-        "The total number of users that bypassed maintenance.",
-        "message_user_id",
-        "message_channel_id",
-        "message_guild_id"
-    );
-
-    private readonly Histogram _commandProcessingTime = Metrics.CreateHistogram(
-        "bot_command_processing_time_seconds",
-        "The time it takes to process an command.",
-        "command_name"
-    );
+    private readonly Counter _totalMessagesProcessed = GridBotMetrics.Messages.Processed;
 
     /// <summary>
     /// Initialize the event handler.
@@ -134,6 +101,11 @@ public partial class OnMessage(
                 .Select(x => x.ToLowerInvariant())
                 .Select(x => x.Split(' ').First())
         );
+
+        // Create each command's series at zero, so the first execution of a command is counted by increase().
+        foreach (var alias in _commandAliases)
+            foreach (var outcome in MetricOutcomes.All)
+                GridBotMetrics.Commands.Executions.WithLabels(alias, outcome);
     }
 
     private static string GetGuildId(SocketMessage message)
@@ -174,9 +146,8 @@ public partial class OnMessage(
         var userIsPrivilaged = _adminUtility.UserIsPrivilaged(message.Author);
         var userIsBlacklisted = _adminUtility.UserIsBlacklisted(message.Author);
 
-        _totalCommandsProcessed.WithLabels(
-            commandName
-        ).Inc();
+        // Aliases are matched case-insensitively, normalize so each command has a single series.
+        var metricCommandName = commandName.ToLowerInvariant();
 
 #if DEBUG
 
@@ -195,7 +166,8 @@ public partial class OnMessage(
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalMessagesFailedDueToMaintenance.Inc();
+                GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Message, MetricLabelValues.RejectionReason.Maintenance).Inc();
+                GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning(
                     "User tried to use the command '{0}', but maintenance is enabled.",
@@ -217,20 +189,13 @@ public partial class OnMessage(
                 return;
             }
 
-            _totalUsersBypassedMaintenance.WithLabels(
-                message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
-                GetGuildId(message)
-            ).Inc();
+            GridBotMetrics.Requests.MaintenanceBypasses.WithLabels(MetricLabelValues.Source.Message).Inc();
         }
 
         if (userIsBlacklisted)
         {
-            _totalBlacklistedUserAttemptedMessages.WithLabels(
-                message.Author.Id.ToString(),
-                message.Channel?.Id.ToString() ?? message.Thread?.Id.ToString(),
-                GetGuildId(message)
-            ).Inc();
+            GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Message, MetricLabelValues.RejectionReason.Blacklisted).Inc();
+            GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
 
@@ -270,12 +235,39 @@ public partial class OnMessage(
 
         Task.Run(async () =>
         {
-            using var _ = _commandProcessingTime.WithLabels(commandName).NewTimer();
+            using var inFlight = GridBotMetrics.Commands.InFlight.TrackInProgress();
 
-            var context = new ShardedCommandContext(_discordClient, message);
-            using var __ = context.Channel.EnterTypingState();
+            var stopwatch = Stopwatch.StartNew();
+            var outcome = MetricOutcomes.Exception;
 
-            await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+            using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.Command);
+            if (activity is not null)
+            {
+                activity.SetTag(GridBotTelemetry.Tags.CommandName, metricCommandName);
+                activity.SetTag(GridBotTelemetry.Tags.CommandType, "text");
+                activity.SetTag(GridBotTelemetry.Tags.DiscordUserId, message.Author.Id);
+                activity.SetTag(GridBotTelemetry.Tags.DiscordChannelId, message.Channel?.Id);
+                activity.SetTag(GridBotTelemetry.Tags.DiscordGuildId, GetGuildId(message));
+            }
+
+            try
+            {
+                var context = new ShardedCommandContext(_discordClient, message);
+                using var __ = context.Channel.EnterTypingState();
+
+                var result = await _commandService.ExecuteAsync(context, argPos, _services).ConfigureAwait(false);
+
+                outcome = OutcomeClassifier.FromCommandResult(result);
+            }
+            finally
+            {
+                activity.SetOutcome(outcome);
+
+                GridBotMetrics.Commands.Executions.WithLabels(metricCommandName, outcome).Inc();
+                GridBotMetrics.Commands.Duration
+                    .WithLabels(metricCommandName, outcome)
+                    .Observe(stopwatch.Elapsed.TotalSeconds);
+            }
         });
     }
 }

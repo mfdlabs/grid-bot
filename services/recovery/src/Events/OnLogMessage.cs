@@ -26,9 +26,9 @@ public class OnLogMessage
     );
 
     private readonly Counter _totalLogMessages = Metrics.CreateCounter(
-        "grid_discord_log_messages_total",
-        "The total number of log messages.",
-        "log_severity"
+        "gridbot_recovery_discord_log_messages_total",
+        "The total number of Discord log messages by severity.",
+        "severity"
     );
 
     /// <summary>

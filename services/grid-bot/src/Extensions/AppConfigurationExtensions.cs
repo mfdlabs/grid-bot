@@ -97,6 +97,9 @@ public static class AppConfigurationExtensions
         AddOptions<MaintenanceOptions>(MaintenanceOptions.SectionName);
         AddOptions<DiscordRolesOptions>(DiscordRolesOptions.SectionName);
 
+        AddOptions<TelemetryOptions>(TelemetryOptions.SectionName);
+        AddValidator<TelemetryOptions, TelemetryOptionsValidator>();
+
         AddOptions<DiscordOptions>(DiscordOptions.SectionName);
         AddValidator<DiscordOptions, DiscordOptionsValidator>();
 

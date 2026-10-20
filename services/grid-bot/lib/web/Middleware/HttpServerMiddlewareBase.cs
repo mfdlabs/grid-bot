@@ -9,24 +9,19 @@ using Microsoft.AspNetCore.Routing;
 public abstract class HttpServerMiddlewareBase
 {
     /// <summary>
-    /// Unknown route value.
+    /// The endpoint label value for requests that did not match a route.
     /// </summary>
-    protected const string _UnknownRouteLabelValue = "Unknown";
+    protected const string _UnknownRouteLabelValue = "unknown";
 
     /// <summary>
-    /// Get endpoint label value for metrics.
+    /// Gets the endpoint label value for metrics.
     /// </summary>
+    /// <remarks>
+    /// This is the route pattern, such as <c>/v1/avatar-fetch</c>, never the raw request path, so the number
+    /// of values is bounded by the number of routes.
+    /// </remarks>
     /// <param name="context">The <see cref="HttpContext"/></param>
-    /// <returns>The endpoint label value or <see cref="_UnknownRouteLabelValue"/></returns>
-    protected static (string controller, string action) GetControllerAndAction(HttpContext context)
-    {
-        var routeData = context.GetRouteData();
-        var action = routeData?.Values["action"] as string ?? string.Empty;
-        var controller = routeData?.Values["controller"] as string ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(action) || string.IsNullOrWhiteSpace(controller))
-            return (_UnknownRouteLabelValue, _UnknownRouteLabelValue);
-
-        return (controller, action);
-    }
+    /// <returns>The route pattern, or <see cref="_UnknownRouteLabelValue"/> if no route matched.</returns>
+    protected static string GetEndpointLabel(HttpContext context)
+        => (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? _UnknownRouteLabelValue;
 }

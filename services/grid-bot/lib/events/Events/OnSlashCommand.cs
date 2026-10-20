@@ -11,6 +11,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.Options;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 using Utility;
 using Extensions;
@@ -54,37 +55,34 @@ public class OnInteraction(
     private readonly IAdminUtility _adminUtility = adminUtility ?? throw new ArgumentNullException(nameof(adminUtility));
     private readonly IPerUserContextLoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    private readonly Counter _totalInteractionsProcessed = Metrics.CreateCounter(
-        "bot_interactions_processed_total",
-        "The total number of interactions processed.",
-        "interaction_type",
-        "command_name"
-    );
+    /// <summary>
+    /// Creates each registered command's metric series at zero, so the first execution of a command is counted by increase().
+    /// </summary>
+    /// <remarks>Call this once the commands have been added to the <see cref="InteractionService"/>.</remarks>
+    public void Initialize()
+    {
+        var type = InteractionType.ApplicationCommand.ToString();
+        var names = new HashSet<string>();
 
-    private readonly Counter _totalInteractionsFailedDueToMaintenance = Metrics.CreateCounter(
-        "bot_interactions_failed_due_to_maintenance_total",
-        "The total number of interactions failed due to maintenance."
-    );
+        // An interaction reports the name of the top level command, which is the outermost group for a subcommand.
+        foreach (var command in _interactionService.SlashCommands)
+        {
+            var name = command.Name;
 
-    private readonly Counter _totalBlacklistedUserAttemptedInteractions = Metrics.CreateCounter(
-        "bot_blacklisted_user_attempted_interactions_total",
-        "The total number of interactions attempted by blacklisted users.",
-        "interaction_user_id"
-    );
+            for (var module = command.Module; module is not null; module = module.Parent)
+                if (module.IsSlashGroup)
+                    name = module.SlashGroupName;
 
-    private readonly Counter _totalUsersBypassedMaintenance = Metrics.CreateCounter(
-        "bot_users_bypassed_maintenance_total",
-        "The total number of users that bypassed maintenance.",
-        "interaction_user_id"
-    );
+            names.Add(name);
+        }
 
-    private readonly Histogram _interactionProcessingTime = Metrics.CreateHistogram(
-        "bot_interaction_processing_time_seconds",
-        "The time it takes to process an interaction.",
-        "interaction_type",
-        "command_name"
-    );
+        foreach (var command in _interactionService.ContextCommands)
+            names.Add(command.Name);
 
+        foreach (var name in names)
+            foreach (var outcome in MetricOutcomes.All)
+                GridBotMetrics.Interactions.Executions.WithLabels(type, name, outcome);
+    }
     /// <summary>
     /// Invoke the event handler.
     /// </summary>
@@ -94,24 +92,20 @@ public class OnInteraction(
         if (interaction.User.IsBot) return;
 
         var commandName = interaction.Id.ToString();
+        var metricCommandName = "unknown"; // Only registered command names are safe to use as a label.
 
         switch (interaction)
         {
             case SocketSlashCommand slashCommand:
-                commandName = slashCommand.CommandName;
+                commandName = metricCommandName = slashCommand.CommandName;
                 break;
             case SocketUserCommand userCommand:
-                commandName = userCommand.CommandName;
+                commandName = metricCommandName = userCommand.CommandName;
                 break;
             case SocketMessageCommand messageCommand:
-                commandName = messageCommand.CommandName;
+                commandName = metricCommandName = messageCommand.CommandName;
                 break;
         }
-
-        _totalInteractionsProcessed.WithLabels(
-            interaction.Type.ToString(),
-            commandName
-        ).Inc();
 
         await interaction.DeferAsync();
 
@@ -125,7 +119,8 @@ public class OnInteraction(
         {
             if (!userIsAdmin && !userIsPrivilaged)
             {
-                _totalInteractionsFailedDueToMaintenance.Inc();
+                GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Interaction, MetricLabelValues.RejectionReason.Maintenance).Inc();
+                GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
                 logger.Warning("Maintenance enabled user tried to use the bot.");
 
@@ -150,16 +145,13 @@ public class OnInteraction(
                 return;
             }
 
-            _totalUsersBypassedMaintenance.WithLabels(
-                interaction.User.Id.ToString()
-            ).Inc();
+            GridBotMetrics.Requests.MaintenanceBypasses.WithLabels(MetricLabelValues.Source.Interaction).Inc();
         }
 
         if (userIsBlacklisted)
         {
-            _totalBlacklistedUserAttemptedInteractions.WithLabels(
-                interaction.User.Id.ToString()
-            ).Inc();
+            GridBotMetrics.Requests.Rejected.WithLabels(MetricLabelValues.Source.Interaction, MetricLabelValues.RejectionReason.Blacklisted).Inc();
+            GridBotMetrics.Interactions.Executions.WithLabels(interaction.Type.ToString(), metricCommandName, MetricOutcomes.Rejected).Inc();
 
             logger.Warning("Blacklisted user tried to use the bot.");
 
@@ -174,22 +166,30 @@ public class OnInteraction(
 
         Task.Run(async () =>
         {
-            using var _ = _interactionProcessingTime
-                .WithLabels(
-                    interaction.Type.ToString(),
-                    commandName
-                )
-                .NewTimer();
+            InteractionExecutionTracker.Start(interaction, interaction.Type.ToString(), metricCommandName);
 
-            var context = new ShardedInteractionContext(
-                _client,
-                interaction
-            );
+            try
+            {
+                var context = new ShardedInteractionContext(
+                    _client,
+                    interaction
+                );
 
-            await _interactionService.ExecuteCommandAsync(
-                context,
-                _services
-            ).ConfigureAwait(false);
+                var result = await _interactionService.ExecuteCommandAsync(
+                    context,
+                    _services
+                ).ConfigureAwait(false);
+
+                // Successful results complete when the interaction-executed event fires.
+                if (!result.IsSuccess)
+                    InteractionExecutionTracker.Complete(interaction, OutcomeClassifier.FromInteractionResult(result));
+            }
+            catch
+            {
+                InteractionExecutionTracker.Complete(interaction, MetricOutcomes.Exception);
+
+                throw;
+            }
         });
     }
 }

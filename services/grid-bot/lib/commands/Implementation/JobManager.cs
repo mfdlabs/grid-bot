@@ -1,9 +1,13 @@
 namespace Grid.Bot.Commands;
 
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 using Client;
+
+using Grid.Bot.Metrics;
+using Grid.Bot.Telemetry;
 
 using JobManagement;
 using ProcessManagement.Core;
@@ -93,6 +97,27 @@ public class JobManager : IJobManager
     public JobManager(IJobManagerGridServer jobManager)
     {
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
+
+        // Create each rejection reason's series at zero, so the first rejection is counted by increase().
+        foreach (var reason in Enum.GetValues<JobRejectionReason>())
+            GridBotMetrics.GridJobs.Rejections.WithLabels(reason.ToString());
+
+        // The instance gauges are read from the job manager when Prometheus scrapes, rather than tracked on every change.
+        Prometheus.Metrics.DefaultRegistry.AddBeforeCollectCallback(UpdateGauges);
+    }
+
+    private void UpdateGauges()
+    {
+        try
+        {
+            GridBotMetrics.GridJobs.Active.Set(_jobManager.GetActiveJobsCount());
+            GridBotMetrics.GridJobs.Instances.Set(_jobManager.GetInstanceCount());
+            GridBotMetrics.GridJobs.ReadyInstances.Set(_jobManager.GetReadyInstanceCount());
+        }
+        catch
+        {
+            // A failure reading the job manager must not fail the whole scrape.
+        }
     }
 
     /// <inheritdoc cref="IJobManager.GetInstanceCount"/>
@@ -125,13 +150,51 @@ public class JobManager : IJobManager
         double expirationInSeconds,
         bool waitForReadyInstance = false,
         bool addToActiveJobs = true
-    ) => _jobManager.NewJob(job, expirationInSeconds, waitForReadyInstance, addToActiveJobs);
+    )
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var outcome = MetricOutcomes.Exception;
+
+        using var activity = GridBotTelemetry.Source.StartActivity(GridBotTelemetry.Spans.GridJobAcquire);
+        activity?.SetTag(GridBotTelemetry.Tags.GridJobId, job.Id);
+
+        try
+        {
+            var result = _jobManager.NewJob(job, expirationInSeconds, waitForReadyInstance, addToActiveJobs);
+
+            if (result.rejectionReason is { } reason)
+            {
+                outcome = MetricOutcomes.Rejected;
+
+                activity?.SetTag(GridBotTelemetry.Tags.GridJobRejectionReason, reason.ToString());
+
+                GridBotMetrics.GridJobs.Rejections.WithLabels(reason.ToString()).Inc();
+            }
+            else
+            {
+                outcome = MetricOutcomes.Success;
+            }
+
+            return result;
+        }
+        finally
+        {
+            activity.SetOutcome(outcome);
+
+            GridBotMetrics.GridJobs.AcquireDuration.WithLabels(outcome).Observe(stopwatch.Elapsed.TotalSeconds);
+        }
+    }
 
     /// <inheritdoc cref="IJobManager.GetJob(IJob)"/>
     public GridServerServiceSoap GetJob(IJob job) => _jobManager.GetJob(job);
 
     /// <inheritdoc cref="IJobManager.CloseJob(IJob, bool)"/>
-    public void CloseJob(IJob job, bool removeFromActiveJobs = true) => _jobManager.CloseJob(job, removeFromActiveJobs);
+    public void CloseJob(IJob job, bool removeFromActiveJobs = true)
+    {
+        GridBotMetrics.GridJobs.Closed.WithLabels(removeFromActiveJobs ? "true" : "false").Inc();
+
+        _jobManager.CloseJob(job, removeFromActiveJobs);
+    }
 
     /// <inheritdoc cref="IJobManager.GetVersion"/>
     public string GetVersion() => _jobManager.GetVersion();

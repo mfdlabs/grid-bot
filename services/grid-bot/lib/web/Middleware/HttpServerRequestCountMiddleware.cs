@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 using Prometheus;
+using Grid.Bot.Metrics;
 
 /// <summary>
 /// Middleware for counting http server requests.
@@ -13,12 +14,7 @@ using Prometheus;
 public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
 {
     private readonly RequestDelegate _next;
-    private readonly Counter _HttpRequestCounter = Metrics.CreateCounter(
-        "http_server_requests_total", 
-        "Total number of http requests", 
-        "method", 
-        "endpoint"
-    );
+    private readonly Counter _HttpRequestCounter = GridBotMetrics.HttpServer.Requests;
 
     /// <summary>
     /// Construct a new instance of <see cref="HttpServerRequestCountMiddleware"/>
@@ -37,10 +33,7 @@ public sealed class HttpServerRequestCountMiddleware : HttpServerMiddlewareBase
     /// <returns>An awaitable <see cref="Task"/></returns>
     public async Task Invoke(HttpContext context)
     {
-        var (controller, action) = GetControllerAndAction(context);
-        var endpoint = controller != _UnknownRouteLabelValue && action != _UnknownRouteLabelValue ?
-            string.Format("{0}.{1}", controller, action)
-            : context.Request.Path.Value ?? _UnknownRouteLabelValue;
+        var endpoint = GetEndpointLabel(context);
 
         _HttpRequestCounter.WithLabels(context.Request.Method, endpoint).Inc();
 

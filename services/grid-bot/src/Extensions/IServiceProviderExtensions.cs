@@ -63,6 +63,8 @@ public static class IServiceProviderExtensions
         commands.Log += onLogMessage.Invoke;
 
         client.ShardReady += onShardReady.Invoke;
+        client.ShardLatencyUpdated += GatewayMetricsHandlers.OnShardLatencyUpdated;
+        client.ShardDisconnected += GatewayMetricsHandlers.OnShardDisconnected;
 
         var discordSettings = services.GetRequiredService<IOptionsMonitor<DiscordOptions>>().CurrentValue;
 
