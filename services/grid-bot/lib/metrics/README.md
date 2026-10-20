@@ -147,7 +147,7 @@ Prometheus scrapes.
 | `gridbot_http_server_request_duration_seconds` | `method`, `endpoint` |
 | `gridbot_http_server_requests_in_flight` | |
 | `gridbot_grpc_requests_total` | `method` (`check_health`, `set_status`) |
-| `gridbot_build_info` | `version`, `git_hash`, `git_branch`, `build_timestamp` |
+| `gridbot_build_info` | `version`, `git_hash`, `git_branch`, `build_timestamp`, `session_id` |
 
 ### Recovery service
 
