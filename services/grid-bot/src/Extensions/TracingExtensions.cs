@@ -45,11 +45,15 @@ public static class TracingExtensions
         var version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
         _tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .ConfigureResource(resource => resource.AddService(
-                serviceName: options.TracingServiceName,
-                serviceVersion: version,
-                serviceInstanceId: Environment.MachineName
-            ))
+            .ConfigureResource(resource => resource
+                .AddService(
+                    serviceName: options.TracingServiceName,
+                    serviceVersion: version,
+                    serviceInstanceId: Environment.MachineName
+                )
+                // The same environment that selects the settings, so traces can be filtered per environment.
+                .AddAttributes([new("deployment.environment.name", EnvironmentDataProvider.EnvironmentName)])
+            )
             .SetSampler(new ParentBasedSampler(new TraceIdRatioBasedSampler(options.TracingSampleRatio)))
             .AddSource(GridBotTelemetry.SourceName)
             .AddAspNetCoreInstrumentation(instrumentation =>

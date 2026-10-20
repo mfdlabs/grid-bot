@@ -29,6 +29,12 @@ TracingOtlpEndpoint=http://localhost:4317
 
 Spans are flushed when the process exits.
 
+Every trace is tagged with the `deployment.environment.name` resource attribute,
+taken from the same environment name that selects the settings (`ENVIRONMENT`,
+or `NOMAD_META_ENVIRONMENT`, defaulting to `development`). Filter on it in
+Jaeger, for example with the tag `deployment.environment.name=staging`, to split
+traces by environment.
+
 ## What is traced
 
 `GridBotTelemetry` defines the `Grid.Bot` `ActivitySource`, and the span and
