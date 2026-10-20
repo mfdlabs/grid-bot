@@ -32,6 +32,12 @@ public class TelemetryOptionsValidator : IValidateOptions<TelemetryOptions>
             if (!Uri.TryCreate(options.LoggingOtlpEndpoint, UriKind.Absolute, out _))
                 failures.Add($"'{nameof(options.LoggingOtlpEndpoint)}' must be an absolute URI when '{nameof(options.LoggingEnabled)}' is true.");
 
+            // The exporter uses an explicit HTTP endpoint verbatim, so a bare host posts to "/" and is rejected.
+            if (options.LoggingOtlpProtocol == TracingOtlpProtocol.HttpProtobuf
+                && Uri.TryCreate(options.LoggingOtlpEndpoint, UriKind.Absolute, out var loggingUri)
+                && loggingUri.AbsolutePath.Trim('/').Length == 0)
+                failures.Add($"'{nameof(options.LoggingOtlpEndpoint)}' must include the signal path (for Loki, '/otlp/v1/logs') when using HttpProtobuf.");
+
             if (string.IsNullOrWhiteSpace(options.LoggingServiceName))
                 failures.Add($"'{nameof(options.LoggingServiceName)}' is required when '{nameof(options.LoggingEnabled)}' is true.");
         }

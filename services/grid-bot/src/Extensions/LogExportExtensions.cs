@@ -29,6 +29,11 @@ public static class LogExportExtensions
     // The attribute that holds the name of the logger that wrote the line, used as the "group" when filtering.
     internal const string LoggerNameAttribute = "logger.name";
 
+    /// <summary>
+    /// Gets the ID unique to this run of the app, attached to every exported log record as <c>session.id</c>.
+    /// </summary>
+    public static string SessionId { get; } = Guid.NewGuid().ToString("N");
+
     private static readonly ConcurrentDictionary<string, MsLogger> _loggers = new();
 
     private static MsLoggerFactory _loggerFactory;
@@ -68,7 +73,11 @@ public static class LogExportExtensions
                         serviceInstanceId: Environment.MachineName
                     )
                     // The same environment that selects the settings, so logs can be filtered per environment.
-                    .AddAttributes([new("deployment.environment.name", EnvironmentDataProvider.EnvironmentName)])
+                    .AddAttributes([
+                        new("deployment.environment.name", EnvironmentDataProvider.EnvironmentName),
+                        // Not an indexed Loki label, so restarts don't create new streams; it stays queryable as structured metadata.
+                        new("session.id", SessionId),
+                    ])
                 );
 
                 otel.IncludeFormattedMessage = true;
@@ -95,10 +104,11 @@ public static class LogExportExtensions
         };
 
         logger.Information(
-            "Log export is enabled, exporting to {0} over {1} at level {2} and above.",
+            "Log export is enabled, exporting to {0} over {1} at level {2} and above, with session ID {3}.",
             options.LoggingOtlpEndpoint,
             options.LoggingOtlpProtocol,
-            options.LoggingMinimumLevel
+            options.LoggingMinimumLevel,
+            SessionId
         );
     }
 
@@ -128,4 +138,5 @@ public static class LogExportExtensions
             LogLevel.Debug => MsLogLevel.Debug,
             _ => MsLogLevel.Trace,
         };
+
 }

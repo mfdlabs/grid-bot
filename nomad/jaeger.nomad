@@ -54,7 +54,7 @@ job "jaeger" {
           "http",
           "traefik",
           "traefik.enable=true",
-          "traefik.http.routers.jaeger-http.rule=Host(`jaeger-http.wck02.vmminfra.dev`)",
+          "traefik.http.routers.jaeger-http.rule=Host(`tracing.wck02.vmminfra.dev`)",
           "traefik.http.routers.jaeger-http.entrypoints=https",
           "traefik.http.routers.jaeger-http.tls=true"
         ]

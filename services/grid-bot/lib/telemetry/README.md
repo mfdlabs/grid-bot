@@ -149,7 +149,9 @@ Each exported record has the resource attributes `service.name` and
 attribute with the name of the logger that wrote the line. Use `logger.name` to
 group or filter logs. Records written inside a trace also carry its `trace_id`
 and `span_id`, which needs tracing to be enabled so that there is a trace to
-carry.
+carry. Every record also carries a `session.id`, a random ID generated once per run of
+the app and printed in the "Log export is enabled" startup line, so one run can
+be isolated even across restarts on the same host.
 
 Loki indexes the service and environment resource attributes by default. The
 level, logger name, and `trace_id` are log attributes and remain structured

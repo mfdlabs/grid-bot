@@ -67,7 +67,7 @@ set, a hint is shown instead of the trace panel.
 source. Its `Environment` variable queries the `deployment_environment_name`
 OTLP resource label. The logger filter matches the `logger_name` structured
 metadata field, the level filter matches `severity_text`, and the trace filter
-matches `trace_id`. Loki normalizes dots in OTLP attribute names to
+matches `trace_id`, the session filter matches `session_id` (one value per run of the app). Loki normalizes dots in OTLP attribute names to
 underscores. Resource attributes such as `service.name` and
 `deployment.environment.name` are indexed labels by default; log attributes
 such as `severity_text`, `logger.name`, and `trace_id` remain structured
